@@ -134,6 +134,14 @@ enum Cmd {
         #[arg(long, default_value_t = 512)]
         dims: usize,
     },
+    /// Add a .txt or .md file to the library as a user document ("My documents"). A form feed starts a new
+    /// page, as `pdftotext` writes it; without one the whole file is page 1.
+    AddDoc {
+        file: PathBuf,
+        /// Document title (default: the file name).
+        #[arg(long)]
+        title: Option<String>,
+    },
     /// Library, model and CPU info.
     Info,
     /// Switch a knowledge or Wikidata pack on or off (stored in <library>/disabled.json).
@@ -336,6 +344,25 @@ fn main() -> Result<()> {
             for line in std::io::stdin().lock().lines() {
                 println!("{}", serde_json::to_string(&enc.encode(&line?)?)?);
             }
+        }
+        Cmd::AddDoc { file, title } => {
+            let e = engine(&Opts { no_llm: true, ..o.clone() })?;
+            let text = std::fs::read_to_string(file).with_context(|| format!("read {}", file.display()))?;
+            let mut pages: Vec<String> = text.split('\x0c').map(str::to_string).collect();
+            if pages.len() > 1 && pages.last().is_some_and(|p| p.trim().is_empty()) {
+                pages.pop();
+            }
+            let title = title.clone().unwrap_or_else(|| file.file_stem().unwrap_or_default().to_string_lossy().into_owned());
+            let t = std::time::Instant::now();
+            let id = e.add_document(&title, &pages, &mut |done, total| {
+                if done % 64 == 0 || done == total {
+                    eprintln!("embedded {done}/{total}");
+                }
+            })?;
+            let n = e.library().packs.iter().find(|p| p.manifest.pack_id == id).and_then(|p| p.manifest.counts.as_ref()).map_or(0, |c| c.passages);
+            let secs = t.elapsed().as_secs_f64();
+            eprintln!("{} pages, {n} passages in {secs:.1}s ({:.1} passages/s)", pages.len(), n as f64 / secs);
+            println!("{id}");
         }
         Cmd::Info => {
             println!("{}", commonplace_llm::system_info());

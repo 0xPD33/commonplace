@@ -103,7 +103,8 @@ impl Library {
                     Err(e) => lib.skipped.push((m.pack_id.clone(), format!("{e:#}"))),
                 },
                 PackType::Knowledge => {
-                    if let (Some(have), Some(e)) = (&lib.embedder, &m.embedder)
+                    if !m.user_document
+                        && let (Some(have), Some(e)) = (&lib.embedder, &m.embedder)
                         && have != e
                     {
                         lib.skipped.push((m.pack_id.clone(), "embedder differs from the installed packs".into()));
@@ -115,7 +116,7 @@ impl Library {
                     }
                     match Pack::open(&path) {
                         Ok(p) => {
-                            if lib.embedder.is_none() {
+                            if lib.embedder.is_none() && !p.manifest.user_document {
                                 lib.embedder = p.manifest.embedder.clone();
                             }
                             lib.packs.push(p);
@@ -128,9 +129,11 @@ impl Library {
         Ok(lib)
     }
 
-    /// Refuse a knowledge pack whose embedder differs from the installed ones.
+    /// Refuse a knowledge pack whose embedder differs from the installed ones. A user document is
+    /// searched on its own and fused by rank, so it never conflicts (its codes share the leaf-mt space).
     pub fn check_compatible(&self, m: &Manifest) -> Result<()> {
         if m.pack_type == PackType::Knowledge
+            && !m.user_document
             && let (Some(have), Some(e)) = (&self.embedder, &m.embedder)
             && have != e
             && !self.packs.iter().all(|p| m.replaces.contains(&p.manifest.pack_id))

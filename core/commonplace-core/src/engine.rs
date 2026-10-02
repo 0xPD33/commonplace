@@ -11,7 +11,7 @@ use crate::retrieval::{Hit, RetrievalSettings, Retriever, select_diverse};
 use crate::route::{self, Route};
 use crate::telemetry::{self, QueryRecord};
 use crate::tools::{calc, units, wikidata::WdFact, wikidata::format_num};
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result, anyhow, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::path::PathBuf;
@@ -312,6 +312,15 @@ impl Engine {
         ensure!(known, "{pack_id} is not an installed knowledge or Wikidata pack");
         Library::set_enabled(&self.cfg.library_dir, pack_id, enabled)?;
         self.reload_library()
+    }
+
+    /// Index a document the user added (text per page) as a knowledge pack and reload the library.
+    /// Keeps the loaded LLM. `progress(done, total)` counts embedded passages. Returns the pack id.
+    pub fn add_document(&self, title: &str, pages: &[String], progress: &mut dyn FnMut(usize, usize)) -> Result<String> {
+        let enc = self.enc.as_ref().ok_or_else(|| anyhow!("the search model is not installed"))?;
+        let id = crate::userdoc::build(&self.cfg.library_dir, title, pages, enc, progress)?;
+        self.reload_library()?;
+        Ok(id)
     }
 
     pub fn set_llm(&self, role: ModelRole, llm: Option<Arc<dyn LlmBackend>>) {

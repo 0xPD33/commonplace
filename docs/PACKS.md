@@ -44,6 +44,16 @@ Passages of one article have consecutive ids (`first_passage .. first_passage + 
 The app refuses a knowledge pack whose `embedder` differs from the installed packs.
 `replaces` names packs that this pack supersedes (`enwiki` replaces `enwiki-core`).
 
+### User documents
+
+The app builds a knowledge pack on the device from a document that the user adds ("My documents"): `CommonplaceEngine.add_document(title, pages, listener)`, or `commonplace add-doc <file.txt>` on the desktop. The code is `core/commonplace-core/src/userdoc.rs`. It writes through the same `pack` writers as `packbuild`.
+
+- The core receives the text of each page. Android extracts it from the PDF.
+- The pack is `doc-<10 hex of SHA-256 over title and pages>`, with `user_document: true` in the manifest and the license "user document". The library list, verify and remove treat it like any pack.
+- The document is one article. Each passage has the section path `p. <page>`, and no passage spans two pages. The chunker follows `chunk.py` (80 to 220 words per passage).
+- The dense index has one IVF list, because a document has at most 5,000 passages. Its codes come from the leaf-mt encoder without the query prompt. leaf-mt shares the mxbai vector space, so the manifest records `embedder.doc = MongoDB/mdbr-leaf-mt`. Each pack is searched on its own and fused by rank, so the embedder check skips packs with `user_document`.
+- The build runs in `packs/.building-<id>/` and moves into place when it is complete. A document without text, or with more than 5,000 passages, fails with a message that the UI can show.
+
 ## Distribution
 
 `packbuild split` writes one plain tar stream of `<pack_id>/` in parts of at most 2 GB, plus `<pack_id>.pack.json` with the SHA-256 of each part.

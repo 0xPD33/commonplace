@@ -87,6 +87,10 @@ pub struct Manifest {
     pub tantivy_version: Option<String>,
     #[serde(default)]
     pub model: Option<ModelInfo>,
+    /// Built on the device from a document the user added. Its dense codes come from the document encoder,
+    /// not from the shipped packs' embedder, so the compatibility check skips it.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub user_document: bool,
     pub files: Vec<FileEntry>,
     pub size_bytes: u64,
 }
@@ -242,6 +246,23 @@ impl Pack {
             _ => Ok(Vec::new()),
         }
     }
+}
+
+/// Today's UTC date as `YYYY-MM-DD`.
+pub fn today() -> String {
+    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+    let days = secs.div_euclid(86_400);
+    // Civil-from-days (H. Hinnant).
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
+    format!("{y:04}-{m:02}-{d:02}")
 }
 
 /// Sum of file sizes under a directory.

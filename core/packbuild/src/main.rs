@@ -286,7 +286,7 @@ fn build(
         pack_type: PackType::Knowledge,
         title: title.into(),
         snapshot_date: snapshot.into(),
-        build_date: today(),
+        build_date: pack::today(),
         replaces,
         license: license.into(),
         attribution: attribution.into(),
@@ -297,6 +297,7 @@ fn build(
         }),
         tantivy_version: (!no_sparse).then(|| sparse::TANTIVY_VERSION.to_string()),
         model: None,
+        user_document: false,
         files,
         size_bytes: size,
     };
@@ -342,7 +343,7 @@ fn replace_dense(input: &Path, pack: &Path, embedder: Embedder) -> Result<()> {
     m.embedder = Some(Embedder { dims, ..embedder });
     m.files = files;
     m.size_bytes = size;
-    m.build_date = today();
+    m.build_date = pack::today();
     std::fs::write(pack.join("manifest.json"), serde_json::to_vec_pretty(&m)?)?;
     eprintln!("done: {} ({:.2} GB, {:.1}s)", pack.display(), size as f64 / 1e9, t0.elapsed().as_secs_f64());
     Ok(())
@@ -408,7 +409,7 @@ fn replace_meta(input: &Path, pack: &Path) -> Result<()> {
     let (files, size) = import::file_entries(pack)?;
     m.files = files;
     m.size_bytes = size;
-    m.build_date = today();
+    m.build_date = pack::today();
     std::fs::write(pack.join("manifest.json"), serde_json::to_vec_pretty(&m)?)?;
     eprintln!("done: {} ({:.1}s)", pack.display(), t0.elapsed().as_secs_f64());
     Ok(())
@@ -462,7 +463,7 @@ fn build_wikidata(input: &Path, out: &Path, snapshot: &str) -> Result<()> {
         pack_type: PackType::Wikidata,
         title: "Wikidata facts".into(),
         snapshot_date: snapshot.into(),
-        build_date: today(),
+        build_date: pack::today(),
         replaces: vec![],
         license: "CC0 1.0".into(),
         attribution: "Wikidata contributors".into(),
@@ -470,6 +471,7 @@ fn build_wikidata(input: &Path, out: &Path, snapshot: &str) -> Result<()> {
         embedder: None,
         tantivy_version: None,
         model: None,
+        user_document: false,
         files,
         size_bytes: size,
     };
@@ -502,7 +504,7 @@ fn build_model(gguf: &Path, out: &Path, pack_id: &str, title: &str, role: &str, 
         pack_type: PackType::Model,
         title: title.into(),
         snapshot_date: String::new(),
-        build_date: today(),
+        build_date: pack::today(),
         replaces: vec![],
         license: license.into(),
         attribution: repo.into(),
@@ -510,6 +512,7 @@ fn build_model(gguf: &Path, out: &Path, pack_id: &str, title: &str, role: &str, 
         embedder: None,
         tantivy_version: None,
         model: Some(ModelInfo { role, file: name, hf_repo: repo.into(), revision: rev.into(), n_ctx }),
+        user_document: false,
         files,
         size_bytes: size,
     };
@@ -576,22 +579,6 @@ fn split(pack: &Path, out: &Path, part_size: u64) -> Result<()> {
         eprintln!("{}  {:>12}  {}", p.sha256, p.bytes, p.name);
     }
     Ok(())
-}
-
-fn today() -> String {
-    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
-    let days = secs.div_euclid(86_400);
-    // Civil-from-days (H. Hinnant).
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
-    format!("{y:04}-{m:02}-{d:02}")
 }
 
 fn main() -> Result<()> {

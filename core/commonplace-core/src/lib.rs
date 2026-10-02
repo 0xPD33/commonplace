@@ -13,3 +13,4 @@ pub mod route;
 pub mod telemetry;
 pub mod text;
 pub mod tools;
+pub mod userdoc;

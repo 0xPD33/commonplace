@@ -12,6 +12,8 @@ use tokenizers::{PaddingParams, PaddingStrategy, Tokenizer, TruncationParams, Tr
 /// mxbai query prompt; leaf-mt is distilled from mxbai and uses the same one.
 pub const QUERY_PROMPT: &str = "Represent this sentence for searching relevant passages: ";
 const QUERY_MAX_TOKENS: usize = 128;
+const DOC_MAX_TOKENS: usize = 512;
+const DOC_BATCH: usize = 8;
 const RERANK_MAX_TOKENS: usize = 256;
 
 static ORT_INIT: Once = Once::new();
@@ -55,17 +57,29 @@ fn tokenizer(dir: &Path) -> Result<Tokenizer> {
 pub struct QueryEncoder {
     session: Mutex<Session>,
     tok: Tokenizer,
+    doc_tok: Tokenizer,
     pub dims: usize,
 }
 
 impl QueryEncoder {
     /// `model` is an ONNX file inside a leaf-mt directory that also holds `tokenizer.json`.
     pub fn load(dir: &Path, model: &str, threads: usize, dims: usize) -> Result<Self> {
-        let mut tok = tokenizer(dir)?;
+        let mut doc_tok = tokenizer(dir)?;
+        let mut tok = doc_tok.clone();
         tok.with_truncation(Some(TruncationParams { max_length: QUERY_MAX_TOKENS, ..Default::default() }))
             .map_err(|e| anyhow!("{e}"))?;
         tok.with_padding(None);
-        Ok(Self { session: Mutex::new(session(&dir.join(model), threads)?), tok, dims })
+        doc_tok
+            .with_truncation(Some(TruncationParams { max_length: DOC_MAX_TOKENS, ..Default::default() }))
+            .map_err(|e| anyhow!("{e}"))?;
+        let pad_id = doc_tok.token_to_id("[PAD]").unwrap_or(0);
+        doc_tok.with_padding(Some(PaddingParams {
+            strategy: PaddingStrategy::BatchLongest,
+            pad_id,
+            pad_token: "[PAD]".into(),
+            ..Default::default()
+        }));
+        Ok(Self { session: Mutex::new(session(&dir.join(model), threads)?), tok, doc_tok, dims })
     }
 
     /// Embed a query: first `dims` dims of the 1024-d output, L2-normalized.
@@ -87,6 +101,39 @@ impl QueryEncoder {
         let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt().max(1e-12);
         v.iter_mut().for_each(|x| *x /= norm);
         Ok(v)
+    }
+
+    /// Embed passages as the pack builder does: no prompt, up to 512 tokens, same dims and
+    /// normalization as `encode`. Texts of similar length share a batch to limit padding;
+    /// `on_batch` gets the number of texts of each finished batch.
+    pub fn encode_docs(&self, texts: &[String], on_batch: &mut dyn FnMut(usize)) -> Result<Vec<Vec<f32>>> {
+        let mut order: Vec<usize> = (0..texts.len()).collect();
+        order.sort_by_key(|&i| texts[i].len());
+        let mut out = vec![Vec::new(); texts.len()];
+        for batch in order.chunks(DOC_BATCH) {
+            let encs = self.doc_tok.encode_batch(batch.iter().map(|&i| texts[i].as_str()).collect::<Vec<_>>(), true).map_err(|e| anyhow!("{e}"))?;
+            let (b, n) = (encs.len(), encs[0].get_ids().len());
+            let ids: Vec<i64> = encs.iter().flat_map(|e| e.get_ids().iter().map(|&x| x as i64)).collect();
+            let mask: Vec<i64> = encs.iter().flat_map(|e| e.get_attention_mask().iter().map(|&x| x as i64)).collect();
+            let types = vec![0i64; b * n];
+            let mut s = self.session.lock().unwrap();
+            let res = s.run(ort::inputs![
+                "input_ids" => TensorRef::from_array_view(([b, n], &ids[..]))?,
+                "attention_mask" => TensorRef::from_array_view(([b, n], &mask[..]))?,
+                "token_type_ids" => TensorRef::from_array_view(([b, n], &types[..]))?,
+            ])?;
+            let (shape, emb) = res["sentence_embedding"].try_extract_tensor::<f32>()?;
+            let full = shape[1] as usize;
+            ensure!(full >= self.dims, "embedding has {full} dims, need {}", self.dims);
+            for (row, &i) in batch.iter().enumerate() {
+                let mut v = emb[row * full..row * full + self.dims].to_vec();
+                let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt().max(1e-12);
+                v.iter_mut().for_each(|x| *x /= norm);
+                out[i] = v;
+            }
+            on_batch(b);
+        }
+        Ok(out)
     }
 }
 

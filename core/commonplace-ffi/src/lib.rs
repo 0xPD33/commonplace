@@ -84,6 +84,8 @@ pub struct PackInfo {
     pub has_cards: bool,
     /// False when the user switched the pack off: installed and counted, but not searched.
     pub enabled: bool,
+    /// Built on the device from a document the user added ("My documents").
+    pub user_document: bool,
 }
 
 #[derive(uniffi::Record)]
@@ -589,6 +591,7 @@ impl CommonplaceEngine {
             has_dense,
             has_cards,
             enabled,
+            user_document: m.user_document,
         };
         let packs_dir = Library::packs_dir(&lib.root);
         let packs = lib
@@ -773,6 +776,13 @@ impl CommonplaceEngine {
         let m = import::import(readers, expected, &packs_dir, &mut prog, &|m| lib.check_compatible(m))?;
         self.engine.reload_library()?;
         Ok(m.pack_id)
+    }
+
+    /// Index a document the user added (text per page, page 1 first) as the pack `doc-<hash>`. Returns the pack id.
+    /// `on_progress(done, total)` counts embedded passages; `on_part_done` is not called. Fails with a message the
+    /// UI can show for an empty document, one over 5,000 passages, or one that is already added.
+    pub fn add_document(&self, title: String, pages: Vec<String>, listener: Arc<dyn ImportListener>) -> R<String> {
+        Ok(self.engine.add_document(&title, &pages, &mut |done, total| listener.on_progress(done as u64, total as u64))?)
     }
 
     pub fn remove_pack(&self, pack_id: String) -> R<()> {

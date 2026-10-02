@@ -73,7 +73,7 @@ private val Dark = darkColorScheme(
     inversePrimary = Color(0xFF8B2E1F),
     secondary = Color(0xFFD8C48E),
     onSecondary = Color(0xFF3A2F0B),
-    secondaryContainer = Color(0xFF4F4321),
+    secondaryContainer = Color(0xFF43382B),
     onSecondaryContainer = Color(0xFFF2E3B8),
     tertiary = Color(0xFFA7C7D4),
     tertiaryContainer = Color(0xFF2B4652),
@@ -112,7 +112,7 @@ private fun literata(opsz: Float) = FontFamily(
                 res,
                 FontWeight(w),
                 style,
-                FontVariation.Settings(FontVariation.weight(w), FontVariation.Setting("opsz", opsz)),
+                variationSettings = FontVariation.Settings(FontVariation.weight(w), FontVariation.Setting("opsz", opsz)),
             )
         }
     },

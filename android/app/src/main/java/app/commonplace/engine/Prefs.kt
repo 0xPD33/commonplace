@@ -1,5 +1,6 @@
 package app.commonplace.engine
 
+import android.app.UiModeManager
 import android.content.Context
 import uniffi.commonplace_ffi.CommonplaceEngine
 import uniffi.commonplace_ffi.ModelKind
@@ -20,6 +21,11 @@ class Prefs(context: Context) {
     var modelKind: ModelKind
         get() = if (sp.getString("model", "fast") == "small") ModelKind.SMALL else ModelKind.FAST
         set(v) = sp.edit().putString("model", if (v == ModelKind.SMALL) "small" else "fast").apply()
+
+    /** A UiModeManager night mode. The system also persists it; this copy only shows the choice in Settings. */
+    var nightMode: Int
+        get() = sp.getInt("night_mode", UiModeManager.MODE_NIGHT_AUTO)
+        set(v) = sp.edit().putInt("night_mode", v).apply()
 
     var threads: Int
         get() = sp.getInt("threads", 4)

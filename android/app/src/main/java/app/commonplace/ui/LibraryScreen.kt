@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
@@ -287,7 +286,7 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
 
 @Composable
 private fun ImportProgress(s: ImportState) {
-    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().testTag("import_progress")) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().testTag("import_progress")) {
         Column(Modifier.padding(16.dp)) {
             Text(s.message, style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(10.dp))
@@ -308,7 +307,7 @@ private fun ImportProgress(s: ImportState) {
 @Composable
 private fun PackRow(icon: ImageVector, title: String, subtitle: String, detail: String, onVerify: () -> Unit, onRemove: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
-    Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth().testTag("pack_row")) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("pack_row")) {
         Row(Modifier.padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(14.dp))

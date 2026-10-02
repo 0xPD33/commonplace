@@ -1,5 +1,6 @@
 package app.commonplace.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +71,8 @@ fun NumberDisc(n: UInt, modifier: Modifier = Modifier) {
             n.toString(),
             color = MaterialTheme.colorScheme.onPrimary,
             fontSize = 11.sp,
+            // Literata has tall ascenders; trim the line box so the digit sits in the middle of the disc.
+            style = MaterialTheme.typography.labelSmall.copy(lineHeight = 11.sp, lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both)),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
@@ -76,13 +81,29 @@ fun NumberDisc(n: UInt, modifier: Modifier = Modifier) {
 
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    // c2sc draws the capitals as Literata's small caps, like a running head in a book.
     Text(
         text.uppercase(Locale.ROOT),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        letterSpacing = 1.2.sp,
+        style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "c2sc"),
+        color = MaterialTheme.colorScheme.primary,
+        letterSpacing = 1.6.sp,
         modifier = modifier,
     )
+}
+
+/** The thin rule around paper cards. */
+@Composable
+fun hairline() = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+
+/** A section break between turns: two rules with a fleuron between them. */
+@Composable
+fun Ornament(modifier: Modifier = Modifier) {
+    val c = MaterialTheme.colorScheme
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        HorizontalDivider(Modifier.weight(1f), color = c.outlineVariant)
+        Text("❦", color = c.outline, fontSize = 18.sp, modifier = Modifier.padding(horizontal = 14.dp))
+        HorizontalDivider(Modifier.weight(1f), color = c.outlineVariant)
+    }
 }
 
 /** Text with `highlight` marked in the evidence color. Falls back to plain text if not found. */

@@ -89,6 +89,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -154,7 +155,7 @@ fun AskScreen(
                 colors = TopAppBarDefaults.topAppBarColors(scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
                 title = {
                     Column {
-                        Text("Commonplace", style = MaterialTheme.typography.titleLarge)
+                        Text("Commonplace", style = MaterialTheme.typography.titleLarge, fontStyle = FontStyle.Italic)
                         ModelStatusLine(model, installed = library?.models?.isNotEmpty() == true)
                     }
                 },
@@ -261,7 +262,7 @@ private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, 
         Spacer(Modifier.height(20.dp))
         val passages = lib.packs.sumOf { it.passages.toLong() }.toULong()
         val names = lib.packs.joinToString(", ") { it.title }
-        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 SectionLabel("Your library")
                 Spacer(Modifier.height(6.dp))
@@ -370,7 +371,7 @@ private fun Conversation(
         ) {
             itemsIndexed(vm.turns, key = { _, t -> t.id }) { i, t ->
                 Column {
-                    if (i > 0) HorizontalDivider(Modifier.padding(bottom = 28.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    if (i > 0) Ornament(Modifier.padding(bottom = 28.dp))
                     val latest = i == vm.turns.lastIndex && !vm.busy
                     TurnView(
                         t, showTimings, canThinkHarder, onOpen,
@@ -415,7 +416,8 @@ private fun AskBar(
     onMic: (() -> Unit)?,
     focus: FocusRequester,
 ) {
-    Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp, shadowElevation = 8.dp) {
+    Surface(color = MaterialTheme.colorScheme.surface) { Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -470,7 +472,7 @@ private fun AskBar(
                 }
             }
         }
-    }
+    } }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

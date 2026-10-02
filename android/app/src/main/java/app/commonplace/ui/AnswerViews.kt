@@ -212,7 +212,7 @@ fun EvidenceCard(card: AnswerCard, onOpen: (OpenSource) -> Unit) {
     val c = MaterialTheme.colorScheme
     Surface(
         onClick = { onOpen(OpenSource(top, card.highlight)) },
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.medium,
         color = c.surfaceContainerLow,
         border = BorderStroke(1.dp, c.outlineVariant),
         modifier = Modifier.fillMaxWidth().testTag("evidence_card"),
@@ -276,7 +276,7 @@ private fun FactTable(card: AnswerCard) {
     var expanded by remember(card) { mutableStateOf(false) }
     val shown = if (expanded) card.facts else card.facts.take(3)
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
             .testTag("fact_table"),
     ) {
         for (f in shown) {
@@ -312,7 +312,7 @@ private fun CompareTable(card: AnswerCard, names: List<String>) {
     var expanded by remember(card) { mutableStateOf(false) }
     val cell = Modifier.padding(start = 8.dp)
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
             .testTag("fact_table"),
     ) {
         Row(Modifier.padding(vertical = 3.dp)) {
@@ -408,8 +408,9 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
         itemsIndexed(sources) { i, s ->
             Surface(
                 onClick = { onOpen(OpenSource(s, "")) },
-                shape = RoundedCornerShape(16.dp),
-                color = c.surfaceContainer,
+                shape = MaterialTheme.shapes.medium,
+                color = c.surfaceContainerLowest,
+                border = hairline(),
                 modifier = Modifier.width(232.dp).height(118.dp),
             ) {
                 Column(Modifier.padding(12.dp)) {
@@ -502,7 +503,7 @@ private fun shareText(turn: Turn, withQuestion: Boolean): String = buildString {
 
 @Composable
 fun InfoNote(text: String) {
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
             Icon(Icons.Outlined.Info, null, Modifier.size(18.dp))
             Spacer(Modifier.width(10.dp))
@@ -513,7 +514,7 @@ fun InfoNote(text: String) {
 
 @Composable
 fun ErrorNote(text: String) {
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth().testTag("error_note")) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.errorContainer, modifier = Modifier.fillMaxWidth().testTag("error_note")) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
             Icon(Icons.Outlined.ErrorOutline, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
             Spacer(Modifier.width(10.dp))
@@ -528,7 +529,7 @@ private fun ThoughtBlock(turn: Turn) {
     var open by remember { mutableStateOf(false) }
     val c = MaterialTheme.colorScheme
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerLow)
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerLow)
             .clickable(enabled = turn.thoughtDone) { open = !open }.padding(12.dp).testTag("thought"),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

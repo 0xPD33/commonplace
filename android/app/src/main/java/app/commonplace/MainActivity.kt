@@ -1,9 +1,11 @@
 package app.commonplace
 
 import android.Manifest
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,18 +32,21 @@ import app.commonplace.ui.HistoryScreen
 import app.commonplace.ui.LibraryScreen
 import app.commonplace.ui.PassageScreen
 import app.commonplace.ui.SettingsScreen
+import app.commonplace.ui.paperGrain
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Paper runs under the 3-button nav bar too; the default scrim is a white strip.
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
+        window.isNavigationBarContrastEnforced = false
         val notifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
         if (savedInstanceState == null) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         setContent {
             CommonplaceTheme {
                 // testTagsAsResourceId lets adb/uiautomator drive the app by tag (scripts/e2e-emulator.sh).
-                Surface(Modifier.semantics { testTagsAsResourceId = true }, color = MaterialTheme.colorScheme.background) {
+                Surface(Modifier.semantics { testTagsAsResourceId = true }.paperGrain(),color = MaterialTheme.colorScheme.background) {
                     val nav = rememberNavController()
                     // Activity scope, so the screen stays on while an answer streams behind a source page too:
                     // a hidden app gets a 3 GiB memory limit on Android 17, which swaps the model out mid-answer.

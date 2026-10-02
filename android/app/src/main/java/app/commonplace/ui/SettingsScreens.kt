@@ -1,5 +1,6 @@
 package app.commonplace.ui
 
+import android.app.UiModeManager
 import android.content.Intent
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -95,6 +95,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit) {
     var planner by remember { mutableStateOf(prefs.usePlanner) }
     var rewrite by remember { mutableStateOf(prefs.rewrite) }
     var timings by remember { mutableStateOf(prefs.showTimings) }
+    var nightMode by remember { mutableIntStateOf(prefs.nightMode) }
 
     fun apply() {
         prefs.threads = threads
@@ -113,6 +114,26 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit) {
         TopAppBar(title = { Text("Settings") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back") } })
     }) { pad ->
         Column(Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(20.dp).testTag("settings")) {
+            SectionLabel("Appearance")
+            Spacer(Modifier.height(8.dp))
+            val uiMode = LocalContext.current.getSystemService(UiModeManager::class.java)
+            val modes = listOf(UiModeManager.MODE_NIGHT_AUTO to "System", UiModeManager.MODE_NIGHT_NO to "Light", UiModeManager.MODE_NIGHT_YES to "Dark")
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().testTag("theme_choice")) {
+                modes.forEachIndexed { i, (mode, label) ->
+                    SegmentedButton(
+                        selected = nightMode == mode,
+                        onClick = {
+                            nightMode = mode
+                            prefs.nightMode = mode
+                            // Android persists this per app and recreates the activity in the new mode.
+                            uiMode.setApplicationNightMode(mode)
+                        },
+                        shape = SegmentedButtonDefaults.itemShape(i, modes.size),
+                    ) { Text(label) }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
             SectionLabel("Model")
             Spacer(Modifier.height(8.dp))
             Text(
@@ -280,7 +301,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+                Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         SectionLabel("Device")
                         Spacer(Modifier.height(6.dp))
@@ -330,7 +351,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
 @Composable
 private fun QueryRow(q: QuerySummary) {
     val t = q.timing
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainer, modifier = Modifier.fillMaxWidth()) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer, border = hairline(), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
             Text(q.query, style = MaterialTheme.typography.titleSmall)
             Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(q.tsMs.toLong())) + " · " + q.model.ifBlank { "search only" }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)

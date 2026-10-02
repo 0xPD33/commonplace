@@ -1,0 +1,16 @@
+Wikidata facts (pack wikidata-facts)
+Source: the Parquet tables permutans/wikidata-* (a conversion of the Wikidata dump of 2026-05-07; snapshot 2026-05-07).
+
+CREDIT
+Wikidata contributors, https://www.wikidata.org
+Each item has a QID Q. The item page is at https://www.wikidata.org/wiki/Q and its history is at https://www.wikidata.org/w/index.php?title=Q&action=history
+
+LICENSE
+Creative Commons CC0 1.0 Universal (public domain dedication): https://creativecommons.org/publicdomain/zero/1.0/
+Wikidata states that its structured data is available under CC0 (https://www.wikidata.org/wiki/Wikidata:Licensing).
+
+CHANGES
+This pack is an adapted copy. It keeps items that have an English Wikipedia page, a selected set of properties, labels and aliases in English. Statements were flattened into a SQLite table.
+
+NOTICES
+The pack gives no guarantee that the data is correct, complete or current. The Wikimedia Foundation did not make this pack and does not endorse it. Wikidata and Wikimedia are trademarks of the Wikimedia Foundation.

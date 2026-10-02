@@ -135,4 +135,4 @@ The question rewrite step ("Understand the question first" in Settings) is off b
 
 ## License
 
-Code: Apache-2.0. Packs carry the license of their source (for example, Wikipedia: CC BY-SA 4.0, Wikidata: CC0). [docs/DATASETS.md](docs/DATASETS.md) lists the license of each pack. Model licenses are in [docs/MODELS.md](docs/MODELS.md).
+Code: Apache-2.0 ([LICENSE](LICENSE)). The pack and model licenses differ from the license of the code. Each pack and each model keeps the license of its source: for example Wikipedia is CC BY-SA 4.0 and GFDL, Wikidata is CC0, Ling-3.0-tiny is MIT, and LFM2.5 is under the LFM Open License v1.0, which allows commercial use only below US$10M annual revenue. Every pack and model carries its credit, license notice and license text in a `NOTICE.txt` (sources in [pipeline/notices](pipeline/notices)). [docs/DATASETS.md](docs/DATASETS.md) lists the license of each pack. Model licenses are in [docs/MODELS.md](docs/MODELS.md).

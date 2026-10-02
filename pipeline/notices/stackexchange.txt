@@ -1,0 +1,23 @@
+Stack Exchange Q&A (pack stackexchange)
+Source: common-pile/stackexchange (revision 5ec3aa2), built from the Stack Exchange community data dumps of 2024-12 (snapshot 2024-12-31).
+
+CREDIT
+Stack Exchange, Inc. and the contributors of each Stack Exchange site. The threads in this pack come from 51 sites, for example academia.stackexchange.com, math.stackexchange.com and askubuntu.com.
+Each article is one thread: a question with its answers and comments. Each article stores its thread URL (for example academia.stackexchange.com/questions/1937 means https://academia.stackexchange.com/questions/1937). All articles have one.
+The thread page shows the question, each answer, the name of each author and a link to each author's profile. CREDITS.txt.zst in this pack lists the contributors of each thread (names as the source data gives them). Decompress it with zstd (for example "zstd -d CREDITS.txt.zst"). Each line is: thread URL, tab, CC BY-SA versions, tab, authors. An author written as u<number> is the profile https://<site>/users/<number> on the site of the thread. The source data has no author names for some posts, and the thread URL then leads to the record. The source data does not tell which author wrote which post.
+
+LICENSE
+User contributions on Stack Exchange sites are licensed under Creative Commons Attribution-ShareAlike, and the version depends on when the post was made:
+  CC BY-SA 2.5: https://creativecommons.org/licenses/by-sa/2.5/
+  CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/
+  CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
+The source data names the versions used in each thread. CREDITS.txt.zst shows them in the second column.
+Attribution: CC BY-SA 4.0 section 3(a)(2) allows you to satisfy the attribution conditions in any reasonable manner for the medium, and it can be reasonable to give a URI or hyperlink to a resource that holds the required information (the credits, the license notice, and the link to the material). The thread URL of each article is such a link: the thread page names the authors of the posts and shows the license. This notice, CREDITS.txt.zst and the thread URL together give the attribution.
+This pack is a collection. Each thread keeps the license of its posts. The pack as a whole is not placed under a new license. Share-alike applies to the posts and to adaptations of them.
+
+CHANGES
+This pack is an adapted copy. Each thread was cut to its title, the question and the first answers (at most 5 passages), and converted to plain text. Many comments, short remarks and the posts after the first passages were removed. Votes, accepted-answer marks and formatting are not kept. Threads were selected by the number of distinct authors.
+
+NOTICES
+Warranty: the content is provided as is, without warranties of any kind. Answers can be wrong or out of date. Check important advice with a qualified source.
+Stack Exchange and the Stack Exchange site names are trademarks of Stack Exchange, Inc. Stack Exchange, Inc. did not make this pack and does not endorse it.

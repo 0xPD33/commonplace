@@ -1,0 +1,17 @@
+arXiv abstracts (pack arxiv-abs)
+Source: librarian-bots/arxiv-metadata-snapshot, snapshot 2026-09-25 (revision 1901619).
+
+CREDIT
+Metadata from arXiv.org (https://arxiv.org), via the Hugging Face dataset librarian-bots/arxiv-metadata-snapshot.
+Each article is one paper. It stores its arXiv identifier I. The paper page is at https://arxiv.org/abs/I
+The authors of a paper are named in the abstract passage; the paper page lists them in full.
+
+LICENSE
+Creative Commons CC0 1.0 Universal (public domain dedication): https://creativecommons.org/publicdomain/zero/1.0/
+arXiv states: "You are free to use descriptive metadata about arXiv e-prints under the terms of the Creative Commons Universal (CC0 1.0) Public Domain Declaration." (https://info.arxiv.org/help/api/tou.html). The licenses of the papers themselves are different and are not part of this pack. This pack holds titles, authors, categories and abstracts only.
+
+CHANGES
+This pack is an adapted copy. Each title and abstract was cut into passages. Fields were reduced to title, authors (shortened), categories and abstract.
+
+NOTICES
+The abstracts are the work of the paper authors. The pack gives no guarantee that the content is correct or current. arXiv did not make this pack and does not endorse it.

@@ -1,0 +1,17 @@
+CIA World Factbook, final edition (pack factbook)
+Source: factbook/factbook.json mirror at commit 144d697 (snapshot 2026-02).
+
+CREDIT
+Central Intelligence Agency (CIA), The World Factbook: https://www.cia.gov/the-world-factbook/
+Each article is one country or area. Its page is at https://www.cia.gov/the-world-factbook/countries/<country name in lower case, words joined by hyphens>/
+The JSON mirror is the repository factbook/factbook.json (https://github.com/factbook/factbook.json), commit 144d697.
+
+LICENSE
+Public domain. The World Factbook is a work of the U.S. Central Intelligence Agency, a U.S. government agency. The JSON mirror states CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/).
+
+CHANGES
+This pack is an adapted copy. The JSON data was converted to text lines of the form "Field: value", one section per Factbook category, and cut into passages. Photographs, maps and flags were not included.
+
+NOTICES
+This pack does not use the CIA seal. The CIA did not make this pack and does not endorse it.
+The Factbook was stopped in 2026. The figures are from the final edition and are out of date for any later period. The pack gives no guarantee that the content is correct or complete.

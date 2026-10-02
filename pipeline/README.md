@@ -52,23 +52,25 @@ scripts/check-pack.sh <id> "<question>"           # inside nix develop; writes d
 
 Without `data/work/<id>/dense/`, `packbuild` builds a keyword-only pack. The next section adds the dense index.
 
+Every released pack needs its notice: pass `--notice pipeline/notices/<id>.txt` to `packbuild build`, or run `packbuild notice` on a built pack. `textbooks-en` and `stackexchange` also take `--credits` with the file that `python -m commonplace_pipeline.credits` writes. The table below is the manifest data; `NOTICE.txt` holds the full credit.
+
 | Pack | Snapshot | License | Attribution |
 |---|---|---|---|
 | wikivoyage-en | 2026-09-01 | CC BY-SA 4.0 | Wikivoyage contributors; Wikimedia dump enwikivoyage-20260901 |
-| stackexchange | 2024-12-31 | CC BY-SA 2.5/3.0/4.0 (per post) | Stack Exchange contributors (links in each thread URL); common-pile/stackexchange@5ec3aa2 |
-| openstax | 2024-01-29 | CC BY 4.0 | OpenStax, Rice University (openstax.org); HuggingFaceTB/openstax_paragraphs |
+| stackexchange | 2024-12-31 | CC BY-SA 2.5/3.0/4.0 (per post) | Stack Exchange, Inc. and the contributors of each site (thread URL in each article; authors in CREDITS.txt.zst); common-pile/stackexchange@5ec3aa2 |
+| openstax | 2024-01-29 | CC BY 4.0 (text of 2024-01-29; CC BY-NC-SA books left out) | OpenStax, Rice University (openstax.org); HuggingFaceTB/openstax_paragraphs |
 | arxiv-abs | 2026-09-25 | CC0 1.0 (arXiv metadata) | arXiv.org metadata via librarian-bots/arxiv-metadata-snapshot@1901619 |
-| medlineplus | 2026-09-26 | Public domain (U.S. NLM) | MedlinePlus, U.S. National Library of Medicine (medlineplus.gov) |
-| wikibooks-en | 2026-04 | CC BY-SA 4.0 | Wikibooks contributors; Kiwix ZIM wikibooks_en_all_nopic_2026-04 |
-| wikiquote-en | 2026-07 | CC BY-SA 4.0 | Wikiquote contributors; Kiwix ZIM wikiquote_en_all_nopic_2026-07 |
-| wikiversity-en | 2026-08 | CC BY-SA 4.0 | Wikiversity contributors; Kiwix ZIM wikiversity_en_all_nopic_2026-08 |
-| wikem-en | 2026-07 | CC BY-SA 3.0 | WikEM contributors (wikem.org); Kiwix ZIM wikem_en_all_nopic_2026-07 |
+| medlineplus | 2026-09-26 | Public domain (U.S. NLM) | Courtesy of MedlinePlus from the National Library of Medicine |
+| wikibooks-en | 2026-04 | CC BY-SA 4.0 and GFDL | Wikibooks contributors; Kiwix ZIM wikibooks_en_all_nopic_2026-04 |
+| wikiquote-en | 2026-07 | CC BY-SA 4.0 (editors' selection; the quotations remain their authors' works) | Wikiquote contributors; Kiwix ZIM wikiquote_en_all_nopic_2026-07 |
+| wikiversity-en | 2026-08 | CC BY-SA 4.0 and GFDL | Wikiversity contributors; Kiwix ZIM wikiversity_en_all_nopic_2026-08 |
+| wikem-en | 2026-07 | CC BY-SA 4.0 | WikEM contributors (wikem.org); Kiwix ZIM wikem_en_all_nopic_2026-07 |
 | archwiki-en | 2026-07 | GFDL 1.3 or later | ArchWiki contributors (wiki.archlinux.org); Kiwix ZIM archlinux_en_all_maxi_2026-07 |
-| devdocs-en | 2026-04 to 2026-08 | Per docset (listed at devdocs.io/about) | DevDocs (devdocs.io) and the authors of each documentation set; Kiwix ZIMs devdocs_en_* |
-| cdc-travel | 2026-09-30 | Public domain (U.S. government work) | Centers for Disease Control and Prevention, Travelers' Health (wwwnc.cdc.gov/travel) |
-| textbooks-en | 2025-03 | CC BY, CC BY-SA, public domain or GFDL (per chapter) | Authors of each book (see the chapter URL); common-pile pressbooks_filtered@1a1d3b5 and libretexts_filtered@70388bc |
+| devdocs-en | 2026-04 to 2026-08 | Per docset (see NOTICE.txt and docs/DATASETS.md) | DevDocs (devdocs.io) and the authors of each documentation set; Kiwix ZIMs devdocs_en_* |
+| cdc-travel | 2026-09-30 | Public domain (U.S. government work) | Centers for Disease Control and Prevention, Travelers' Health (wwwnc.cdc.gov/travel). This content is not endorsed by CDC or HHS. |
+| textbooks-en | 2025-03 | CC BY, CC BY-SA, CC0, public domain or GFDL (per book; see CREDITS.txt) | Authors of each book (CREDITS.txt and the chapter URL); common-pile pressbooks_filtered@1a1d3b5 and libretexts_filtered@70388bc |
 | wiktionary-en | 2026-09-28 | CC BY-SA 4.0 and GFDL | Wiktionary contributors; kaikki.org English extract (Tatu Ylonen, wiktextract) of 2026-09-28 |
-| factbook | 2026-02 | Public domain (U.S. government work); JSON mirror CC0 | Central Intelligence Agency, The World Factbook; factbook/factbook.json@144d697 |
+| factbook | 2026-02 | Public domain (U.S. government work); JSON mirror CC0 | Central Intelligence Agency, The World Factbook (public domain); factbook/factbook.json@144d697 (CC0) |
 
 The common-pile Stack Exchange rows have no scores, accepted flags or post boundaries. So `stackexchange` keeps threads by distinct-author count and drops comments by a heuristic (see the module docstring).
 

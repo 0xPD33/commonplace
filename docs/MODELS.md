@@ -1,6 +1,6 @@
 # Models
 
-Every model that Commonplace uses, with its pinned revision and file hash.
+Every model that Commonplace uses, with its pinned revision and file hash. The model packs ship their license text and credit as `NOTICE.txt` (`pipeline/notices/`), because MIT and the LFM Open License require the text to travel with the weights. The licenses of the models differ from the license of the code.
 `scripts/fetch-models.sh` downloads these exact revisions into `data/models/` and writes `data/models/SHA256SUMS`.
 
 ## On the phone
@@ -8,8 +8,8 @@ Every model that Commonplace uses, with its pinned revision and file hash.
 | Role | Hugging Face repo @ revision | File | SHA-256 | License |
 |---|---|---|---|---|
 | Fallback model (CPU; pack `lfm25-8b-a1b` in `data/library-lfm`) | `LiquidAI/LFM2.5-8B-A1B-GGUF` @ `49c14831707011e64d70b2ebd8462ba08d608434` | `LFM2.5-8B-A1B-Q4_0.gguf` (4.84 GB) | `48ed1465d761311b2fd57b7fb46cf969a20b3a8281945b04e10f52bd1609e715` | LFM Open License v1.0 |
-| Main model (CPU, pack `ling3-tiny`; the app reads it into RAM) | `bartowski/Ling-3.0-tiny-GGUF` @ `ea072726af0d2e8ba325b2f90fc0efa762105a91` | `Ling-3.0-tiny-Q4_0.gguf` (4.62 GB) | `c1a548fd60cfb5a46d6e5fd7635224dec473664c9320a656132106bf7ce23cfb` | MIT |
-| Small model (8 GB phones, emulator) | `LiquidAI/LFM2.5-1.2B-Instruct-GGUF` @ `8ed288026e23958ad9dfa92d53ed773a8eee7125` | `LFM2.5-1.2B-Instruct-Q4_0.gguf` (0.70 GB) | `2ea801949d760cdf1a2cc04a54262c22c3c0c54f0769d57760c9adeb0e59233f` | LFM Open License v1.0 |
+| Main model (CPU, pack `ling3-tiny`; the app reads it into RAM) | `bartowski/Ling-3.0-tiny-GGUF` @ `ea072726af0d2e8ba325b2f90fc0efa762105a91` | `Ling-3.0-tiny-Q4_0.gguf` (4.62 GB) | `c1a548fd60cfb5a46d6e5fd7635224dec473664c9320a656132106bf7ce23cfb` | MIT (model card of `inclusionAI/Ling-3.0-tiny`; the pack ships the MIT text) |
+| Small model (8 GB phones, emulator) | `LiquidAI/LFM2.5-1.2B-Instruct-GGUF` @ `8ed288026e23958ad9dfa92d53ed773a8eee7125` | `LFM2.5-1.2B-Instruct-Q4_0.gguf` (0.70 GB) | `2ea801949d760cdf1a2cc04a54262c22c3c0c54f0769d57760c9adeb0e59233f` | LFM Open License v1.0 (commercial use only below US$10M annual revenue; the pack ships the license text) |
 | LiteRT-LM model (TPU engine setting; runs on LiteRT's CPU backend) | `litert-community/gemma-4-E2B-it-litert-lm` @ `b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1` | `gemma-4-E2B-it.litertlm` (2.59 GB) | `181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c` | Apache-2.0 |
 | Tensor G5 NPU build (blocked: see BENCHMARKS.md) | same repo @ same revision | `gemma-4-E2B-it_Google_Tensor_G5.litertlm` (3.11 GB) | `af1082986639ecde7db95d91be6fe54f8b6b458104734c5bafc204e69d6852dc` | Apache-2.0 |
 | Tested, not used (1B active of 20B) | `deepgrove/maple-preview-GGUF` @ `f5466f918e0c50cdb9d4d47a6f35813509a42a30` | `maple-preview-TQ1_0-head-Q4_K.gguf` (4.98 GB) | `54016e4d543bd688829e67103fc85b8396db94b7f8eb3f81fa95884e44393872` | MIT |

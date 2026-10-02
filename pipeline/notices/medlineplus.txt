@@ -1,0 +1,17 @@
+MedlinePlus health topics (pack medlineplus)
+Source: MedlinePlus health topics XML of 2026-09-26 (snapshot 2026-09-26).
+
+CREDIT
+Courtesy of MedlinePlus from the National Library of Medicine
+https://medlineplus.gov
+Each article in this pack stores a topic name N. The topic page is at https://medlineplus.gov/N.html
+
+LICENSE
+Public domain. MedlinePlus health topic summaries are works of the U.S. National Library of Medicine, a U.S. government agency. This pack uses only these summaries. Pages on medlineplus.gov can show material from other sources under their own terms (for example images). This pack does not contain such material.
+
+CHANGES
+This pack is an adapted copy. The topic summary HTML was converted to plain text and cut into passages. Links, images and videos were removed. The topic groups became section names.
+
+NOTICES
+The National Library of Medicine, the National Institutes of Health and the U.S. Department of Health and Human Services did not make this pack and do not endorse it.
+This information is general. It is not medical advice and does not replace a health professional. The pack gives no guarantee that it is correct, complete or current. Check medlineplus.gov for the current text.

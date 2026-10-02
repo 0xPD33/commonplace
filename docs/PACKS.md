@@ -41,6 +41,7 @@ Passages of one article have consecutive ids (`first_passage .. first_passage + 
 ### Manifest
 
 `manifest.json` lists every file with its size and SHA-256, the snapshot date, the license and attribution, the counts, and the `embedder` block.
+Every release pack holds a `NOTICE.txt` (credit, license names, disclaimers and license texts). `textbooks-en` and `stackexchange` also hold `CREDITS.txt` or `CREDITS.txt.zst`. `packbuild notice` adds these files and `build`, `model` and `wikidata` take `--notice` and `--credits`. The files are listed in the manifest, so verify and import check them like all other files.
 The app refuses a knowledge pack whose `embedder` differs from the installed packs.
 `replaces` names packs that this pack supersedes (`enwiki` replaces `enwiki-core`).
 
@@ -91,6 +92,9 @@ $PB build --input data/work/enwiki-core --out data/library/packs/enwiki-core --p
 $PB model --gguf data/models/llm/Ling-3.0-tiny-Q4_0.gguf --out data/library/packs/ling3-tiny --pack-id ling3-tiny \
   --title "Ling 3.0 tiny (Q4_0)" --role llm-fast --hf-repo bartowski/Ling-3.0-tiny-GGUF \
   --revision ea072726af0d2e8ba325b2f90fc0efa762105a91 --license MIT --link
+
+# Notices: copy the notice into a built pack and fix its license or attribution (sources: pipeline/notices/).
+$PB notice --pack data/library/packs/wikem-en --notice pipeline/notices/wikem-en.txt --license "CC BY-SA 4.0"
 
 # Dense codes on the GPU for a built keyword-only pack, then swap them in (no tantivy rebuild).
 uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/wikivoyage-en

@@ -1,0 +1,18 @@
+WikEM emergency medicine (pack wikem-en)
+Source: Kiwix ZIM file wikem_en_all_nopic_2026-07 (snapshot 2026-07).
+
+CREDIT
+The pages come from WikEM (https://wikem.org), written by WikEM contributors. The Kiwix project (https://kiwix.org) packaged the ZIM file.
+The authors of a page are listed in its page history. Each article in this pack stores its page title T (with underscores for spaces). The page is at https://wikem.org/wiki/T and its history is at https://wikem.org/index.php?title=T&action=history
+
+LICENSE
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/ (legal code: https://creativecommons.org/licenses/by-sa/4.0/legalcode)
+The WikEM site states: "This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License" (https://wikem.org/wiki/WikEM:Copyrights).
+This pack is a collection. Each page keeps the license of its source. The pack as a whole is not placed under a new license.
+
+CHANGES
+This pack is an adapted copy. The page text was converted to plain text and cut into passages. Images, references, navigation boxes and edit links were removed.
+
+NOTICES
+Warranty: the content is provided as is, without warranties of any kind (see section 5 of the license). The pack gives no guarantee that it is correct, complete or current.
+This content is a reference for trained clinicians. It is not medical advice and does not replace clinical judgment, local protocols or current drug references. WikEM and its contributors do not endorse this pack.

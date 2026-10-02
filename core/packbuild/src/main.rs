@@ -5,10 +5,10 @@ use anyhow::{Context, Result, bail, ensure};
 use arrow_array::cast::AsArray;
 use arrow_array::types::{Float64Type, UInt16Type, UInt32Type, UInt64Type};
 use arrow_array::{Array, RecordBatch};
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use commonplace_core::pack::{
-    self, Counts, Embedder, Fact, FORMAT_VERSION, Manifest, ModelInfo, ModelRole, PackType, PassageRecord, dense, frames, import,
-    meta, sparse,
+    self, Counts, Embedder, Fact, FileEntry, FORMAT_VERSION, Manifest, ModelInfo, ModelRole, PackType, PassageRecord, dense, frames,
+    import, meta, sparse,
 };
 use commonplace_core::tools::wikidata;
 use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
@@ -24,6 +24,17 @@ use std::time::Instant;
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
+}
+
+/// License files that travel with a pack: listed in `manifest.json` and verified like every other file.
+#[derive(Args)]
+struct NoticeArgs {
+    /// Copied into the pack as `NOTICE.txt` (credits, license names and texts).
+    #[arg(long)]
+    notice: Option<PathBuf>,
+    /// Copied into the pack as `CREDITS.txt` (`CREDITS.txt.zst` for a .zst file): per-work credits, such as one line per book.
+    #[arg(long)]
+    credits: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]
@@ -55,6 +66,19 @@ enum Cmd {
         /// Skip the tantivy index (dense-only pack).
         #[arg(long)]
         no_sparse: bool,
+        #[command(flatten)]
+        notices: NoticeArgs,
+    },
+    /// Add or replace NOTICE.txt / CREDITS.txt of a built pack and optionally fix its license or attribution.
+    Notice {
+        #[arg(long)]
+        pack: PathBuf,
+        #[command(flatten)]
+        notices: NoticeArgs,
+        #[arg(long)]
+        license: Option<String>,
+        #[arg(long)]
+        attribution: Option<String>,
     },
     /// Rewrite meta.sqlite of a built knowledge pack from `<input>` articles/redirects (same articles).
     Meta {
@@ -82,6 +106,8 @@ enum Cmd {
         out: PathBuf,
         #[arg(long)]
         snapshot: String,
+        #[command(flatten)]
+        notices: NoticeArgs,
     },
     /// Wrap a GGUF file as a model pack.
     Model {
@@ -106,6 +132,11 @@ enum Cmd {
         /// Hard-link instead of copying the GGUF.
         #[arg(long)]
         link: bool,
+        /// Defaults to the Hugging Face repo.
+        #[arg(long)]
+        attribution: Option<String>,
+        #[command(flatten)]
+        notices: NoticeArgs,
     },
     /// Split a pack directory into ≤ part-size tar parts plus `<pack_id>.pack.json`.
     Split {
@@ -415,6 +446,33 @@ fn replace_meta(input: &Path, pack: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Puts NOTICE.txt / CREDITS.txt into a built pack and lists them in the manifest. Other files keep their
+/// hashes, so this is fast for large packs.
+fn add_notices(pack: &Path, n: &NoticeArgs, license: Option<&str>, attribution: Option<&str>) -> Result<()> {
+    let mut m = Manifest::read(pack)?;
+    let credits_name = if n.credits.as_ref().is_some_and(|p| p.extension().is_some_and(|e| e == "zst")) { "CREDITS.txt.zst" } else { "CREDITS.txt" };
+    for (src, name) in [(&n.notice, "NOTICE.txt"), (&n.credits, credits_name)] {
+        let Some(src) = src else { continue };
+        let dest = pack.join(name);
+        std::fs::copy(src, &dest).with_context(|| format!("copy {}", src.display()))?;
+        let bytes = std::fs::metadata(&dest)?.len();
+        if let Some(i) = m.files.iter().position(|f| f.path == name) {
+            m.size_bytes -= m.files.remove(i).bytes;
+        }
+        m.files.push(FileEntry { path: name.into(), bytes, sha256: pack::sha256_file(&dest)? });
+        m.size_bytes += bytes;
+    }
+    m.files.sort_by(|a, b| a.path.cmp(&b.path));
+    if let Some(l) = license {
+        m.license = l.into();
+    }
+    if let Some(a) = attribution {
+        m.attribution = a.into();
+    }
+    std::fs::write(pack.join("manifest.json"), serde_json::to_vec_pretty(&m)?)?;
+    Ok(())
+}
+
 fn build_wikidata(input: &Path, out: &Path, snapshot: &str) -> Result<()> {
     if out.exists() {
         std::fs::remove_dir_all(out)?;
@@ -481,7 +539,19 @@ fn build_wikidata(input: &Path, out: &Path, snapshot: &str) -> Result<()> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn build_model(gguf: &Path, out: &Path, pack_id: &str, title: &str, role: &str, repo: &str, rev: &str, license: &str, n_ctx: u32, link: bool) -> Result<()> {
+fn build_model(
+    gguf: &Path,
+    out: &Path,
+    pack_id: &str,
+    title: &str,
+    role: &str,
+    repo: &str,
+    rev: &str,
+    license: &str,
+    attribution: Option<&str>,
+    n_ctx: u32,
+    link: bool,
+) -> Result<()> {
     std::fs::create_dir_all(out)?;
     let name = gguf.file_name().context("gguf file name")?.to_string_lossy().into_owned();
     let dest = out.join(&name);
@@ -507,7 +577,7 @@ fn build_model(gguf: &Path, out: &Path, pack_id: &str, title: &str, role: &str, 
         build_date: pack::today(),
         replaces: vec![],
         license: license.into(),
-        attribution: repo.into(),
+        attribution: attribution.unwrap_or(repo).into(),
         counts: None,
         embedder: None,
         tantivy_version: None,
@@ -583,22 +653,28 @@ fn split(pack: &Path, out: &Path, part_size: u64) -> Result<()> {
 
 fn main() -> Result<()> {
     match Cli::parse().cmd {
-        Cmd::Build { input, out, pack_id, title, snapshot, license, attribution, replaces, embedder_doc, embedder_query, zstd_level, no_sparse } => {
+        Cmd::Build { input, out, pack_id, title, snapshot, license, attribution, replaces, embedder_doc, embedder_query, zstd_level, no_sparse, notices } => {
             let embedder = input.join("dense").exists().then(|| Embedder {
                 doc: embedder_doc,
                 query: embedder_query,
                 dims: 512,
                 encoding: "binary-sign-mrl".into(),
             });
-            build(&input, &out, &pack_id, &title, &snapshot, &license, &attribution, replaces, embedder, zstd_level, no_sparse)
+            build(&input, &out, &pack_id, &title, &snapshot, &license, &attribution, replaces, embedder, zstd_level, no_sparse)?;
+            add_notices(&out, &notices, None, None)
         }
         Cmd::Meta { input, pack } => replace_meta(&input, &pack),
         Cmd::Dense { input, pack, embedder_doc, embedder_query } => {
             replace_dense(&input, &pack, Embedder { doc: embedder_doc, query: embedder_query, dims: 512, encoding: "binary-sign-mrl".into() })
         }
-        Cmd::Wikidata { input, out, snapshot } => build_wikidata(&input, &out, &snapshot),
-        Cmd::Model { gguf, out, pack_id, title, role, hf_repo, revision, license, n_ctx, link } => {
-            build_model(&gguf, &out, &pack_id, &title, &role, &hf_repo, &revision, &license, n_ctx, link)
+        Cmd::Notice { pack, notices, license, attribution } => add_notices(&pack, &notices, license.as_deref(), attribution.as_deref()),
+        Cmd::Wikidata { input, out, snapshot, notices } => {
+            build_wikidata(&input, &out, &snapshot)?;
+            add_notices(&out, &notices, None, None)
+        }
+        Cmd::Model { gguf, out, pack_id, title, role, hf_repo, revision, license, n_ctx, link, attribution, notices } => {
+            build_model(&gguf, &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
+            add_notices(&out, &notices, None, None)
         }
         Cmd::Split { pack, out, part_size } => split(&pack, &out, part_size),
         Cmd::Verify { pack } => {

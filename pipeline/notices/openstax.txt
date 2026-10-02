@@ -1,0 +1,76 @@
+OpenStax textbooks (pack openstax)
+Source: Hugging Face dataset HuggingFaceTB/openstax_paragraphs (snapshot 2024-01-29), a copy of the text of openstax.org books.
+
+CREDIT
+OpenStax, Rice University: https://openstax.org
+Each article is one chapter section of an OpenStax book. The title reads "<book>: <chapter>". Each article stores the page of its book on openstax.org (https://openstax.org/details/books/<slug>). Where you read a book at https://openstax.org/books/<slug>, OpenStax asks users to credit it as: "Access for free at https://openstax.org/books/<slug>".
+The authors of each book are named on its page at openstax.org and in the book front matter.
+
+LICENSE
+Creative Commons Attribution 4.0 International (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+These books were published under CC BY 4.0 when the text was copied (2024-01-29), as the license file of each OpenStax book repository shows (https://github.com/openstax). In March and April 2026 OpenStax changed the license of the current editions of many books to CC BY-NC-SA 4.0. This pack holds the earlier text under the CC BY 4.0 license that applied to it; Creative Commons licenses are irrevocable for the copies that were already given out. Newer editions at openstax.org can have other terms.
+OpenStax books that were already under CC BY-NC-SA 4.0 at that date are not in this pack: Calculus Volumes 1, 2 and 3, Principles of Accounting Volumes 1 and 2, Business Law I Essentials and Organic Chemistry.
+Third-party material in a book (for example some images) can have other licenses. This pack holds text only.
+This pack is a collection. Each book keeps its license. The pack as a whole is not placed under a new license.
+
+BOOKS IN THIS PACK (English; title, page at openstax.org)
+  World History Volume 1, to 1500: https://openstax.org/details/books/world-history-volume-1
+  World History Volume 2, from 1400: https://openstax.org/details/books/world-history-volume-2
+  Workplace Software and Skills: https://openstax.org/details/books/workplace-software-skills
+  Contemporary Mathematics: https://openstax.org/details/books/contemporary-mathematics
+  Principles of Marketing: https://openstax.org/details/books/principles-marketing
+  Introduction to Philosophy: https://openstax.org/details/books/introduction-philosophy
+  Introduction to Political Science: https://openstax.org/details/books/introduction-political-science
+  Principles of Finance: https://openstax.org/details/books/principles-finance
+  Introduction to Intellectual Property: https://openstax.org/details/books/introduction-intellectual-property
+  College Success Concise: https://openstax.org/details/books/college-success-concise
+  College Success: https://openstax.org/details/books/college-success
+  Preparing for College Success: https://openstax.org/details/books/preparing-for-college-success
+  Business Ethics: https://openstax.org/details/books/business-ethics
+  Introduction to Anthropology: https://openstax.org/details/books/introduction-anthropology
+  Introduction to Sociology 3e: https://openstax.org/details/books/introduction-sociology-3e
+  Psychology 2e: https://openstax.org/details/books/psychology-2e
+  U.S. History: https://openstax.org/details/books/us-history
+  Microbiology: https://openstax.org/details/books/microbiology
+  University Physics Volume 1: https://openstax.org/details/books/university-physics-volume-1
+  University Physics Volume 2: https://openstax.org/details/books/university-physics-volume-2
+  University Physics Volume 3: https://openstax.org/details/books/university-physics-volume-3
+  Elementary Algebra 2e: https://openstax.org/details/books/elementary-algebra-2e
+  Intermediate Algebra 2e: https://openstax.org/details/books/intermediate-algebra-2e
+  Prealgebra 2e: https://openstax.org/details/books/prealgebra-2e
+  Statistics: https://openstax.org/details/books/statistics
+  Entrepreneurship: https://openstax.org/details/books/entrepreneurship
+  Astronomy 2e: https://openstax.org/details/books/astronomy-2e
+  Physics: https://openstax.org/details/books/physics
+  Chemistry 2e: https://openstax.org/details/books/chemistry-2e
+  Chemistry: Atoms First 2e: https://openstax.org/details/books/chemistry-atoms-first-2e
+  Biology 2e: https://openstax.org/details/books/biology-2e
+  Biology for AP® Courses: https://openstax.org/details/books/biology-ap-courses
+  Concepts of Biology: https://openstax.org/details/books/concepts-biology
+  Anatomy and Physiology 2e: https://openstax.org/details/books/anatomy-and-physiology-2e
+  Organizational Behavior: https://openstax.org/details/books/organizational-behavior
+  Principles of Management: https://openstax.org/details/books/principles-management
+  Principles of Economics 3e: https://openstax.org/details/books/principles-economics-3e
+  Principles of Macroeconomics 3e: https://openstax.org/details/books/principles-macroeconomics-3e
+  Principles of Macroeconomics for AP® Courses 2e: https://openstax.org/details/books/principles-macroeconomics-ap-courses-2e
+  Principles of Microeconomics 3e: https://openstax.org/details/books/principles-microeconomics-3e
+  Principles of Microeconomics for AP® Courses 2e: https://openstax.org/details/books/principles-microeconomics-ap-courses-2e
+  Introductory Business Statistics 2e: https://openstax.org/details/books/introductory-business-statistics-2e
+  Introductory Statistics 2e: https://openstax.org/details/books/introductory-statistics-2e
+  Introduction to Business: https://openstax.org/details/books/introduction-business
+  Writing Guide with Handbook: https://openstax.org/details/books/writing-guide
+  Algebra and Trigonometry 2e: https://openstax.org/details/books/algebra-and-trigonometry-2e
+  College Algebra 2e: https://openstax.org/details/books/college-algebra-2e
+  College Algebra with Corequisite Support 2e: https://openstax.org/details/books/college-algebra-corequisite-support-2e
+  Precalculus 2e: https://openstax.org/details/books/precalculus-2e
+  Life, Liberty, and the Pursuit of Happiness: https://openstax.org/details/books/life-liberty-and-pursuit-happiness
+  American Government 3e: https://openstax.org/details/books/american-government-3e
+  College Physics 2e: https://openstax.org/details/books/college-physics-2e
+  College Physics for AP® Courses 2e: https://openstax.org/details/books/college-physics-ap-courses-2e
+
+CHANGES
+This pack is an adapted copy. The text was converted to plain text and cut into passages. Figures, tables, exercises, review questions, answer keys, references and prefaces were left out. Book titles and chapter titles are kept.
+
+NOTICES
+Warranty: the content is provided as is, without warranties of any kind. The text is a copy from 2024; editions at openstax.org can differ.
+OpenStax and OpenStax CNX are trademarks of Rice University. OpenStax did not make this pack and does not endorse it.

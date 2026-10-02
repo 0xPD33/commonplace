@@ -1,0 +1,19 @@
+English Wikiquote (pack wikiquote-en)
+Source: Kiwix ZIM file wikiquote_en_all_nopic_2026-07 (snapshot 2026-07).
+
+CREDIT
+The pages come from Wikiquote (https://en.wikiquote.org), written by Wikiquote contributors. The Kiwix project (https://kiwix.org) packaged the ZIM file.
+The editors of a page are listed in its page history. Each article in this pack stores its page title T (with underscores for spaces). The page is at https://en.wikiquote.org/wiki/T and its history is at https://en.wikiquote.org/w/index.php?title=T&action=history
+
+LICENSE
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/ (legal code: https://creativecommons.org/licenses/by-sa/4.0/legalcode)
+The CC BY-SA license covers the work of the Wikiquote editors: the selection and arrangement of quotations, and the editors' own text (introductions, notes, translations made by editors). The quotations themselves remain the works of their authors or of the holders of their rights. This pack does not license them under CC BY-SA. Check the rights to a quoted work before you reuse it outside brief quotation.
+This pack is a collection. Each page keeps the license of its source. The pack as a whole is not placed under a new license.
+
+CHANGES
+This pack is an adapted copy. The page text was converted to plain text and cut into passages. Images, references, navigation boxes and edit links were removed.
+
+NOTICES
+Warranty: the content is provided as is, without warranties of any kind (see section 5 of the license). The pack gives no guarantee that it is correct, complete or current.
+Wikiquote cannot guarantee that a quotation is correct or that its attribution is right. Check the cited source.
+The names Wikiquote and Wikimedia, and their logos, are trademarks of the Wikimedia Foundation. The Foundation did not make this pack and does not endorse it.

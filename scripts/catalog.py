@@ -16,7 +16,7 @@ DESCRIPTIONS = {
     "lfm25-8b-a1b": "Mid-size answer model (LFM2.5 8B-A1B).",
     "qwen36-35b-a3b": "Deep answer model for Think harder (Qwen3.6 35B-A3B).",
     "arxiv-abs": "Abstracts of arXiv papers.",
-    "stackexchange": "Questions and answers from 52 Stack Exchange sites.",
+    "stackexchange": "Questions and answers from 51 Stack Exchange sites.",
     "textbooks-en": "Open textbooks from Pressbooks and LibreTexts.",
     "openstax": "OpenStax college textbooks.",
     "devdocs-en": "Programming documentation from DevDocs.",

@@ -1,0 +1,19 @@
+English Wikivoyage (pack wikivoyage-en)
+Source: Wikimedia dump enwikivoyage-20260901 (snapshot 2026-09-01).
+
+CREDIT
+The articles come from Wikivoyage (https://en.wikivoyage.org), written by Wikivoyage contributors. Source: https://dumps.wikimedia.org/enwikivoyage/20260901/
+The authors of an article are listed in its page history. Each article in this pack stores its page title T (with underscores for spaces). The article is at https://en.wikivoyage.org/wiki/T and its history is at https://en.wikivoyage.org/w/index.php?title=T&action=history
+
+LICENSE
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0): https://creativecommons.org/licenses/by-sa/4.0/ (legal code: https://creativecommons.org/licenses/by-sa/4.0/legalcode)
+The Wikivoyage site states the license as CC BY-SA (https://en.wikivoyage.org/wiki/Wikivoyage:Copyleft). Older revisions can carry an earlier version of the license; the page history shows them.
+This pack is a collection. Each article keeps the license of its source. The pack as a whole is not placed under a new license.
+
+CHANGES
+This pack is an adapted copy. The wikitext of each article was converted to markdown-like plain text and cut into passages. Listing templates (see, do, buy, eat, drink, sleep, go) became one text line each. Images, maps and navigation boxes were removed.
+
+NOTICES
+Warranty: the content is provided as is, without warranties of any kind (see section 5 of the license). The pack gives no guarantee that it is correct, complete or current.
+Travel information changes. Check prices, opening times, safety and entry rules with official sources before you travel.
+The names Wikivoyage and Wikimedia, and their logos, are trademarks of the Wikimedia Foundation. The Foundation did not make this pack and does not endorse it.

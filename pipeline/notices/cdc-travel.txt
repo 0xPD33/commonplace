@@ -1,0 +1,17 @@
+CDC travel health by destination (pack cdc-travel)
+Source: CDC Travelers' Health destination pages, retrieved 2026-09-30 (snapshot 2026-09-30).
+
+CREDIT
+Centers for Disease Control and Prevention (CDC), Travelers' Health: https://wwwnc.cdc.gov/travel
+Each article in this pack stores a page path P. The destination page is at https://wwwnc.cdc.gov/P
+
+LICENSE
+Public domain. The pages are works of the U.S. Centers for Disease Control and Prevention, a U.S. government agency. CDC content that a third party owns is not part of this pack.
+
+CHANGES
+This pack is an adapted copy. The page HTML was converted to plain text and cut into passages. Images, figures and navigation were removed. Tables became text.
+
+NOTICES
+This content is not endorsed by CDC or HHS.
+CDC and HHS did not make this pack. The CDC name and logo are not used to promote it.
+Travel health advice changes. This copy is from the snapshot date above. Check https://wwwnc.cdc.gov/travel for current advice. The content is not medical advice and does not replace a health professional.

@@ -8,10 +8,87 @@ I built it for the poidh bounty "Build the Best Offline AI Research App for Andr
 
 A naive design spends the phone's compute on raw Wikipedia text at query time. Commonplace prepares the text ahead of time on a desktop. The phone mostly looks things up.
 
-1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index, and the 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. The Ettin-17m cross-encoder reranks the top 24 passages on the phone and the top 40 on the desktop.
+### System overview
+
+The desktop builds the packs. The phone imports them from files and never uses the network. The two dashed boxes exist in the Rust core and in the UniFFI layer, but the app has no screen for them yet.
+
+```mermaid
+flowchart LR
+  subgraph Desktop["Desktop build: pipeline/ and packbuild"]
+    SRC["Dump, ZIM, dataset, GGUF"] --> CHUNK["Chunk into passages"]
+    CHUNK --> EMB["mxbai embeddings on GPU"]
+    EMB --> PB["packbuild"]
+    PB --> PARTS["Pack parts with SHA-256"]
+  end
+  PARTS --> REL["GitHub release packs-2026-09"]
+  REL --> BR
+  subgraph Phone["Phone: no INTERNET permission"]
+    BR["Browser download"] --> SAF["SAF import, SHA-256 checks"]
+    SAF --> LIB
+    subgraph LIB["Library"]
+      KP["Knowledge packs"]
+      WD["wikidata-facts"]
+      MP["Model packs"]
+      UD["My documents"]
+    end
+    SW["Per-pack on/off switch"] -.-> KP
+    subgraph App["App layers"]
+      UI["Compose UI, Kotlin"] --> FFI["UniFFI"]
+      FFI --> CORE["commonplace-core, Rust"]
+      CORE --> ORT["ONNX Runtime encoders"]
+      CORE --> LLM["commonplace-llm, llama.cpp"]
+    end
+    LIB --> CORE
+    CORE -.->|"indexes on the phone"| UD
+  end
+  classDef pending stroke-dasharray: 5 5
+  class UD,SW pending
+```
+
+### From a question to a cited answer
+
+The answer card appears after the rerank, before the model writes a word. The intent head and the turn-kind head are small classifiers on the leaf-mt embedding of the question. The turn-kind head needs the language model. Without it, every message counts as a question.
+
+```mermaid
+flowchart TD
+  Q["Question"] --> TK{"Turn-kind head"}
+  TK -->|"reformat or small talk"| GEN
+  TK -->|"question"| REW["Question rewrite, off by default"]
+  TK -->|"question"| ENT["Entity linking"]
+  REW -.-> ENT
+  TK -->|"question"| INT["Intent head: lookup, explain, compare, calc"]
+  ENT --> BM25["BM25 per pack, tantivy"]
+  ENT --> ENC["leaf-mt query encoder"]
+  ENC --> IVF["Binary IVF, 512-bit codes"]
+  BM25 --> RRF["RRF fusion"]
+  IVF --> RRF
+  ENT --> RRF
+  INT -.->|"compare: one search each"| RRF
+  RRF --> RR["Ettin cross-encoder rerank"]
+  RR --> CARD
+  subgraph CARD["Answer card, shown early"]
+    P["Best passage, highlighted sentence"]
+    F["Wikidata facts"]
+    R["Reader snippet, DeBERTa, optional"]
+  end
+  RR -.->|"deep or unresolved follow-up"| PLAN["Planner subqueries"]
+  PLAN -.-> RRF
+  RR --> EV["Evidence selection, 600 tokens"]
+  PLAN -.-> EV
+  EV --> COMP["Optional compute: ratios, units, calc"]
+  INT -.->|"calc"| COMP
+  COMP --> GEN["Ling-3.0-tiny streams answer"]
+  THINK["Optional thinking mode"] -.-> GEN
+  GEN --> CHK["Citation post-check"]
+  CHK --> ANS["Answer with citations"]
+```
+
+### Design choices
+
+1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index, and the 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. The Ettin-17m cross-encoder reranks the top 24 fused passages on the phone (with an 8-bit copy of the model) and the top 40 on the desktop.
 2. **An instant answer card.** The best passage, Wikidata facts and the source list appear before the model writes a word. The matching sentence is highlighted. For simple lookups, an extractive reader adds a short snippet.
 3. **A small model writes the answer.** Ling-3.0-tiny (7.9B total and 1.3B active parameters, MIT) runs fully in RAM through llama.cpp. It reads compact evidence, not whole articles. The app caches the state of the system prompt, so each question only pays for its own evidence.
-4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist. It underlines sentences with numbers that are not in the evidence. Arithmetic, unit conversions and Wikidata ratios run in code.
+4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist. It underlines sentences with numbers that are not in the evidence. Unit conversions and Wikidata ratios run in code. For an explicit calculation, the model writes an expression and code evaluates it.
 5. **Comparisons and follow-ups.** A comparison runs one search for each item. A follow-up uses the earlier turns. A turn such as "make it shorter" rewrites the last answer and does not search.
 6. **Thinking mode.** The brain button next to the question box lets Ling reason before it answers. The default budget is 256 tokens, and you can change it in Settings.
 

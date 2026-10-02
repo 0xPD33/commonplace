@@ -454,7 +454,7 @@ private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: ()
             OutlinedButton(onClick = onThinkHarder, modifier = Modifier.offset(x = 12.dp).testTag("think_harder")) {
                 Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Think harder · 1–2 min")
+                Text("Ask the deep model · 1–2 min")
             }
         }
     }

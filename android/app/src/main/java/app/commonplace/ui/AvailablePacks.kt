@@ -40,6 +40,15 @@ class PickFromDownloads : ActivityResultContracts.OpenMultipleDocuments() {
         )
 }
 
+/** The single-file picker for My documents, opened on the Downloads folder. */
+class PickDocument : ActivityResultContracts.OpenDocument() {
+    override fun createIntent(context: Context, input: Array<String>) =
+        super.createIntent(context, input).putExtra(
+            DocumentsContract.EXTRA_INITIAL_URI,
+            DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Download"),
+        )
+}
+
 @Composable
 fun AvailableRow(p: CatalogPack, onClick: () -> Unit) {
     Surface(onClick = onClick, shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("available_row")) {

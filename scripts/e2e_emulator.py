@@ -149,6 +149,165 @@ def wait_answer(r: Run, question: str, label: str, timeout: float) -> dict:
     return {"question": question, "total_s": round(total_s, 1), "app_timings": timings}
 
 
+FIXTURES = ROOT / "scripts/fixtures"
+# The text of scripts/fixtures/quillfeather.pdf, one string per page. The island and its people are invented, so
+# only the added document can answer a question about them.
+DOC_PAGES = [
+    "Quillfeather Lighthouse: a field guide\n\nThe Quillfeather Lighthouse stands on a granite spur above the northern shore of the invented island of Marrowby. The tower was finished in 1887 and is forty-one metres tall. Its builders cut the blocks from the spur itself, so the tower looks like a grey tooth growing out of the rock. The first lamp burned whale oil. In 1931 the keepers changed to paraffin, and in 1962 the light became electric. Sailors call the beam the Quill because it sweeps the water in a thin white stroke every nine seconds.\n\nVisitors reach the lighthouse by a footpath of two hundred and twelve steps that starts at the old ferry pier. The climb takes about twenty minutes. A small museum in the oil store shows lamps, logbooks and the fog bell. The museum opens from May to September and is closed on Mondays.",
+    "The keepers of Quillfeather\n\nThe first head keeper of the Quillfeather Lighthouse was Odalys Brennmark. She arrived in 1887 with her brother and kept the light for thirty-three years. Her logbooks record every ship that passed, the wind, and the state of the lamp. The logbooks also record that she taught the children of the island to read in the lamp room on winter evenings.\n\nAfter Brennmark retired in 1920, the post went to Tobiah Wrenfield, who served until the light was automated in 1989. Wrenfield kept bees on the south slope. The honey of the Quillfeather bees is still sold at the museum shop, and the label shows a small drawing of the tower.",
+    "The great storm and the fog bell\n\nOn the night of the ninth of November 1913, a storm that the islanders still call the Grey Week drove the steamer Halcyon Marsh onto the Marrowby shoals. The keepers saw the first rockets at midnight. Brennmark lit a second lamp in the gallery and rang the fog bell by hand for eleven hours so that the lifeboat from Skerry Quay could find the channel. All forty-seven passengers and crew reached the shore alive.\n\nThe fog bell weighs ninety kilograms and still hangs beside the door of the museum. Visitors may ring it once. The rope was replaced in 2004, and the brass plate under the bell lists the names of the forty-seven people who were saved.",
+]
+DOC_QUESTION = "Quillfeather Lighthouse Odalys Brennmark"
+
+
+def subtree_text(n: ET.Element) -> str:
+    return " | ".join(filter(None, ((d.get("text") or d.get("content-desc") or "") for d in n.iter("node"))))
+
+
+def new_topic(r: Run) -> None:
+    ui = r.ui
+    n = ui.find(tag="new_topic")
+    if n is not None:
+        ui.tap(n)
+        ui.wait(10, tag="welcome")
+
+
+def open_library(r: Run) -> None:
+    r.ui.tap(r.ui.wait(60, tag="open_library"))
+    r.ui.wait(10, tag="library_list")
+
+
+def pack_row(ui: Ui, title: str) -> ET.Element | None:
+    for n in ui.dump().iter("node"):
+        if n.get("resource-id", "").endswith("pack_row") and title in subtree_text(n):
+            return n
+    return None
+
+
+def scroll_to_row(r: Run, title: str) -> ET.Element:
+    ui = r.ui
+    for _ in range(10):
+        row = pack_row(ui, title)
+        if row is not None:
+            return row
+        adb("shell", "input", "swipe", "540", "1800", "540", "900", "300")
+        time.sleep(0.8)
+    raise TimeoutError(f"no pack row with {title!r}")
+
+
+def row_child(row: ET.Element, tag: str | None = None, desc: str | None = None) -> ET.Element:
+    for d in row.iter("node"):
+        if tag and d.get("resource-id", "").endswith(tag):
+            return d
+        if desc and d.get("content-desc") == desc:
+            return d
+    raise RuntimeError(f"no {tag or desc} in the row: {subtree_text(row)}")
+
+
+def set_switch(r: Run, title: str, on: bool) -> None:
+    """Tap the row's switch and wait until the row shows the new state ("Off: not searched" when off)."""
+    ui = r.ui
+    row = scroll_to_row(r, title)
+    if ("Off: not searched" not in subtree_text(row)) == on:
+        raise RuntimeError(f"{title} is already {'on' if on else 'off'}")
+    ui.tap(row_child(row, tag="pack_switch"))
+    end = time.time() + 30
+    while time.time() < end:
+        row = pack_row(ui, title)
+        if row is not None and ("Off: not searched" not in subtree_text(row)) == on:
+            return
+        time.sleep(0.7)
+    raise TimeoutError(f"{title} did not switch {'on' if on else 'off'}")
+
+
+def remove_row(r: Run, title: str) -> None:
+    """Remove through the row's menu and the confirmation dialog (its own window: no resource ids)."""
+    ui = r.ui
+    ui.tap(row_child(scroll_to_row(r, title), desc="Actions"))
+    ui.tap(ui.wait(5, text="Remove"))
+    ui.wait(5, contains=f"Remove {title}?")
+    ui.tap(ui.wait(5, text="Remove"))
+
+
+def ask_card(r: Run, question: str, label: str, timeout: float = 150) -> dict:
+    """Ask on a fresh topic, wait for the answer card, stop the answer, and return the card and source text."""
+    ui = r.ui
+    new_topic(r)
+    ui.tap(ui.wait(20, tag="ask_input"))
+    r.type_text(question)
+    ui.tap(ui.wait(10, tag="ask_send"))
+    ui.wait(15, tag="turn_query", contains=question)
+    card = subtree_text(ui.wait(timeout, tag="evidence_card"))
+    stop = ui.find(tag="ask_stop")
+    if stop is not None:
+        ui.tap(stop)
+    end = time.time() + 60
+    while ui.find(tag="ask_stop") is not None and time.time() < end:
+        time.sleep(1)
+    row = ui.find(tag="sources_row")
+    sources = subtree_text(row) if row is not None else ""
+    r.shot(f"{label}-card", card.replace("\n", " ")[:160])
+    return {"card": card, "sources": sources}
+
+
+def fresh_app(r: Run, remove_docs: bool = True) -> None:
+    if remove_docs:
+        adb("shell", "run-as", PKG, "sh", "-c", "'rm -rf files/library/packs/doc-*'")
+    adb("shell", "am", "force-stop", PKG)
+    adb("shell", "am", "start", "-n", f"{PKG}/.MainActivity")
+    r.ui.wait(90, tag="open_library")
+    r.ui.wait(120, contains="Ready")
+
+
+def pick_from_downloads(r: Run, filename: str) -> None:
+    ui = r.ui
+    for _ in range(3):
+        try:
+            ui.tap(ui.wait(10, text=filename))
+            return
+        except TimeoutError:
+            ui.tap(ui.wait(15, text="Show roots"))
+            time.sleep(1.5)
+            ui.tap(ui.wait(10, text="Downloads"))
+    raise TimeoutError(f"{filename} not shown in the picker")
+
+
+def tap_add_document(r: Run) -> None:
+    """Scroll until the button is clear of the system bar and the floating button, then tap it."""
+    ui = r.ui
+    for _ in range(10):
+        n = ui.find(tag="add_document")
+        if n is not None and 300 < ui.center(n)[1] < 2080:
+            ui.tap(n)
+            return
+        adb("shell", "input", "swipe", "540", "1700", "540", "900", "300")
+        time.sleep(0.8)
+    raise TimeoutError("Add document is not reachable")
+
+
+def add_document(r: Run, filename: str, label: str) -> None:
+    """Library is open: tap Add document, pick the file from Downloads, wait until indexing ends."""
+    ui = r.ui
+    tap_add_document(r)
+    pick_from_downloads(r, filename)
+    seen = counted = False
+    t0 = time.time()
+    end = t0 + 600
+    while time.time() < end:
+        n = ui.find(tag="import_progress")
+        if n is None:
+            if seen or time.time() - t0 > 20:
+                break
+        else:
+            seen = True
+            if not counted and "passages" in subtree_text(n):
+                counted = True
+                r.shot(f"{label}-indexing", subtree_text(n))
+        time.sleep(0.5)
+    else:
+        raise TimeoutError("indexing did not finish")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--install", action="store_true", help="install the debug APK first")
@@ -160,7 +319,9 @@ def main() -> int:
     ap.add_argument("--import-dir", help="dist dir of a split pack (packbuild split): test the SAF import with it")
     ap.add_argument("--catalog-dir", help="split packs plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads")
     ap.add_argument("--withhold", default="", help="file of --catalog-dir that is missing at the first install and added for the second")
-    ap.add_argument("--only", nargs="*", default=[], help="run only these steps")
+    ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
+    ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
+    ap.add_argument("--only", nargs="*", default=[], help="run only these steps (pack-switch, my-pdf, my-txt, my-progress, my-errors, plus the names above)")
     args = ap.parse_args()
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -471,6 +632,132 @@ def main() -> int:
             r.back()
         finally:
             adb("shell", "cmd", "uimode", "night", "no")
+
+    @step("pack-switch")
+    def _():
+        # A pack that is switched off is installed but not searched; its source must vanish and return.
+        manifest = json.loads(adb("shell", "run-as", PKG, "cat", f"files/library/packs/{args.toggle_pack}/manifest.json"))
+        title = manifest["title"]
+        fresh_app(r, remove_docs=False)
+        before = ask_card(r, args.toggle_question, "switch-on")
+        if title not in before["card"]:
+            raise RuntimeError(f"{title} is not the top source of {args.toggle_question!r}: {before['card']!r}")
+        open_library(r)
+        scroll_to_row(r, title)
+        r.shot("switch-library-on", "every knowledge pack row has a switch")
+        set_switch(r, title, on=False)
+        r.shot("switch-library-off", f"{title}: dimmed, Off: not searched")
+        r.back()
+        try:
+            off = ask_card(r, args.toggle_question, "switch-off")
+            if title in off["card"] + off["sources"]:
+                raise RuntimeError(f"{title} still answers while off: {off['card']!r}")
+        finally:
+            open_library(r)
+            set_switch(r, title, on=True)
+        r.shot("switch-library-back-on")
+        r.back()
+        after = ask_card(r, args.toggle_question, "switch-back-on")
+        if title not in after["card"]:
+            raise RuntimeError(f"{title} did not return after switching on: {after['card']!r}")
+
+    def check_doc_source(res: dict, title: str, page: int) -> None:
+        # The top card may be any page of the document; the page with the answer must be among the sources.
+        if title not in res["card"] or not re.search(r"p\. \d", res["card"]) or f"p. {page}" not in res["card"] + res["sources"]:
+            raise RuntimeError(f"expected {title!r}, a 'p. N' and 'p. {page}' in the card or sources: {res!r}")
+
+    def doc_cycle(filename: str, title: str, label: str, page: int) -> None:
+        """Add the file, find its passage by a question, switch it off, ask again, then remove it."""
+        fresh_app(r)
+        open_library(r)
+        add_document(r, filename, label)
+        scroll_to_row(r, title)
+        r.shot(f"{label}-library", f"{title} listed under My documents")
+        r.back()
+        check_doc_source(ask_card(r, DOC_QUESTION, f"{label}-on"), title, page)
+        open_library(r)
+        set_switch(r, title, on=False)
+        r.shot(f"{label}-library-off")
+        r.back()
+        off = ask_card(r, DOC_QUESTION, f"{label}-off")
+        if title in off["card"] + off["sources"]:
+            raise RuntimeError(f"{title} answers while off: {off['card']!r}")
+        open_library(r)
+        remove_row(r, title)
+        ui.wait(15, contains=f"Removed {title}")
+        time.sleep(1)
+        if pack_row(ui, title) is not None:
+            raise RuntimeError("the document is still listed after Remove")
+        left = adb("shell", "run-as", PKG, "ls", "files/library/packs").split()
+        if any(i.startswith("doc-") for i in left):
+            raise RuntimeError(f"pack directory left behind: {left}")
+        r.shot(f"{label}-removed")
+        r.back()
+
+    @step("my-pdf")
+    def _():
+        adb("shell", "rm", "-f", "/sdcard/Download/quillfeather.pdf")
+        adb("push", "-q", str(FIXTURES / "quillfeather.pdf"), "/sdcard/Download/")
+        if int(adb("shell", "getprop", "ro.build.version.sdk").strip()) < 35:
+            print("  note: this device has no platform PDF text API unless SDK extension 13 is present")
+        doc_cycle("quillfeather.pdf", "quillfeather", "pdf", page=2)
+
+    @step("my-txt")
+    def _():
+        # A form feed starts a new page, so the keeper's paragraph is on page 2 as in the PDF.
+        tmp = out / "harbour-notes.txt"
+        tmp.write_text("\f".join(DOC_PAGES), encoding="utf-8")
+        adb("shell", "rm", "-f", "/sdcard/Download/harbour-notes.txt")
+        adb("push", "-q", str(tmp), "/sdcard/Download/")
+        doc_cycle("harbour-notes.txt", "harbour-notes", "txt", page=2)
+
+    @step("my-progress")
+    def _():
+        # A long file keeps the progress card on screen: "Indexing <title>…" and passages done of total.
+        import random
+
+        rng = random.Random(7)
+        words = " ".join(DOC_PAGES).replace("\n", " ").split()
+        pages = [" ".join(rng.choice(words) for _ in range(400)) for _ in range(150)]
+        big = out / "long-notes.txt"
+        big.write_text("\f".join(pages), encoding="utf-8")
+        adb("push", "-q", str(big), "/sdcard/Download/")
+        fresh_app(r)
+        open_library(r)
+        add_document(r, "long-notes.txt", "progress")
+        if not any(s["step"] == "progress-indexing" for s in r.steps):
+            raise RuntimeError("the progress card never showed passage counts")
+        scroll_to_row(r, "long-notes")
+        r.shot("progress-done", "the long document is listed with its passage count")
+        remove_row(r, "long-notes")
+        ui.wait(15, contains="Removed long-notes")
+        r.back()
+
+    @step("my-errors")
+    def _():
+        # The core's own message is shown, without the "msg=" wrapper: an empty file, then the same file twice.
+        empty = out / "empty-note.txt"
+        empty.write_text("  \n", encoding="utf-8")
+        adb("push", "-q", str(empty), "/sdcard/Download/")
+        tmp = out / "harbour-notes.txt"
+        tmp.write_text("\f".join(DOC_PAGES), encoding="utf-8")
+        adb("push", "-q", str(tmp), "/sdcard/Download/")
+        fresh_app(r)
+        open_library(r)
+        tap_add_document(r)
+        pick_from_downloads(r, "empty-note.txt")
+        msg = ui.wait(120, contains="no text to search").get("text")
+        r.shot("error-empty", msg)
+        add_document(r, "harbour-notes.txt", "twice")
+        tap_add_document(r)
+        pick_from_downloads(r, "harbour-notes.txt")
+        msg = ui.wait(120, contains="already in your library").get("text")
+        if "msg=" in msg:
+            raise RuntimeError(f"raw error text: {msg}")
+        r.shot("error-duplicate", msg)
+        remove_row(r, "harbour-notes")
+        ui.wait(15, contains="Removed harbour-notes")
+        r.back()
 
     for name, fn in flows:
         if args.only and name not in args.only:

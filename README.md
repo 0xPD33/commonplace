@@ -10,7 +10,7 @@ A naive design spends the phone's compute on raw Wikipedia text at query time. C
 
 ### System overview
 
-The desktop builds the packs. The phone imports them from files and never uses the network. The two dashed boxes exist in the Rust core and in the UniFFI layer, but the app has no screen for them yet.
+The desktop builds the packs. The phone imports them from files and never uses the network. In Library, each knowledge pack and the Wikidata pack has an on/off switch, and "My documents" indexes a PDF, text or Markdown file on the phone.
 
 ```mermaid
 flowchart LR
@@ -41,8 +41,6 @@ flowchart LR
     LIB --> CORE
     CORE -.->|"indexes on the phone"| UD
   end
-  classDef pending stroke-dasharray: 5 5
-  class UD,SW pending
 ```
 
 ### From a question to a cited answer
@@ -107,7 +105,7 @@ The question rewrite step ("Understand the question first" in Settings) is off b
 | Pixel 10 speed | Card median 0.91 s, first word about 7 s, Ling decode about 18 tok/s on a cool phone and 8-11 tok/s on a hot phone ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)) |
 | Quality (63 seed questions, desktop) | Score ratio 0.52 against Claude with web search ([docs/EVAL.md](docs/EVAL.md)) |
 | LiteRT-LM engine (Gemma 4 E2B) | Works on the CPU. The Tensor G5 NPU path is blocked by a library version mismatch. |
-| Not done | Per-pack switches, on-device document import and a catalog-based pack install are in progress. A heat test over many questions is open. |
+| Not done | A heat test over many questions is open. |
 
 ## Try it
 

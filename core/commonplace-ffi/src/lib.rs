@@ -82,6 +82,8 @@ pub struct PackInfo {
     pub attribution: String,
     pub has_dense: bool,
     pub has_cards: bool,
+    /// False when the user switched the pack off: installed and counted, but not searched.
+    pub enabled: bool,
 }
 
 #[derive(uniffi::Record)]
@@ -106,7 +108,9 @@ pub struct LibraryInfo {
     pub packs: Vec<PackInfo>,
     pub models: Vec<ModelPackInfo>,
     pub skipped: Vec<SkippedPack>,
+    /// Installed, whether or not switched on (pack id `wikidata-facts`).
     pub has_wikidata: bool,
+    pub wikidata_enabled: bool,
     pub wikidata_size_bytes: u64,
     pub total_bytes: u64,
     pub cap_bytes: u64,
@@ -572,26 +576,31 @@ impl CommonplaceEngine {
 
     pub fn library(&self) -> LibraryInfo {
         let lib: Arc<Library> = self.engine.library();
+        let info = |m: &pack::Manifest, has_dense: bool, has_cards: bool, enabled: bool| PackInfo {
+            pack_id: m.pack_id.clone(),
+            title: m.title.clone(),
+            kind: "knowledge".into(),
+            snapshot_date: m.snapshot_date.clone(),
+            size_bytes: m.size_bytes,
+            articles: m.counts.as_ref().map(|c| c.articles).unwrap_or(0),
+            passages: m.counts.as_ref().map(|c| c.passages).unwrap_or(0),
+            license: m.license.clone(),
+            attribution: m.attribution.clone(),
+            has_dense,
+            has_cards,
+            enabled,
+        };
+        let packs_dir = Library::packs_dir(&lib.root);
         let packs = lib
             .packs
             .iter()
-            .map(|p| {
-                let m = &p.manifest;
-                PackInfo {
-                    pack_id: m.pack_id.clone(),
-                    title: m.title.clone(),
-                    kind: "knowledge".into(),
-                    snapshot_date: m.snapshot_date.clone(),
-                    size_bytes: m.size_bytes,
-                    articles: m.counts.as_ref().map(|c| c.articles).unwrap_or(0),
-                    passages: m.counts.as_ref().map(|c| c.passages).unwrap_or(0),
-                    license: m.license.clone(),
-                    attribution: m.attribution.clone(),
-                    has_dense: p.dense.is_some(),
-                    has_cards: p.cards.is_some(),
-                }
-            })
+            .map(|p| info(&p.manifest, p.dense.is_some(), p.cards.is_some(), true))
+            .chain(lib.disabled.iter().filter(|m| m.pack_type == PackType::Knowledge).map(|m| {
+                let dir = packs_dir.join(&m.pack_id);
+                info(m, dir.join("dense").exists(), dir.join("cards").exists(), false)
+            }))
             .collect();
+        let wikidata = lib.wikidata.as_ref().map(|(m, _)| m).or_else(|| lib.disabled.iter().find(|m| m.pack_type == PackType::Wikidata));
         let models = lib
             .models
             .iter()
@@ -610,8 +619,9 @@ impl CommonplaceEngine {
             packs,
             models,
             skipped: lib.skipped.iter().map(|(p, r)| SkippedPack { pack_id: p.clone(), reason: r.clone() }).collect(),
-            has_wikidata: lib.wikidata.is_some(),
-            wikidata_size_bytes: lib.wikidata.as_ref().map(|(m, _)| m.size_bytes).unwrap_or(0),
+            has_wikidata: wikidata.is_some(),
+            wikidata_enabled: lib.wikidata.is_some(),
+            wikidata_size_bytes: wikidata.map(|m| m.size_bytes).unwrap_or(0),
             total_bytes: lib.total_bytes(),
             cap_bytes: FOOTPRINT_CAP,
             snapshot_date: lib.snapshot_date(),
@@ -779,9 +789,15 @@ impl CommonplaceEngine {
         // Drop open readers before deleting their files.
         let tmp = dir.with_file_name(format!(".removing-{pack_id}"));
         std::fs::rename(&dir, &tmp).map_err(anyhow::Error::from)?;
+        Library::set_enabled(&self.engine.cfg.library_dir, &pack_id, true)?;
         self.engine.reload_library()?;
         std::fs::remove_dir_all(&tmp).map_err(anyhow::Error::from)?;
         Ok(())
+    }
+
+    /// Switch a knowledge or Wikidata pack on or off. Persists in the library and keeps the loaded model.
+    pub fn set_pack_enabled(&self, pack_id: String, enabled: bool) -> R<()> {
+        Ok(self.engine.set_pack_enabled(&pack_id, enabled)?)
     }
 
     /// Re-hash a pack. Returns the files that do not match its manifest.

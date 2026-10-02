@@ -30,11 +30,32 @@ pub struct Library {
     pub embedder: Option<Embedder>,
     /// Packs that were found but not loaded, with the reason.
     pub skipped: Vec<(String, String)>,
+    /// Knowledge and Wikidata packs the user switched off (`disabled.json`). Manifest only: not opened or searched.
+    pub disabled: Vec<Manifest>,
 }
 
 impl Library {
     pub fn packs_dir(root: &Path) -> PathBuf {
         root.join("packs")
+    }
+
+    /// Ids in `<root>/disabled.json`; a missing or unreadable file means everything is enabled.
+    pub fn disabled_ids(root: &Path) -> Vec<String> {
+        std::fs::read(root.join("disabled.json")).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+    }
+
+    /// Record `pack_id` as on or off. Takes effect on the next `open`.
+    pub fn set_enabled(root: &Path, pack_id: &str, enabled: bool) -> Result<()> {
+        let mut ids = Self::disabled_ids(root);
+        if ids.iter().any(|i| i == pack_id) == enabled {
+            if enabled {
+                ids.retain(|i| i != pack_id);
+            } else {
+                ids.push(pack_id.to_string());
+            }
+            std::fs::write(root.join("disabled.json"), serde_json::to_vec(&ids)?)?;
+        }
+        Ok(())
     }
 
     pub fn open(root: &Path) -> Result<Self> {
@@ -47,10 +68,17 @@ impl Library {
             .collect();
         entries.sort();
         let manifests: Vec<(PathBuf, Result<Manifest>)> = entries.into_iter().map(|p| (p.clone(), Manifest::read(&p))).collect();
-        let replaced: Vec<String> =
-            manifests.iter().filter_map(|(_, m)| m.as_ref().ok()).flat_map(|m| m.replaces.clone()).collect();
+        let off = Self::disabled_ids(root);
+        // A switched-off pack must not hide the pack it replaces.
+        let replaced: Vec<String> = manifests
+            .iter()
+            .filter_map(|(_, m)| m.as_ref().ok())
+            .filter(|m| !off.contains(&m.pack_id))
+            .flat_map(|m| m.replaces.clone())
+            .collect();
 
-        let mut lib = Library { root: root.to_path_buf(), packs: vec![], wikidata: None, models: vec![], embedder: None, skipped: vec![] };
+        let mut lib =
+            Library { root: root.to_path_buf(), packs: vec![], wikidata: None, models: vec![], embedder: None, skipped: vec![], disabled: vec![] };
         for (path, m) in manifests {
             let name = path.file_name().unwrap().to_string_lossy().into_owned();
             let m = match m {
@@ -62,6 +90,10 @@ impl Library {
             };
             if replaced.contains(&m.pack_id) {
                 lib.skipped.push((m.pack_id.clone(), "replaced by a larger pack".into()));
+                continue;
+            }
+            if m.pack_type != PackType::Model && off.contains(&m.pack_id) {
+                lib.disabled.push(m);
                 continue;
             }
             match m.pack_type {

@@ -11,7 +11,7 @@ use crate::retrieval::{Hit, RetrievalSettings, Retriever, select_diverse};
 use crate::route::{self, Route};
 use crate::telemetry::{self, QueryRecord};
 use crate::tools::{calc, units, wikidata::WdFact, wikidata::format_num};
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::path::PathBuf;
@@ -303,6 +303,15 @@ impl Engine {
         let lib = Library::open(&self.cfg.library_dir)?;
         *self.lib.write().unwrap() = Arc::new(lib);
         Ok(())
+    }
+
+    /// Switch a knowledge or Wikidata pack on or off, then reload. Keeps the loaded LLM.
+    pub fn set_pack_enabled(&self, pack_id: &str, enabled: bool) -> Result<()> {
+        let lib = self.library();
+        let known = lib.packs.iter().map(|p| &p.manifest).chain(lib.wikidata.iter().map(|(m, _)| m)).chain(&lib.disabled).any(|m| m.pack_id == pack_id);
+        ensure!(known, "{pack_id} is not an installed knowledge or Wikidata pack");
+        Library::set_enabled(&self.cfg.library_dir, pack_id, enabled)?;
+        self.reload_library()
     }
 
     pub fn set_llm(&self, role: ModelRole, llm: Option<Arc<dyn LlmBackend>>) {

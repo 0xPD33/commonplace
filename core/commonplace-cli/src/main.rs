@@ -136,6 +136,18 @@ enum Cmd {
     },
     /// Library, model and CPU info.
     Info,
+    /// Switch a knowledge or Wikidata pack on or off (stored in <library>/disabled.json).
+    Pack {
+        #[arg(value_enum)]
+        action: PackAction,
+        id: String,
+    },
+}
+
+#[derive(clap::ValueEnum, Clone, Copy)]
+enum PackAction {
+    Enable,
+    Disable,
 }
 
 fn engine(o: &Opts) -> Result<Engine> {
@@ -348,7 +360,16 @@ fn main() -> Result<()> {
             if let Some((m, _)) = &lib.wikidata {
                 println!("wikidata {}", m.snapshot_date);
             }
+            for m in &lib.disabled {
+                println!("disabled {} — {}", m.pack_id, m.title);
+            }
             println!("total {:.2} GB", lib.total_bytes() as f64 / 1e9);
+        }
+        Cmd::Pack { action, id } => {
+            let e = engine(&Opts { no_llm: true, ..o.clone() })?;
+            let enable = matches!(action, PackAction::Enable);
+            e.set_pack_enabled(id, enable)?;
+            println!("{id} {}", if enable { "enabled" } else { "disabled" });
         }
         Cmd::Retrieve { query, k, json } => {
             let e = engine(&Opts { no_llm: true, ..o.clone() })?;

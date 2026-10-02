@@ -1,0 +1,104 @@
+# Packs
+
+A pack is a directory of files that the app reads with `mmap`. The Rust crate `commonplace-core` defines the format (`core/commonplace-core/src/pack/`). `packbuild` writes packs through the same code, so the writer and the reader cannot drift.
+
+There are three pack types: `knowledge`, `wikidata` and `model`.
+
+## Layout (format version 1)
+
+```
+<pack_id>/
+  manifest.json
+  meta.sqlite        articles(id, title, title_norm, qid, popularity, url_title, oneliner,
+                              first_passage, n_passages), redirects(from_norm, article_id), sources
+  store/             passages: dict.zstd, frames.bin, frames.idx
+  cards/             optional fact cards, same frame layout, one record per passage
+  tantivy/           optional BM25 index (tantivy 0.26.2)
+  dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
+  wikidata.sqlite    wikidata packs only
+  <model>.gguf       model packs only
+```
+
+### Frame store (`store/`, `cards/`)
+
+- `frames.bin` holds zstd frames. Each frame holds 64 records and uses the shared dictionary `dict.zstd`.
+- `frames.idx`: magic `CPFI`, u32 version, u32 records per frame, u64 record count, u64 frame count, then `frames + 1` u64 byte offsets.
+- A decompressed frame is: u32 `n`, `n + 1` u32 offsets, record bytes.
+- A passage record is: u32 article id, u16 ordinal, u16 section-path length, section path, text.
+- A card record is one line per fact: `fact text \t passage ids (comma separated)`.
+
+To read passage `p`, the app decompresses frame `p / 64` only.
+Passages of one article have consecutive ids (`first_passage .. first_passage + n_passages`).
+
+### Dense index (`dense/`)
+
+- Codes are the first 512 dimensions of an mxbai embedding, sign-binarized, packed like `numpy.packbits` (dimension `d` is bit `0x80 >> (d % 8)` of byte `d / 8`).
+- `centroids.f16`: `n_lists × 512` half floats. `lists.idx`: `n_lists + 1` u64 code offsets.
+- `codes.bin` (64 bytes per code) and `ids.bin` (u32 passage id per code) are grouped by list.
+- Search: the float query picks the `nprobe` best lists, a Hamming scan keeps 1,000 codes, and float·(±1) rescoring keeps 200.
+- The dense index can cover fewer passages than the store (`ids.u32` lists the covered ones).
+
+### Manifest
+
+`manifest.json` lists every file with its size and SHA-256, the snapshot date, the license and attribution, the counts, and the `embedder` block.
+The app refuses a knowledge pack whose `embedder` differs from the installed packs.
+`replaces` names packs that this pack supersedes (for example, `enwiki-full` replaces `enwiki-core`).
+
+## Distribution
+
+`packbuild split` writes one plain tar stream of `<pack_id>/` in parts of at most 2 GB, plus `<pack_id>.pack.json` with the SHA-256 of each part.
+The app imports the parts through the Android file picker (SAF). It extracts the stream directly, hashes each part and each file as it reads, checks everything against `pack.json` and `manifest.json`, and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
+The app also enforces the 50 GB total footprint before an import starts.
+
+## Build a pack
+
+Run all commands from the repository root inside `nix develop` (or with the tools from `docs/INSTALL.md`).
+
+```sh
+cd core && cargo build --release -p packbuild && cd ..
+PB=core/target/release/packbuild
+
+# Simple English Wikipedia (dev pack, sparse only): chunk, then build.
+uv run --project pipeline python -m commonplace_pipeline.chunk --input data/raw/finewiki-simplewiki.parquet --out data/work/simplewiki
+$PB build --input data/work/simplewiki --out data/library/packs/simplewiki --pack-id simplewiki \
+  --title "Simple English Wikipedia" --snapshot 2025-08 --attribution "Wikipedia contributors; HuggingFaceFW/finewiki"
+
+# English Wikipedia from the monthly dump (pipeline/README.md has the full monthly steps), then the starter subset.
+uv run --project pipeline python -m commonplace_pipeline.wikipedia convert --date 20260901 --out data/work/enwiki-20260901
+uv run --project pipeline python -m commonplace_pipeline.wikipedia build --work data/work/enwiki-20260901 --pageviews data/raw/pageviews.sqlite
+uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/enwiki-20260901
+$PB build --input data/work/enwiki-20260901 --out data/library/packs/enwiki --pack-id enwiki --title "English Wikipedia" \
+  --snapshot 2026-09-01 --replaces enwiki-core --attribution "Wikipedia contributors; Wikimedia dump enwiki-20260901"
+uv run --project pipeline python -m commonplace_pipeline.plan_a subset --src data/work/enwiki-20260901 --out data/work/enwiki-core
+$PB build --input data/work/enwiki-core --out data/library/packs/enwiki-core --pack-id enwiki-core \
+  --title "English Wikipedia (starter)" --snapshot 2026-09-01 --attribution "Wikipedia contributors; Wikimedia dump enwiki-20260901"
+
+# A model pack.
+$PB model --gguf data/models/llm/Ling-3.0-tiny-Q4_0.gguf --out data/library/packs/ling3-tiny --pack-id ling3-tiny \
+  --title "Ling 3.0 tiny (Q4_0)" --role llm-fast --hf-repo bartowski/Ling-3.0-tiny-GGUF \
+  --revision ea072726af0d2e8ba325b2f90fc0efa762105a91 --license MIT --link
+
+# Dense codes on the GPU for a built keyword-only pack, then swap them in (no tantivy rebuild).
+uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/wikivoyage-en
+$PB dense --input data/work/wikivoyage-en --pack data/library/packs/wikivoyage-en
+
+# New QIDs or redirects (plan_a.py enrich --title-qid) for a built pack: rewrite meta.sqlite only.
+$PB meta --input data/work/<id> --pack data/library/packs/<id>
+
+# Parts for download.
+$PB split --pack data/library/packs/enwiki-core --out dist/
+$PB verify --pack data/library/packs/enwiki-core
+```
+
+### Pipeline input schema (Parquet)
+
+| File | Columns |
+|---|---|
+| `articles.parquet` | `article_id` u32 (dense from 0), `title`, `qid` (nullable), `popularity` u64, `url_title`, `oneliner`, `first_passage` u32, `n_passages` u32 |
+| `passages.parquet` | `passage_id` u32 (dense from 0, grouped by article), `article_id` u32, `ordinal` u16, `section_path`, `text` |
+| `redirects.parquet` (optional) | `from_title`, `article_id` u32 |
+| `questions.parquet` (optional) | `passage_id` u32, `questions` (joined with newlines) |
+| `cards.parquet` (optional) | `passage_id` u32, `fact`, `source_ids` ("12,13") |
+| `dense/` (optional) | `codes.u8` (n × 64), `assign.u32`, `centroids.f32`, `info.json` (`dims`), optional `ids.u32` |
+
+The text that `embed.py` embeds for a passage is `"{title} > {section_path}\n{text}"` (`"{title}\n{text}"` when there is no section). The 2023 Plan A codes used `"{title}\n{text}"`.

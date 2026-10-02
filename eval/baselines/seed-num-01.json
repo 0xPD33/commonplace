@@ -1,0 +1,47 @@
+{
+  "id": "seed-num-01",
+  "query": "How many times larger is Russia than France?",
+  "answer": "By land area, Russia is about 31 times larger than mainland France. That's because Russia covers about 17,098,246 km² within its internationally recognised borders [1], while metropolitan France (the European part) is about 551,695 km² [2][3]. If you count France's overseas regions as well, its total area is about 643,801 km² [3], and Russia comes out about 26–27 times larger. Most people mean European France when they ask this, so \"about 30 times larger\" is a fair rule of thumb.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Russia",
+      "title": "Russia - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Geography_of_France",
+      "title": "Geography of France - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/France",
+      "title": "France - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Russia",
+    "France",
+    "Geography of France",
+    "Metropolitan France",
+    "List of countries and dependencies by area"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Russia",
+    "https://en.wikipedia.org/wiki/Geography_of_France",
+    "https://en.wikipedia.org/wiki/France"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.04896640000000001,
+  "duration_ms": 11844,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:30+00:00"
+}

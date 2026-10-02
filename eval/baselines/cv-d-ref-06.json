@@ -1,0 +1,40 @@
+{
+  "id": "cv-d-ref-06",
+  "query": "too wordy, shorten it",
+  "answer": "A blockchain is a shared digital ledger made of blocks of records. Each block is linked to the one before it by a cryptographic hash, so changing old data would mean changing every block after it [1][2]. Many computers keep copies of it, so no single authority controls it. It first became known through Bitcoin.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.techtarget.com/searchcio/definition/blockchain",
+      "title": "What is Blockchain? Definition, Examples and How it Works"
+    },
+    {
+      "n": 2,
+      "url": "https://www.blackduck.com/glossary/what-is-blockchain.html",
+      "title": "What Is Blockchain and How Does It Work?"
+    }
+  ],
+  "wikipedia_articles": [
+    "Blockchain",
+    "Distributed ledger",
+    "Cryptographic hash function",
+    "Bitcoin"
+  ],
+  "urls": [
+    "https://www.techtarget.com/searchcio/definition/blockchain",
+    "https://www.blackduck.com/glossary/what-is-blockchain.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.049615,
+  "duration_ms": 14553,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:50:24+00:00"
+}

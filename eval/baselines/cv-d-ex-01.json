@@ -1,0 +1,43 @@
+{
+  "id": "cv-d-ex-01",
+  "query": "what else can you tell me?",
+  "answer": "There are three main kinds of volcano [1]:\n\n- Shield volcanoes, like the ones in Hawaii, have runny lava that flows a long way. They build broad, gently sloping mountains and usually erupt calmly.\n- Stratovolcanoes (also called composite volcanoes) are tall cones made of layers of lava and ash. Their thick, sticky magma makes them the most dangerous to people living nearby.\n- Cinder cones are small, usually 30 to 400 meters high, and most erupt only once.\n\nWhere a volcano forms also shapes how it behaves. Where plates pull apart, such as at mid-ocean ridges, eruptions are mostly quiet and make new seafloor. Where plates collide, you get the violent stratovolcanoes of the Pacific \"Ring of Fire.\" Hot spots form chains of islands like Hawaii as a plate slowly moves over a fixed plume of hot rock in the mantle [1].\n\nThe Smithsonian has recorded 10,652 confirmed eruptions from 1,214 volcanoes over roughly the last 11,700 years [1]. The biggest dangers are pyroclastic flows, which are avalanches of hot gas and rock that can reach about 850°C, and lahars, which are fast volcanic mudflows. Very large eruptions can also throw enough ash and gas into the sky to cool the whole planet for a while, which is called a \"volcanic winter\" and can ruin harvests [1]. The best-known case is Mount Tambora's 1815 eruption, which led to 1816's \"Year Without a Summer.\" That example comes from general knowledge, not from the source I checked.\n\nIf you'd like, I can go deeper into any of these, like famous eruptions or how scientists predict them.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Volcano",
+      "title": "Volcano - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Volcano",
+    "Shield volcano",
+    "Stratovolcano",
+    "Cinder cone",
+    "Ring of Fire",
+    "Hotspot (geology)",
+    "Mid-ocean ridge",
+    "Pyroclastic flow",
+    "Lahar",
+    "Volcanic winter",
+    "Holocene",
+    "1815 eruption of Mount Tambora",
+    "Year Without a Summer"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Volcano"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.092957,
+  "duration_ms": 24604,
+  "num_turns": 4,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:49:20+00:00"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "cv-t-ex-04",
+  "query": "I want more detail",
+  "answer": "DNA stands for deoxyribonucleic acid. It is made of two long chains of building blocks called nucleotides. Each nucleotide has three parts: a sugar called deoxyribose, a phosphate group and one of four bases, which are adenine (A), thymine (T), cytosine (C) and guanine (G) [1]. The sugars and phosphates form the outer backbone of each strand, and the bases point inward. The two strands run in opposite directions and twist around each other to form the double helix [1].\n\nThe bases on the two strands pair up in a fixed way: A always pairs with T, and C always pairs with G. Because of this, each strand works as a template for the other. When a cell divides, it can copy its DNA and give each new cell an identical set of instructions [1]. The order of the bases is the actual code. Stretches called genes are copied into RNA, and the RNA is then used to build proteins, which do most of the work in cells [1].\n\nIn plants and animals, most DNA sits in the cell nucleus, packed into chromosomes. Small amounts are also found in mitochondria, and in plants, in chloroplasts. Bacteria keep their DNA loose in the cell, usually as a single circular chromosome [1]. The human genome has about 3 billion base pairs spread across 46 chromosomes [1]. DNA was first isolated by Friedrich Miescher in 1869. In 1953, James Watson and Francis Crick proposed the double-helix model, using X-ray diffraction data that included Rosalind Franklin's work [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/DNA",
+      "title": "DNA – Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "DNA",
+    "Nucleotide",
+    "Base pair",
+    "Nucleic acid double helix",
+    "DNA replication",
+    "Transcription (biology)",
+    "Chromosome",
+    "Human genome",
+    "Friedrich Miescher",
+    "Rosalind Franklin"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/DNA"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08158460000000001,
+  "duration_ms": 19370,
+  "num_turns": 3,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:33+00:00"
+}

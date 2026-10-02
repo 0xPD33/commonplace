@@ -1,0 +1,62 @@
+{
+  "id": "seed-trv-07",
+  "query": "What should I see in Kyoto if I only have two days?",
+  "answer": "Group the sights by area so you're not crossing the city twice. **Day 1 (west and north):** start early at the Arashiyama bamboo grove, then go to Kinkaku-ji (the Golden Pavilion), ideally before 11am when crowds peak. Add Nijo Castle if you have time [1][2]. **Day 2 (south and east):** go to Fushimi Inari's thousands of red torii gates first. Then walk through Higashiyama's old lanes up to Kiyomizu-dera, and spend the evening in Gion and the narrow Pontocho alley for dinner [1][2][3].\n\nThe biggest tip is to beat the crowds. Fushimi Inari never closes, so going at sunrise (before about 8am) or after dark gives you the gates nearly to yourself. It's busiest from about 10am to 4pm. If you walk about 30 minutes uphill, past where most people turn back, it gets much quieter [4][5]. Two days is enough for the highlights, but it will feel tight, so don't try to add much more [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.insidekyoto.com/kyoto-two-day-itinerary",
+      "title": "Kyoto Two-Day Itinerary - Inside Kyoto"
+    },
+    {
+      "n": 2,
+      "url": "https://asiatravellab.com/kyoto-itinerary-2026/",
+      "title": "Kyoto Itinerary 2026: 2 Days, 3 Days and 4 Days"
+    },
+    {
+      "n": 3,
+      "url": "https://japaninsidersecrets.com/2-day-kyoto-itinerary/",
+      "title": "2 Day Kyoto Itinerary: Fushimi Inari, Bamboo Forest and Gion in One Smooth Plan"
+    },
+    {
+      "n": 4,
+      "url": "https://kyotofushimiinari.com/best-time-to-visit/",
+      "title": "Best time to visit Fushimi Inari: crowds by hour and season"
+    },
+    {
+      "n": 5,
+      "url": "https://kyotoitinerary.com/fushimi-inari-guide",
+      "title": "Fushimi Inari Guide 2026 — Routes & Best Times"
+    }
+  ],
+  "wikipedia_articles": [
+    "Arashiyama",
+    "Kinkaku-ji",
+    "Nijō Castle",
+    "Fushimi Inari-taisha",
+    "Kiyomizu-dera",
+    "Higashiyama-ku, Kyoto",
+    "Gion",
+    "Pontochō"
+  ],
+  "urls": [
+    "https://www.insidekyoto.com/kyoto-two-day-itinerary",
+    "https://asiatravellab.com/kyoto-itinerary-2026/",
+    "https://japaninsidersecrets.com/2-day-kyoto-itinerary/",
+    "https://kyotofushimiinari.com/best-time-to-visit/",
+    "https://kyotoitinerary.com/fushimi-inari-guide"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1143492,
+  "duration_ms": 24065,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:46:52+00:00"
+}

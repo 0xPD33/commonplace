@@ -1,0 +1,49 @@
+{
+  "id": "seed-mh-04",
+  "query": "What language is spoken today in the country where the Inca Empire had its capital?",
+  "answer": "The Inca capital was Cusco, which is in present-day Peru, and the main language spoken there today is Spanish. Peru's constitution names three official languages: Spanish, Quechua and Aymara [1][2]. Spanish is the first language of roughly 83% of Peruvians and is used in government, schools and business across the country [3]. Quechua, the language of the Inca Empire, is the first language of about 13%. It is still widely spoken in the Andes, including around Cusco, and many place names come from it [3]. Aymara is spoken mainly around Lake Titicaca near the Bolivian border [1][2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.britannica.com/place/Peru/Languages",
+      "title": "Peru - Quechua, Aymara, Spanish | Britannica"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Languages_of_Peru",
+      "title": "Languages of Peru - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://www.machutravelperu.com/blog/what-language-is-spoken-in-peru",
+      "title": "What languages are spoken in Peru? | Machu Travel Peru"
+    }
+  ],
+  "wikipedia_articles": [
+    "Inca Empire",
+    "Cusco",
+    "Peru",
+    "Languages of Peru",
+    "Peruvian Spanish",
+    "Quechuan languages",
+    "Aymara language"
+  ],
+  "urls": [
+    "https://www.britannica.com/place/Peru/Languages",
+    "https://en.wikipedia.org/wiki/Languages_of_Peru",
+    "https://www.machutravelperu.com/blog/what-language-is-spoken-in-peru"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.053092799999999996,
+  "duration_ms": 14414,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:11+00:00"
+}

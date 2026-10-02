@@ -1,0 +1,61 @@
+{
+  "id": "smoke-2",
+  "query": "Why do onions make people cry when they are cut?",
+  "answer": "Onions make you cry because cutting them starts a chemical defense reaction. A whole onion doesn't contain the irritant. When a knife breaks the cells, an enzyme called alliinase, which is normally kept separate, mixes with sulfur compounds and breaks them down into 1-propenyl sulfenic acid. A second enzyme, lachrymatory-factor synthase, then turns that into a gas called syn-propanethial-S-oxide [1][2]. The gas drifts up into your eyes. Nerves on the surface of the eye (the cornea) sense it as an irritant, and your nervous system tells the tear glands to produce tears to dilute it and wash it away [1][3].\n\nA common explanation is that the gas mixes with your eye's moisture and forms sulfuric acid. That's at best only part of the story. Any acid formed is a tiny amount, and the main effect seems to be onion compounds directly triggering pain-sensing receptors on those nerves, including the TRPA1 receptor that wasabi also activates [4]. Scientists think the reaction evolved to protect onions from being eaten, and researchers have bred \"tearless\" onions by reducing the lachrymatory-factor synthase enzyme [1][5].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://edu.rsc.org/magnificent-molecules/propanethial-s-oxide/3010038.article",
+      "title": "Why chopping onions can turn on the waterworks (RSC Education)"
+    },
+    {
+      "n": 2,
+      "url": "https://pubs.acs.org/doi/10.1021/acschembio.7b00336",
+      "title": "Enzyme That Makes You Cry–Crystal Structure of Lachrymatory Factor Synthase from Allium cepa (ACS Chemical Biology)"
+    },
+    {
+      "n": 3,
+      "url": "https://curiousclinicians.com/2022/04/27/episode-47-something-to-cry-about/",
+      "title": "Episode 47 – Something to Cry About (Curious Clinicians)"
+    },
+    {
+      "n": 4,
+      "url": "https://theconversation.com/mondays-medical-myth-chewing-gum-stops-onion-tears-9405",
+      "title": "Monday's medical myth: chewing gum stops onion tears (The Conversation)"
+    },
+    {
+      "n": 5,
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4822150/",
+      "title": "Production and characterization of tearless and non-pungent onion (PMC)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Syn-Propanethial-S-oxide",
+    "Onion",
+    "Alliinase",
+    "Lachrymatory factor synthase",
+    "Lachrymatory agent",
+    "TRPA1",
+    "Tears"
+  ],
+  "urls": [
+    "https://edu.rsc.org/magnificent-molecules/propanethial-s-oxide/3010038.article",
+    "https://pubs.acs.org/doi/10.1021/acschembio.7b00336",
+    "https://curiousclinicians.com/2022/04/27/episode-47-something-to-cry-about/",
+    "https://theconversation.com/mondays-medical-myth-chewing-gum-stops-onion-tears-9405",
+    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4822150/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1167952,
+  "duration_ms": 30892,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-28T23:21:28+00:00"
+}

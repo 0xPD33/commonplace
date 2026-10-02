@@ -1,0 +1,47 @@
+{
+  "id": "cv-fu-03",
+  "query": "Why was it built in the first place?",
+  "answer": "East Germany built the Berlin Wall to stop its own people from leaving for the West. By 1961, millions of East Germans had fled through Berlin, where the border between East and West was still open. Many of them were young, skilled workers, and losing them was draining the country's economy and threatening the communist government [1][2]. More than 150,000 people left in just the first seven months of 1961 [2]. With Soviet leader Nikita Khrushchev's approval, East Germany's ruling party (the SED) began sealing off West Berlin on 13 August 1961. It started with barbed wire, and concrete walls followed a few days later [2][3]. The official story was that the wall was an \"antifascist protective barrier\" against the West, but its real job was to keep East Germans in [1].\n\nSources:\n[1] History.com – Berlin Wall: History, Dates & Fall – https://www.history.com/articles/berlin-wall\n[2] EBSCO Research Starters – Communists Raise the Berlin Wall – https://www.ebsco.com/research-starters/history/communists-raise-berlin-wall\n[3] Stiftung Berliner Mauer – The Berlin Wall – https://www.stiftung-berliner-mauer.de/en/topics/berlin-wall",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.history.com/articles/berlin-wall",
+      "title": "Berlin Wall: History, Dates & Fall"
+    },
+    {
+      "n": 2,
+      "url": "https://www.ebsco.com/research-starters/history/communists-raise-berlin-wall",
+      "title": "Communists Raise the Berlin Wall"
+    },
+    {
+      "n": 3,
+      "url": "https://www.stiftung-berliner-mauer.de/en/topics/berlin-wall",
+      "title": "The Berlin Wall"
+    }
+  ],
+  "wikipedia_articles": [
+    "Berlin Wall",
+    "Emigration from the Eastern Bloc",
+    "Berlin Crisis of 1961",
+    "Inner German border",
+    "Socialist Unity Party of Germany"
+  ],
+  "urls": [
+    "https://www.history.com/articles/berlin-wall",
+    "https://www.ebsco.com/research-starters/history/communists-raise-berlin-wall",
+    "https://www.stiftung-berliner-mauer.de/en/topics/berlin-wall"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0659456,
+  "duration_ms": 18012,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:08:19+00:00"
+}

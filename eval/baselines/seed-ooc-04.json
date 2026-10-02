@@ -1,0 +1,60 @@
+{
+  "id": "seed-ooc-04",
+  "query": "What new features does the latest iPhone have?",
+  "answer": "Apple's newest iPhones come from its September 9, 2026 event. The iPhone 18 Pro and 18 Pro Max are in stores now, and the first foldable iPhone, called the iPhone Duo, arrives next month.\n\n**iPhone 18 Pro and Pro Max** (in stores since September 18, from $1,199 and $1,299):\n- **Camera:** a 48MP main camera with a variable aperture (f/1.48 to f/4), like a DSLR. It adds manual Pro controls and texture and grain options in Photographic Styles [1].\n- **Photo authenticity:** a feature called Apple Reference Image lets you prove a photo is real [1].\n- **Speed:** a new A20 Pro chip built on a 2-nanometer process. Apple says graphics are up to 40% faster, and there are two Neural Engines for AI work [1].\n- **Screen:** a smaller Dynamic Island that can show three Live Activities at once [1].\n- **Battery:** up to 45 hours of video on the Pro Max. It charges to 50% in about 15 minutes with a cable [1].\n- **Software:** iOS 27, including the new AI-powered Siri that understands what's on your screen [1][2].\n\n**iPhone Duo** (preorders October 16, in stores October 23, from $1,999):\n- **Design:** it opens like a book, with a 7.6-inch screen inside and a 5.4-inch screen outside. It's titanium and water-resistant (IP68). Apple calls it the thinnest iPhone ever when opened [3].\n- **Security:** Touch ID in the side button instead of Face ID [3].\n- **Pencil and apps:** it's the first iPhone that works with the Apple Pencil, and you can run two apps side by side [3][4].\n- **Chip and cameras:** it uses the same A20 Pro chip, with two 48MP rear cameras [3].\n- **Dates:** preorders open October 16 at 5 a.m. Pacific, and it launches October 23 in the US and more than 70 other countries [5].\n\nAll of these details come from Apple's own announcements, not independent testing.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.apple.com/newsroom/2026/09/apple-debuts-iphone-18-pro-and-iphone-18-pro-max/",
+      "title": "Apple debuts iPhone 18 Pro and iPhone 18 Pro Max - Apple Newsroom"
+    },
+    {
+      "n": 2,
+      "url": "https://9to5mac.com/2026/09/09/iphone-18-pro-officially-announced-heres-whats-new/",
+      "title": "Apple announces iPhone 18 Pro: Features, pricing, release date - 9to5Mac"
+    },
+    {
+      "n": 3,
+      "url": "https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/",
+      "title": "Apple unveils iPhone Duo - Apple Newsroom"
+    },
+    {
+      "n": 4,
+      "url": "https://www.foxbusiness.com/technology/apple-unveils-first-foldable-iphone-iphone-18-pro-lineup-new-watches-annual-launch-event",
+      "title": "Apple announces foldable iPhone, new smartwatches and AirPods at 2026 launch event - Fox Business"
+    },
+    {
+      "n": 5,
+      "url": "https://www.macrumors.com/2026/09/09/iphone-duo-pricing-pre-orders-release-date/",
+      "title": "iPhone Duo: Pricing, Pre-Orders, and Release Date Announced - MacRumors"
+    }
+  ],
+  "wikipedia_articles": [
+    "iPhone 18 Pro",
+    "iPhone Duo",
+    "Apple A20",
+    "iOS 27",
+    "List of iPhone models",
+    "Foldable smartphone"
+  ],
+  "urls": [
+    "https://www.apple.com/newsroom/2026/09/apple-debuts-iphone-18-pro-and-iphone-18-pro-max/",
+    "https://9to5mac.com/2026/09/09/iphone-18-pro-officially-announced-heres-whats-new/",
+    "https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/",
+    "https://www.foxbusiness.com/technology/apple-unveils-first-foldable-iphone-iphone-18-pro-lineup-new-watches-annual-launch-event",
+    "https://www.macrumors.com/2026/09/09/iphone-duo-pricing-pre-orders-release-date/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.2705038,
+  "duration_ms": 58855,
+  "num_turns": 9,
+  "web_search_requests": 3,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:48:49+00:00"
+}

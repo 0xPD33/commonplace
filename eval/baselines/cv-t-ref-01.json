@@ -1,0 +1,47 @@
+{
+  "id": "cv-t-ref-01",
+  "query": "can you cut that down a bit?",
+  "answer": "Sure, here's a shorter version. The internet is a global network of networks that all use the same rules, called TCP/IP, to exchange data [1][2]. Data is broken into small packets. Each packet carries a destination IP address, and routers pass it along until it arrives, where the packets are put back together [2]. DNS turns names like wikipedia.org into those IP addresses [3]. Services like the web and email run on top of this network [1].\n\nSources:\n[1] Internet – https://en.wikipedia.org/wiki/Internet\n[2] Internet protocol suite – https://en.wikipedia.org/wiki/Internet_protocol_suite\n[3] Domain Name System – https://en.wikipedia.org/wiki/Domain_Name_System",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Internet",
+      "title": "Internet"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Internet_protocol_suite",
+      "title": "Internet protocol suite"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Domain_Name_System",
+      "title": "Domain Name System"
+    }
+  ],
+  "wikipedia_articles": [
+    "Internet",
+    "Internet protocol suite",
+    "Packet switching",
+    "Router (computing)",
+    "IP address",
+    "Domain Name System"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Internet",
+    "https://en.wikipedia.org/wiki/Internet_protocol_suite",
+    "https://en.wikipedia.org/wiki/Domain_Name_System"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0174836,
+  "duration_ms": 5821,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:52:01+00:00"
+}

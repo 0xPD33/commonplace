@@ -1,0 +1,42 @@
+{
+  "id": "cv-ref-06",
+  "query": "tl;dr",
+  "answer": "Evolution means living things change over generations, and all species come from common ancestors [1]. The main driver is natural selection, which Darwin and Wallace described in 1858. Individuals whose inherited traits suit their environment survive and reproduce more, so those traits become more common over time [2]. Mutations and gene recombination supply the variation. Fossils, anatomy and DNA all back it up [1].\n\nSources:\n[1] Evolution – Wikipedia: https://en.wikipedia.org/wiki/Evolution\n[2] Natural selection – Wikipedia: https://en.wikipedia.org/wiki/Natural_selection",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Evolution",
+      "title": "Evolution - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Natural_selection",
+      "title": "Natural selection - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Evolution",
+    "Natural selection",
+    "Common descent",
+    "Charles Darwin",
+    "Alfred Russel Wallace",
+    "On the Origin of Species",
+    "Evidence of common descent"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Evolution",
+    "https://en.wikipedia.org/wiki/Natural_selection"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0177196,
+  "duration_ms": 5324,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:10:02+00:00"
+}

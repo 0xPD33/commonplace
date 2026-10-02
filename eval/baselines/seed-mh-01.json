@@ -1,0 +1,52 @@
+{
+  "id": "seed-mh-01",
+  "query": "What was the goal of Martin Luther and what happened to Christianity through his works?",
+  "answer": "Luther wanted to reform the Catholic Church, not break away from it. In 1517 he wrote the Ninety-five Theses to start an academic debate about the sale of indulgences, which he saw as an abuse. At first he intended to fix the Church from the inside [1][2]. At the heart of his theology was the belief that people are saved by God's grace through faith alone, not by good works or by buying Church remissions of sin [2][3].\n\nHis ideas didn't reform the Church the way he hoped. They split it instead. Pope Leo X excommunicated him in January 1521, and later that year Emperor Charles V declared him an outlaw at the Diet of Worms [3]. His writings helped spark the Protestant Reformation, which permanently divided Western Christianity into Roman Catholic and Protestant branches. His own teachings became the basis of Lutheranism [1][3]. His German translation of the Bible, completed in 1534, also made scripture much easier for ordinary people to read [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.britannica.com/event/Ninety-five-Theses",
+      "title": "Ninety-five Theses | Britannica"
+    },
+    {
+      "n": 2,
+      "url": "https://www.enotes.com/topics/martin-luther/questions/martin-luther-s-goals-and-methods-3138849",
+      "title": "Martin Luther's Goals and Methods - eNotes.com"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Martin_Luther",
+      "title": "Martin Luther - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Martin Luther",
+    "Ninety-five Theses",
+    "Reformation",
+    "Indulgence",
+    "Justification (theology)",
+    "Sola fide",
+    "Diet of Worms",
+    "Lutheranism",
+    "Protestantism",
+    "Luther Bible"
+  ],
+  "urls": [
+    "https://www.britannica.com/event/Ninety-five-Theses",
+    "https://www.enotes.com/topics/martin-luther/questions/martin-luther-s-goals-and-methods-3138849",
+    "https://en.wikipedia.org/wiki/Martin_Luther"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.11573419999999998,
+  "duration_ms": 27160,
+  "num_turns": 6,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:01+00:00"
+}

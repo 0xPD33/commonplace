@@ -1,0 +1,51 @@
+{
+  "id": "seed-exp-06",
+  "query": "How can an airplane be so fast?",
+  "answer": "A few things work together. First, jet engines are extremely powerful. They push huge amounts of air and hot gas out the back very fast, and by Newton's third law the plane gets pushed forward [1]. Second, once a plane is cruising, the engines don't have to hold it up, because the wings make lift that balances the weight. The engines only need to overcome air resistance (drag). When thrust equals drag, the plane holds a steady speed [1]. Third, airliners cruise very high, usually around 31,000–38,000 ft (9,400–11,600 m) [2]. The air up there is much thinner, so drag at a given speed is much lower [3]. That's why a modern jet like the 787 or A350 can cruise at about Mach 0.85, roughly 900 km/h (560 mph) [2].\n\nTheir smooth, streamlined shape helps too, and so does the fact that there's no road or wheel friction in the air. They don't go even faster because drag climbs sharply as they approach the speed of sound, which makes flying faster costly in fuel. Airliners are designed to cruise just below that point.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-an-airplane/",
+      "title": "The Four Forces on an Airplane – NASA Glenn Research Center"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Cruise_(aeronautics)",
+      "title": "Cruise (aeronautics) – Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://flyawaysimulation.com/ask/answers/why-airliners-cruise-high-altitudes/",
+      "title": "Why do airliners cruise at high altitudes? – Fly Away Simulation"
+    }
+  ],
+  "wikipedia_articles": [
+    "Cruise (aeronautics)",
+    "Jet engine",
+    "Thrust",
+    "Drag (physics)",
+    "Lift (force)",
+    "Newton's laws of motion",
+    "Density of air",
+    "Transonic",
+    "Mach number"
+  ],
+  "urls": [
+    "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-an-airplane/",
+    "https://en.wikipedia.org/wiki/Cruise_(aeronautics)",
+    "https://flyawaysimulation.com/ask/answers/why-airliners-cruise-high-altitudes/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1114684,
+  "duration_ms": 36618,
+  "num_turns": 7,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:43:55+00:00"
+}

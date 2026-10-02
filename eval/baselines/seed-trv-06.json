@@ -1,0 +1,47 @@
+{
+  "id": "seed-trv-06",
+  "query": "When is the best time to visit Iceland to see the northern lights?",
+  "answer": "The aurora season in Iceland runs from about late September to early April. That's when the nights are long and dark enough to see it; from May to August the midnight sun makes it practically impossible [1][2]. The months on either side of the equinoxes, late September to October and February to March, are often named the best. These months tend to have more geomagnetic activity, and the weather in them is usually less harsh than midwinter [3][2]. February is often picked as the single best month because it combines long nights with fairly settled weather [3]. By April, Reykjavík only gets about five hours of real darkness a night, so your chances drop [3]. On any given night, the best viewing is usually between about 9 pm and 2 am [3].\n\nWhatever month you choose, three things have to happen together: darkness, solar activity and clear skies. Cloud cover is usually the real obstacle in Iceland. To improve your odds, plan several nights, get away from city lights, try to avoid the days around a full moon, and check the Icelandic Met Office's aurora and cloud forecast each day [3][1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://guidetoiceland.is/the-northern-lights/the-northern-lights-aurora-borealis-in-iceland",
+      "title": "The Best Time to See the Northern Lights in Iceland | Guide to Iceland"
+    },
+    {
+      "n": 2,
+      "url": "https://adventures.is/blog/best-months-and-places-for-northern-lights-iceland/",
+      "title": "Best Time and Places to See the Northern Lights in Iceland"
+    },
+    {
+      "n": 3,
+      "url": "https://fiftydegreesnorth.com/us/article/best-time-for-northern-lights-in-iceland",
+      "title": "Best time to see the Northern Lights in Iceland | Travel guide"
+    }
+  ],
+  "wikipedia_articles": [
+    "Aurora",
+    "Iceland",
+    "Midnight sun",
+    "Equinox",
+    "Icelandic Meteorological Office"
+  ],
+  "urls": [
+    "https://guidetoiceland.is/the-northern-lights/the-northern-lights-aurora-borealis-in-iceland",
+    "https://adventures.is/blog/best-months-and-places-for-northern-lights-iceland/",
+    "https://fiftydegreesnorth.com/us/article/best-time-for-northern-lights-in-iceland"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0555638,
+  "duration_ms": 16647,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:46:40+00:00"
+}

@@ -1,0 +1,46 @@
+{
+  "id": "seed-mh-05",
+  "query": "Who was the British monarch when the Eiffel Tower was finished?",
+  "answer": "Queen Victoria was the British monarch at the time. The Eiffel Tower was finished on 31 March 1889 as the centrepiece of the 1889 World's Fair in Paris [1][2]. Victoria reigned over the United Kingdom from 1837 until 1901 [3], so the tower was completed about 52 years into her 63-year reign, two years after her Golden Jubilee in 1887.\n\nSources:\n[1] Eiffel Tower opens in Paris | March 31, 1889 | HISTORY — https://www.history.com/this-day-in-history/march-31/eiffel-tower-opens\n[2] Origins and Construction of the Eiffel Tower — https://toureiffel.paris/en/the-monument/history\n[3] Victoria (r. 1837-1901) | The Royal Family — https://www.royal.uk/encyclopedia/victoria-r-1837-1901",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.history.com/this-day-in-history/march-31/eiffel-tower-opens",
+      "title": "Eiffel Tower opens in Paris | March 31, 1889 | HISTORY"
+    },
+    {
+      "n": 2,
+      "url": "https://toureiffel.paris/en/the-monument/history",
+      "title": "Origins and Construction of the Eiffel Tower"
+    },
+    {
+      "n": 3,
+      "url": "https://www.royal.uk/encyclopedia/victoria-r-1837-1901",
+      "title": "Victoria (r. 1837-1901) | The Royal Family"
+    }
+  ],
+  "wikipedia_articles": [
+    "Eiffel Tower",
+    "Queen Victoria",
+    "Exposition Universelle (1889)",
+    "Golden Jubilee of Queen Victoria"
+  ],
+  "urls": [
+    "https://www.history.com/this-day-in-history/march-31/eiffel-tower-opens",
+    "https://toureiffel.paris/en/the-monument/history",
+    "https://www.royal.uk/encyclopedia/victoria-r-1837-1901"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-4-5-20251001",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08671219999999999,
+  "duration_ms": 15132,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:17+00:00"
+}

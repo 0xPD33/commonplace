@@ -1,0 +1,45 @@
+{
+  "id": "seed-cmp-04",
+  "query": "What's the difference between baking soda and baking powder?",
+  "answer": "Both are chemical leaveners, and the difference comes down to acid. Baking soda is pure sodium bicarbonate, a base. It only makes carbon dioxide bubbles when it meets an acidic ingredient in the recipe, like buttermilk, yogurt, vinegar, lemon juice, brown sugar, molasses or natural cocoa. It starts reacting as soon as the two touch [1][2]. Baking powder is sodium bicarbonate that already has a dry acid mixed in, plus a filler such as cornstarch to keep the two apart. It only needs liquid to start working [2][3].\n\nMost store-bought baking powder is \"double-acting.\" It contains one acid that reacts when the batter gets wet and a second that reacts in the heat of the oven. That second rise makes baked goods fluffier and means the batter doesn't have to go into the oven right away [2][3]. Recipes with a lot of acid often call for both. For example, one cup of flour with one cup of buttermilk might use ½ teaspoon baking powder plus ¼ teaspoon baking soda, instead of a full teaspoon of baking powder [3].\n\nYou can't swap one for the other one-to-one. If you use baking soda without enough acid, the result won't rise properly and can taste soapy or metallic.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.armandhammer.com/en/articles/baking-soda-vs-baking-powder",
+      "title": "Baking Soda vs. Baking Powder: What's the Difference | Arm & Hammer"
+    },
+    {
+      "n": 2,
+      "url": "https://sallysbakingaddiction.com/baking-powder-vs-baking-soda/",
+      "title": "Baking Powder vs. Baking Soda - Sally's Baking Addiction"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Baking_powder",
+      "title": "Baking powder - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Baking powder",
+    "Sodium bicarbonate",
+    "Leavening agent"
+  ],
+  "urls": [
+    "https://www.armandhammer.com/en/articles/baking-soda-vs-baking-powder",
+    "https://sallysbakingaddiction.com/baking-powder-vs-baking-soda/",
+    "https://en.wikipedia.org/wiki/Baking_powder"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1128982,
+  "duration_ms": 20277,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:26+00:00"
+}

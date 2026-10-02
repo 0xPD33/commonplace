@@ -1,0 +1,42 @@
+{
+  "id": "cv-cmp-01",
+  "query": "How does that compare to Mars?",
+  "answer": "Mars is far colder than Venus. Its average surface temperature is about −63 °C (−81 °F), which puts it roughly 525 °C below Venus's average of about 464 °C [1][2]. Temperatures on Mars also swing a lot, from about −140 °C to around 20 °C depending on the place, season and time of day [2].\n\nBoth planets have atmospheres made mostly of carbon dioxide, so the difference comes from how thick the air is. The Martian atmosphere has a surface pressure of only about 0.6% of Earth's, so it holds in very little heat [2]. Mars is also farther from the Sun. Venus's surface pressure, by comparison, is roughly 90 times Earth's, which traps heat and produces a runaway greenhouse effect.\n\nSources:\n[1] Temperatures Across Our Solar System – NASA Science: https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/\n[2] Atmosphere of Mars – Wikipedia: https://en.wikipedia.org/wiki/Atmosphere_of_Mars",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/",
+      "title": "Temperatures Across Our Solar System - NASA Science"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Atmosphere_of_Mars",
+      "title": "Atmosphere of Mars"
+    }
+  ],
+  "wikipedia_articles": [
+    "Mars",
+    "Atmosphere of Mars",
+    "Climate of Mars",
+    "Venus",
+    "Atmosphere of Venus",
+    "Runaway greenhouse effect"
+  ],
+  "urls": [
+    "https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/",
+    "https://en.wikipedia.org/wiki/Atmosphere_of_Mars"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.051759799999999995,
+  "duration_ms": 13521,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:09:07+00:00"
+}

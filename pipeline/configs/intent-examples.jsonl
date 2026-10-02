@@ -1,0 +1,226 @@
+{"text": "Who wrote The Great Gatsby?", "kind": "lookup"}
+{"text": "What is the capital of Peru?", "kind": "lookup"}
+{"text": "How many moons does Jupiter have?", "kind": "lookup"}
+{"text": "Who was Cleopatra?", "kind": "lookup"}
+{"text": "Where is Timbuktu?", "kind": "lookup"}
+{"text": "What language is spoken in Brazil?", "kind": "lookup"}
+{"text": "How tall is the Eiffel Tower?", "kind": "lookup"}
+{"text": "Who painted the Sistine Chapel ceiling?", "kind": "lookup"}
+{"text": "What year did World War II end?", "kind": "lookup"}
+{"text": "Who discovered penicillin?", "kind": "lookup"}
+{"text": "What is the population of Tokyo?", "kind": "lookup"}
+{"text": "Who is the author of Don Quixote?", "kind": "lookup"}
+{"text": "When was the Magna Carta signed?", "kind": "lookup"}
+{"text": "What is the chemical symbol for sodium?", "kind": "lookup"}
+{"text": "How old is the universe?", "kind": "lookup"}
+{"text": "How far is the Moon from Earth?", "kind": "lookup"}
+{"text": "What is the largest ocean?", "kind": "lookup"}
+{"text": "Who was the first president of the United States?", "kind": "lookup"}
+{"text": "What currency does Japan use?", "kind": "lookup"}
+{"text": "Where was Mozart born?", "kind": "lookup"}
+{"text": "When did the Berlin Wall fall?", "kind": "lookup"}
+{"text": "What is the boiling point of water?", "kind": "lookup"}
+{"text": "Who invented the telephone?", "kind": "lookup"}
+{"text": "What is the highest mountain in Africa?", "kind": "lookup"}
+{"text": "How long is the Nile?", "kind": "lookup"}
+{"text": "What is the speed of light?", "kind": "lookup"}
+{"text": "Who founded Microsoft?", "kind": "lookup"}
+{"text": "What is the official language of Austria?", "kind": "lookup"}
+{"text": "When did humans first land on the Moon?", "kind": "lookup"}
+{"text": "What is the smallest country in the world?", "kind": "lookup"}
+{"text": "Who composed the Four Seasons?", "kind": "lookup"}
+{"text": "What does DNA stand for?", "kind": "lookup"}
+{"text": "How many bones are in the human body?", "kind": "lookup"}
+{"text": "Which planet is closest to the Sun?", "kind": "lookup"}
+{"text": "Who wrote Pride and Prejudice?", "kind": "lookup"}
+{"text": "What is the capital of Canada?", "kind": "lookup"}
+{"text": "Who was Genghis Khan?", "kind": "lookup"}
+{"text": "What is the tallest building in the world?", "kind": "lookup"}
+{"text": "Where do penguins live?", "kind": "lookup"}
+{"text": "Who was Ada Lovelace?", "kind": "lookup"}
+{"text": "What is the Great Barrier Reef?", "kind": "lookup"}
+{"text": "How deep is the Mariana Trench?", "kind": "lookup"}
+{"text": "Who was Frida Kahlo married to?", "kind": "lookup"}
+{"text": "What is the melting point of iron?", "kind": "lookup"}
+{"text": "Who is the patron saint of Ireland?", "kind": "lookup"}
+{"text": "Which country has the most islands?", "kind": "lookup"}
+{"text": "When was the printing press invented?", "kind": "lookup"}
+{"text": "What is the capital of Australia?", "kind": "lookup"}
+{"text": "Who directed Jaws?", "kind": "lookup"}
+{"text": "What is a leopard?", "kind": "lookup"}
+{"text": "Who was Isaac Newton?", "kind": "lookup"}
+{"text": "Which river flows through Paris?", "kind": "lookup"}
+{"text": "How many people live in Canada?", "kind": "lookup"}
+{"text": "What is the national animal of Scotland?", "kind": "lookup"}
+{"text": "Who designed the Eiffel Tower?", "kind": "lookup"}
+{"text": "What is photosynthesis?", "kind": "lookup"}
+{"text": "Define entropy", "kind": "lookup"}
+{"text": "What is a black hole?", "kind": "lookup"}
+{"text": "who wrote hamlet", "kind": "lookup"}
+{"text": "What is the Silk Road?", "kind": "lookup"}
+{"text": "When was the United Nations founded?", "kind": "lookup"}
+{"text": "Who discovered insulin?", "kind": "lookup"}
+{"text": "Where is the Taj Mahal?", "kind": "lookup"}
+{"text": "What is the area of Texas?", "kind": "lookup"}
+{"text": "How many moons does Mars have?", "kind": "lookup"}
+{"text": "How does a jet engine work?", "kind": "explain"}
+{"text": "Why do cats purr?", "kind": "explain"}
+{"text": "What causes earthquakes?", "kind": "explain"}
+{"text": "How do bees make honey?", "kind": "explain"}
+{"text": "Why did the Titanic sink?", "kind": "explain"}
+{"text": "How is glass made?", "kind": "explain"}
+{"text": "Why is the ocean salty?", "kind": "explain"}
+{"text": "How do vaccines work?", "kind": "explain"}
+{"text": "Why did the Roman Empire fall?", "kind": "explain"}
+{"text": "How do airplanes stay in the air?", "kind": "explain"}
+{"text": "Why is the sky red at sunset?", "kind": "explain"}
+{"text": "How did the Black Death spread?", "kind": "explain"}
+{"text": "Why do leaves change color in autumn?", "kind": "explain"}
+{"text": "How does the heart pump blood?", "kind": "explain"}
+{"text": "What causes inflation?", "kind": "explain"}
+{"text": "How does GPS work?", "kind": "explain"}
+{"text": "Why was the Berlin Wall built?", "kind": "explain"}
+{"text": "How does a refrigerator work?", "kind": "explain"}
+{"text": "What caused World War I?", "kind": "explain"}
+{"text": "How do tides work?", "kind": "explain"}
+{"text": "Why do we have seasons?", "kind": "explain"}
+{"text": "How does a nuclear reactor produce electricity?", "kind": "explain"}
+{"text": "Explain how the stock market works", "kind": "explain"}
+{"text": "Describe the water cycle", "kind": "explain"}
+{"text": "How does photosynthesis work?", "kind": "explain"}
+{"text": "Why did the dinosaurs die out?", "kind": "explain"}
+{"text": "How do volcanoes form?", "kind": "explain"}
+{"text": "How do I fix a leaking tap?", "kind": "explain"}
+{"text": "How do I treat a bee sting?", "kind": "explain"}
+{"text": "How do you make bread rise?", "kind": "explain"}
+{"text": "How do I change a flat tire?", "kind": "explain"}
+{"text": "How can I improve my sleep?", "kind": "explain"}
+{"text": "How do I convert Celsius to Fahrenheit?", "kind": "explain"}
+{"text": "Explain quantum entanglement simply", "kind": "explain"}
+{"text": "Why is the Great Barrier Reef dying?", "kind": "explain"}
+{"text": "How was penicillin mass produced?", "kind": "explain"}
+{"text": "Why do we dream?", "kind": "explain"}
+{"text": "How does the immune system fight infections?", "kind": "explain"}
+{"text": "What is the reason for the Suez Canal's importance?", "kind": "explain"}
+{"text": "How did the Industrial Revolution change society?", "kind": "explain"}
+{"text": "Why does ice float on water?", "kind": "explain"}
+{"text": "How do antibiotics kill bacteria?", "kind": "explain"}
+{"text": "Explain the theory of evolution", "kind": "explain"}
+{"text": "How does a rainbow form?", "kind": "explain"}
+{"text": "Why do birds migrate?", "kind": "explain"}
+{"text": "How does compound interest work?", "kind": "explain"}
+{"text": "Why did the Soviet Union collapse?", "kind": "explain"}
+{"text": "How do submarines dive and surface?", "kind": "explain"}
+{"text": "What makes a hurricane form?", "kind": "explain"}
+{"text": "Describe how the internet works", "kind": "explain"}
+{"text": "Why does the Moon have phases?", "kind": "explain"}
+{"text": "How do solar panels make electricity?", "kind": "explain"}
+{"text": "How does the brain store memories?", "kind": "explain"}
+{"text": "Summarize the plot of Macbeth", "kind": "explain"}
+{"text": "Give me a short history of the Ottoman Empire", "kind": "explain"}
+{"text": "Explain inflation in plain English", "kind": "explain"}
+{"text": "How did the pyramids get built?", "kind": "explain"}
+{"text": "Why is Pluto no longer a planet?", "kind": "explain"}
+{"text": "How does blockchain work?", "kind": "explain"}
+{"text": "Why are flamingos pink?", "kind": "explain"}
+{"text": "How do I get a visa for Japan?", "kind": "explain"}
+{"text": "How do you prepare for a marathon?", "kind": "explain"}
+{"text": "what makes the northern lights happen", "kind": "explain"}
+{"text": "why do onions make you cry", "kind": "explain"}
+{"text": "how does a microwave heat food", "kind": "explain"}
+{"text": "Why was the Hubble telescope put in space?", "kind": "explain"}
+{"text": "Compare Rome and Athens", "kind": "compare"}
+{"text": "Which is taller, the Eiffel Tower or Big Ben?", "kind": "compare"}
+{"text": "Which is bigger, Canada or the United States?", "kind": "compare"}
+{"text": "How does Python compare to Java?", "kind": "compare"}
+{"text": "Is Mars bigger than Venus?", "kind": "compare"}
+{"text": "Which came first, the Colosseum or the Parthenon?", "kind": "compare"}
+{"text": "Compare the populations of Japan and Germany", "kind": "compare"}
+{"text": "Is the Amazon longer than the Nile?", "kind": "compare"}
+{"text": "What is the difference between weather and climate?", "kind": "compare"}
+{"text": "How do frogs differ from toads?", "kind": "compare"}
+{"text": "Which is older, Oxford or Cambridge?", "kind": "compare"}
+{"text": "Is K2 shorter than Mount Everest?", "kind": "compare"}
+{"text": "Compare capitalism and socialism", "kind": "compare"}
+{"text": "Which is deeper, the Atlantic or the Pacific?", "kind": "compare"}
+{"text": "How do dolphins differ from sharks?", "kind": "compare"}
+{"text": "Is gold heavier than lead?", "kind": "compare"}
+{"text": "Which is more populous, India or China?", "kind": "compare"}
+{"text": "What are the similarities between Judaism and Christianity?", "kind": "compare"}
+{"text": "Compare the American and French revolutions", "kind": "compare"}
+{"text": "Which is faster, a cheetah or a greyhound?", "kind": "compare"}
+{"text": "Is Australia bigger than Brazil?", "kind": "compare"}
+{"text": "What distinguishes a monkey from an ape?", "kind": "compare"}
+{"text": "Contrast Impressionism with Expressionism", "kind": "compare"}
+{"text": "Which is larger, the Sun or Jupiter?", "kind": "compare"}
+{"text": "How does the Burj Khalifa compare to the Shanghai Tower?", "kind": "compare"}
+{"text": "Mac vs PC: which is better?", "kind": "compare"}
+{"text": "Coke vs Pepsi, what's the difference?", "kind": "compare"}
+{"text": "Is a tomato more like a fruit or a vegetable?", "kind": "compare"}
+{"text": "What's the difference between a lake and a pond?", "kind": "compare"}
+{"text": "Which is harder, diamond or sapphire?", "kind": "compare"}
+{"text": "Compare Napoleon and Alexander the Great as generals", "kind": "compare"}
+{"text": "Which was longer, World War I or World War II?", "kind": "compare"}
+{"text": "Is London older than Paris?", "kind": "compare"}
+{"text": "How does a hurricane differ from a typhoon?", "kind": "compare"}
+{"text": "Is Spanish harder than Italian?", "kind": "compare"}
+{"text": "How is Mandarin different from Cantonese?", "kind": "compare"}
+{"text": "Which lives longer, a tortoise or a parrot?", "kind": "compare"}
+{"text": "Compare the Moon and Mars", "kind": "compare"}
+{"text": "Are wolves bigger than coyotes?", "kind": "compare"}
+{"text": "How do the Greek and Roman gods compare?", "kind": "compare"}
+{"text": "Which country is richer, Norway or Sweden?", "kind": "compare"}
+{"text": "Is the Pacific Ocean bigger than all the land on Earth combined?", "kind": "compare"}
+{"text": "How does Earth compare to Venus?", "kind": "compare"}
+{"text": "Is Tokyo bigger than New York?", "kind": "compare"}
+{"text": "Which is colder, the Arctic or Antarctica?", "kind": "compare"}
+{"text": "Compare iOS and Android", "kind": "compare"}
+{"text": "how do bats and birds differ", "kind": "compare"}
+{"text": "is a violin different from a viola", "kind": "compare"}
+{"text": "which is heavier an elephant or a blue whale", "kind": "compare"}
+{"text": "Are Vikings and Normans the same people?", "kind": "compare"}
+{"text": "How many times bigger is Jupiter than Earth?", "kind": "calc"}
+{"text": "What is the population density of Japan?", "kind": "calc"}
+{"text": "What percent of Earth is covered by water?", "kind": "calc"}
+{"text": "What is the ratio of men to women in China?", "kind": "calc"}
+{"text": "What is the difference in area between Texas and France?", "kind": "calc"}
+{"text": "What is the average temperature on Mars?", "kind": "calc"}
+{"text": "How much more populous is India than the United States?", "kind": "calc"}
+{"text": "What is the GDP per capita of Germany?", "kind": "calc"}
+{"text": "How many people per square kilometer live in Bangladesh?", "kind": "calc"}
+{"text": "How many kilometers is 100 miles?", "kind": "calc"}
+{"text": "How long does light take to travel from the Sun to Earth?", "kind": "calc"}
+{"text": "What is 15 percent of the population of Brazil?", "kind": "calc"}
+{"text": "How much older is the Parthenon than the Colosseum?", "kind": "calc"}
+{"text": "How many times longer is the Nile than the Thames?", "kind": "calc"}
+{"text": "What is the population density of Monaco?", "kind": "calc"}
+{"text": "How much faster is a cheetah than a human?", "kind": "calc"}
+{"text": "By how much did the world population grow since 1950?", "kind": "calc"}
+{"text": "How much bigger is Canada than Australia in area?", "kind": "calc"}
+{"text": "What fraction of the US population lives in California?", "kind": "calc"}
+{"text": "How many hours of daylight does Oslo get in December?", "kind": "calc"}
+{"text": "How much deeper is the Mariana Trench than Everest is tall?", "kind": "calc"}
+{"text": "What is the ratio of Earth's diameter to the Moon's?", "kind": "calc"}
+{"text": "How much heavier is a blue whale than an elephant?", "kind": "calc"}
+{"text": "What is the difference in height between the Burj Khalifa and the Eiffel Tower?", "kind": "calc"}
+{"text": "How many square miles is Rhode Island?", "kind": "calc"}
+{"text": "How much did the Great Pyramid weigh?", "kind": "calc"}
+{"text": "What is Canada's population per square kilometre?", "kind": "calc"}
+{"text": "How many times more people live in Tokyo than in Oslo?", "kind": "calc"}
+{"text": "What percentage of Australia is desert?", "kind": "calc"}
+{"text": "How many more moons does Saturn have than Jupiter?", "kind": "calc"}
+{"text": "Convert 30 degrees Celsius to Fahrenheit", "kind": "calc"}
+{"text": "How many seconds are in a year?", "kind": "calc"}
+{"text": "What is the combined population of Norway and Sweden?", "kind": "calc"}
+{"text": "How much of the Amazon has been cut down in percent?", "kind": "calc"}
+{"text": "How far is Mars from Earth in light minutes?", "kind": "calc"}
+{"text": "What is the average lifespan difference between men and women in Japan?", "kind": "calc"}
+{"text": "how much taller is the eiffel tower than big ben", "kind": "calc"}
+{"text": "What share of the world's oxygen comes from the ocean?", "kind": "calc"}
+{"text": "How much more rain does London get than Madrid?", "kind": "calc"}
+{"text": "How many litres are in a gallon?", "kind": "calc"}
+{"text": "What is the per capita income in India?", "kind": "calc"}
+{"text": "How many times more carbon dioxide does China emit than France?", "kind": "calc"}
+{"text": "How much warmer is Venus than Mercury?", "kind": "calc"}
+{"text": "How many Great Walls would it take to circle the Earth?", "kind": "calc"}
+{"text": "What is the growth rate of Nigeria's population?", "kind": "calc"}

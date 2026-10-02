@@ -1,0 +1,47 @@
+{
+  "id": "seed-num-02",
+  "query": "Is the Netherlands more densely populated than Germany, and by how much?",
+  "answer": "Yes. The Netherlands is roughly twice as densely populated as Germany, but the exact ratio depends on whether you count its large inland and coastal waters. Measured by land area only, the Netherlands has about 541 people per km² (roughly 18.1 million people on 33,500 km²) [1]. Germany's statistics office, Destatis, gives about 240 per km² [2]. On that basis the Netherlands is about 2.25 times as dense, with roughly 300 more people per km².\n\nIf you use total area including water (about 41,865 km²) [1], the Dutch figure drops to around 436 per km² [3]. That makes it about 1.8 times Germany's density.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Netherlands",
+      "title": "Netherlands – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.destatis.de/EN/Themes/Countries-Regions/International-Statistics/Country-Profiles/germany.pdf?__blob=publicationFile&v=21",
+      "title": "Statistisches Bundesamt (Destatis) – Germany Statistical Country Profile"
+    },
+    {
+      "n": 3,
+      "url": "https://www.populationpyramid.net/population-density/netherlands/2025/",
+      "title": "Population Density Netherlands 2025 – PopulationPyramid.net"
+    }
+  ],
+  "wikipedia_articles": [
+    "Netherlands",
+    "Germany",
+    "Demographics of the Netherlands",
+    "Demographics of Germany",
+    "List of countries and dependencies by population density"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Netherlands",
+    "https://www.destatis.de/EN/Themes/Countries-Regions/International-Statistics/Country-Profiles/germany.pdf?__blob=publicationFile&v=21",
+    "https://www.populationpyramid.net/population-density/netherlands/2025/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.14001280000000002,
+  "duration_ms": 22505,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:53+00:00"
+}

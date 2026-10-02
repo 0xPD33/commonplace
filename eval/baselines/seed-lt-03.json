@@ -1,0 +1,54 @@
+{
+  "id": "seed-lt-03",
+  "query": "What was the Antikythera mechanism used for?",
+  "answer": "The Antikythera mechanism was a hand-cranked Greek astronomical calculator, often called the first analog computer. It dates to around the late 2nd or early 1st century BCE and was recovered in 1901 from a shipwreck off the Greek island of Antikythera [1][2].\n\nWhen you turned the handle, its bronze gears showed where the Sun, the Moon and probably the planets were in the sky. It also showed the Moon's phase and could predict eclipses decades in advance [2][3]. On the back, one spiral dial used the Babylonian 223-month Saros cycle to predict eclipses. Another followed the 19-year Metonic cycle that lines up lunar months with the solar year [2][4].\n\nIt also worked as a calendar. A small dial inside the Metonic one tracked the four-year cycle of the Panhellenic games, including the Olympics [1][2]. Put simply, it was a mechanical model of the Greek cosmos and calendar, probably used for teaching, showing off, or scientific or religious timekeeping. No one knows for sure who owned it or exactly how they used it.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.scientificamerican.com/article/antikythera-mechanism-eclipse-olympics/",
+      "title": "Ancient Greek Eclipse Calculator Marked Olympics | Scientific American"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Antikythera_mechanism",
+      "title": "Antikythera mechanism - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://www.nature.com/articles/s41598-021-84310-w",
+      "title": "A Model of the Cosmos in the ancient Greek Antikythera Mechanism | Scientific Reports"
+    },
+    {
+      "n": 4,
+      "url": "https://www.worldhistory.org/Antikythera_Mechanism/",
+      "title": "Antikythera Mechanism - World History Encyclopedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Antikythera mechanism",
+    "Antikythera wreck",
+    "Saros (astronomy)",
+    "Metonic cycle",
+    "Olympiad",
+    "Analog computer"
+  ],
+  "urls": [
+    "https://www.scientificamerican.com/article/antikythera-mechanism-eclipse-olympics/",
+    "https://en.wikipedia.org/wiki/Antikythera_mechanism",
+    "https://www.nature.com/articles/s41598-021-84310-w",
+    "https://www.worldhistory.org/Antikythera_Mechanism/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0563522,
+  "duration_ms": 17604,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:48:50+00:00"
+}

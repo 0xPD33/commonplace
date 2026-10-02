@@ -1,0 +1,54 @@
+{
+  "id": "seed-lt-02",
+  "query": "What happened during the dancing plague of 1518?",
+  "answer": "In July 1518, in Strasbourg (then part of the Holy Roman Empire, now in France), a woman named Frau Troffea stepped into the street and started dancing and couldn't stop. She kept going for days, and within about a week more than 30 people had joined her. By August, estimates put the number of dancers somewhere between 50 and 400. [1][2] Accounts describe people dancing until their feet were raw and bloody and they collapsed from exhaustion. [3]\n\nThe city's first response made things worse. Believing the dancers needed to dance the fever out of their systems, officials opened guildhalls, hired musicians, and brought in strong men to hold the dancers up. When the outbreak kept growing, they reversed course: they banned public dancing and then music, and sent the afflicted to a shrine of Saint Vitus. There the dancers were given crosses and red shoes sprinkled with holy water. [1][2] By early September the outbreak had died down. [1]\n\nSome later accounts say as many as 15 people a day died, but the surviving records from Strasbourg at the time don't mention any deaths, so historians still argue over whether anyone died. [1] The cause isn't known for sure. One old theory is ergot poisoning from moldy grain. Historian John Waller argues instead that it was a stress-induced mass psychogenic illness, brought on by famine and disease in a population that believed an angry Saint Vitus could curse people with dancing. [1][4]",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Dancing_plague_of_1518",
+      "title": "Dancing plague of 1518 – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.history.com/articles/what-was-the-dancing-plague-of-1518",
+      "title": "What Was the Dancing Plague of 1518? | HISTORY"
+    },
+    {
+      "n": 3,
+      "url": "https://publicdomainreview.org/essay/the-dancing-plague-of-1518",
+      "title": "The Dancing Plague of 1518 — The Public Domain Review"
+    },
+    {
+      "n": 4,
+      "url": "https://www.nationalgeographic.com/history/article/dancing-plague-of-1518-strasbourg-choreomania",
+      "title": "What caused Strasbourg's dancing plague of 1518? | National Geographic"
+    }
+  ],
+  "wikipedia_articles": [
+    "Dancing plague of 1518",
+    "Dancing mania",
+    "Mass psychogenic illness",
+    "Ergotism",
+    "Saint Vitus",
+    "Strasbourg"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Dancing_plague_of_1518",
+    "https://www.history.com/articles/what-was-the-dancing-plague-of-1518",
+    "https://publicdomainreview.org/essay/the-dancing-plague-of-1518",
+    "https://www.nationalgeographic.com/history/article/dancing-plague-of-1518-strasbourg-choreomania"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.09048339999999999,
+  "duration_ms": 26120,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:48:47+00:00"
+}

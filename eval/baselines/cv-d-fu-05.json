@@ -1,0 +1,53 @@
+{
+  "id": "cv-d-fu-05",
+  "query": "how did he die",
+  "answer": "Nobody knows for sure. What we do know is that he died in August 1227, traditionally dated to August 18, in northwest China while fighting his last campaign against the Tangut kingdom of Western Xia [1][2]. The Mongols kept his death secret until they had won that war [2]. The most common account comes from the Secret History of the Mongols. It says he was thrown from his horse while hunting in the winter of 1226–27 and never fully recovered, dying later of the injuries or a resulting illness [2][3].\n\nOther sources tell different stories. Marco Polo said he died from an infected arrow wound in the knee. Other legends say a Tangut princess stabbed him or that he was killed in battle [2][3]. In 2021 some researchers suggested he died of plague, given that he had a fever and died about eight days after falling ill [3][4]. None of these explanations has been confirmed.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.history.com/this-day-in-history/august-18/genghis-khan-dies",
+      "title": "Genghis Khan dies - History.com"
+    },
+    {
+      "n": 2,
+      "url": "https://www.thecollector.com/how-did-genghis-khan-die/",
+      "title": "How Did Genghis Khan Die? Theories and Mysteries - TheCollector"
+    },
+    {
+      "n": 3,
+      "url": "https://www.livescience.com/genghis-khan-death-cause-revealed.html",
+      "title": "The story you heard about Genghis Khan's death is probably all wrong - Live Science"
+    },
+    {
+      "n": 4,
+      "url": "https://www.medievalists.net/2021/12/genghis-khan-died-plague/",
+      "title": "Genghis Khan died of the plague, researchers suggest - Medievalists.net"
+    }
+  ],
+  "wikipedia_articles": [
+    "Genghis Khan",
+    "Death and burial of Genghis Khan",
+    "Mongol conquest of Western Xia",
+    "The Secret History of the Mongols",
+    "Western Xia"
+  ],
+  "urls": [
+    "https://www.history.com/this-day-in-history/august-18/genghis-khan-dies",
+    "https://www.thecollector.com/how-did-genghis-khan-die/",
+    "https://www.livescience.com/genghis-khan-death-cause-revealed.html",
+    "https://www.medievalists.net/2021/12/genghis-khan-died-plague/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05779360000000001,
+  "duration_ms": 16929,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:48:59+00:00"
+}

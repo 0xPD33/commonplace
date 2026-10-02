@@ -1,0 +1,34 @@
+{
+  "id": "seed-fac-02",
+  "query": "Who was the US president in 2016?",
+  "answer": "Barack Obama, a Democrat, was president for all of 2016. He was the 44th president and served two terms, from January 20, 2009, to January 20, 2017 [1]. Donald Trump won the November 2016 election, but he didn't take office until January 20, 2017 [1].\n\nSources:\n[1] Presidency of Barack Obama – Wikipedia: https://en.wikipedia.org/wiki/Presidency_of_Barack_Obama",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Presidency_of_Barack_Obama",
+      "title": "Presidency of Barack Obama - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Barack Obama",
+    "Presidency of Barack Obama",
+    "2016 United States presidential election",
+    "Donald Trump"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Presidency_of_Barack_Obama"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.055988399999999994,
+  "duration_ms": 10170,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:42:45+00:00"
+}

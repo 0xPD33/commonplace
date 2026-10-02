@@ -1,0 +1,46 @@
+{
+  "id": "cv-t-cmp-05",
+  "query": "how much bigger is it than Earth",
+  "answer": "Jupiter is about 11 times wider than Earth. Its equatorial diameter is about 143,000 km, compared with Earth's roughly 12,750 km [1][2]. By volume the gap is much bigger: about 1,300 Earths would fit inside it [1][3]. Jupiter is only about 318 times as massive as Earth, though [1][2]. That's because it's a gas giant made mostly of hydrogen and helium, so it's much less dense than our rocky planet.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.universetoday.com/articles/how-much-bigger-is-jupiter-than-earth",
+      "title": "How Much Bigger is Jupiter Than Earth? - Universe Today"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Jupiter",
+      "title": "Jupiter - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://www.universetoday.com/articles/how-many-earths-can-fit-in-jupiter",
+      "title": "How Many Earths Can Fit in Jupiter? - Universe Today"
+    }
+  ],
+  "wikipedia_articles": [
+    "Jupiter",
+    "Earth",
+    "Jupiter mass",
+    "Gas giant"
+  ],
+  "urls": [
+    "https://www.universetoday.com/articles/how-much-bigger-is-jupiter-than-earth",
+    "https://en.wikipedia.org/wiki/Jupiter",
+    "https://www.universetoday.com/articles/how-many-earths-can-fit-in-jupiter"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0495362,
+  "duration_ms": 12219,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:56+00:00"
+}

@@ -1,0 +1,55 @@
+{
+  "id": "cv-fu-12",
+  "query": "wat did he discover about lite",
+  "answer": "Newton's biggest discovery about light was that white light is really a mix of all the colours. In the 1660s he shone sunlight through a glass prism and saw it spread into a band of colours, usually listed as red, orange, yellow, green, blue, indigo and violet. He then showed that the prism doesn't add those colours; it separates colours that were already in the light, because each one bends (refracts) by a slightly different amount [1][2][3]. This work also explained how rainbows form. It led him to build a reflecting telescope, which uses a mirror instead of a lens so it doesn't blur the image with colour fringes. He also studied the coloured rings that appear in thin films of air or glass, now called \"Newton's rings\" [3][4]. He published all of this in his 1704 book *Opticks*. In it he also argued that light is a stream of tiny particles, which he called \"corpuscles.\" That particle idea was later replaced by the wave theory of light, but the book shaped research on light for more than a century [1][4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.britannica.com/topic/Opticks-by-Newton",
+      "title": "Opticks | Britannica"
+    },
+    {
+      "n": 2,
+      "url": "https://www.custom-images.sciencesource.com/science-source-blog/2022/1/27/iaasc-newton-and-understanding-color",
+      "title": "Isaac Newton and the Physics of Color: How a Prism Changed Everything"
+    },
+    {
+      "n": 3,
+      "url": "https://study.com/academy/lesson/opticks-isaac-newton-overview-principles-significance.html",
+      "title": "Opticks by Isaac Newton"
+    },
+    {
+      "n": 4,
+      "url": "https://en.wikipedia.org/wiki/Opticks",
+      "title": "Opticks - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Isaac Newton",
+    "Opticks",
+    "Corpuscular theory of light",
+    "Dispersive prism",
+    "Newtonian telescope",
+    "Newton's rings",
+    "Visible spectrum"
+  ],
+  "urls": [
+    "https://www.britannica.com/topic/Opticks-by-Newton",
+    "https://www.custom-images.sciencesource.com/science-source-blog/2022/1/27/iaasc-newton-and-understanding-color",
+    "https://study.com/academy/lesson/opticks-isaac-newton-overview-principles-significance.html",
+    "https://en.wikipedia.org/wiki/Opticks"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.054216600000000004,
+  "duration_ms": 15905,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:09:06+00:00"
+}

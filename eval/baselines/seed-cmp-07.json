@@ -1,0 +1,61 @@
+{
+  "id": "seed-cmp-07",
+  "query": "What's the difference between a virus and a bacterium, and why don't antibiotics work on viruses?",
+  "answer": "A bacterium is a complete single-celled living organism. It has a cell wall, its own ribosomes for making proteins, and its own metabolism, so it can grow and divide by itself, whether inside your body or out in the environment [1][2]. A virus is much smaller and isn't a cell at all. It's just genetic material (DNA or RNA) packed in a protein shell called a capsid, sometimes with an outer envelope. It can only copy itself by getting inside a host cell and using that cell's machinery [1][2][3].\n\nThat difference is why antibiotics don't work on viruses. Antibiotics attack parts found only in bacteria, like the bacterial cell wall, bacterial ribosomes, or enzymes bacteria need to copy their DNA. A virus has none of those, so there's nothing for the drug to hit [2][3][4]. Because a virus runs on your own cells' machinery, a drug that blocked that machinery would also harm you. Viral infections are instead handled by your immune system, vaccines, or antiviral drugs that target specific viral steps, such as Tamiflu for flu or HIV medicines [1][4]. Taking antibiotics for a viral illness like a cold doesn't help, can cause side effects, and helps create antibiotic-resistant bacteria [4][5].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://imb.uq.edu.au/article/2020/04/difference-between-bacteria-and-viruses",
+      "title": "What's the difference between bacteria and viruses? - Institute for Molecular Bioscience, University of Queensland"
+    },
+    {
+      "n": 2,
+      "url": "https://www.drugs.com/article/antibiotics-and-viruses.html",
+      "title": "Viral Infections - Why Don't Antibiotics Kill Viruses? - Drugs.com"
+    },
+    {
+      "n": 3,
+      "url": "https://amrnarrative.org/2025/11/20/why-are-antibiotics-ineffective-against-viruses/",
+      "title": "Why are antibiotics ineffective against viruses? - The AMR Narrative"
+    },
+    {
+      "n": 4,
+      "url": "https://www.mayoclinic.org/diseases-conditions/infectious-diseases/expert-answers/infectious-disease/faq-20058098",
+      "title": "Bacterial vs. viral infections: How do they differ? - Mayo Clinic"
+    },
+    {
+      "n": 5,
+      "url": "https://www.mayoclinichealthsystem.org/hometown-health/speaking-of-health/3-reasons-why-you-did-not-receive-antibiotics-from-your-provider",
+      "title": "Why antibiotics aren't always the answer for an illness - Mayo Clinic Health System"
+    }
+  ],
+  "wikipedia_articles": [
+    "Virus",
+    "Bacteria",
+    "Antibiotic",
+    "Antiviral drug",
+    "Capsid",
+    "Cell wall",
+    "Antimicrobial resistance"
+  ],
+  "urls": [
+    "https://imb.uq.edu.au/article/2020/04/difference-between-bacteria-and-viruses",
+    "https://www.drugs.com/article/antibiotics-and-viruses.html",
+    "https://amrnarrative.org/2025/11/20/why-are-antibiotics-ineffective-against-viruses/",
+    "https://www.mayoclinic.org/diseases-conditions/infectious-diseases/expert-answers/infectious-disease/faq-20058098",
+    "https://www.mayoclinichealthsystem.org/hometown-health/speaking-of-health/3-reasons-why-you-did-not-receive-antibiotics-from-your-provider"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.084342,
+  "duration_ms": 25220,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:52+00:00"
+}

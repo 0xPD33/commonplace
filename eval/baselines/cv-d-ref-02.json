@@ -1,0 +1,47 @@
+{
+  "id": "cv-d-ref-02",
+  "query": "explain that like I'm 12",
+  "answer": "Think of a company like a giant pizza. When a company needs money to grow, it can cut itself into lots of tiny slices, called shares or stocks, and sell them to people. If you buy one, you own a tiny piece of that company. [1][2]\n\nThe stock market is like a huge swap meet where people buy and sell those slices with each other. It works a bit like an auction: one person wants to sell a slice and another offers money for it. [3] It isn't one building. It's all the stock exchanges put together. [1]\n\nPrices go up and down depending on how popular a company is. If lots of people want its slices, say because it just made a hit video game, the price goes up. If people stop wanting them, the price goes down. [2] You can make money if you sell your slice for more than you paid for it. Some companies also share part of their profits with owners, and those payments are called dividends. [1] The catch is that prices can drop too, so you could lose money.\n\nSources:\n[1] Stock Market Explained for Kids and Teens (Mydoh): https://www.mydoh.ca/learn/money-101/investing/stock-market-explained-for-kids-and-teens/\n[2] The Stock Market Explained for Kids (Kids' Money): https://www.kidsmoney.org/kids/investing/stock-market/\n[3] Stock Market: Simple Explanation for Kids, Teens & Beginners (Easy Peasy Finance): https://www.easypeasyfinance.com/stock-market-for-kids-financial-literacy/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.mydoh.ca/learn/money-101/investing/stock-market-explained-for-kids-and-teens/",
+      "title": "Stock Market Explained for Kids and Teens"
+    },
+    {
+      "n": 2,
+      "url": "https://www.kidsmoney.org/kids/investing/stock-market/",
+      "title": "The Stock Market Explained for Kids - Kids' Money"
+    },
+    {
+      "n": 3,
+      "url": "https://www.easypeasyfinance.com/stock-market-for-kids-financial-literacy/",
+      "title": "Stock Market: Simple Explanation for Kids, Teens & Beginners"
+    }
+  ],
+  "wikipedia_articles": [
+    "Stock market",
+    "Stock",
+    "Stock exchange",
+    "Dividend",
+    "Supply and demand"
+  ],
+  "urls": [
+    "https://www.mydoh.ca/learn/money-101/investing/stock-market-explained-for-kids-and-teens/",
+    "https://www.kidsmoney.org/kids/investing/stock-market/",
+    "https://www.easypeasyfinance.com/stock-market-for-kids-financial-literacy/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0574832,
+  "duration_ms": 16329,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:50:08+00:00"
+}

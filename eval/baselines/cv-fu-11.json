@@ -1,0 +1,41 @@
+{
+  "id": "cv-fu-11",
+  "query": "Can you go into more detail?",
+  "answer": "Here's a more detailed version, step by step.\n\n**The satellites:** The GPS constellation has 24 to 32 satellites in six orbital planes. They fly about 20,200 km up and circle the Earth roughly twice a day, once every 11 hours 58 minutes [1]. Each one carries atomic clocks and continuously broadcasts a timestamp along with data describing its own orbit.\n\n**Measuring distance:** Your receiver notes when each signal arrives. It multiplies the travel time by the speed of light to get a distance to that satellite. That's why the timing has to be so precise: light covers about 30 cm per nanosecond, so tiny clock errors turn into large position errors.\n\n**Why four satellites:** Your phone has a cheap quartz clock, not an atomic one, so its measured distances are all off by the same unknown clock error. These are called \"pseudoranges.\" Three satellites would be enough to fix a point in 3D if the clock were perfect. A fourth adds the equation needed to solve for the clock error along with latitude, longitude and altitude [1]. A useful side effect is that your receiver ends up knowing the time very accurately.\n\n**Relativity:** Seen from Earth, the satellite clocks run about 38 microseconds per day fast. This is mostly because gravity is weaker at their altitude, partly offset by their orbital speed. The system is designed to correct for this, and without the correction positions would drift by kilometers a day [1].\n\n**Errors and accuracy:** The biggest natural source of error is the ionosphere, which slows the signals. Single-frequency receivers use a model called Klobuchar to estimate that delay. Newer satellites broadcast more civilian signals (L1C, L2C, L5), which let a receiver measure the delay directly [1]. Consumer devices typically get within about 5 m, and survey-grade equipment can reach about 2 cm [1].\n\n**Ground control:** The U.S. Space Force runs the system from Schriever Space Force Base. Ground stations track the satellites, keep their clocks synchronized to within nanoseconds and upload corrected orbit data [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Global_Positioning_System",
+      "title": "Global Positioning System - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Global Positioning System",
+    "Pseudorange",
+    "Trilateration",
+    "Atomic clock",
+    "Medium Earth orbit",
+    "Error analysis for the Global Positioning System",
+    "Ionosphere",
+    "Gravitational time dilation",
+    "GPS signals",
+    "Schriever Space Force Base",
+    "Satellite navigation"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Global_Positioning_System"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.09713100000000001,
+  "duration_ms": 26105,
+  "num_turns": 4,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:09:09+00:00"
+}

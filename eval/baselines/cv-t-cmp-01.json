@@ -1,0 +1,39 @@
+{
+  "id": "cv-t-cmp-01",
+  "query": "and the Shanghai Tower?",
+  "answer": "The Shanghai Tower is 632 metres (2,073 ft) tall. That's about 196 metres shorter than the Burj Khalifa. It has 128 storeys and stands in the Lujiazui district of Pudong, Shanghai. It's the tallest building in China and the third-tallest in the world when measured to its architectural top [1][2].\n\nSources:\n[1] Shanghai Tower – Wikipedia: https://en.wikipedia.org/wiki/Shanghai_Tower\n[2] Shanghai Tower – Gensler: https://www.gensler.com/projects/shanghai-tower",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Shanghai_Tower",
+      "title": "Shanghai Tower - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.gensler.com/projects/shanghai-tower",
+      "title": "Shanghai Tower - Gensler"
+    }
+  ],
+  "wikipedia_articles": [
+    "Shanghai Tower",
+    "Burj Khalifa",
+    "List of tallest buildings"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Shanghai_Tower",
+    "https://www.gensler.com/projects/shanghai-tower"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.044699199999999994,
+  "duration_ms": 10321,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:36+00:00"
+}

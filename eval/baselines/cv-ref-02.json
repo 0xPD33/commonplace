@@ -1,0 +1,42 @@
+{
+  "id": "cv-ref-02",
+  "query": "explain it like I'm 10",
+  "answer": "Your body has its own army that fights germs, called the immune system. A vaccine is like a practice drill for that army. It shows your body a germ that has been killed or made weak, or just a small piece of one, so it can't really make you sick [1][2]. Your body looks at it and learns what that germ looks like. Then it makes special fighters called antibodies that know how to grab and stop that exact germ [2].\n\nThe best part is that your body remembers. It's a bit like getting a copy of the other team's playbook before the big game, so you already know their moves [2]. If the real germ ever tries to get in, your body spots it right away and fights it off fast, usually before you even feel sick. Some vaccines need a second shot or a \"booster\" later to help your body remember. And when lots of people get vaccinated, germs have trouble spreading, which helps protect people who can't get the shot, like tiny babies.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://kidshealth.org/en/parents/fact-myth-immunizations.html",
+      "title": "Vaccines Explained: Common Questions (KidsHealth)"
+    },
+    {
+      "n": 2,
+      "url": "https://answers.childrenshospital.org/how-vaccines-work/",
+      "title": "Using germs against themselves: How vaccines work (Boston Children's Hospital)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Vaccine",
+    "Immune system",
+    "Antibody",
+    "Immunological memory",
+    "Booster dose",
+    "Herd immunity"
+  ],
+  "urls": [
+    "https://kidshealth.org/en/parents/fact-myth-immunizations.html",
+    "https://answers.childrenshospital.org/how-vaccines-work/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.053475600000000005,
+  "duration_ms": 13797,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:10:03+00:00"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "seed-fu-01",
+  "query": "Why did he build it?",
+  "answer": "Shah Jahan built the Taj Mahal as a tomb for his favourite wife, Mumtaz Mahal. She died on 17 June 1631 while giving birth to their 14th child, and the two had been close companions ever since they married in 1612 [1][2]. Work began in 1632. The mausoleum itself was finished in 1648, and the surrounding buildings and garden about five years later [3]. The design is often read as an earthly version of Mumtaz Mahal's home in paradise [1]. It also reflects Shah Jahan's taste for grand building and showed off the wealth and power of the Mughal Empire. Shah Jahan himself was later buried there, next to her [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.tajmahal.gov.in/taj-story.aspx",
+      "title": "The Taj Mahal Story"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Mumtaz_Mahal",
+      "title": "Mumtaz Mahal - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
+      "title": "Taj Mahal - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Taj Mahal",
+    "Mumtaz Mahal",
+    "Shah Jahan"
+  ],
+  "urls": [
+    "https://www.tajmahal.gov.in/taj-story.aspx",
+    "https://en.wikipedia.org/wiki/Mumtaz_Mahal",
+    "https://en.wikipedia.org/wiki/Taj_Mahal"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0501008,
+  "duration_ms": 14804,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:49:03+00:00"
+}

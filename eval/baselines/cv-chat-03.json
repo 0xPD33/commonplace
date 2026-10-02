@@ -1,0 +1,34 @@
+{
+  "id": "cv-chat-03",
+  "query": "wow, that's interesting",
+  "answer": "It is interesting. Mumtaz Mahal died in 1631 while giving birth to their fourteenth child, and Shah Jahan started the tomb soon after. More than 20,000 workers and craftsmen worked on it, some from as far away as Persia, Syria and Italy, and the court architect Ustad Ahmad Lahori led the project [1]. When Shah Jahan died in 1666, his son Aurangzeb buried him beside her. Their real graves are in a lower chamber, and the decorated tombs visitors see upstairs are empty memorials [1]. UNESCO made it a World Heritage Site in 1983 [1]. If you want to know more about it, just ask.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
+      "title": "Taj Mahal - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Taj Mahal",
+    "Shah Jahan",
+    "Mumtaz Mahal",
+    "Ustad Ahmad Lahori"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Taj_Mahal"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.06387119999999999,
+  "duration_ms": 11705,
+  "num_turns": 3,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:10:17+00:00"
+}

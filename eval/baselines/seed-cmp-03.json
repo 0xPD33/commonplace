@@ -1,0 +1,50 @@
+{
+  "id": "seed-cmp-03",
+  "query": "How is Buddhism different from Hinduism?",
+  "answer": "Both religions come from ancient India and share a lot of vocabulary: karma, rebirth, samsara (the cycle of birth and death), dharma, and the goal of getting free from that cycle, called moksha in Hinduism and nirvana in Buddhism [1]. They differ mainly on the points below.\n\n- **Origins and scripture:** Buddhism goes back to one founder, the Buddha, in about the 5th century BCE. Hinduism has no single founder and grew out of Vedic religion blended with other Indian traditions. Buddhism rejected the authority of the Vedas and Upanishads, which Hinduism treats as sacred [1][2].\n- **The self:** Hinduism teaches that each person has an eternal soul (atman). Buddhism's \"not-self\" (anatta) teaching says there's no permanent self, only five constantly changing parts: body, feelings, perception, mental formations and consciousness [1][2].\n- **God and ultimate reality:** Hinduism describes Brahman as the eternal source of everything, and many traditions worship a supreme God. Buddhism doesn't rely on a creator God or on Brahman. It explains reality through \"dependent arising,\" the idea that everything comes into being because of other conditions [1].\n- **Caste:** Hinduism historically built the caste system into its social and religious order. The Buddha taught that caste doesn't matter for spiritual progress [1][2].\n\nKeep in mind that \"Hinduism\" covers a wide range of schools, so any short comparison simplifies things.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Buddhism_and_Hinduism",
+      "title": "Buddhism and Hinduism – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.studyiq.com/articles/differences-and-similarities-between-buddhism-and-hinduism/",
+      "title": "Differences and Similarities Between Buddhism and Hinduism – StudyIQ"
+    }
+  ],
+  "wikipedia_articles": [
+    "Buddhism and Hinduism",
+    "Buddhism",
+    "Hinduism",
+    "Anatta",
+    "Ātman (Hinduism)",
+    "Brahman",
+    "Pratītyasamutpāda",
+    "Moksha",
+    "Nirvana",
+    "Saṃsāra",
+    "Karma",
+    "Vedas",
+    "Caste system in India",
+    "Gautama Buddha"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Buddhism_and_Hinduism",
+    "https://www.studyiq.com/articles/differences-and-similarities-between-buddhism-and-hinduism/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.12414499999999999,
+  "duration_ms": 30645,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:26+00:00"
+}

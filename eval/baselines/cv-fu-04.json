@@ -1,0 +1,51 @@
+{
+  "id": "cv-fu-04",
+  "query": "How was it mass produced?",
+  "answer": "Penicillin was first made in quantity at Oxford, not by Fleming. Starting around 1939, Howard Florey and Ernst Chain led a team that worked out how to purify it and showed in 1940 that it protected infected mice, but their process was slow and gave very little [1]. In mid-1941 Florey took the work to the United States. There, scientists at the US Department of Agriculture's lab in Peoria, Illinois, who already knew fermentation well, switched from growing the mould on the surface of shallow trays to \"deep-tank\" fermentation, where the mould grows throughout large tanks with air bubbled through [1][2].\n\nTwo other changes raised yields a lot. First, the Peoria team added corn steep liquor, a nutrient-rich waste product from making corn starch, to the growth broth. Second, lab assistant Mary Hunt brought in a mouldy cantaloupe from a local market, and its strain made several times more penicillin than Fleming's original, with some accounts saying about six times [1][3]. US drug companies such as Pfizer, Merck and Squibb then scaled these methods up for the war effort. Output went from not enough to treat a single patient in 1941 to enough for the Allied armed forces by 1944 [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.sciencemuseum.org.uk/objects-and-stories/how-was-penicillin-developed",
+      "title": "How was penicillin developed? – Science Museum"
+    },
+    {
+      "n": 2,
+      "url": "https://www.sciencehistory.org/education/scientific-biographies/howard-walter-florey-and-ernst-boris-chain/",
+      "title": "Howard Walter Florey and Ernst Boris Chain – Science History Institute"
+    },
+    {
+      "n": 3,
+      "url": "https://www.the-scientist.com/how-a-moldy-cantaloupe-took-fleming-s-penicillin-from-discovery-to-mass-production-72304",
+      "title": "How a Moldy Cantaloupe Brought Fleming's Penicillin to the World – The Scientist"
+    }
+  ],
+  "wikipedia_articles": [
+    "History of penicillin",
+    "Penicillin",
+    "Howard Florey",
+    "Ernst Chain",
+    "Mary Hunt (bacteriologist)",
+    "National Center for Agricultural Utilization Research",
+    "Corn steep liquor",
+    "Penicillium chrysogenum",
+    "Industrial fermentation"
+  ],
+  "urls": [
+    "https://www.sciencemuseum.org.uk/objects-and-stories/how-was-penicillin-developed",
+    "https://www.sciencehistory.org/education/scientific-biographies/howard-walter-florey-and-ernst-boris-chain/",
+    "https://www.the-scientist.com/how-a-moldy-cantaloupe-took-fleming-s-penicillin-from-discovery-to-mass-production-72304"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08673600000000001,
+  "duration_ms": 27258,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:08:29+00:00"
+}

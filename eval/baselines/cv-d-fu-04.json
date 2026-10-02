@@ -1,0 +1,47 @@
+{
+  "id": "cv-d-fu-04",
+  "query": "Why was it launched into space instead of built on the ground?",
+  "answer": "The main reason is Earth's atmosphere. Pockets of moving air bend and blur starlight, which is what makes stars twinkle. From above the atmosphere, Hubble gets steady light and much sharper images than a telescope on the ground [1]. The atmosphere also blocks most ultraviolet light and some infrared light. Hubble was built to see ultraviolet, visible and near-infrared light, so being in space opens wavelengths that ground telescopes largely can't observe [1][2]. That ultraviolet ability still gives Hubble an edge today, even over large ground telescopes that use adaptive optics to correct for blurring [3]. Being in orbit also avoids weather, and it keeps Hubble away from much of the background skyglow that limits telescopes on the ground.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://science.nasa.gov/mission/hubble/overview/why-have-a-telescope-in-space/",
+      "title": "Why Have a Telescope in Space? - NASA Science"
+    },
+    {
+      "n": 2,
+      "url": "https://imagine.gsfc.nasa.gov/science/toolbox/emspectrum_observatories1.html",
+      "title": "Observatories Across the Electromagnetic Spectrum"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Hubble_Space_Telescope",
+      "title": "Hubble Space Telescope - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Hubble Space Telescope",
+    "Space telescope",
+    "Astronomical seeing",
+    "Ultraviolet astronomy",
+    "Adaptive optics"
+  ],
+  "urls": [
+    "https://science.nasa.gov/mission/hubble/overview/why-have-a-telescope-in-space/",
+    "https://imagine.gsfc.nasa.gov/science/toolbox/emspectrum_observatories1.html",
+    "https://en.wikipedia.org/wiki/Hubble_Space_Telescope"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.063335,
+  "duration_ms": 13668,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:48:42+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "seed-trv-05",
+  "query": "What are the signs of altitude sickness, and how do I avoid it when hiking in Peru?",
+  "answer": "Altitude sickness (acute mountain sickness, or AMS) feels a lot like a hangover. The main sign is a headache, plus at least one of: loss of appetite, nausea or vomiting, dizziness, fatigue or poor sleep. It usually starts 2 to 12 hours after you arrive at altitude [1]. The dangerous forms need urgent action. Confusion, stumbling or clumsy walking, and unusual drowsiness can mean fluid on the brain (HACE). Severe breathlessness even at rest, chest congestion, or a cough that may bring up pink or bloody sputum can mean fluid in the lungs (HAPE). With either one, go down right away, at least 300 m, and use oxygen if it's available [1].\n\nThis matters in Peru because you usually fly straight into Cusco at about 3,400 m (11,150 ft). Flying directly to that height can make up to half of travelers sick [2]. On the classic Inca Trail, the high point is Dead Woman's Pass at 4,215 m (13,828 ft), and people most often get sick on the day 2 climb up to it [3].\n\nTo avoid it:\n- Go slowly. Acclimatization takes 3 to 5 days, and it helps to spend a few days around 2,500 to 2,750 m first [2]. Many travelers do this in the lower Sacred Valley, which is a bit under 3,000 m. At minimum, spend 2 to 3 days in Cusco before any hard hiking [3].\n- Follow the ascent rule on multi-day treks. Above 3,000 m, don't raise the height where you sleep by more than about 500 m per day, and add a rest night for every 1,000 m you gain [1].\n- Take it easy at first. Keep activity light for the first day or two and skip alcohol for 48 hours [1].\n- Ask a doctor about acetazolamide (Diamox) before you go. It speeds up acclimatization and is usually started the day before you go up [1][2].\n- Don't push through symptoms. If they get worse, stop climbing, and if they get much worse, go down.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.cdc.gov/yellow-book/hcp/environmental-hazards-risks/high-altitude-travel-and-altitude-illness.html",
+      "title": "High-Altitude Travel and Altitude Illness | CDC Yellow Book"
+    },
+    {
+      "n": 2,
+      "url": "https://bushop.com/peru/guides/peru-altitude-sickness-guide-prevention-meds-oxygen-and-when-to-get-help/",
+      "title": "Peru Altitude Sickness Guide (2026): Prevention, Meds, Oxygen, and When to Get Help"
+    },
+    {
+      "n": 3,
+      "url": "https://trexperienceperu.com/blog/dead-womans-pass",
+      "title": "Dead Woman's Pass: Inca Trail Altitude & Hiking Guide"
+    }
+  ],
+  "wikipedia_articles": [
+    "Altitude sickness",
+    "High-altitude cerebral edema",
+    "High-altitude pulmonary edema",
+    "Acetazolamide",
+    "Cusco",
+    "Inca Trail to Machu Picchu",
+    "Sacred Valley"
+  ],
+  "urls": [
+    "https://www.cdc.gov/yellow-book/hcp/environmental-hazards-risks/high-altitude-travel-and-altitude-illness.html",
+    "https://bushop.com/peru/guides/peru-altitude-sickness-guide-prevention-meds-oxygen-and-when-to-get-help/",
+    "https://trexperienceperu.com/blog/dead-womans-pass"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1553172,
+  "duration_ms": 37385,
+  "num_turns": 6,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:46:54+00:00"
+}

@@ -1,0 +1,86 @@
+{
+  "id": "seed-exp-07",
+  "query": "Why are people saying WiFi and radio waves are harmful? What is the evidence?",
+  "answer": "Most of the worry comes from a few real findings that often get stretched. The strong evidence, though, doesn't show that WiFi or phones harm people at normal exposure levels.\n\n**Where the concern comes from**\n- **A 2011 WHO classification.** The WHO's cancer agency (IARC) labeled radiofrequency radiation \"possibly carcinogenic\" (Group 2B) [1]. That's its weakest positive category. It means the evidence was limited and couldn't be ruled out, not that harm was shown.\n- **A US rat study.** The US National Toxicology Program found \"clear evidence\" of a rare heart tumor (malignant schwannoma) in male rats given whole-body exposure, and \"some evidence\" of brain gliomas [2][3]. The rats got high doses for many hours a day over their whole lives, so it's hard to apply the results to how people use phones.\n- **Recent US politics.** In January 2026, HHS started a new study of cellphone and wireless radiation, and the FDA took down webpages that had called cellphone radiation safe [4][5]. Some people took that as an admission of danger. What changed was the policy, not the science.\n\n**What the stronger evidence shows**\n- **Cancer.** In 2024 the WHO commissioned a large review of human studies. It found moderate-certainty evidence that mobile phone use likely doesn't raise the risk of brain tumors (glioma, meningioma, acoustic neuroma) in adults or children. It found the same for childhood leukemia and exposure from cell towers and other transmitters [1][6]. Some researchers dispute it, arguing it underplays higher risks among the heaviest, longest-term users [7].\n- **Physics.** Radio waves are \"non-ionizing,\" meaning they don't carry enough energy to break chemical bonds or damage DNA the way X-rays or UV light can. The main proven effect is slight heating, and exposure limits are set well below that.\n- **Electromagnetic hypersensitivity.** Some people say WiFi gives them headaches or other symptoms, and the WHO accepts that those symptoms are real [8]. But in double-blind tests, these people couldn't tell when a real field was switched on. They reported symptoms just as often after fake exposures [9].\n\n**Bottom line:** The FDA, CDC and FCC have long held that phone radiation within legal limits is safe, and large population studies haven't found a clear cancer link [4]. There are still open questions, like very heavy lifetime use and newer technologies such as 5G. But the claim that WiFi is harmful goes well beyond what the evidence supports.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.bfs.de/EN/topics/emf/competence-centre-emf/reports/reports-mobile/who-systematic-reviews.html",
+      "title": "BfS - From cancer to reproduction: How the WHO uses systematic reviews to assess the risk of mobile communications, Wi-Fi, and the like"
+    },
+    {
+      "n": 2,
+      "url": "https://www.niehs.nih.gov/health/topics/agents/cellphones",
+      "title": "NIEHS - Cell Phones"
+    },
+    {
+      "n": 3,
+      "url": "https://ntp.niehs.nih.gov/sites/default/files/ntp/about_ntp/trpanel/2018/march/presentations/21wyde_rats_results_508.pdf",
+      "title": "Results of the NTP Studies of Cell Phone Radio Frequency Radiation"
+    },
+    {
+      "n": 4,
+      "url": "https://www.usnews.com/news/health-news/articles/2026-01-20/hhs-announces-new-study-of-cellphone-radiation-and-health",
+      "title": "HHS Announces New Study of Cellphone Radiation and Health (US News)"
+    },
+    {
+      "n": 5,
+      "url": "https://www.cancerhealth.com/article/fda-removes-web-pages-saying-cellphone-radiation-safe-hhs-launches-study-topic",
+      "title": "FDA Removes Web Pages Saying Cellphone Radiation Is Safe as HHS Launches a Study on the Topic - Cancer Health"
+    },
+    {
+      "n": 6,
+      "url": "https://www.sciencedirect.com/science/article/pii/S0160412024005695",
+      "title": "The effect of exposure to radiofrequency fields on cancer risk in the general and working population: A systematic review of human observational studies – Part I (Environment International, 2024)"
+    },
+    {
+      "n": 7,
+      "url": "https://www.saferemr.com/2024/09/biased-who-commissioned-review-claims.html",
+      "title": "Electromagnetic Radiation Safety: Biased WHO-commissioned review claims no cancer link to cellphone use"
+    },
+    {
+      "n": 8,
+      "url": "https://www.who.int/teams/environment-climate-change-and-health/radiation-and-health/non-ionizing/hypersensitivity",
+      "title": "WHO - Electromagnetic hypersensitivity"
+    },
+    {
+      "n": 9,
+      "url": "https://en.wikipedia.org/wiki/Electromagnetic_hypersensitivity",
+      "title": "Electromagnetic hypersensitivity - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Mobile phone radiation and health",
+    "Wireless electronic devices and health",
+    "Electromagnetic hypersensitivity",
+    "Non-ionizing radiation",
+    "List of IARC Group 2B Agents – Possibly carcinogenic to humans",
+    "National Toxicology Program",
+    "International Agency for Research on Cancer",
+    "5G misinformation"
+  ],
+  "urls": [
+    "https://www.bfs.de/EN/topics/emf/competence-centre-emf/reports/reports-mobile/who-systematic-reviews.html",
+    "https://www.niehs.nih.gov/health/topics/agents/cellphones",
+    "https://ntp.niehs.nih.gov/sites/default/files/ntp/about_ntp/trpanel/2018/march/presentations/21wyde_rats_results_508.pdf",
+    "https://www.usnews.com/news/health-news/articles/2026-01-20/hhs-announces-new-study-of-cellphone-radiation-and-health",
+    "https://www.cancerhealth.com/article/fda-removes-web-pages-saying-cellphone-radiation-safe-hhs-launches-study-topic",
+    "https://www.sciencedirect.com/science/article/pii/S0160412024005695",
+    "https://www.saferemr.com/2024/09/biased-who-commissioned-review-claims.html",
+    "https://www.who.int/teams/environment-climate-change-and-health/radiation-and-health/non-ionizing/hypersensitivity",
+    "https://en.wikipedia.org/wiki/Electromagnetic_hypersensitivity"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.22860439999999999,
+  "duration_ms": 42714,
+  "num_turns": 7,
+  "web_search_requests": 4,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:04+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "seed-how-06",
+  "query": "How do I get rid of black mould in the bathroom for good?",
+  "answer": "To get rid of black mould for good, you need to deal with the damp that feeds it, not just the stain. Otherwise it keeps coming back.\n\nGetting it off: On hard surfaces like tiles, grout and painted walls, scrub with detergent and water, then dry the area completely. The US EPA says you don't need to use bleach as a routine cleaner for mould [1][2]. If you do use bleach, never mix it with ammonia or other cleaners, because that creates toxic fumes. Mould that has grown into silicone sealant or crumbling grout usually can't be cleaned out, so cut it out and redo it. If the mouldy patch is bigger than about 10 square feet (roughly 1 m²), or keeps coming back through the plaster, get a professional in [2].\n\nKeeping it away: Keep the room's humidity below 60%, ideally 30–50% [2]. Run the extractor fan while you shower and for at least 15 minutes afterwards, and open a window or leave the door open when you can [3]. Squeegee or wipe the walls and screen after each shower, dry towels somewhere else, and fix any leaks quickly [3]. The EPA says that more ventilation plus more frequent cleaning usually stops bathroom mould from returning [2].\n\nIf it still keeps coming back, check whether the fan actually pulls air out. Also look for a cold external wall or a hidden leak, since those are the usual causes.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.epa.gov/mold/mold-cleanup-your-home",
+      "title": "Mold Cleanup in Your Home | US EPA"
+    },
+    {
+      "n": 2,
+      "url": "https://www.epa.gov/mold/brief-guide-mold-moisture-and-your-home",
+      "title": "A Brief Guide to Mold, Moisture and Your Home | US EPA"
+    },
+    {
+      "n": 3,
+      "url": "https://www.rentokil.co.uk/blog/black-mould-bathroom/",
+      "title": "Black Mould in Bathrooms: Why it Happens and How to Remove and Prevent it! - Rentokil"
+    }
+  ],
+  "wikipedia_articles": [
+    "Mold",
+    "Indoor mold",
+    "Stachybotrys chartarum",
+    "Mold health issues",
+    "Relative humidity",
+    "Ventilation (architecture)",
+    "Condensation"
+  ],
+  "urls": [
+    "https://www.epa.gov/mold/mold-cleanup-your-home",
+    "https://www.epa.gov/mold/brief-guide-mold-moisture-and-your-home",
+    "https://www.rentokil.co.uk/blog/black-mould-bathroom/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1141322,
+  "duration_ms": 25802,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:47:49+00:00"
+}

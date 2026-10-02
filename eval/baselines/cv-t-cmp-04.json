@@ -1,0 +1,54 @@
+{
+  "id": "cv-t-cmp-04",
+  "query": "How does it compare to the French Revolution?",
+  "answer": "The French Revolution came a little later and was shorter, running from 1789 to 1799, which overlaps with the end of the American Revolution period [2]. The American Revolution helped inspire it, both through its ideas and in practical terms. France had just paid heavily to support the Americans in the war, and French veterans such as Lafayette brought revolutionary ideas home [3]. The goals were different, though. The Americans mainly wanted independence from British colonial rule. The French tried to remake their whole society by overthrowing the monarchy and the aristocratic order [2][4]. The French Revolution was also far more violent and unstable. It went through a radical phase, the Reign of Terror, in which tens of thousands died, and it ended with Napoleon taking power. The American Revolution, by contrast, produced a lasting constitutional republic [2][4]. Americans first welcomed the French Revolution as a sister cause, but opinion split sharply once it turned radical [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://history.state.gov/milestones/1784-1800/french-rev",
+      "title": "Milestones in the History of U.S. Foreign Relations: The United States and the French Revolution, 1789–1799"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/French_Revolution",
+      "title": "French Revolution - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Influence_of_the_American_Revolution_on_the_French_Revolution",
+      "title": "Influence of the American Revolution on the French Revolution - Wikipedia"
+    },
+    {
+      "n": 4,
+      "url": "https://www.historyisnowmagazine.com/blog/2023/8/11/the-american-revolution-versus-the-french-revolution",
+      "title": "The American Revolution Versus the French Revolution"
+    }
+  ],
+  "wikipedia_articles": [
+    "French Revolution",
+    "American Revolution",
+    "Influence of the American Revolution on the French Revolution",
+    "Reign of Terror",
+    "Napoleon",
+    "Gilbert du Motier, Marquis de Lafayette"
+  ],
+  "urls": [
+    "https://history.state.gov/milestones/1784-1800/french-rev",
+    "https://en.wikipedia.org/wiki/French_Revolution",
+    "https://en.wikipedia.org/wiki/Influence_of_the_American_Revolution_on_the_French_Revolution",
+    "https://www.historyisnowmagazine.com/blog/2023/8/11/the-american-revolution-versus-the-french-revolution"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.055561799999999995,
+  "duration_ms": 16684,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:54+00:00"
+}

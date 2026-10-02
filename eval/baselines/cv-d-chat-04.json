@@ -1,0 +1,22 @@
+{
+  "id": "cv-d-chat-04",
+  "query": "haha awesome",
+  "answer": "Glad you liked it! Sperm whales are amazing. If you're curious, I can look into more about them, like how they use those clicks to find prey, or which land animals are the loudest.",
+  "sources": [],
+  "wikipedia_articles": [
+    "Sperm whale"
+  ],
+  "urls": [],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0105396,
+  "duration_ms": 4382,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:50:24+00:00"
+}

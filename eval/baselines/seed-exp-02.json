@@ -1,0 +1,55 @@
+{
+  "id": "seed-exp-02",
+  "query": "Who really created the foundation of electricity?",
+  "answer": "No one person created it. Electricity is a natural phenomenon, so it was discovered bit by bit over centuries rather than invented [2]. If you want one name for the foundation, it's usually William Gilbert, the English physician who is often called the \"father of electricity.\" In his book De Magnete (1600) he studied static attraction in a systematic way and coined the Latin word \"electricus,\" meaning \"amber-like.\" That word gave us \"electricity,\" and the book also introduced terms like \"electric force\" and \"magnetic pole\" [1][3].\n\nOthers built on that work. The ancient Greek Thales of Miletus noticed static effects from rubbing amber much earlier. Stephen Gray showed the difference between conductors and insulators, and the Leyden jar (1745) made it possible to store charge. Benjamin Franklin showed that lightning is electrical, which is why he's often the name people give [2]. Alessandro Volta built the first battery in 1800, the first steady source of current [3]. Michael Faraday discovered electromagnetic induction in 1831, the principle behind the electric generator [3]. James Clerk Maxwell later combined electricity and magnetism into a single theory. Edison and Tesla came after all of this; they turned the science into practical power systems rather than laying its foundations [2].\n\nSo the fairest answer is Gilbert for the scientific starting point, and Faraday and Maxwell for the physics that makes modern electrical power possible.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://nationalmaglab.org/magnet-academy/history-of-electricity-magnetism/pioneers/william-gilbert/",
+      "title": "William Gilbert - Magnet Academy (National MagLab)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.sciencefocus.com/science/who-invented-electricty",
+      "title": "Who discovered electricity? Probably not who you're thinking - BBC Science Focus Magazine"
+    },
+    {
+      "n": 3,
+      "url": "https://www.eetimes.com/the-actual-father-of-electricity/",
+      "title": "The Actual Father of Electricity - EE Times"
+    }
+  ],
+  "wikipedia_articles": [
+    "History of electromagnetic theory",
+    "William Gilbert (physicist)",
+    "De Magnete",
+    "Thales of Miletus",
+    "Stephen Gray (scientist)",
+    "Leyden jar",
+    "Benjamin Franklin",
+    "Alessandro Volta",
+    "Voltaic pile",
+    "Michael Faraday",
+    "Electromagnetic induction",
+    "James Clerk Maxwell",
+    "Maxwell's equations"
+  ],
+  "urls": [
+    "https://nationalmaglab.org/magnet-academy/history-of-electricity-magnetism/pioneers/william-gilbert/",
+    "https://www.sciencefocus.com/science/who-invented-electricty",
+    "https://www.eetimes.com/the-actual-father-of-electricity/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0841318,
+  "duration_ms": 28858,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:43:21+00:00"
+}

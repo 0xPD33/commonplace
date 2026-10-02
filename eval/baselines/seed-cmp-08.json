@@ -1,0 +1,49 @@
+{
+  "id": "seed-cmp-08",
+  "query": "How do Linux and Windows handle file permissions differently?",
+  "answer": "Linux and Windows both control who can use a file, but they are built differently. Classic Linux permissions are simple. Every file has one owner and one group, and three sets of read, write and execute (rwx) permissions: one for the owner, one for the group, and one for everyone else (\"others\"). You set these with chmod and chown [1][2]. Linux checks only the first category you fall into, in the order owner, group, others. Three special flags change the rules: setuid makes a program run as its owner, setgid makes new files in a folder take the folder's group, and the sticky bit stops people deleting other users' files in a shared folder [1].\n\nWindows, on NTFS, uses an access control list (ACL) on each file. This is a list of entries, and each one names a user or group and lists the rights it is allowed or denied. There can be as many entries as you need, and the rights are much finer than read, write and execute [3][1]. Windows reads the entries in order until the requested access is either fully allowed or explicitly denied. Permissions usually pass down automatically from parent folders, and a separate list can log access attempts for auditing [3][1]. A file with no list at all is open to everyone, while a file with an empty list blocks everyone [3].\n\nIn short, Linux's model is easier to read and manage, and Windows's is more flexible but can get complicated once inheritance and deny rules pile up [2]. The difference is smaller than it looks, because Linux file systems like ext4 also support add-on POSIX ACLs (managed with setfacl and getfacl) that give named users and groups their own permissions [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/File-system_permissions",
+      "title": "File-system permissions – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.redhat.com/en/blog/linux-file-permissions-explained",
+      "title": "Linux file permissions explained – Red Hat"
+    },
+    {
+      "n": 3,
+      "url": "https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-lists",
+      "title": "Access Control Lists – Win32 apps | Microsoft Learn"
+    }
+  ],
+  "wikipedia_articles": [
+    "File-system permissions",
+    "Access-control list",
+    "NTFS",
+    "Chmod",
+    "Setuid",
+    "Sticky bit",
+    "Discretionary access control"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/File-system_permissions",
+    "https://www.redhat.com/en/blog/linux-file-permissions-explained",
+    "https://learn.microsoft.com/en-us/windows/win32/secauthz/access-control-lists"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1300068,
+  "duration_ms": 27910,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:55+00:00"
+}

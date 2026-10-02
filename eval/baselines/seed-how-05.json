@@ -1,0 +1,55 @@
+{
+  "id": "seed-how-05",
+  "query": "How do I fix a flat bike tyre when I'm out on a ride?",
+  "answer": "Most riders swap in a spare inner tube at the roadside and patch the punctured one later at home, because swapping is much faster [1][2].\n\n1. Get the wheel off. Shift into the smallest rear cog so the chain is slack, and open your rim brake if you have one. Then open the quick-release lever or unscrew the thru-axle and drop the wheel out [1].\n2. Take out the tube. Push a tyre lever under one edge of the tyre (the bead) and pry it over the rim. Slide the lever around the wheel until that whole side is free. Push the valve out through the rim and pull the tube out [1].\n3. Find what caused it. Run your fingers carefully around the inside of the tyre and look at the tread. Pick out any glass, thorn or grit. If you skip this, the same object will puncture the new tube straight away [1][3].\n4. Fit the new tube. Put a little air in it so it holds its shape. Push the valve through the rim hole first, then tuck the tube into the tyre [1].\n5. Refit the tyre. Work the bead back onto the rim with your thumbs, starting at the valve and finishing there. Try not to use levers for the last tight section, because that's how you pinch and puncture the new tube [1].\n6. Check and inflate. Make sure the tyre is sitting evenly all the way around and no tube is poking out under the bead. Then pump it up, refit the wheel and close your brake again [1].\n\nIf you don't have a spare, you can patch the hole where you are. Self-adhesive patches are quicker at the roadside, but patches you glue on are more likely to last [3]. It's worth carrying a spare tube, tyre levers, patches and a mini pump or CO2 inflator on every ride [2][4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://julianrides.com/en/articles/how-to-fix-a-flat-tire/",
+      "title": "How to Fix a Flat Tire on a Bike: Step-by-Step — Julian Rides"
+    },
+    {
+      "n": 2,
+      "url": "https://www.bikeradar.com/advice/workshop/how-to-fix-a-puncture-video",
+      "title": "How to fix a puncture on a bike | Video tutorial and easy step-by-step guide with tips | BikeRadar"
+    },
+    {
+      "n": 3,
+      "url": "https://www.cyclingweekly.com/news/product-news/fix-a-puncture-142674",
+      "title": "How to fix a bike puncture and mend an inner tube | Cycling Weekly"
+    },
+    {
+      "n": 4,
+      "url": "https://www.cyclinguk.org/article/technical-guide/video-repair-puncture",
+      "title": "Video: How to fix a puncture on a road bike and mountain bike | Cycling UK"
+    }
+  ],
+  "wikipedia_articles": [
+    "Flat tire",
+    "Bicycle tire",
+    "Inner tube",
+    "Tire lever",
+    "Tire patch",
+    "Presta valve",
+    "Quick release skewer"
+  ],
+  "urls": [
+    "https://julianrides.com/en/articles/how-to-fix-a-flat-tire/",
+    "https://www.bikeradar.com/advice/workshop/how-to-fix-a-puncture-video",
+    "https://www.cyclingweekly.com/news/product-news/fix-a-puncture-142674",
+    "https://www.cyclinguk.org/article/technical-guide/video-repair-puncture"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0858196,
+  "duration_ms": 27210,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:47:42+00:00"
+}

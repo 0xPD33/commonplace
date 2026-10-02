@@ -1,0 +1,47 @@
+{
+  "id": "cv-t-fu-04",
+  "query": "why is it green?",
+  "answer": "It's green because its outer skin is copper, and copper that sits out in the weather slowly corrodes into a green layer called a patina. When the statue was dedicated in 1886, it was the shiny reddish-brown of a new penny. The copper first oxidized into a dark brown coating. That coating then reacted with sulfur compounds in the polluted New York air, and with chloride from the sea spray, to form green copper minerals, mainly brochantite plus some atacamite [1][2]. The change took about 20 years, so the statue was fully green by the early 1900s [2][3]. The patina also protects the copper underneath from further corrosion, which is why it has been left alone rather than cleaned off [1][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.history.com/articles/statue-of-liberty-green-color-change",
+      "title": "The Statue of Liberty Wasn't Always Green – History.com"
+    },
+    {
+      "n": 2,
+      "url": "https://www.acs.org/content/dam/acsorg/pressroom/reactions/infographics/statue-of-liberty-became-green.pdf",
+      "title": "Statue of Liberty: A Patina 20 Years in the Making – American Chemical Society"
+    },
+    {
+      "n": 3,
+      "url": "https://www.nbcnewyork.com/news/local/the-real-reason-the-statue-of-liberty-is-green/3910988/",
+      "title": "Why Is the Statue of Liberty Green? It Wasn't Always That Color – NBC New York"
+    }
+  ],
+  "wikipedia_articles": [
+    "Statue of Liberty",
+    "Patina",
+    "Copper",
+    "Brochantite",
+    "Atacamite"
+  ],
+  "urls": [
+    "https://www.history.com/articles/statue-of-liberty-green-color-change",
+    "https://www.acs.org/content/dam/acsorg/pressroom/reactions/infographics/statue-of-liberty-became-green.pdf",
+    "https://www.nbcnewyork.com/news/local/the-real-reason-the-statue-of-liberty-is-green/3910988/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0525946,
+  "duration_ms": 13388,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:50:40+00:00"
+}

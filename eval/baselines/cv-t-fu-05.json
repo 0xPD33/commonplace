@@ -1,0 +1,41 @@
+{
+  "id": "cv-t-fu-05",
+  "query": "did they get along",
+  "answer": "Not really, although the famous feud is often exaggerated. Tesla worked at the Edison Machine Works for only about six months starting in 1884. The historian W. Bernard Carlson thinks the two men probably met just a couple of times. One of those meetings was friendly: Tesla stayed up all night repairing the dynamos on the SS Oregon, and Edison called him \"a damned good man\" [1].\n\nTesla left early in 1885 after a pay dispute. In his own telling, the company's manager promised him a $50,000 bonus to redesign its machines and then said the offer was a practical joke. Later versions put the promise and the \"you don't understand our American humor\" line in Edison's mouth. Historians doubt the story, partly because the company didn't have that kind of cash to pay out [1][2].\n\nThe rivalry that people remember is the \"War of the Currents\" in the late 1880s. Edison's company campaigned for direct current against the alternating-current system that Westinghouse built using Tesla's patents [1]. Tesla got on much better with George Westinghouse. When Westinghouse's company ran into money trouble in the early 1890s, Tesla let it out of its royalty payments, and it later bought his patents outright for $216,000 [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Nikola_Tesla",
+      "title": "Nikola Tesla – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://medium.com/@interestingshit/the-best-feud-that-never-really-existed-edison-and-tesla-df748813c4cd",
+      "title": "The Best Feud That Never Really Existed: Edison and Tesla"
+    }
+  ],
+  "wikipedia_articles": [
+    "Nikola Tesla",
+    "Thomas Edison",
+    "War of the currents",
+    "George Westinghouse",
+    "Edison Machine Works"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Nikola_Tesla",
+    "https://medium.com/@interestingshit/the-best-feud-that-never-really-existed-edison-and-tesla-df748813c4cd"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.12197759999999999,
+  "duration_ms": 31286,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:12+00:00"
+}

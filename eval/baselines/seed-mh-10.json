@@ -1,0 +1,57 @@
+{
+  "id": "seed-mh-10",
+  "query": "Beethoven went deaf — how did he keep composing, and which famous works came after?",
+  "answer": "Beethoven kept composing because he could hear music in his head. He had been a trained professional musician since childhood, so he could imagine pitches, harmonies and whole textures without playing them. He also worked out his ideas on paper in sketchbooks, rather than needing to hear them played [3][1]. His hearing started to fail around 1798, when he was in his late twenties. In 1802 he wrote the Heiligenstadt Testament, a letter to his brothers that was never sent. In it he admitted he had thought about suicide but said he was determined to keep making music [2]. By the 1820s he was almost completely deaf. Visitors wrote their side of a conversation in \"conversation books\" and he answered out loud, sometimes jotting musical sketches in the same books [1][4]. One often-repeated story says he bit a rod touching the piano to feel the vibrations through his jaw, but that's hard to verify.\n\nHis deafness mostly ended his career as a performing pianist, not as a composer [2]. Nearly all his most famous works came after it began. From the middle years there are the \"Eroica\" (Third) and Fifth Symphonies and his only opera, Fidelio. From the late period there are the \"Hammerklavier\" and other late piano sonatas, the Missa solemnis, the late string quartets and the Ninth Symphony, which premiered in 1824 [2][3]. At that premiere, a well-known story says one of the singers had to turn him around so he could see the audience clapping, because he couldn't hear it.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.classical-music.com/features/composers/beethovens-conversation-books",
+      "title": "Beethoven conversation books: fascinating insights | Classical Music"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Ludwig_van_Beethoven",
+      "title": "Ludwig van Beethoven - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://opusnotes.substack.com/p/how-did-beethoven-compose-masterpieces",
+      "title": "How did Beethoven Compose Masterpieces in Silence? The Triumph of Genius Over Disability"
+    },
+    {
+      "n": 4,
+      "url": "https://bsolive.com/news/the-beethoven-conversation-books-what-were-they/",
+      "title": "The Beethoven Conversation Books — what were they?"
+    }
+  ],
+  "wikipedia_articles": [
+    "Ludwig van Beethoven",
+    "Heiligenstadt Testament",
+    "Symphony No. 9 (Beethoven)",
+    "Missa solemnis (Beethoven)",
+    "Late string quartets (Beethoven)",
+    "Symphony No. 3 (Beethoven)",
+    "Symphony No. 5 (Beethoven)",
+    "Fidelio",
+    "Piano Sonata No. 29 (Beethoven)"
+  ],
+  "urls": [
+    "https://www.classical-music.com/features/composers/beethovens-conversation-books",
+    "https://en.wikipedia.org/wiki/Ludwig_van_Beethoven",
+    "https://opusnotes.substack.com/p/how-did-beethoven-compose-masterpieces",
+    "https://bsolive.com/news/the-beethoven-conversation-books-what-were-they/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1418724,
+  "duration_ms": 39891,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:56+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "seed-exp-05",
+  "query": "How does 3D printing work?",
+  "answer": "3D printing, also called additive manufacturing, builds an object by adding material one thin layer at a time from a digital design [1]. You start with a 3D model, usually made in CAD software and saved in a format like STL. Software called a slicer cuts that model into hundreds or thousands of horizontal slices and works out the path the printer should follow for each one [1]. The printer then makes the part slice by slice, bonding each new layer to the one below it, until the full object is finished.\n\nHow each layer gets made depends on the technology. The most common method for home printers is fused deposition modeling (FDM, also called fused filament fabrication). It feeds plastic filament from a spool through a heated nozzle, which moves around and lays down melted plastic that hardens as it cools, much like a very precise hot-glue gun [1][2]. Stereolithography (SLA) uses a vat of liquid resin that hardens under light. A UV laser traces each layer so the resin solidifies exactly where it hits [1][2]. Selective laser sintering (SLS) spreads a thin layer of fine powder, usually nylon, and uses a laser to fuse the parts that belong to the object. The loose powder around it holds the part up, so SLS doesn't need the temporary support structures that FDM and SLA often do for overhangs [1][3]. There are other methods too, such as metal powder-bed fusion and inkjet-style material jetting, but they all follow the same basic idea of building up layers from a digital file.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8470301/",
+      "title": "3D/4D Printing of Polymers: Fused Deposition Modelling (FDM), Selective Laser Sintering (SLS), and Stereolithography (SLA)"
+    },
+    {
+      "n": 2,
+      "url": "https://markforged.com/resources/blog/fdm-vs-sla",
+      "title": "FDM vs. SLA 3D Printing: Differences, Pros & Cons | Markforged"
+    },
+    {
+      "n": 3,
+      "url": "https://3dprinting.com/types-of-3d-printing/",
+      "title": "Types of 3D Printing: FDM, SLA, SLS, DLP & MJF Explained"
+    }
+  ],
+  "wikipedia_articles": [
+    "3D printing",
+    "Fused filament fabrication",
+    "Stereolithography",
+    "Selective laser sintering",
+    "Slicer (3D printing)",
+    "STL (file format)",
+    "Computer-aided design"
+  ],
+  "urls": [
+    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8470301/",
+    "https://markforged.com/resources/blog/fdm-vs-sla",
+    "https://3dprinting.com/types-of-3d-printing/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.059395,
+  "duration_ms": 18281,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:43:27+00:00"
+}

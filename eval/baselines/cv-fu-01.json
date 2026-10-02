@@ -1,0 +1,46 @@
+{
+  "id": "cv-fu-01",
+  "query": "What else did she write?",
+  "answer": "Besides Pride and Prejudice, Jane Austen finished five other novels. Four came out while she was alive: Sense and Sensibility in 1811, Mansfield Park in 1814 and Emma in 1815 (the fourth being Pride and Prejudice itself). Northanger Abbey and Persuasion were published together after she died in 1817, though the title pages are dated 1818 [1][2]. She also wrote the short epistolary novel Lady Susan, her early \"Juvenilia\" pieces, and two novels she never finished, The Watsons and Sanditon [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://janeaustens.house/jane-austen/novels/",
+      "title": "Jane Austen's Novels – Jane Austen's House"
+    },
+    {
+      "n": 2,
+      "url": "https://jasna.org/austen/works/",
+      "title": "Jane Austen's Works » JASNA"
+    }
+  ],
+  "wikipedia_articles": [
+    "Jane Austen",
+    "Sense and Sensibility",
+    "Mansfield Park",
+    "Emma (novel)",
+    "Northanger Abbey",
+    "Persuasion (novel)",
+    "Lady Susan",
+    "The Watsons",
+    "Sanditon",
+    "Juvenilia (Austen)"
+  ],
+  "urls": [
+    "https://janeaustens.house/jane-austen/novels/",
+    "https://jasna.org/austen/works/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.058015199999999996,
+  "duration_ms": 11416,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:08:13+00:00"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "cv-chat-04",
+  "query": "ok cool",
+  "answer": "Glad that helped! If you're curious about anything else about Everest, like how that height was measured, climbing routes, or its history, just ask.",
+  "sources": [],
+  "wikipedia_articles": [],
+  "urls": [],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.009931599999999999,
+  "duration_ms": 3952,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:10:12+00:00"
+}

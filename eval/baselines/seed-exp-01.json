@@ -1,0 +1,44 @@
+{
+  "id": "seed-exp-01",
+  "query": "What was the goal of the French Revolution?",
+  "answer": "The French Revolution (1789–1799) didn't have one fixed goal. Its aims grew more radical over time. Broadly, revolutionaries wanted to tear down the \"Ancien Régime,\" the absolute monarchy that gave special privileges to the nobility and the Catholic clergy. In its place they wanted a system built on Enlightenment ideas: popular sovereignty, citizenship, equal rights before the law, and fair taxation [1][2].\n\nThese ideas were summed up in the motto \"Liberty, Equality, Fraternity.\" Liberty meant freedom from arbitrary rule. Equality meant ending feudal privileges and tax exemptions. Fraternity meant uniting the French people as one nation [2]. The early achievements show what the revolutionaries were after. The August 1789 decrees abolished feudalism and the church tithe. The Declaration of the Rights of Man and of the Citizen set out basic rights. The first plan was a constitutional monarchy that limited the king's power [1].\n\nAfter that, goals changed with circumstances. Pressure from war, economic crisis and radical groups such as the Jacobins led to the monarchy being abolished and the First Republic declared in September 1792, and Louis XVI was executed in 1793. Then came the Reign of Terror, the Thermidorian Reaction and the Directory [1].\n\nSo the short answer is that it began as an effort to fix France's finances and limit royal and aristocratic privilege. It ended up trying to rebuild French society around rights, equality and the nation.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/French_Revolution",
+      "title": "French Revolution – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.newworldencyclopedia.org/entry/French_Revolution",
+      "title": "French Revolution – New World Encyclopedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "French Revolution",
+    "Ancien Régime",
+    "Liberté, égalité, fraternité",
+    "August Decrees",
+    "Declaration of the Rights of Man and of the Citizen",
+    "French First Republic",
+    "Reign of Terror",
+    "Age of Enlightenment"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/French_Revolution",
+    "https://www.newworldencyclopedia.org/entry/French_Revolution"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.10809859999999999,
+  "duration_ms": 18924,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:43:08+00:00"
+}

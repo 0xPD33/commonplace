@@ -1,0 +1,47 @@
+{
+  "id": "seed-trv-08",
+  "query": "What vaccinations do I need for a trip to Kenya?",
+  "answer": "The only vaccine Kenya can make you show proof of at entry is yellow fever, and only in certain cases. If you fly directly from the US or Canada, you don't need it. You do need a yellow fever certificate if you're arriving from a country with yellow fever risk, or if you spend more than 12 hours in an airport in one of those countries on the way [1][2].\n\nEven when it isn't required, the CDC recommends the yellow fever shot for everyone aged 9 months or older. The exceptions are trips limited to Nairobi city, most coastal counties, or the northeastern counties of Mandera, Wajir and Garissa. So if you're going on safari to game parks outside those areas, plan on getting it [1].\n\nThe CDC also recommends:\n- Routine shots: be up to date on MMR (measles, mumps, rubella), polio, Tdap/Td, chickenpox, flu, shingles and COVID-19 [1].\n- Hepatitis A and typhoid: for most travelers [1].\n- Hepatitis B: for unvaccinated travelers under 60 [1].\n- Situational vaccines to discuss with a clinician: rabies (common in dogs there), cholera (for areas with active outbreaks), and mpox (if you expect sexual contact with new partners or large public events) [1].\n\nKenya also has malaria, and there's no vaccine for travelers. You'll need prescription antimalarial pills for areas below 2,500 m, which covers most safari and beach destinations. Central Nairobi only calls for insect precautions [1].\n\nTry to see a travel clinic 4–6 weeks before you leave, because some vaccines take time or need more than one dose. Entry rules can also change, so check the CDC Kenya page again close to your departure date. I couldn't load Kenya's Ministry of Health page to confirm directly.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://wwwnc.cdc.gov/travel/destinations/traveler/none/kenya",
+      "title": "CDC Travelers' Health: Kenya"
+    },
+    {
+      "n": 2,
+      "url": "https://www.cdc.gov/yellow-book/hcp/preparing-international-travelers/yellow-fever-vaccine-and-malaria-prevention-information-by-country.html",
+      "title": "CDC Yellow Book: Yellow Fever Vaccine and Malaria Prevention Information, by Country"
+    }
+  ],
+  "wikipedia_articles": [
+    "Yellow fever vaccine",
+    "Yellow fever",
+    "Malaria",
+    "Travel medicine",
+    "Hepatitis A vaccine",
+    "Typhoid vaccine",
+    "Hepatitis B vaccine",
+    "Rabies vaccine",
+    "Cholera vaccine",
+    "MMR vaccine",
+    "Health in Kenya"
+  ],
+  "urls": [
+    "https://wwwnc.cdc.gov/travel/destinations/traveler/none/kenya",
+    "https://www.cdc.gov/yellow-book/hcp/preparing-international-travelers/yellow-fever-vaccine-and-malaria-prevention-information-by-country.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1156032,
+  "duration_ms": 40546,
+  "num_turns": 6,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:47:10+00:00"
+}

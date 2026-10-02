@@ -1,0 +1,47 @@
+{
+  "id": "seed-fac-01",
+  "query": "When was the US created?",
+  "answer": "The United States is usually dated to July 4, 1776. That's the day the Second Continental Congress, meeting in Philadelphia, adopted the Declaration of Independence, which is why July 4 is celebrated as Independence Day [1][2]. Delegates didn't start signing the document until August 2, 1776 [2]. There are other milestones too. Britain recognized American independence in the Treaty of Paris in 1783. The Constitutional Convention adopted the current Constitution on September 17, 1787. It was ratified in June 1788, and the federal government began operating under it on March 4, 1789 [3]. So the nation dates from 1776, but the current form of government started in 1789.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.archives.gov/milestone-documents/declaration-of-independence",
+      "title": "Declaration of Independence (1776) | National Archives"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence",
+      "title": "United States Declaration of Independence - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://constitutioncenter.org/the-constitution/about-the-constitution-faqs",
+      "title": "U.S. Constitution FAQs | Constitution Center"
+    }
+  ],
+  "wikipedia_articles": [
+    "United States Declaration of Independence",
+    "Signing of the United States Declaration of Independence",
+    "Constitution of the United States",
+    "Treaty of Paris (1783)",
+    "United States"
+  ],
+  "urls": [
+    "https://www.archives.gov/milestone-documents/declaration-of-independence",
+    "https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence",
+    "https://constitutioncenter.org/the-constitution/about-the-constitution-faqs"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0611626,
+  "duration_ms": 12730,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:42:48+00:00"
+}

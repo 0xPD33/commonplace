@@ -1,0 +1,51 @@
+{
+  "id": "cv-d-cmp-05",
+  "query": "How is it different from Hinduism?",
+  "answer": "Buddhism and Hinduism both come from ancient India and share ideas like karma, rebirth (samsara) and the goal of being freed from that cycle. They disagree on some basic points, though. The biggest one is about the self. Hinduism teaches that each being has an eternal soul (atman), which many schools see as one with the ultimate reality, Brahman. Buddhism teaches anatta, or \"not-self\": there is no permanent soul, so rebirth happens without one being passed along [1][2]. The two also treat scripture and gods differently. Most Hindu traditions accept the Vedas as sacred authority and worship many gods. The Buddha rejected the authority of the Vedas and their rituals, and Buddhism doesn't depend on a creator god. It centers on the Four Noble Truths and the Eightfold Path, with the goal called nirvana instead of the Hindu moksha [2][3]. Finally, the Buddha criticized the caste system and taught that a person's worth comes from their actions, not the family they're born into [3]. One more practical difference: Hinduism has no single founder and grew over many centuries, while Buddhism goes back to one teacher, Siddhartha Gautama.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/%C4%80tman_(Hinduism)",
+      "title": "Ātman (Hinduism) – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.hinduwebsite.com/hinduism/h_buddhism.asp",
+      "title": "Hinduism vs Buddhism: Key Differences & Similarities Explained"
+    },
+    {
+      "n": 3,
+      "url": "https://fiveable.me/introduction-hinduism/unit-12/hinduism-buddhism-similarities-differences/study-guide/9UfxhrRhJO44bOxj",
+      "title": "Hinduism and Buddhism: Similarities and differences"
+    }
+  ],
+  "wikipedia_articles": [
+    "Buddhism and Hinduism",
+    "Anatta",
+    "Ātman (Hinduism)",
+    "Vedas",
+    "Nirvana",
+    "Moksha",
+    "Caste system in India",
+    "Four Noble Truths",
+    "Gautama Buddha"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/%C4%80tman_(Hinduism)",
+    "https://www.hinduwebsite.com/hinduism/h_buddhism.asp",
+    "https://fiveable.me/introduction-hinduism/unit-12/hinduism-buddhism-similarities-differences/study-guide/9UfxhrRhJO44bOxj"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.059223399999999995,
+  "duration_ms": 18100,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:49:51+00:00"
+}

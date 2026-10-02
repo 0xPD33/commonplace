@@ -1,0 +1,47 @@
+{
+  "id": "seed-how-04",
+  "query": "How do I find out which process is using a port on Linux?",
+  "answer": "Use `sudo ss -ltnp 'sport = :8080'` (or `sudo ss -ltnp | grep :8080`). Replace 8080 with your port. The `-l` flag shows listening sockets, `-t` limits it to TCP, `-n` shows port numbers instead of service names, and `-p` shows the process name and PID. Use `-u` instead of `-t` for UDP. ss is part of iproute2 and has replaced the older `netstat -tulpn` [1][3].\n\nYou can also use `sudo lsof -i :8080`, which lists the command, PID and user for anything that has that port open [3][2]. Another option is `sudo fuser -v 8080/tcp`, which comes from the psmisc package. `fuser -k 8080/tcp` will kill whatever is holding the port [1][2].\n\nRun these with sudo. Without root you only see details for your own processes, so the process column may be empty for anything owned by root or another user [1]. If ss shows nothing but the port is still taken, check whether it's held by a container or a different network namespace.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.baeldung.com/linux/find-process-using-port",
+      "title": "Finding the PID of the Process Using a Specific Port | Baeldung on Linux"
+    },
+    {
+      "n": 2,
+      "url": "https://www.geeksforgeeks.org/linux-unix/how-to-kill-a-process-running-on-particular-port-in-linux/",
+      "title": "How to Kill a Process Running on Particular Port in Linux? - GeeksforGeeks"
+    },
+    {
+      "n": 3,
+      "url": "https://www.cyberciti.biz/faq/what-process-has-open-linux-port/",
+      "title": "Linux Find Out Which Process Is Listening Upon a Port - nixCraft"
+    }
+  ],
+  "wikipedia_articles": [
+    "Iproute2",
+    "Lsof",
+    "Fuser (Unix)",
+    "Netstat",
+    "Port (computer networking)"
+  ],
+  "urls": [
+    "https://www.baeldung.com/linux/find-process-using-port",
+    "https://www.geeksforgeeks.org/linux-unix/how-to-kill-a-process-running-on-particular-port-in-linux/",
+    "https://www.cyberciti.biz/faq/what-process-has-open-linux-port/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05552,
+  "duration_ms": 17630,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:47:28+00:00"
+}

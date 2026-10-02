@@ -1,0 +1,44 @@
+{
+  "id": "cv-d-fu-02",
+  "query": "How long is it?",
+  "answer": "Counting every wall section built by every dynasty, the Great Wall is about 21,196 km (roughly 13,171 miles) long. China's cultural heritage administration announced that figure in June 2012, after a survey that started in 2007 [1][2]. You'll often see a shorter number, about 8,850 km (5,500 miles). That covers only the Ming dynasty wall, built 1368–1644, which includes most of the best-preserved sections that visitors see today [2][3]. It was also the preliminary result released in 2009 [1]. Both lengths add up many separate walls, trenches and natural barriers, so the wall isn't one continuous line [1][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+      "title": "Great Wall of China - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.chinahighlights.com/greatwall/fact/great-wall-length.htm",
+      "title": "How Long Is the Great Wall of China? Half the Equator! - China Highlights"
+    },
+    {
+      "n": 3,
+      "url": "https://en.wikipedia.org/wiki/Ming_Great_Wall",
+      "title": "Ming Great Wall - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Great Wall of China",
+    "Ming Great Wall"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+    "https://www.chinahighlights.com/greatwall/fact/great-wall-length.htm",
+    "https://en.wikipedia.org/wiki/Ming_Great_Wall"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.062653,
+  "duration_ms": 13368,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:48:41+00:00"
+}

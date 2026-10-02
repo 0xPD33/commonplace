@@ -1,0 +1,38 @@
+{
+  "id": "cv-t-ex-05",
+  "query": "say more",
+  "answer": "The Silk Road took shape around 130 BCE. It began after the Chinese envoy Zhang Qian made his missions west and Han-dynasty China expanded into Central Asia. It then carried trade for about 1,500 years, until the mid-1400s, over more than 6,400 km (4,000 miles) of land routes [1]. Silk, porcelain, tea and spices went west, while horses, camels and gold went east. Ideas travelled too: Buddhism, Christianity and Judaism spread along the routes, and so did inventions like paper and gunpowder [1]. So did disease. The routes may have helped spread the plague behind the Black Death [1]. Overland trade declined after the 15th century as the Ottomans came to control key routes, which pushed Europeans to look for sea routes to Asia [1]. The name itself is modern. The German geographer Ferdinand von Richthofen popularized \"Seidenstraße\" (Silk Road) in 1877 [1]. In 2014, UNESCO listed the Chang'an–Tianshan corridor as a World Heritage Site [1].\n\nSources:\n[1] Silk Road – Wikipedia: https://en.wikipedia.org/wiki/Silk_Road",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Silk_Road",
+      "title": "Silk Road - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Silk Road",
+    "Zhang Qian",
+    "Han dynasty",
+    "Ferdinand von Richthofen",
+    "Silk Road transmission of Buddhism",
+    "Black Death",
+    "Ottoman Empire",
+    "Silk Roads: the Routes Network of Chang'an-Tianshan Corridor"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Silk_Road"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.07955000000000001,
+  "duration_ms": 20032,
+  "num_turns": 3,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:42+00:00"
+}

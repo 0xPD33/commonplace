@@ -1,0 +1,232 @@
+# Wikidata properties kept in the wikidata-facts pack. Line order is the display priority (first shows first).
+# pid	label shown on the phone
+P31	instance of
+P1448	official name
+P17	country
+P131	located in
+P30	continent
+P36	capital
+P1376	capital of
+P1082	population
+P2046	area
+P2044	elevation
+P625	coordinates
+P37	official language
+P38	currency
+P35	head of state
+P6	head of government
+P122	form of government
+P2131	GDP (nominal)
+P4010	GDP (PPP)
+P2132	GDP per capita (nominal)
+P2299	GDP per capita (PPP)
+P1081	Human Development Index
+P2250	life expectancy
+P1125	Gini coefficient
+P1198	unemployment rate
+P1279	inflation rate
+P2219	real GDP growth
+P421	time zone
+P85	anthem
+P1451	motto
+P47	borders
+P206	next to body of water
+P706	located on terrain feature
+P610	highest point
+P1589	lowest point
+P2927	water area
+P474	calling code
+P78	internet domain
+P297	ISO country code
+P1622	driving side
+P2884	mains voltage
+P2853	plug type
+P281	postal code
+P571	inception
+P576	dissolved
+P1619	opened
+P569	date of birth
+P19	place of birth
+P570	date of death
+P20	place of death
+P509	cause of death
+P119	place of burial
+P1477	birth name
+P742	pseudonym
+P1449	nickname
+P27	citizenship
+P106	occupation
+P39	position held
+P101	field of work
+P800	notable work
+P69	educated at
+P108	employer
+P463	member of
+P102	political party
+P26	spouse
+P22	father
+P25	mother
+P40	child
+P3373	sibling
+P1971	number of children
+P166	award received
+P135	movement
+P184	doctoral advisor
+P1066	student of
+P241	military branch
+P410	military rank
+P607	conflict
+P1412	languages spoken
+P103	native language
+P2048	height
+P2067	mass
+P641	sport
+P413	playing position
+P54	team
+P118	league
+P286	head coach
+P115	home venue
+P1532	country for sport
+P159	headquarters
+P112	founded by
+P169	CEO
+P488	chairperson
+P1037	director
+P127	owned by
+P749	parent organization
+P452	industry
+P1454	legal form
+P414	stock exchange
+P249	ticker symbol
+P1128	employees
+P2139	revenue
+P2295	net profit
+P3362	operating income
+P2403	total assets
+P2226	market capitalization
+P2769	budget
+P2124	members
+P2196	students
+P1056	products
+P178	developer
+P176	manufacturer
+P277	programming language
+P348	latest version
+P275	license
+P400	platform
+P1813	short name
+P856	official website
+P50	author
+P170	creator
+P57	director
+P58	screenwriter
+P162	producer
+P86	composer
+P175	performer
+P161	cast
+P272	production company
+P750	distributor
+P449	original broadcaster
+P264	record label
+P123	publisher
+P577	publication date
+P1191	first performance
+P136	genre
+P407	language
+P495	country of origin
+P144	based on
+P921	main subject
+P840	set in
+P179	series
+P155	follows
+P156	followed by
+P1113	episodes
+P2437	seasons
+P1104	pages
+P1433	published in
+P2047	duration
+P2130	cost
+P2142	box office
+P84	architect
+P149	architectural style
+P88	commissioned by
+P186	material
+P1101	floors
+P1435	heritage designation
+P1174	visitors per year
+P1083	capacity
+P137	operator
+P2109	installed capacity
+P276	location
+P195	collection
+P585	date
+P580	start
+P582	end
+P664	organizer
+P1346	winner
+P1120	deaths
+P1339	injured
+P1132	participants
+P2043	length
+P2049	width
+P2386	diameter
+P4511	depth
+P2234	volume
+P2660	prominence
+P885	source
+P403	mouth
+P4614	drainage basin
+P2053	basin area
+P2225	discharge
+P274	chemical formula
+P246	element symbol
+P1086	atomic number
+P2101	melting point
+P2102	boiling point
+P2054	density
+P231	CAS number
+P61	discoverer or inventor
+P575	discovered
+P138	named after
+P279	subclass of
+P361	part of
+P1181	value
+P2534	formula
+P225	taxon name
+P105	taxon rank
+P171	parent taxon
+P141	conservation status
+P3063	gestation period
+P4214	maximum lifespan
+P780	symptoms
+P828	cause
+P1542	effect
+P2176	treatment
+P2175	treats
+P1995	medical specialty
+P397	orbits
+P376	on astronomical body
+P59	constellation
+P2583	distance from Earth
+P2120	radius
+P2146	orbital period
+P2147	rotation period
+P2243	apoapsis
+P2244	periapsis
+P2233	semi-major axis
+P1096	eccentricity
+P2045	orbital inclination
+P2076	temperature
+P1215	apparent magnitude
+P2052	speed
+P2050	wingspan
+P2665	alcohol by volume
+P1092	total produced
+P1098	speakers
+P282	writing system
+P218	ISO 639-1 code
+P220	ISO 639-3 code
+P140	religion
+P172	ethnic group
+P1001	jurisdiction
+P2348	time period

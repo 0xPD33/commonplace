@@ -1,0 +1,54 @@
+{
+  "id": "cv-fu-02",
+  "query": "Why is it dying?",
+  "answer": "The main reason is climate change. Unusually warm water makes corals push out the algae that live in their tissue and feed them. The coral turns white (\"bleaches\"), and if the heat lasts too long, it dies. In 2024 the reef had its worst heat stress on record, which caused the most widespread and severe bleaching ever seen there [1][2]. The next year's surveys found the biggest one-year drop in coral cover since records began, with regional losses of 14–30% and some reefs losing up to about 71% [2][3]. Cyclones, flooding and outbreaks of the coral-eating crown-of-thorns starfish add to the damage. The worst-hit corals are fast-growing Acropora, because they're sensitive to heat and are the starfish's favourite food [2][3].\n\nCalling the reef \"dying\" goes a bit too far, though. It's badly stressed and swinging more wildly than before, but it isn't dead. The 2025/26 surveys found coral cover holding steady or rising slightly in the north and centre, falling slightly in the south, and at around 26–35% overall. That's the start of recovery from the 2024 bleaching, helped by a late-summer monsoon that cooled the water [4]. The worry is that bleaching, floods, cyclones and starfish are hitting more often and on top of each other. That leaves corals less and less time to recover between hits [4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://wwf.org.au/news/2025/mass-coral-mortality-on-the-great-barrier-reef/",
+      "title": "Mass coral mortality on the Great Barrier Reef - WWF-Australia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.aims.gov.au/information-centre/news-and-stories/great-barrier-reef-more-volatile-sharp-declines-coral-cover",
+      "title": "Great Barrier Reef more volatile with sharp declines in coral cover - AIMS"
+    },
+    {
+      "n": 3,
+      "url": "https://www.abc.net.au/news/2025-08-06/great-barrier-reef-aims-survey-shows-bleaching-coral-decline/105613850",
+      "title": "Great Barrier Reef coral cover decline shows 'ecosystem under stress' - ABC News"
+    },
+    {
+      "n": 4,
+      "url": "https://www.aims.gov.au/monitoring-great-barrier-reef/gbr-condition-summary-2025-26",
+      "title": "Annual Summary Report of Coral Reef Condition 2025/26 - AIMS"
+    }
+  ],
+  "wikipedia_articles": [
+    "Great Barrier Reef",
+    "Coral bleaching",
+    "Crown-of-thorns starfish",
+    "Environmental threats to the Great Barrier Reef",
+    "Acropora",
+    "Effects of climate change on oceans"
+  ],
+  "urls": [
+    "https://wwf.org.au/news/2025/mass-coral-mortality-on-the-great-barrier-reef/",
+    "https://www.aims.gov.au/information-centre/news-and-stories/great-barrier-reef-more-volatile-sharp-declines-coral-cover",
+    "https://www.abc.net.au/news/2025-08-06/great-barrier-reef-aims-survey-shows-bleaching-coral-decline/105613850",
+    "https://www.aims.gov.au/monitoring-great-barrier-reef/gbr-condition-summary-2025-26"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.13660699999999998,
+  "duration_ms": 98743,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:09:40+00:00"
+}

@@ -1,0 +1,46 @@
+{
+  "id": "seed-cmp-06",
+  "query": "Does espresso or drip coffee have more caffeine?",
+  "answer": "It depends on how you measure it. Ounce for ounce, espresso has far more caffeine: about 60–75 mg in a 1-ounce shot, compared with roughly 8–16 mg per ounce of drip coffee [1][2]. But you drink much more drip coffee at once. An 8-ounce cup has about 95 mg, and a 12-ounce mug can reach 200 mg, so a normal cup of drip coffee usually has more total caffeine than a single shot (about 65 mg) [2][3]. A double shot (about 125 mg) is roughly the same as, or a bit more than, a small cup of drip [2]. The exact amount changes with the bean, the roast, and how it's brewed, so treat these numbers as averages.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Espresso",
+      "title": "Espresso - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://coffeefactz.com/managing-caffeine-espresso-drip-guide/",
+      "title": "Espresso vs Drip Coffee: Caffeine Facts That Matter"
+    },
+    {
+      "n": 3,
+      "url": "https://kickinghorsecoffee.com/pages/caffeine-myths-espresso-vs-drip-coffee",
+      "title": "Caffeine Myths: Espresso vs Drip Coffee – Kicking Horse Coffee"
+    }
+  ],
+  "wikipedia_articles": [
+    "Espresso",
+    "Drip coffee",
+    "Caffeine",
+    "Coffee"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Espresso",
+    "https://coffeefactz.com/managing-caffeine-espresso-drip-guide/",
+    "https://kickinghorsecoffee.com/pages/caffeine-myths-espresso-vs-drip-coffee"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.06288260000000001,
+  "duration_ms": 17960,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:44:38+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "cv-cmp-04",
+  "query": "How is it different from an alligator?",
+  "answer": "Crocodiles and alligators are related but belong to different families: crocodiles to Crocodylidae, alligators to Alligatoridae. The simplest way to tell them apart is the snout. An alligator's is broad and U-shaped, while a crocodile's is narrower and V-shaped [1][2]. The teeth are another giveaway. When an alligator closes its mouth, its lower teeth fit into sockets in the upper jaw and are mostly hidden, because the upper jaw overlaps them. A crocodile's lower teeth sit outside the upper jaw, so you can see both rows [1][2]. Crocodiles also cope with saltwater much better because the salt glands on their tongues work well, whereas alligators' glands are weak. That's why alligators mostly stay in freshwater [1][3]. Only two alligator species exist: the American alligator in the southeastern US and the Chinese alligator in the Yangtze region. Crocodiles are spread across the tropics. Southern Florida is the only place where wild alligators and crocodiles live side by side.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.livescience.com/32144-whats-the-difference-between-alligators-and-crocodiles.html",
+      "title": "How are alligators and crocodiles different? – Live Science"
+    },
+    {
+      "n": 2,
+      "url": "https://sciencenotes.org/difference-between-alligators-and-crocodiles/",
+      "title": "Difference Between Alligators and Crocodiles – Science Notes"
+    },
+    {
+      "n": 3,
+      "url": "https://www.activewild.com/alligator-vs-crocodile/",
+      "title": "Alligator vs Crocodile – Active Wild"
+    }
+  ],
+  "wikipedia_articles": [
+    "Crocodile",
+    "Alligator",
+    "Crocodilia",
+    "Alligatoridae",
+    "American alligator",
+    "Chinese alligator",
+    "American crocodile"
+  ],
+  "urls": [
+    "https://www.livescience.com/32144-whats-the-difference-between-alligators-and-crocodiles.html",
+    "https://sciencenotes.org/difference-between-alligators-and-crocodiles/",
+    "https://www.activewild.com/alligator-vs-crocodile/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0546716,
+  "duration_ms": 14913,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T13:09:25+00:00"
+}

@@ -1,0 +1,47 @@
+{
+  "id": "cv-t-cmp-06",
+  "query": "Is Austrian German different from German in Germany?",
+  "answer": "Yes, though only somewhat. Austrian German is a standard variety of the same language, so Austrians and Germans understand each other without trouble. Austria even has its own official dictionary, the Österreichisches Wörterbuch, which has been published since 1948 under the Austrian education ministry [1][2]. The biggest differences are in everyday words, especially food. Austrians say \"Erdapfel\" for potato (Germans say \"Kartoffel\"), \"Paradeiser\" for tomato (\"Tomate\"), \"Marillen\" for apricots (\"Aprikosen\"), \"Obers\" for cream (\"Sahne\") and \"Jänner\" for January (\"Januar\") [3]. Grammar differs a little. For example, Austrians form the past tense of \"sitzen\" (to sit) and \"stehen\" (to stand) with \"sein\" instead of \"haben,\" as in \"ich bin gesessen,\" and they make words smaller or cuter with \"-erl\" or \"-el\" (like \"Sackerl,\" a little bag) instead of \"-chen\" [1][3]. Pronunciation is also different. On top of the standard language, most Austrians speak Bavarian or, in Vorarlberg, Alemannic dialects in daily life, and these can be much harder for Germans from the north to follow [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Austrian_German",
+      "title": "Austrian German - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/%C3%96sterreichisches_W%C3%B6rterbuch",
+      "title": "Österreichisches Wörterbuch - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://www.lingoda.com/blog/en/german-dialects-vocabulary-differences/",
+      "title": "Austrian, Swiss and German vocabulary: The differences - Lingoda"
+    }
+  ],
+  "wikipedia_articles": [
+    "Austrian German",
+    "Österreichisches Wörterbuch",
+    "Standard German",
+    "Bavarian language",
+    "German language"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Austrian_German",
+    "https://en.wikipedia.org/wiki/%C3%96sterreichisches_W%C3%B6rterbuch",
+    "https://www.lingoda.com/blog/en/german-dialects-vocabulary-differences/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.054607,
+  "duration_ms": 15883,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:52:03+00:00"
+}

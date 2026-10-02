@@ -1,0 +1,58 @@
+{
+  "id": "cv-t-ex-01",
+  "query": "tell me more about that",
+  "answer": "Tides don't come from the Moon simply pulling on the ocean. They come from the difference in how hard the Moon pulls on different parts of Earth. Its pull is strongest on the side facing it and weakest on the far side, and that difference (the \"tidal force\") stretches the oceans into two bulges: one under the Moon and one on the opposite side of the planet [1][2]. Earth rotates through both bulges, so most coasts get two high tides and two low tides roughly every 24 hours and 50 minutes. The extra 50 minutes is there because the Moon moves along its orbit while Earth turns [3].\n\nThe Sun has the same kind of effect, but it's a bit less than half as strong as the Moon's. At new and full Moon the Sun, Moon and Earth line up and their effects add together. That produces spring tides, which have the biggest gap between high and low water; the name has nothing to do with the season [4]. About a week later, at the half Moon, the Sun and Moon pull at right angles and partly cancel out. That produces neap tides, which have the smallest range [4].\n\nIn real oceans the neat \"two bulges\" picture gets heavily changed by continents, the shape of the seafloor and the shape of coastlines. That's why some places get only one tide a day and why tidal ranges vary so much, from a few centimetres in some seas to more than 15 metres in Canada's Bay of Fundy [2][5].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://science.nasa.gov/moon/tides/",
+      "title": "Tides - NASA Science"
+    },
+    {
+      "n": 2,
+      "url": "https://www.noaa.gov/education/resource-collections/ocean-coasts/tides",
+      "title": "Tides - NOAA"
+    },
+    {
+      "n": 3,
+      "url": "https://oceanservice.noaa.gov/education/tutorial_tides/lessons/ups_downs.html",
+      "title": "Tides and Water Levels: NOAA's National Ocean Service Education"
+    },
+    {
+      "n": 4,
+      "url": "https://oceanservice.noaa.gov/facts/springtide.html",
+      "title": "What are spring and neap tides? - NOAA"
+    },
+    {
+      "n": 5,
+      "url": "https://ntslf.org/tides/about-tides/tides-faq",
+      "title": "Tides FAQ - National Tidal and Sea Level Facility"
+    }
+  ],
+  "wikipedia_articles": [
+    "Tide",
+    "Tidal force",
+    "Bay of Fundy",
+    "Lunar day"
+  ],
+  "urls": [
+    "https://science.nasa.gov/moon/tides/",
+    "https://www.noaa.gov/education/resource-collections/ocean-coasts/tides",
+    "https://oceanservice.noaa.gov/education/tutorial_tides/lessons/ups_downs.html",
+    "https://oceanservice.noaa.gov/facts/springtide.html",
+    "https://ntslf.org/tides/about-tides/tides-faq"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0572496,
+  "duration_ms": 17883,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:22+00:00"
+}

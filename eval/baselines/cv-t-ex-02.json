@@ -1,0 +1,48 @@
+{
+  "id": "cv-t-ex-02",
+  "query": "could you go deeper",
+  "answer": "The Cold War came out of the collapse of the wartime alliance after 1945. On one side were the United States and its allies, the Western Bloc, which backed liberal capitalism. On the other were the Soviet Union and the communist states of the Eastern Bloc. It's called \"cold\" because the two superpowers never fought each other directly. Instead they competed through ideology, economics, technology, spying and propaganda [1]. The US strategy was \"containment,\" meaning it tried to stop communism from spreading. It used the Marshall Plan to rebuild Western Europe and set up NATO in 1949, and the Soviets answered with the Warsaw Pact in 1955 [1].\n\nAfter the Soviets tested their first atomic bomb in 1949, a nuclear arms race began, and the rivalry also moved into space with the Space Race [1]. The hot fighting happened in proxy wars, where the superpowers backed opposite sides in other countries' conflicts. The biggest were Korea (1950–53), Vietnam (1955–75) and the Soviet war in Afghanistan (1979–89) [1]. There were also major crises, including the Berlin Blockade (1948–49), the Soviet crushing of uprisings in Hungary in 1956 and Czechoslovakia in 1968, and the Cuban Missile Crisis in 1962. The Cuban crisis is widely seen as the closest the world came to nuclear war [1].\n\nTensions eased in the 1970s during a period called détente. It included arms-limitation treaties and the US opening to China in 1972 [1]. After Mikhail Gorbachev came to power in 1985, his reforms helped make possible the 1989 revolutions across Eastern Europe. The Soviet Union's breakup in 1991 ended the Cold War [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Cold_War",
+      "title": "Cold War - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Cold War",
+    "Containment",
+    "Marshall Plan",
+    "NATO",
+    "Warsaw Pact",
+    "Nuclear arms race",
+    "Space Race",
+    "Korean War",
+    "Vietnam War",
+    "Soviet–Afghan War",
+    "Berlin Blockade",
+    "Hungarian Revolution of 1956",
+    "Warsaw Pact invasion of Czechoslovakia",
+    "Cuban Missile Crisis",
+    "Détente",
+    "Revolutions of 1989",
+    "Dissolution of the Soviet Union",
+    "Mikhail Gorbachev"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Cold_War"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.07237260000000001,
+  "duration_ms": 16607,
+  "num_turns": 3,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:25+00:00"
+}

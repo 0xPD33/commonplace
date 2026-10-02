@@ -1,0 +1,38 @@
+{
+  "id": "cv-d-ex-02",
+  "query": "Can you expand on that?",
+  "answer": "King John sealed Magna Carta at Runnymede, near Windsor, on 15 June 1215. He did it under pressure from rebel barons, and Archbishop Stephen Langton helped negotiate the deal. The charter protected the rights of the church, protected people from illegal imprisonment, promised swift justice and limited the feudal payments the king could demand [1]. Its best-known promise is that no free man could be imprisoned or punished \"except by the lawful judgment of his peers or by the law of the land.\"\n\nIt failed at first. Pope Innocent III annulled it within months, and war broke out between John and the barons (the First Barons' War) [1]. After John died, the regents ruling for his young son Henry III reissued a toned-down version in 1216 and again in 1217. Henry reissued it in 1225 in return for new taxes, and Edward I confirmed it as statute law in 1297 [1].\n\nThree clauses from the 1297 version are still law in England and Wales. They protect the freedom of the English Church, the liberties of the City of London and the right to due process [1]. In the 1600s, lawyers like Edward Coke reinterpreted it as a defence of ancient English liberties. That view shaped the thinking of the American colonists and the U.S. Constitution [1]. Four original copies from 1215 survive: two at the British Library, one at Lincoln Castle and one at Salisbury Cathedral [1].\n\n[1] Magna Carta – Wikipedia: https://en.wikipedia.org/wiki/Magna_Carta",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Magna_Carta",
+      "title": "Magna Carta – Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Magna Carta",
+    "John, King of England",
+    "Stephen Langton",
+    "Pope Innocent III",
+    "First Barons' War",
+    "Henry III of England",
+    "Edward Coke",
+    "Runnymede"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Magna_Carta"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0783422,
+  "duration_ms": 20438,
+  "num_turns": 3,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:49:18+00:00"
+}

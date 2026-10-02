@@ -1,0 +1,20 @@
+{
+  "id": "cv-t-chat-04",
+  "query": "thanks buddy",
+  "answer": "You're welcome! If you have more questions about deserts or anything else, just ask.",
+  "sources": [],
+  "wikipedia_articles": [],
+  "urls": [],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0069756,
+  "duration_ms": 2578,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:52:25+00:00"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "seed-ooc-02",
+  "query": "What is the euro to US dollar exchange rate right now?",
+  "answer": "As of today, September 29, 2026, one euro buys about **$1.135** (EUR/USD around 1.1347), down roughly 0.2% on the day [1]. Xe's mid-market converter showed a similar figure of about 1.137 [2]. That puts the euro near its lowest level since late June. The dollar has been strong because of higher US Treasury yields, a hawkish Federal Reserve and demand for safe assets, while ECB President Christine Lagarde has signalled a more cautious approach [1].\n\nThese rates change minute to minute, and the mid-market rate is not what you'd get at a bank or card provider, which usually add a markup. Check a live source like Xe or Wise just before you convert money [2][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://tradingeconomics.com/euro-area/currency",
+      "title": "Euro US Dollar Exchange Rate - EUR/USD - Quote - Chart - Historical Data - News (Trading Economics)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.xe.com/en-us/currencyconverter/convert/?Amount=1&From=EUR&To=USD",
+      "title": "1 EUR to USD - Euros to US Dollars Exchange Rate (Xe)"
+    },
+    {
+      "n": 3,
+      "url": "https://wise.com/us/currency-converter/eur-to-usd-rate",
+      "title": "Euros to US dollars Exchange Rate. Convert EUR/USD - Wise"
+    }
+  ],
+  "wikipedia_articles": [
+    "Euro",
+    "United States dollar",
+    "Exchange rate",
+    "Tables of historical exchange rates to the United States dollar",
+    "European Central Bank",
+    "Federal Reserve"
+  ],
+  "urls": [
+    "https://tradingeconomics.com/euro-area/currency",
+    "https://www.xe.com/en-us/currencyconverter/convert/?Amount=1&From=EUR&To=USD",
+    "https://wise.com/us/currency-converter/eur-to-usd-rate"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0783014,
+  "duration_ms": 22305,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:48:05+00:00"
+}

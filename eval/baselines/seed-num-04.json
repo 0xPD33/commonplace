@@ -1,0 +1,39 @@
+{
+  "id": "seed-num-04",
+  "query": "Walking 5 km an hour, how long would it take to walk the length of the Great Wall of China?",
+  "answer": "It depends on which \"Great Wall\" you count. China's official figure, from a survey announced in 2012, is 21,196 km. That total includes every wall, trench and natural barrier built by many dynasties over more than 2,000 years [1][2]. At 5 km/h, that works out to about 4,240 hours of walking. Nonstop, that's about 177 days, or nearly 6 months. At a more realistic 8 hours a day, it's about 530 days, or roughly a year and a half.\n\nIf you only mean the Ming-dynasty wall (about 8,852 km), which includes most of the best-preserved sections [1], it would take about 1,770 hours. That's about 74 days nonstop or about 221 days at 8 hours a day.\n\nIn practice it would take longer, because the wall runs over steep, broken terrain and has parallel branches and gaps, so you couldn't keep a steady 5 km/h or walk it as one line.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+      "title": "Great Wall of China - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.chinahighlights.com/greatwall/fact/great-wall-length.htm",
+      "title": "How Long Is the Great Wall of China? Half the Equator! - China Highlights"
+    }
+  ],
+  "wikipedia_articles": [
+    "Great Wall of China",
+    "Ming Great Wall",
+    "Preferred walking speed"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+    "https://www.chinahighlights.com/greatwall/fact/great-wall-length.htm"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0636352,
+  "duration_ms": 18251,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:45:55+00:00"
+}

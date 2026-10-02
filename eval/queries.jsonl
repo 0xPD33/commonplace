@@ -1,0 +1,63 @@
+{"id":"seed-fac-01","query":"When was the US created?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-fac-02","query":"Who was the US president in 2016?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-fac-03","query":"How long did the Roman Empire last?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-fac-04","query":"Who designed the Golden Gate Bridge?","category":"factual","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-fac-05","query":"Who created the first rocket ship?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-01","query":"What was the goal of the French Revolution?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-02","query":"Who really created the foundation of electricity?","category":"explanation","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-03","query":"Why is the sky blue and not green?","category":"explanation","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-04","query":"How does a motor work?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-05","query":"How does 3D printing work?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-06","query":"How can an airplane be so fast?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-07","query":"Why are people saying WiFi and radio waves are harmful? What is the evidence?","category":"explanation","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-08","query":"Who created the concept of the government?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-09","query":"How does an oven work?","category":"explanation","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-01","query":"What's the difference between a crocodile and an alligator?","category":"comparison","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-02","query":"How can you tell a leopard, a jaguar and a cheetah apart?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-03","query":"How is Buddhism different from Hinduism?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-04","query":"What's the difference between baking soda and baking powder?","category":"comparison","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-05","query":"Which was bigger, the Roman Empire or the Mongol Empire?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-06","query":"Does espresso or drip coffee have more caffeine?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-07","query":"What's the difference between a virus and a bacterium, and why don't antibiotics work on viruses?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-08","query":"How do Linux and Windows handle file permissions differently?","category":"comparison","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-01","query":"What was the goal of Martin Luther and what happened to Christianity through his works?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-02","query":"What technology is attributed to the foundation of AI and where did it start?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-03","query":"Which river flows through the capital of Hungary, and into which sea does it flow?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-04","query":"What language is spoken today in the country where the Inca Empire had its capital?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-05","query":"Who was the British monarch when the Eiffel Tower was finished?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-06","query":"Which university did the inventor of the World Wide Web study at?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-07","query":"What is the tallest mountain in the country that hosted the 1964 Summer Olympics?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-08","query":"What currency do they use in the country where Angkor Wat is?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-09","query":"How did the printing press help the Protestant Reformation spread?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-mh-10","query":"Beethoven went deaf — how did he keep composing, and which famous works came after?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-01","query":"How many times larger is Russia than France?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-02","query":"Is the Netherlands more densely populated than Germany, and by how much?","category":"numeric","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-03","query":"How many Earths would fit inside the Sun?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-04","query":"Walking 5 km an hour, how long would it take to walk the length of the Great Wall of China?","category":"numeric","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-05","query":"How much taller is Mount Everest than Mont Blanc, in metres?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-01","query":"Is it safe to drink tap water in Mexico City?","category":"travel","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-trv-02","query":"Do you tip in restaurants in Japan?","category":"travel","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-03","query":"What should I do if I get stung by a jellyfish?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-04","query":"How do I say \"thank you\" and \"excuse me\" in Thai?","category":"travel","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-05","query":"What are the signs of altitude sickness, and how do I avoid it when hiking in Peru?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-06","query":"When is the best time to visit Iceland to see the northern lights?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-07","query":"What should I see in Kyoto if I only have two days?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-08","query":"What vaccinations do I need for a trip to Kenya?","category":"travel","difficulty":2,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-trv-09","query":"What do I have to keep in mind while camping in the wild?","category":"travel","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-01","query":"What can you feed a bird? What should you not feed a bird?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-02","query":"How do I fix a squeaky door hinge?","category":"howto","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-03","query":"How do I make a sourdough starter from scratch?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-04","query":"How do I find out which process is using a port on Linux?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-05","query":"How do I fix a flat bike tyre when I'm out on a ride?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-06","query":"How do I get rid of black mould in the bathroom for good?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-07","query":"How do I solve a quadratic equation by completing the square?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-ooc-01","query":"Who won the most recent FIFA World Cup?","category":"out_of_corpus","difficulty":2,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-ooc-02","query":"What is the euro to US dollar exchange rate right now?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-ooc-03","query":"What will the weather be like in Lisbon this weekend?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-ooc-04","query":"What new features does the latest iPhone have?","category":"out_of_corpus","difficulty":2,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-lt-01","query":"What is surströmming, and why does it smell so bad?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-02","query":"What happened during the dancing plague of 1518?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-03","query":"What was the Antikythera mechanism used for?","category":"long_tail","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-fu-01","query":"Why did he build it?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"Who built the Taj Mahal?","answer":"The Taj Mahal in Agra, India, was commissioned by the Mughal emperor Shah Jahan and completed around 1653."}]}
+{"id":"seed-fu-02","query":"Why isn't it Sydney?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"What is the capital of Australia?","answer":"The capital of Australia is Canberra."}]}
+{"id":"seed-fu-03","query":"And what went wrong at Chernobyl?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"How does a nuclear reactor make electricity?","answer":"A nuclear reactor uses heat from uranium fission to boil water; the steam turns a turbine connected to a generator."}]}

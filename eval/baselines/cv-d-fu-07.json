@@ -1,0 +1,48 @@
+{
+  "id": "cv-d-fu-07",
+  "query": "What happens if it stops making insulin?",
+  "answer": "If the pancreas stops making insulin, glucose can't move out of the blood and into the body's cells, so blood sugar climbs too high (hyperglycemia) [1]. That's what happens in type 1 diabetes: the immune system destroys the insulin-making beta cells, and high blood sugar usually appears once about 80–90% of them are gone [2][1]. Early signs include a lot of thirst, frequent urination, weight loss and tiredness [1]. Because the cells can't use sugar for energy, the body breaks down fat instead and makes ketones. This can lead to diabetic ketoacidosis (DKA), a life-threatening condition with very high blood sugar, acidic blood, dehydration and salt imbalances [3][2]. Without insulin, this is fatal. Today people manage it by taking insulin every day through injections or a pump [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://my.clevelandclinic.org/health/diseases/21500-type-1-diabetes",
+      "title": "Type 1 Diabetes: What It Is, Symptoms, Causes & Treatment (Cleveland Clinic)"
+    },
+    {
+      "n": 2,
+      "url": "https://emedicine.medscape.com/article/117739-overview",
+      "title": "Type 1 Diabetes Mellitus: Background, Pathophysiology, Etiology (Medscape)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6339756/",
+      "title": "Diabetic Ketoacidosis Revealing a Severe Hypertriglyceridemia and Acute Pancreatitis in Type 1 Diabetes Mellitus"
+    }
+  ],
+  "wikipedia_articles": [
+    "Type 1 diabetes",
+    "Hyperglycemia",
+    "Diabetic ketoacidosis",
+    "Insulin",
+    "Beta cell",
+    "Insulin (medication)"
+  ],
+  "urls": [
+    "https://my.clevelandclinic.org/health/diseases/21500-type-1-diabetes",
+    "https://emedicine.medscape.com/article/117739-overview",
+    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6339756/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0556362,
+  "duration_ms": 14237,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:48:57+00:00"
+}

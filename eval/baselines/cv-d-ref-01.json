@@ -1,0 +1,43 @@
+{
+  "id": "cv-d-ref-01",
+  "query": "make it shorter please",
+  "answer": "A fridge moves heat out of the cabinet by pumping a refrigerant around a closed loop [1]. The compressor squeezes the refrigerant gas so it gets hot, and the coils on the outside let that heat escape into the room while the gas turns into a liquid [1][2]. The liquid then goes through an expansion valve, where the pressure drops and it gets very cold. Inside the fridge, it soaks up heat from the food and turns back into gas, and then the loop starts over [1][2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.electronics-cooling.com/2017/07/vapor-compression-cooling-works/",
+      "title": "How Vapor-Compression Cooling Works"
+    },
+    {
+      "n": 2,
+      "url": "https://www.araner.com/blog/vapor-compression-refrigeration-cycle",
+      "title": "The Vapor Compression Refrigeration Cycle, Step By Step"
+    }
+  ],
+  "wikipedia_articles": [
+    "Refrigerator",
+    "Vapor-compression refrigeration",
+    "Refrigerant",
+    "Gas compressor",
+    "Condenser (heat transfer)",
+    "Thermal expansion valve",
+    "Evaporator"
+  ],
+  "urls": [
+    "https://www.electronics-cooling.com/2017/07/vapor-compression-cooling-works/",
+    "https://www.araner.com/blog/vapor-compression-refrigeration-cycle"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0533382,
+  "duration_ms": 13997,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:50:00+00:00"
+}

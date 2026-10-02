@@ -1,0 +1,46 @@
+{
+  "id": "cv-d-cmp-07",
+  "query": "Which is hotter, Mercury or Venus?",
+  "answer": "Venus is hotter, even though Mercury is closer to the Sun. Venus's average surface temperature is about 464°C (867°F). That makes it the hottest planet in the Solar System. Mercury's average is only about 167°C (333°F) [1]. The difference comes from Venus's very thick atmosphere, which is about 96.5% carbon dioxide and roughly 90 times as dense as Earth's. It creates a runaway greenhouse effect that keeps the whole planet hot enough to melt lead, day and night [2][3]. Mercury has almost no atmosphere, so its heat escapes into space. Its sunlit side gets very hot, but its night side falls to about −180°C (−290°F) [2].\n\nSources:\n[1] NASA Science, \"Temperatures Across Our Solar System\": https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/\n[2] Live Science, \"Why is Venus hotter than Mercury, when Mercury is closer to the sun?\": https://www.livescience.com/space/venus/why-is-venus-hotter-than-mercury-when-mercury-is-closer-to-the-sun\n[3] NASA Science, \"Venus: Facts\": https://science.nasa.gov/venus/venus-facts/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/",
+      "title": "Temperatures Across Our Solar System - NASA Science"
+    },
+    {
+      "n": 2,
+      "url": "https://www.livescience.com/space/venus/why-is-venus-hotter-than-mercury-when-mercury-is-closer-to-the-sun",
+      "title": "Why is Venus hotter than Mercury, when Mercury is closer to the sun? - Live Science"
+    },
+    {
+      "n": 3,
+      "url": "https://science.nasa.gov/venus/venus-facts/",
+      "title": "Venus: Facts - NASA Science"
+    }
+  ],
+  "wikipedia_articles": [
+    "Venus",
+    "Mercury (planet)",
+    "Atmosphere of Venus",
+    "Runaway greenhouse effect"
+  ],
+  "urls": [
+    "https://science.nasa.gov/solar-system/temperatures-across-our-solar-system/",
+    "https://www.livescience.com/space/venus/why-is-venus-hotter-than-mercury-when-mercury-is-closer-to-the-sun",
+    "https://science.nasa.gov/venus/venus-facts/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0556026,
+  "duration_ms": 14074,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:49:58+00:00"
+}

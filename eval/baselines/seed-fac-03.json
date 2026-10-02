@@ -1,0 +1,56 @@
+{
+  "id": "seed-fac-03",
+  "query": "How long did the Roman Empire last?",
+  "answer": "It depends on where you draw the end line. The usual start is 27 BC, when Octavian became Augustus. If you count only the Western Empire, it lasted about 500 years, ending in AD 476 when the last western emperor, Romulus Augustulus, was deposed [1][2]. The Eastern Roman Empire, which historians later called the Byzantine Empire, lasted until the Ottomans took Constantinople in 1453 [1][3]. On that reading the empire ran for about 1,480 years. If you also count the earlier Roman Kingdom and Republic, which traditionally date from Rome's founding in 753 BC, the Roman state lasted about 2,200 years [4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Roman_Empire",
+      "title": "Roman Empire - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.rome.net/roman-empire",
+      "title": "Roman Empire (27 BC - 476 AD) - History of Rome"
+    },
+    {
+      "n": 3,
+      "url": "https://www.britannica.com/place/Byzantine-Empire",
+      "title": "Byzantine Empire | History, Geography, Maps, & Facts | Britannica"
+    },
+    {
+      "n": 4,
+      "url": "https://edrawmind.wondershare.com/history/roman-empire-timeline.html",
+      "title": "Complete Roman Empire Timeline (753 BC-1453 AD)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Roman Empire",
+    "History of the Roman Empire",
+    "Byzantine Empire",
+    "Fall of the Western Roman Empire",
+    "Fall of Constantinople",
+    "Augustus",
+    "Romulus Augustulus",
+    "Founding of Rome"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Roman_Empire",
+    "https://www.rome.net/roman-empire",
+    "https://www.britannica.com/place/Byzantine-Empire",
+    "https://edrawmind.wondershare.com/history/roman-empire-timeline.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0717722,
+  "duration_ms": 16613,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:42:52+00:00"
+}

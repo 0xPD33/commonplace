@@ -1,0 +1,55 @@
+{
+  "id": "seed-exp-04",
+  "query": "How does a motor work?",
+  "answer": "I'll assume you mean an electric motor. Most electric motors work because a wire carrying current inside a magnetic field feels a push, called the Lorentz force. The motor arranges this so the push turns the shaft [1]. The force is strongest when the current and the magnetic field cross at right angles, and it pushes in a direction perpendicular to both [2].\n\nIn a simple DC motor, a coil of wire sits between magnets. Current goes one way along one side of the loop and the opposite way along the other, so one side gets pushed up and the other down, and the loop twists. On its own, the loop would just rock back and forth around a resting position. To prevent that, a split-ring commutator turns with the coil, and stationary brushes press against it. Every half turn, the brushes switch to the other segment, which reverses the current in the coil. Because of that switch, the push always turns the coil the same way, so it keeps spinning [3][4].\n\nOther designs use the same idea and just flip the current differently. Brushless motors switch the current electronically instead of using brushes. AC induction motors use alternating current to create a magnetic field that rotates, and that field drags the rotor around with it [1]. If you meant a gasoline \"motor\" (an internal combustion engine), that works on a completely different principle: burning fuel pushes pistons.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Electric_motor",
+      "title": "Electric motor - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.sciencedirect.com/topics/engineering/lorentz-force",
+      "title": "Lorentz Force - an overview | ScienceDirect Topics"
+    },
+    {
+      "n": 3,
+      "url": "https://digilander.libero.it/mfinotes/IVEuropeo/Physics/electricmotor.htm",
+      "title": "Application of the Lorentz Force: the electric motor"
+    },
+    {
+      "n": 4,
+      "url": "https://www.luisllamas.es/en/motor-dc-operation-lorentz-force-back-emf/",
+      "title": "The DC motor in depth: physics, torque and back-emf"
+    }
+  ],
+  "wikipedia_articles": [
+    "Electric motor",
+    "Lorentz force",
+    "Commutator (electric)",
+    "Brushed DC electric motor",
+    "Brushless DC electric motor",
+    "Induction motor",
+    "Internal combustion engine"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Electric_motor",
+    "https://www.sciencedirect.com/topics/engineering/lorentz-force",
+    "https://digilander.libero.it/mfinotes/IVEuropeo/Physics/electricmotor.htm",
+    "https://www.luisllamas.es/en/motor-dc-operation-lorentz-force-back-emf/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0608414,
+  "duration_ms": 19406,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:43:27+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "cv-t-cmp-02",
+  "query": "how is it different from a shark",
+  "answer": "The main difference is that a dolphin is a mammal and a shark is a fish. They look alike because they evolved similar streamlined bodies for the same job, but they aren't closely related [1][2]. Dolphins breathe air through a blowhole on top of the head, so they have to come up to the surface. Sharks get oxygen from the water through gills and spend their whole lives underwater [1][3]. Dolphins are also warm-blooded and nurse their young with milk. Most sharks are cold-blooded, and their skin is covered in tiny tooth-like scales [3]. On the inside, a shark's skeleton is made of cartilage, while a dolphin has bones [2]. An easy way to tell them apart in the water is the tail: a dolphin's tail flukes are horizontal and move up and down, while a shark's tail fin is vertical and sweeps side to side [1].\n\nOne caveat: many sharks also give birth to live young, so live birth on its own isn't a reliable way to tell them apart. Nursing with milk and breathing air are the real mammal traits [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://us.whales.org/2026/07/29/whats-the-difference-between-a-shark-and-a-dolphin/",
+      "title": "What's the difference between a shark and a dolphin? - Whale and Dolphin Conservation"
+    },
+    {
+      "n": 2,
+      "url": "https://www.discoverwildlife.com/animal-facts/marine-animals/dolphin-vs-shark",
+      "title": "Dolphin vs shark: what's the difference between these charismatic animals? - Discover Wildlife"
+    },
+    {
+      "n": 3,
+      "url": "https://www.dolphincommunicationproject.org/dolphin-faq-14/",
+      "title": "What is the difference between dolphins, fish and sharks? - Dolphin Communication Project"
+    }
+  ],
+  "wikipedia_articles": [
+    "Dolphin",
+    "Shark",
+    "Convergent evolution",
+    "Cetacea",
+    "Chondrichthyes",
+    "Blowhole (anatomy)",
+    "Fish fin"
+  ],
+  "urls": [
+    "https://us.whales.org/2026/07/29/whats-the-difference-between-a-shark-and-a-dolphin/",
+    "https://www.discoverwildlife.com/animal-facts/marine-animals/dolphin-vs-shark",
+    "https://www.dolphincommunicationproject.org/dolphin-faq-14/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05723620000000001,
+  "duration_ms": 16241,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-30T14:51:47+00:00"
+}

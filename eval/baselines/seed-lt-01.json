@@ -1,0 +1,49 @@
+{
+  "id": "seed-lt-01",
+  "query": "What is surströmming, and why does it smell so bad?",
+  "answer": "Surströmming is a Swedish dish of fermented Baltic Sea herring that goes back at least to the 16th century. It's a different thing from ordinary pickled herring. The fish are soaked in strong brine to draw out the blood, then moved to a weaker brine and fermented for at least six months. They're canned in early July, and they keep fermenting inside the sealed cans [1]. By tradition, the new season's catch can't be sold before the third Thursday in August. People usually eat it outdoors on thin flatbread with potatoes and red onion [1].\n\nThe smell comes from what the fermentation produces. Enzymes in the fish and salt-tolerant Halanaerobium bacteria break the fish down into several compounds [1][2][3]:\n- Hydrogen sulfide, which smells like rotten eggs\n- Butyric acid, which smells like rancid butter or vomit\n- Propionic acid, which is part of what makes body odor smell\n- Acetic acid, the sharp note in vinegar\n\nThe bacteria also make carbon dioxide. That's why the cans visibly bulge, which is normal for surströmming. The trapped gas is also why the smell is strongest the moment you open a can [1][2]. It isn't actually rotten, though. When scientists analyze it, they don't find the typical decay chemicals like putrescine, cadaverine or skatole [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Surstr%C3%B6mming",
+      "title": "Surströmming – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.iflscience.com/surstromming-why-swedens-stinky-fermented-fish-smells-so-bad-but-people-still-eat-it-80828",
+      "title": "Surströmming: Why Sweden's Stinky Fermented Fish Smells So Bad (But People Still Eat It) – IFLScience"
+    },
+    {
+      "n": 3,
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S0740002020300927",
+      "title": "Discovering microbiota and volatile compounds of surströmming, the traditional Swedish sour herring – Food Microbiology (ScienceDirect)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Surströmming",
+    "Baltic herring",
+    "Fermented fish",
+    "Hydrogen sulfide",
+    "Butyric acid",
+    "Propionic acid",
+    "Halanaerobium"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Surstr%C3%B6mming",
+    "https://www.iflscience.com/surstromming-why-swedens-stinky-fermented-fish-smells-so-bad-but-people-still-eat-it-80828",
+    "https://www.sciencedirect.com/science/article/abs/pii/S0740002020300927"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-4-5-20251001",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0987462,
+  "duration_ms": 25743,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.284 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-09-29T12:48:32+00:00"
+}

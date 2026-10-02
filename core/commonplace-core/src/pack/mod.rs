@@ -284,3 +284,38 @@ pub fn sha256_file(p: &Path) -> Result<String> {
     std::io::copy(&mut f, &mut h)?;
     Ok(hex::encode(h.finalize()))
 }
+
+/// The web page an article came from, formed from the pack's `url_title` convention (docs/DATASETS.md, the
+/// pack notices). `None` when the pack has no page address that opens by itself: user documents, the
+/// Factbook (country codes), and textbook chapters with an `__unknown__` address.
+pub fn source_url(pack_id: &str, title: &str, url_title: &str) -> Option<String> {
+    if url_title.is_empty() || url_title.contains("__unknown__") {
+        return None;
+    }
+    if url_title.starts_with("http://") || url_title.starts_with("https://") {
+        return Some(url_title.to_string());
+    }
+    // Title characters that end a URL path early.
+    let t = url_title.replace('%', "%25").replace(' ', "_").replace('?', "%3F").replace('#', "%23");
+    let wiki = |host: &str| Some(format!("https://{host}/wiki/{t}"));
+    match pack_id {
+        "enwiki" | "enwiki-core" => wiki("en.wikipedia.org"),
+        "wikibooks-en" => wiki("en.wikibooks.org"),
+        "wikiversity-en" => wiki("en.wikiversity.org"),
+        "wikivoyage-en" => wiki("en.wikivoyage.org"),
+        "wikiquote-en" => wiki("en.wikiquote.org"),
+        "wiktionary-en" => wiki("en.wiktionary.org"),
+        "wikem-en" => wiki("wikem.org"),
+        "archwiki-en" => Some(format!("https://wiki.archlinux.org/title/{t}")),
+        "arxiv-abs" => Some(format!("https://arxiv.org/abs/{t}")),
+        "cdc-travel" => Some(format!("https://wwwnc.cdc.gov/{t}")),
+        "medlineplus" => Some(format!("https://medlineplus.gov/{t}.html")),
+        "stackexchange" => Some(format!("https://{t}")),
+        // Titles read "<Docset>: <page>"; the docset name is the lower-case site folder.
+        "devdocs-en" => {
+            let set = title.split_once(": ")?.0.to_lowercase();
+            Some(format!("https://devdocs.io/{set}/{t}"))
+        }
+        _ => None,
+    }
+}

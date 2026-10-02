@@ -223,7 +223,7 @@ fun EvidenceCard(card: AnswerCard, onOpen: (OpenSource) -> Unit) {
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
                     Text(top.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val sub = listOf(top.section, top.packTitle).filter { it.isNotBlank() }.joinToString(" · ")
+                    val sub = listOf(top.section, top.packTitle, top.license).filter { it.isNotBlank() }.joinToString(" · ")
                     Text(sub, style = MaterialTheme.typography.labelSmall, color = c.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (card.fromCards) {
@@ -411,7 +411,7 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
                 shape = MaterialTheme.shapes.medium,
                 color = c.surfaceContainerLowest,
                 border = hairline(),
-                modifier = Modifier.width(232.dp).height(118.dp),
+                modifier = Modifier.width(232.dp).height(148.dp),
             ) {
                 Column(Modifier.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -422,8 +422,10 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
                     if (s.section.isNotBlank()) {
                         Text(s.section, style = MaterialTheme.typography.labelSmall, color = c.primary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
                     }
+                    val credit = listOf(s.packTitle, s.license).filter { it.isNotBlank() }.joinToString(" · ")
+                    Text(credit, style = MaterialTheme.typography.labelSmall, color = c.outline, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp).testTag("source_credit_line"))
                     Spacer(Modifier.height(4.dp))
-                    Text(s.snippet, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text(s.snippet, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -497,7 +499,11 @@ private fun shareText(turn: Turn, withQuestion: Boolean): String = buildString {
     append(turn.answerText.trim())
     if (turn.sources.isNotEmpty()) {
         append("\n\nSources:\n")
-        turn.sources.joinTo(this, "\n") { "[${it.n}] ${it.title}${if (it.section.isNotBlank()) " — ${it.section}" else ""} (${it.packTitle})" }
+        turn.sources.joinTo(this, "\n") {
+            val credit = listOf(it.packTitle, it.license).filter { s -> s.isNotBlank() }.joinToString(", ")
+            "[${it.n}] ${it.title}${if (it.section.isNotBlank()) " — ${it.section}" else ""} ($credit)" +
+                if (it.sourceUrl.isNotBlank()) "\n    ${it.sourceUrl}" else ""
+        }
     }
 }
 

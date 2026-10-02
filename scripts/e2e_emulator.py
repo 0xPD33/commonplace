@@ -759,6 +759,145 @@ def main() -> int:
         ui.wait(15, contains="Removed harbour-notes")
         r.back()
 
+    def node_text(tag: str) -> str:
+        n = ui.find(tag=tag)
+        return (n.get("text") or n.get("content-desc") or "") if n is not None else ""
+
+    @step("attribution")
+    def _():
+        # A Wikipedia-style answer: the card, the source cards, the passage page and the article page all name
+        # the source and the license; the passage and article pages also show the page address as selectable text.
+        fresh_app(r, remove_docs=False)
+        res = ask_card(r, "Who invented the telephone?", "attr")
+        credit = [n.get("text") for n in ui.nodes() if n.get("resource-id", "").endswith("source_credit_line")]
+        if not credit or not all(" · " in c for c in credit):
+            raise RuntimeError(f"source cards lack the pack and license line: {credit!r}")
+        r.shot("attr-source-cards", " | ".join(credit[:3]))
+        for _ in range(8):  # the answer streamed past the card: scroll back up to it
+            if ui.find(tag="evidence_card") is not None:
+                break
+            adb("shell", "input", "swipe", "540", "600", "540", "1900", "200")
+            time.sleep(0.6)
+        ui.tap(ui.wait(10, tag="evidence_card"))
+        ui.wait(10, tag="passage_view")
+        ui.scroll_find(tag="source_credit")
+        checks = {"source_attribution": "", "source_license": "License:", "source_url": "https://"}
+        for tag, want in checks.items():
+            if want not in node_text(tag):
+                raise RuntimeError(f"passage page: {tag} is {node_text(tag)!r}, expected {want!r}")
+        for tag in ("copy_url", "open_url"):
+            if ui.find(tag=tag) is None:
+                raise RuntimeError(f"passage page has no {tag}")
+        r.shot("attr-passage", f"{node_text('source_license')} · {node_text('source_url')}")
+        ui.tap(ui.scroll_find(tag="open_article"))
+        ui.wait(10, tag="article_view")
+        for _ in range(120):  # fling to the end of a long article
+            if ui.find(tag="source_credit") is not None:
+                break
+            for _ in range(4):
+                adb("shell", "input", "swipe", "540", "1900", "540", "300", "80")
+        else:
+            raise TimeoutError("the article page has no source credit at its end")
+        if "https://" not in node_text("source_url") or "License:" not in node_text("source_license"):
+            raise RuntimeError("article page lacks the license or the page address")
+        r.shot("attr-article", node_text("source_url"))
+        r.back()
+        r.back()
+        stop = ui.find(tag="ask_stop")
+        if stop is not None:
+            ui.tap(stop)
+
+    @step("notice")
+    def _():
+        # "View notice" on a pack row shows that pack's NOTICE.txt (cdc-travel is small; the emulator's older packs predate notices).
+        pack = "cdc-travel"
+        manifest = json.loads((ROOT / f"data/library/packs/{pack}/manifest.json").read_text())
+        notice = (ROOT / f"data/library/packs/{pack}/NOTICE.txt").read_text()
+        subprocess.run([str(ROOT / "scripts/dev-push.sh"), pack], check=True)
+        fresh_app(r, remove_docs=False)
+        open_library(r)
+        ui.tap(row_child(scroll_to_row(r, manifest["title"]), desc="Actions"))
+        r.shot("notice-menu", "the pack row menu has View notice")
+        ui.tap(ui.wait(5, text="View notice"))
+        ui.wait(10, tag="notice_view")
+        text = ui.all_text()
+        first = notice.splitlines()[0]
+        if first not in text:
+            raise RuntimeError(f"notice text not shown: wanted {first!r}")
+        r.shot("notice-shown", first)
+        r.back()
+        r.back()
+
+    @step("licenses")
+    def _():
+        fresh_app(r, remove_docs=False)
+        ui.tap(ui.wait(10, tag="overflow"))
+        ui.tap(ui.wait(5, text="Settings"))
+        ui.tap(ui.scroll_find(tag="open_licenses"))
+        ui.wait(10, tag="licenses_view")
+        if "llama.cpp" not in ui.all_text():
+            raise RuntimeError("the license list does not show llama.cpp")
+        r.shot("licenses-top", "llama.cpp listed")
+        for _ in range(60):
+            adb("shell", "input", "swipe", "540", "1900", "540", "300", "100")
+        r.shot("licenses-scrolled", "scrolled well into the list")
+        r.back()
+        r.back()
+
+    @step("ask-document")
+    def _():
+        adb("shell", "rm", "-f", "/sdcard/Download/quillfeather.pdf")
+        adb("push", "-q", str(FIXTURES / "quillfeather.pdf"), "/sdcard/Download/")
+        question = "When does the museum open?"
+        fresh_app(r)
+        open_library(r)
+        add_document(r, "quillfeather.pdf", "scope")
+        r.back()
+        wide = ask_card(r, question, "scope-whole-library")
+        r.shot("scope-whole-library-note", f"no scope: {wide['card'][:120]!r}")
+        open_library(r)
+        row = scroll_to_row(r, "quillfeather")
+        ui.tap(row_child(row, tag="ask_document"))
+        chip = ui.wait(10, tag="scope_chip")
+        if "Searching: quillfeather" not in subtree_text(chip) and "Searching: quillfeather" not in (chip.get("text") or chip.get("content-desc") or ""):
+            raise RuntimeError(f"scope chip text: {subtree_text(chip)!r}")
+        ui.wait(5, tag="ask_input")
+        r.shot("scope-chip", "back on Ask with the scope chip above the input")
+
+        first = ask_card(r, question, "scope-q1")
+        credit = [n.get("text") for n in ui.nodes() if n.get("resource-id", "").endswith("source_credit_line")]
+        if "museum" not in first["card"] or not credit or not all("quillfeather" in c for c in credit):
+            raise RuntimeError(f"a scoped question reached other packs: card {first['card']!r}, sources {credit!r}")
+        if ui.find(tag="scope_chip") is None:
+            raise RuntimeError("the chip vanished after a question")
+        # A follow-up keeps the scope: ask on the same topic (no new topic) and check the sources again.
+        ui.tap(ui.wait(10, tag="ask_input"))
+        r.type_text("Who was the first keeper?")
+        ui.tap(ui.wait(10, tag="ask_send"))
+        ui.wait(15, tag="turn_query", contains="Who was the first keeper?")
+        ui.wait(150, tag="sources_row")
+        time.sleep(2)
+        stop = ui.find(tag="ask_stop")
+        if stop is not None:
+            ui.tap(stop)
+        for _ in range(60):
+            if ui.find(tag="ask_stop") is None:
+                break
+            time.sleep(1)
+        credit = [n.get("text") for n in ui.nodes() if n.get("resource-id", "").endswith("source_credit_line")]
+        if not credit or not all("quillfeather" in c for c in credit) or ui.find(tag="scope_chip") is None:
+            raise RuntimeError(f"the follow-up left the scope: {credit!r}")
+        r.shot("scope-follow-up", "follow-up: chip still set, every source is the document")
+        ui.tap(ui.wait(5, tag="scope_chip"))
+        time.sleep(1)
+        if ui.find(tag="scope_chip") is not None:
+            raise RuntimeError("the chip stays after a tap on it")
+        r.shot("scope-removed", "chip removed: questions search the whole library again")
+        open_library(r)
+        remove_row(r, "quillfeather")
+        ui.wait(15, contains="Removed quillfeather")
+        r.back()
+
     for name, fn in flows:
         if args.only and name not in args.only:
             continue

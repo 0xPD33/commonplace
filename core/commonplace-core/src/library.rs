@@ -129,6 +129,11 @@ impl Library {
         Ok(lib)
     }
 
+    /// The knowledge packs a question searches, with their index: those in `scope`, or all when it is empty.
+    pub fn scoped<'a>(&'a self, scope: &'a [String]) -> impl Iterator<Item = (u8, &'a Pack)> + 'a {
+        self.packs.iter().enumerate().filter(move |(_, p)| scope.is_empty() || scope.contains(&p.manifest.pack_id)).map(|(i, p)| (i as u8, p))
+    }
+
     /// Refuse a knowledge pack whose embedder differs from the installed ones. A user document is
     /// searched on its own and fused by rank, so it never conflicts (its codes share the leaf-mt space).
     pub fn check_compatible(&self, m: &Manifest) -> Result<()> {

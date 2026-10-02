@@ -101,6 +101,8 @@ pub struct Retriever<'a> {
     pub enc: Option<&'a QueryEncoder>,
     pub rr: Option<&'a Reranker>,
     pub s: &'a RetrievalSettings,
+    /// Pack ids to search; empty means every pack.
+    pub scope: &'a [String],
 }
 
 impl Retriever<'_> {
@@ -110,19 +112,17 @@ impl Retriever<'_> {
             let sparse = sc.spawn(|| {
                 let t = Instant::now();
                 use rayon::prelude::*;
-                let r: Vec<(u8, Vec<(u32, f32)>)> = self
-                    .lib
-                    .packs
+                let packs: Vec<(u8, &crate::pack::Pack)> = self.lib.scoped(self.scope).collect();
+                let r: Vec<(u8, Vec<(u32, f32)>)> = packs
                     .par_iter()
-                    .enumerate()
                     .filter(|_| self.s.use_sparse)
-                    .filter_map(|(i, p)| p.sparse.as_ref().map(|s| (i as u8, s.search(query, self.s.sparse_k).unwrap_or_default())))
+                    .filter_map(|(i, p)| p.sparse.as_ref().map(|s| (*i, s.search(query, self.s.sparse_k).unwrap_or_default())))
                     .collect();
                 (r, ms(t))
             });
             let dense = sc.spawn(|| -> Result<(Vec<(u8, Vec<(u32, f32)>)>, f64, f64)> {
                 let Some(enc) = self.enc.filter(|_| self.s.use_dense) else { return Ok((vec![], 0.0, 0.0)) };
-                if !self.lib.packs.iter().any(|p| p.dense.is_some()) {
+                if !self.lib.scoped(self.scope).any(|(_, p)| p.dense.is_some()) {
                     return Ok((vec![], 0.0, 0.0));
                 }
                 let t = Instant::now();
@@ -131,12 +131,8 @@ impl Retriever<'_> {
                 let t = Instant::now();
                 let r = self
                     .lib
-                    .packs
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, p)| {
-                        p.dense.as_ref().map(|d| (i as u8, d.search(&q, self.s.nprobe, self.s.hamming_k, self.s.dense_k)))
-                    })
+                    .scoped(self.scope)
+                    .filter_map(|(i, p)| p.dense.as_ref().map(|d| (i, d.search(&q, self.s.nprobe, self.s.hamming_k, self.s.dense_k))))
                     .collect();
                 Ok((r, enc_ms, ms(t)))
             });

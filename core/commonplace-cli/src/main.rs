@@ -108,6 +108,9 @@ enum Cmd {
         /// Let the model reason first (capped by --think-budget).
         #[arg(long)]
         think: bool,
+        /// Search only this pack (repeat for several). Default: every enabled pack.
+        #[arg(long = "pack")]
+        packs: Vec<String>,
     },
     /// Show the reranked retrieval results only.
     Retrieve {
@@ -117,6 +120,9 @@ enum Cmd {
         /// Print JSON (one object with a "hits" list) instead of text.
         #[arg(long)]
         json: bool,
+        /// Search only this pack (repeat for several). Default: every enabled pack.
+        #[arg(long = "pack")]
+        packs: Vec<String>,
     },
     /// Run a list of queries (one per line or JSONL with "query") and print a timing table.
     Bench { queries: PathBuf },
@@ -317,6 +323,8 @@ struct EvalReq {
     deep: bool,
     #[serde(default)]
     think: bool,
+    #[serde(default)]
+    packs: Vec<String>,
 }
 
 fn pct(v: &mut [f64], p: f64) -> f64 {
@@ -398,14 +406,14 @@ fn main() -> Result<()> {
             e.set_pack_enabled(id, enable)?;
             println!("{id} {}", if enable { "enabled" } else { "disabled" });
         }
-        Cmd::Retrieve { query, k, json } => {
+        Cmd::Retrieve { query, k, json, packs } => {
             let e = engine(&Opts { no_llm: true, ..o.clone() })?;
             {
                 let mut s = e.settings.write().unwrap();
                 s.retrieval.rerank_keep = *k;
                 s.retrieval.fuse_keep = s.retrieval.fuse_keep.max(*k);
             }
-            let out = e.ask(&AskRequest { query: query.clone(), ..Default::default() }, &TermSink { printed: 0.into(), quiet: true })?;
+            let out = e.ask(&AskRequest { query: query.clone(), packs: packs.clone(), ..Default::default() }, &TermSink { printed: 0.into(), quiet: true })?;
             if *json {
                 println!("{}", serde_json::json!({ "query": query, "hits": out.card.sources, "retrieval": out.record.retrieval, "card_ms": out.record.card_ms }));
                 return Ok(());
@@ -419,13 +427,13 @@ fn main() -> Result<()> {
                 r.encode_ms, r.sparse_ms, r.dense_ms, r.fuse_ms, r.rerank_ms, out.record.card_ms
             );
         }
-        Cmd::Ask { query, json, deep, think } => {
+        Cmd::Ask { query, json, deep, think, packs } => {
             let e = engine(&Opts { no_llm: o.no_llm || *deep, ..o.clone() })?;
             if *deep && !o.no_llm {
                 e.load_model(ModelRole::LlmDeep)?;
             }
             let sink = TermSink { printed: 0.into(), quiet: *json };
-            let out = e.ask(&AskRequest { query: query.clone(), history: vec![], deep: *deep, think: *think }, &sink)?;
+            let out = e.ask(&AskRequest { query: query.clone(), history: vec![], deep: *deep, think: *think, packs: packs.clone() }, &sink)?;
             if *json {
                 println!("{}", outcome_json(&out));
             } else {
@@ -442,7 +450,7 @@ fn main() -> Result<()> {
                 }
                 let req: EvalReq = serde_json::from_str(&line)?;
                 let sink = TermSink { printed: 0.into(), quiet: true };
-                let v = match e.ask(&AskRequest { query: req.query, history: req.history, deep: req.deep, think: req.think }, &sink) {
+                let v = match e.ask(&AskRequest { query: req.query, history: req.history, deep: req.deep, think: req.think, packs: req.packs }, &sink) {
                     Ok(out) => outcome_json(&out),
                     Err(err) => serde_json::json!({ "error": format!("{err:#}") }),
                 };

@@ -287,7 +287,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
+fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument: (String, String) -> Unit, vm: LibraryViewModel = viewModel()) {
     val ctx = LocalContext.current
     val holder = (ctx.applicationContext as CommonplaceApp).engine
     val lib by holder.library.collectAsState()
@@ -366,13 +366,14 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
                     onEnabled = { vm.setEnabled(p.packId, it) },
                     onVerify = { vm.verify(p.packId) },
                     onRemove = { confirmRemove = p.packId },
+                    onNotice = { onNotice(p.packId) },
                 )
             }
             if (l?.hasWikidata == true) {
                 item {
                     PackRow(Icons.Outlined.DataObject, "Wikidata facts", "Numbers and dates for people, places and things", bytes(l.wikidataSizeBytes.toLong()) + " · CC0",
                         enabled = vm.toggling[WIKIDATA] ?: l.wikidataEnabled, onEnabled = { vm.setEnabled(WIKIDATA, it) },
-                        onVerify = { vm.verify(WIKIDATA) }, onRemove = { confirmRemove = WIKIDATA })
+                        onVerify = { vm.verify(WIKIDATA) }, onRemove = { confirmRemove = WIKIDATA }, onNotice = { onNotice(WIKIDATA) })
                 }
             }
             item { SectionLabel("My documents", Modifier.padding(top = 12.dp)) }
@@ -390,6 +391,7 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
                     onEnabled = { vm.setEnabled(p.packId, it) },
                     onVerify = { vm.verify(p.packId) },
                     onRemove = { confirmRemove = p.packId },
+                    onAsk = { onAskDocument(p.packId, p.title) },
                 )
             }
             item {
@@ -421,6 +423,7 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
                     detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}",
                     onVerify = { vm.verify(m.packId) },
                     onRemove = { confirmRemove = m.packId },
+                    onNotice = { onNotice(m.packId) },
                 )
             }
             l?.skipped?.takeIf { it.isNotEmpty() }?.let { sk ->
@@ -505,6 +508,10 @@ private fun PackRow(
     /** `null` for rows that cannot be switched off (models). */
     enabled: Boolean? = null,
     onEnabled: (Boolean) -> Unit = {},
+    /** Shows the pack's NOTICE.txt. `null` for documents, which have none. */
+    onNotice: (() -> Unit)? = null,
+    /** "Ask this document": limits the next questions to this pack. */
+    onAsk: (() -> Unit)? = null,
 ) {
     var menu by remember { mutableStateOf(false) }
     val dim = Modifier.alpha(if (enabled == false) 0.5f else 1f)
@@ -519,6 +526,9 @@ private fun PackRow(
                     Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                 }
                 if (enabled == false) Text("Off: not searched", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (onAsk != null && enabled != false) {
+                    TextButton(onClick = onAsk, contentPadding = PaddingValues(0.dp), modifier = Modifier.testTag("ask_document")) { Text("Ask this document") }
+                }
             }
             if (enabled != null) {
                 Switch(
@@ -529,6 +539,7 @@ private fun PackRow(
             }
             IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Actions") }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                if (onNotice != null) DropdownMenuItem(text = { Text("View notice") }, onClick = { menu = false; onNotice() }, modifier = Modifier.testTag("view_notice"))
                 DropdownMenuItem(text = { Text("Check integrity") }, onClick = { menu = false; onVerify() })
                 DropdownMenuItem(text = { Text("Remove") }, onClick = { menu = false; onRemove() })
             }

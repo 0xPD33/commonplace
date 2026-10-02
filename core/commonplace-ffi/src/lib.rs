@@ -149,6 +149,8 @@ pub struct AskInput {
     /// Thinking mode: the model reasons first (slower, capped by `Settings::think_budget`).
     pub think: bool,
     pub thermal_headroom: Option<f32>,
+    /// Pack ids this question searches; empty means every enabled pack.
+    pub packs: Vec<String>,
 }
 
 #[derive(uniffi::Enum, Clone, Copy)]
@@ -172,6 +174,9 @@ pub struct SourceItem {
     pub title: String,
     pub section: String,
     pub snippet: String,
+    /// License of the pack, and the article's web page (empty when it has none).
+    pub license: String,
+    pub source_url: String,
 }
 
 #[derive(uniffi::Record, Clone)]
@@ -266,6 +271,9 @@ pub struct PassageView {
     pub text: String,
     pub url_title: String,
     pub license: String,
+    pub attribution: String,
+    /// The article's web page; empty when the pack has none.
+    pub source_url: String,
 }
 
 #[derive(uniffi::Record)]
@@ -285,6 +293,7 @@ pub struct ArticleView {
     pub paragraphs: Vec<ArticleParagraph>,
     pub attribution: String,
     pub license: String,
+    pub source_url: String,
 }
 
 #[derive(uniffi::Record)]
@@ -409,6 +418,8 @@ fn source_item(s: &engine::SourceRef) -> SourceItem {
         title: s.title.clone(),
         section: s.section.clone(),
         snippet: s.snippet.clone(),
+        license: s.license.clone(),
+        source_url: s.source_url.clone(),
     }
 }
 
@@ -423,6 +434,8 @@ fn source_ref(s: &SourceItem) -> engine::SourceRef {
         section: s.section.clone(),
         snippet: s.snippet.clone(),
         score: 0.0,
+        license: s.license.clone(),
+        source_url: s.source_url.clone(),
     }
 }
 
@@ -676,6 +689,7 @@ impl CommonplaceEngine {
                 .collect(),
             deep: input.deep,
             think: input.think,
+            packs: input.packs,
         };
         let sink = ListenerSink { l: listener, cancel: self.cancel.clone() };
         let out = self.engine.ask(&req, &sink)?;
@@ -702,6 +716,7 @@ impl CommonplaceEngine {
         let p = lib.packs.iter().find(|p| p.manifest.pack_id == pack_id).ok_or_else(|| CpError::Failed { msg: format!("pack {pack_id} not installed") })?;
         let rec = p.passage(passage_id)?;
         let a = p.meta.article(rec.article_id)?.ok_or_else(|| CpError::Failed { msg: "article not found".into() })?;
+        let source_url = pack::source_url(&pack_id, &a.title, a.url_title.as_deref().unwrap_or_default()).unwrap_or_default();
         Ok(PassageView {
             pack_id,
             pack_title: p.manifest.title.clone(),
@@ -710,8 +725,10 @@ impl CommonplaceEngine {
             title: a.title,
             section: rec.section_path,
             text: rec.text,
+            source_url,
             url_title: a.url_title.unwrap_or_default(),
             license: p.manifest.license.clone(),
+            attribution: p.manifest.attribution.clone(),
         })
     }
 
@@ -721,6 +738,7 @@ impl CommonplaceEngine {
         let a = p.meta.article(article_id)?.ok_or_else(|| CpError::Failed { msg: "article not found".into() })?;
         let ids: Vec<u32> = (a.first_passage..a.first_passage + a.n_passages).collect();
         let recs = p.passages(&ids)?;
+        let source_url = pack::source_url(&pack_id, &a.title, a.url_title.as_deref().unwrap_or_default()).unwrap_or_default();
         Ok(ArticleView {
             pack_id,
             pack_title: p.manifest.title.clone(),
@@ -730,7 +748,16 @@ impl CommonplaceEngine {
             paragraphs: ids.into_iter().zip(recs).map(|(id, r)| ArticleParagraph { passage_id: id, section: r.section_path, text: r.text }).collect(),
             attribution: p.manifest.attribution.clone(),
             license: p.manifest.license.clone(),
+            source_url,
         })
+    }
+
+    /// The pack's `NOTICE.txt` (credit, license and license texts); empty when it has none.
+    pub fn pack_notice(&self, pack_id: String) -> String {
+        if pack_id.contains('/') || pack_id.starts_with('.') {
+            return String::new();
+        }
+        std::fs::read_to_string(Library::packs_dir(&self.engine.cfg.library_dir).join(pack_id).join("NOTICE.txt")).unwrap_or_default()
     }
 
     /// Stream-import a pack from its parts (any order; sorted by name). Returns the pack id.

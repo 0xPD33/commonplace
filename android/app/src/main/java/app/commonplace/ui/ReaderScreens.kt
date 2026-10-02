@@ -1,6 +1,14 @@
 package app.commonplace.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -122,11 +130,39 @@ private fun PassageBody(pad: PaddingValues, p: PassageView, highlight: String, o
             Text("Read the full article")
         }
         Spacer(Modifier.height(20.dp))
-        Text(
-            "Text from ${p.packTitle}, ${p.license}. Passage ${p.passageId}.",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline,
-        )
+        SourceCredit(p.packTitle, p.attribution, p.license, p.sourceUrl)
+        Spacer(Modifier.height(8.dp))
+        Text("Passage ${p.passageId}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+    }
+}
+
+/** Where the text came from: the credit, the license, and the page it was copied from (text you can select and copy). */
+@Composable
+private fun SourceCredit(packTitle: String, attribution: String, license: String, url: String) {
+    val ctx = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val c = MaterialTheme.colorScheme
+    Surface(shape = MaterialTheme.shapes.medium, color = c.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("source_credit")) {
+        Column(Modifier.padding(16.dp)) {
+            SectionLabel("Source")
+            Spacer(Modifier.height(6.dp))
+            Text(packTitle, style = MaterialTheme.typography.titleSmall)
+            if (attribution.isNotBlank()) Text(attribution, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, modifier = Modifier.testTag("source_attribution"))
+            Text("License: $license", style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, modifier = Modifier.testTag("source_license"))
+            if (url.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                SelectionContainer {
+                    Text(url, style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace), color = c.primary, modifier = Modifier.testTag("source_url"))
+                }
+                Row {
+                    TextButton(onClick = { clipboard.setText(AnnotatedString(url)) }, modifier = Modifier.testTag("copy_url")) { Text("Copy link") }
+                    TextButton(
+                        onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } },
+                        modifier = Modifier.testTag("open_url"),
+                    ) { Text("Open in browser") }
+                }
+            }
+        }
     }
 }
 
@@ -209,7 +245,7 @@ private fun ArticleBody(pad: PaddingValues, a: ArticleView, focus: UInt) {
         }
         item {
             Spacer(Modifier.height(24.dp))
-            Text("${a.attribution}. ${a.license}.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            SourceCredit(a.packTitle, a.attribution, a.license, a.sourceUrl)
             Spacer(Modifier.height(32.dp))
         }
     }

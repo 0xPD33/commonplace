@@ -2,7 +2,7 @@
 //! (`encoders::Head::intent`).
 
 use crate::library::Library;
-use crate::pack::{meta::Article, normalize_title};
+use crate::pack::{Pack, meta::Article, normalize_title};
 use crate::encoders::Reranker;
 use crate::text::STOPWORDS;
 
@@ -38,7 +38,8 @@ pub fn normalize(q: &str) -> String {
 
 /// `rr` lets entity linking pick among same-name articles by the question's context. `topics` are the
 /// article titles the rewrite model named; when any of them exists, they are the entities.
-pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker>, topics: &[String]) -> Route {
+/// `scope` limits entity linking to those pack ids (empty: every pack).
+pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker>, topics: &[String], scope: &[String]) -> Route {
     let query = normalize(query);
     let lower = format!(" {} ", query.to_lowercase());
     let words: Vec<&str> = query.split_whitespace().collect();
@@ -51,17 +52,15 @@ pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker
         // A title the model named must exist as a title or a redirect; no guessing from its words.
         let norm = normalize_title(t);
         let found = lib
-            .packs
-            .iter()
-            .enumerate()
-            .filter_map(|(pi, p)| p.meta.lookup_title(&norm).ok().flatten().map(|a| (pi as u8, a)))
+            .scoped(scope)
+            .filter_map(|(pi, p)| p.meta.lookup_title(&norm).ok().flatten().map(|a| (pi, a)))
             .max_by_key(|(_, a)| a.popularity);
         if let Some((pack, article)) = found.filter(|(p, a)| !entities.iter().any(|x: &Entity| x.pack == *p && x.article.id == a.id)) {
             entities.push(Entity { pack, article, surface: t.clone() });
         }
     }
     if entities.is_empty() {
-        entities = link_entities_with(lib, &query, rr);
+        entities = link_entities_with(lib, &query, rr, scope);
     }
     let complex = entities.len() >= 2 || words.len() > 14;
     Route { query, complex, needs_rewrite, compare: false, entities }
@@ -69,14 +68,14 @@ pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker
 
 /// Longest-first n-gram lookup against article titles and redirects in every pack.
 /// Single words must be capitalized in the query (or the query must be very short) to limit noise.
-pub fn link_entities(lib: &Library, query: &str) -> Vec<Entity> {
-    link_entities_with(lib, query, None)
+pub fn link_entities(lib: &Library, query: &str, scope: &[String]) -> Vec<Entity> {
+    link_entities_with(lib, query, None, scope)
 }
 
 /// Margin (reranker logits) a less popular same-name article needs to replace the most popular one.
 const DISAMBIG_MARGIN: f32 = 1.0;
 
-fn link_entities_with(lib: &Library, query: &str, rr: Option<&Reranker>) -> Vec<Entity> {
+fn link_entities_with(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]) -> Vec<Entity> {
     let toks: Vec<&str> = query
         .split(|c: char| c.is_whitespace() || matches!(c, '?' | '!' | ',' | ';' | ':' | '"'))
         .filter(|t| !t.is_empty())
@@ -105,8 +104,8 @@ fn link_entities_with(lib: &Library, query: &str, rr: Option<&Reranker>) -> Vec<
             let norm = normalize_title(&surface);
             // "US" means the country, not the film "Us": all-caps codes resolve by their exact key first.
             let code = n == 1 && (2..=5).contains(&surface.len()) && surface.chars().all(|c| c.is_ascii_uppercase());
-            let lookup = |f: &dyn Fn(&crate::pack::Pack) -> Option<Article>| {
-                lib.packs.iter().enumerate().filter_map(|(pi, p)| f(p).map(|a| (pi as u8, a))).max_by_key(|(_, a)| a.popularity)
+            let lookup = |f: &dyn Fn(&Pack) -> Option<Article>| {
+                lib.scoped(scope).filter_map(|(pi, p)| f(p).map(|a| (pi, a))).max_by_key(|(_, a)| a.popularity)
             };
             let by_title = || lookup(&|p| p.meta.lookup_title(&norm).ok().flatten());
             let best = if code { lookup(&|p| p.meta.lookup_code(&surface).ok().flatten()).or_else(by_title) } else { by_title() };
@@ -121,7 +120,7 @@ fn link_entities_with(lib: &Library, query: &str, rr: Option<&Reranker>) -> Vec<
                     .flatten()
             });
             let best = match (rr, best) {
-                (Some(rr), Some(b)) if !code && n <= 3 => disambiguate(lib, rr, query, &norm, b, lowercase),
+                (Some(rr), Some(b)) if !code && n <= 3 => disambiguate(lib, rr, query, &norm, b, lowercase, scope),
                 (_, b) => b.filter(|(_, a)| !(lowercase && qualified(a))),
             };
             // A lowercase phrase inside a sentence names a thing only if it matches a proper name
@@ -160,12 +159,12 @@ pub fn attribute(route: &Route) -> String {
 /// Start from the most viewed one (the primary topic), leave out rarely viewed ones (disambiguation
 /// stubs), and let the question's context override only by a clear reranker margin.
 /// `lowercase` (a common noun) rules out qualified titles; then nothing may be left.
-fn disambiguate(lib: &Library, rr: &Reranker, query: &str, norm: &str, best: (u8, Article), lowercase: bool) -> Option<(u8, Article)> {
+fn disambiguate(lib: &Library, rr: &Reranker, query: &str, norm: &str, best: (u8, Article), lowercase: bool, scope: &[String]) -> Option<(u8, Article)> {
     let mut cands = vec![best];
-    for (pi, p) in lib.packs.iter().enumerate().filter(|(_, p)| is_wikipedia(&p.manifest.pack_id)) {
+    for (pi, p) in lib.scoped(scope).filter(|(_, p)| is_wikipedia(&p.manifest.pack_id)) {
         for a in p.meta.candidates(norm, 6).unwrap_or_default() {
-            if !cands.iter().any(|(cp, c)| *cp == pi as u8 && c.id == a.id) {
-                cands.push((pi as u8, a));
+            if !cands.iter().any(|(cp, c)| *cp == pi && c.id == a.id) {
+                cands.push((pi, a));
             }
         }
     }

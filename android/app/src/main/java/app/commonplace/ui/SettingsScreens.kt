@@ -81,7 +81,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: () -> Unit) {
     val holder = (LocalContext.current.applicationContext as CommonplaceApp).engine
     val prefs = holder.prefs
     val lib by holder.library.collectAsState()
@@ -217,6 +217,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit) {
             Spacer(Modifier.height(24.dp))
             HorizontalDivider()
             TextButton(onClick = onDiagnostics, modifier = Modifier.testTag("open_diagnostics")) { Text("Diagnostics and benchmark") }
+            TextButton(onClick = onLicenses, modifier = Modifier.testTag("open_licenses")) { Text("Open-source licenses") }
         }
     }
 }
@@ -325,7 +326,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
                             for ((i, q) in BENCH.withIndex()) {
                                 if (!isActive) return@launch
                                 bench = "Running ${i + 1} of ${BENCH.size}: $q"
-                                runCatching { e.ask(AskInput(q, emptyList(), false, false, holder.thermalHeadroom()), SilentListener) }
+                                runCatching { e.ask(AskInput(q, emptyList(), false, false, holder.thermalHeadroom(), emptyList()), SilentListener) }
                             }
                             val rs = e.recentQueries().take(BENCH.size)
                             fun p50(xs: List<Double>) = xs.sorted().getOrNull(xs.size / 2) ?: 0.0

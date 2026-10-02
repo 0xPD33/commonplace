@@ -106,10 +106,12 @@ private fun turn(o: JSONObject) = SavedTurn(
 private fun source(s: SourceItem) = JSONObject()
     .put("n", s.n.toLong()).put("pack", s.packId).put("packTitle", s.packTitle).put("pid", s.passageId.toLong())
     .put("aid", s.articleId.toLong()).put("title", s.title).put("section", s.section).put("snippet", s.snippet)
+    .put("license", s.license).put("url", s.sourceUrl)
 
 private fun source(o: JSONObject) = SourceItem(
     o.getLong("n").toUInt(), o.getString("pack"), o.getString("packTitle"), o.getLong("pid").toUInt(),
     o.getLong("aid").toUInt(), o.getString("title"), o.getString("section"), o.getString("snippet"),
+    o.optString("license"), o.optString("url"),
 )
 
 private fun card(c: AnswerCard) = JSONObject()

@@ -47,7 +47,7 @@ The app refuses a knowledge pack whose `embedder` differs from the installed pac
 
 ### User documents
 
-The app builds a knowledge pack on the device from a document that the user adds ("My documents"): `CommonplaceEngine.add_document(title, pages, listener)`, or `commonplace add-doc <file.txt>` on the desktop. The code is `core/commonplace-core/src/userdoc.rs`. It writes through the same `pack` writers as `packbuild`.
+The app builds a knowledge pack on the device from a document that the user adds ("My documents"): `CommonplaceEngine.add_document(title, pages, listener)`, or `commonplace add-doc <file.txt>` on the desktop. The code is `core/commonplace-core/src/userdoc.rs`. It writes through the same `pack` writers as `packbuild`. "Ask this document" in Library limits the questions that follow to that pack (`AskInput.packs` in the FFI, `AskRequest.packs` in the core; `commonplace ask|retrieve --pack <id>` on the desktop). Retrieval, entity linking and Wikidata facts skip every pack outside the list. An empty list means every enabled pack.
 
 - The core receives the text of each page. Android extracts it from the PDF.
 - The pack is `doc-<10 hex of SHA-256 over title and pages>`, with `user_document: true` in the manifest and the license "user document". The library list, verify and remove treat it like any pack.

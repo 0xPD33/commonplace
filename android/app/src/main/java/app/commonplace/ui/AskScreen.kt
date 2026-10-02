@@ -39,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.AddComment
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.LocalLibrary
@@ -57,6 +58,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -144,6 +147,9 @@ fun AskScreen(
         val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         if (granted || vm.listening) vm.toggleVoice() else micPermission.launch(Manifest.permission.RECORD_AUDIO)
     }
+    // A removed or switched-off document cannot be searched: drop the scope instead of answering from nothing.
+    val scopeGone = vm.scope?.let { s -> library?.packs?.none { it.packId == s.packId && it.enabled } == true } == true
+    LaunchedEffect(scopeGone) { if (scopeGone) vm.clearScope() }
     // The mic must not outlive the screen, in the background or behind a source page.
     DisposableEffect(Unit) { onDispose { vm.stopVoice() } }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopVoice() }
@@ -192,6 +198,8 @@ fun AskScreen(
                     voiceError = vm.voiceError,
                     onMic = if (vm.voiceAvailable) onMic else null,
                     focus = inputFocus,
+                    scope = vm.scope,
+                    onClearScope = vm::clearScope,
                 )
             }
         },
@@ -435,9 +443,20 @@ private fun AskBar(
     voiceError: String?,
     onMic: (() -> Unit)?,
     focus: FocusRequester,
+    scope: AskScope?,
+    onClearScope: () -> Unit,
 ) {
     Surface(color = MaterialTheme.colorScheme.surface) { Column {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        if (scope != null) {
+            InputChip(
+                selected = true,
+                onClick = onClearScope,
+                label = { Text("Searching: ${scope.title}", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                trailingIcon = { Icon(Icons.Outlined.Close, "Remove, search the whole library", Modifier.size(InputChipDefaults.AvatarSize)) },
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp).testTag("scope_chip"),
+            )
+        }
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,

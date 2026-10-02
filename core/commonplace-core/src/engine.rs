@@ -107,6 +107,8 @@ pub struct AskRequest {
     pub deep: bool,
     /// Let the model reason before it answers (slower; capped by `Settings::think_budget`).
     pub think: bool,
+    /// Pack ids this question searches (retrieval, entity linking, Wikidata). Empty: every enabled pack.
+    pub packs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -132,6 +134,11 @@ pub struct SourceRef {
     pub section: String,
     pub snippet: String,
     pub score: f32,
+    /// The pack's license and the article's web page, for the source list. Empty when unknown.
+    #[serde(default)]
+    pub license: String,
+    #[serde(default)]
+    pub source_url: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -285,8 +292,8 @@ impl Engine {
     pub fn pool(&self, query: &str) -> Result<(Arc<Library>, Vec<Hit>)> {
         let lib = self.library();
         let s = self.settings.read().unwrap().clone();
-        let route = route::route(&lib, query, false, self.rr.as_ref(), &[]);
-        let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval };
+        let route = route::route(&lib, query, false, self.rr.as_ref(), &[], &[]);
+        let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval, scope: &[] };
         let mut st = Default::default();
         let mut hits = retriever.fused(&route.query, &route.entities, &mut st)?;
         if let Some(rr) = self.rr.as_ref().filter(|_| s.retrieval.use_rerank) {
@@ -377,11 +384,19 @@ impl Engine {
             section: h.passage.section_path.clone(),
             snippet,
             score: h.score(),
+            license: pack.license.clone(),
+            source_url: crate::pack::source_url(&pack.pack_id, &h.article.title, h.article.url_title.as_deref().unwrap_or_default()).unwrap_or_default(),
         }
     }
 
-    fn wikidata_facts(lib: &Library, route: &Route, total: usize) -> Vec<WdFact> {
-        let Some((_, wd)) = &lib.wikidata else { return vec![] };
+    /// The Wikidata pack, unless a pack scope leaves it out.
+    fn wikidata<'a>(lib: &'a Library, scope: &[String]) -> Option<&'a crate::tools::wikidata::WikidataDb> {
+        let (m, wd) = lib.wikidata.as_ref()?;
+        (scope.is_empty() || scope.contains(&m.pack_id)).then_some(wd)
+    }
+
+    fn wikidata_facts(lib: &Library, route: &Route, total: usize, scope: &[String]) -> Vec<WdFact> {
+        let Some(wd) = Self::wikidata(lib, scope) else { return vec![] };
         let qids: Vec<&str> = route.entities.iter().filter_map(|e| e.article.qid.as_deref()).collect();
         if qids.is_empty() {
             return vec![];
@@ -436,8 +451,8 @@ impl Engine {
 
     /// Ratios, differences and densities from Wikidata numbers, computed in Rust.
     /// Entities keep their order in the question, so "Russia than France" divides Russia by France.
-    fn wikidata_calcs(lib: &Library, route: &Route) -> Vec<String> {
-        let Some((_, wd)) = &lib.wikidata else { return vec![] };
+    fn wikidata_calcs(lib: &Library, route: &Route, scope: &[String]) -> Vec<String> {
+        let Some(wd) = Self::wikidata(lib, scope) else { return vec![] };
         let lower = route.query.to_lowercase();
         let mut ents: Vec<(usize, &str, Vec<WdFact>)> = route
             .entities
@@ -579,7 +594,7 @@ impl Engine {
             None => (req.query.clone(), vec![]),
         };
         rec.topics = topics.clone();
-        let mut route = route::route(&lib, &search_text, !req.history.is_empty(), self.rr.as_ref(), &topics);
+        let mut route = route::route(&lib, &search_text, !req.history.is_empty(), self.rr.as_ref(), &topics, &req.packs);
         // The intent head reads the standalone question. Its best guess sets the cheap choices; only a
         // confident "calc" may start the slow LLM compute call.
         let emb = self.enc.as_ref().map(|e| e.encode(&route.query)).transpose()?;
@@ -597,11 +612,11 @@ impl Engine {
         // Without the rewrite step, carry the previous turn's topic by rule.
         let follow_up = rewritten.is_none() && (route.needs_rewrite || (!req.history.is_empty() && route.entities.is_empty()));
         if follow_up && let Some(prev) = req.history.last() {
-            let mut prev_entities = route::route(&lib, &prev.query, false, self.rr.as_ref(), &[]).entities;
+            let mut prev_entities = route::route(&lib, &prev.query, false, self.rr.as_ref(), &[], &req.packs).entities;
             if prev_entities.is_empty() {
                 // "Who invented the telephone?" has no name in it, but its answer does.
                 let head: String = prev.answer.chars().take(300).collect();
-                prev_entities = route::link_entities(&lib, &head);
+                prev_entities = route::link_entities(&lib, &head, &req.packs);
                 prev_entities.truncate(2);
             }
             let names: Vec<String> = prev_entities.iter().map(|e| e.article.title.clone()).collect();
@@ -616,10 +631,10 @@ impl Engine {
             }
         }
         rec.search_query = route.query.clone();
-        let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval };
+        let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval, scope: &req.packs };
         let keep = s.retrieval.rerank_keep;
         let mut hits = retriever.retrieve(&route.query, &route.entities, keep, &mut rec.retrieval)?;
-        let wd = Self::wikidata_facts(&lib, &route, 6);
+        let wd = Self::wikidata_facts(&lib, &route, 6, &req.packs);
         let unit_line = units::convert_query(&route.query);
         let card = {
             let top = card_passage(&hits, &route.entities).map(|h| {
@@ -738,7 +753,7 @@ impl Engine {
                 queries.push(question.clone());
             }
             for q in &queries {
-                let ents = route::link_entities(&lib, q);
+                let ents = route::link_entities(&lib, q, &req.packs);
                 let mut st = Default::default();
                 for h in retriever.fused(q, &ents, &mut st)? {
                     if !pool.iter().any(|p| p.pack == h.pack && p.pid == h.pid) {
@@ -782,7 +797,7 @@ impl Engine {
         // Stage 3b: compute. Wikidata values first (no LLM); the LLM compute call re-reads the whole evidence
         // (10–13 s on the Pixel), so it runs only for an explicit calculation that Wikidata cannot answer.
         let wants_numbers = plan.needs_numbers || plan.intent == "calc" || intent == "calc";
-        let calcs = if wants_numbers || route.compare || route.entities.len() >= 2 { Self::wikidata_calcs(&lib, &route) } else { vec![] };
+        let calcs = if wants_numbers || route.compare || route.entities.len() >= 2 { Self::wikidata_calcs(&lib, &route, &req.packs) } else { vec![] };
         let deterministic = !calcs.is_empty();
         for c in calcs {
             ev.add_computed(c);

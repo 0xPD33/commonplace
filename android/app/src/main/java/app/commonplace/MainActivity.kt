@@ -30,6 +30,8 @@ import app.commonplace.ui.CommonplaceTheme
 import app.commonplace.ui.DiagnosticsScreen
 import app.commonplace.ui.HistoryScreen
 import app.commonplace.ui.LibraryScreen
+import app.commonplace.ui.LicensesScreen
+import app.commonplace.ui.NoticeScreen
 import app.commonplace.ui.PassageScreen
 import app.commonplace.ui.SettingsScreen
 import app.commonplace.ui.paperGrain
@@ -94,8 +96,21 @@ class MainActivity : ComponentActivity() {
                             ArticleScreen(a.getString("pack")!!, a.getLong("aid").toUInt(), a.getLong("f").toUInt(), onBack = { nav.popBackStack() })
                         }
                         composable("history") { HistoryScreen(ask, onBack = { nav.popBackStack() }) }
-                        composable("library") { LibraryScreen(onBack = { nav.popBackStack() }) }
-                        composable("settings") { SettingsScreen(onBack = { nav.popBackStack() }, onDiagnostics = { nav.navigate("diagnostics") }) }
+                        composable("library") {
+                            LibraryScreen(
+                                onBack = { nav.popBackStack() },
+                                onNotice = { id -> nav.navigate("notice/${Uri.encode(id)}") },
+                                onAskDocument = { id, title ->
+                                    ask.searchOnly(id, title)
+                                    nav.popBackStack()
+                                },
+                            )
+                        }
+                        composable("notice/{pack}") { e -> NoticeScreen(e.arguments!!.getString("pack")!!, onBack = { nav.popBackStack() }) }
+                        composable("settings") {
+                            SettingsScreen(onBack = { nav.popBackStack() }, onDiagnostics = { nav.navigate("diagnostics") }, onLicenses = { nav.navigate("licenses") })
+                        }
+                        composable("licenses") { LicensesScreen(onBack = { nav.popBackStack() }) }
                         composable("diagnostics") { DiagnosticsScreen(onBack = { nav.popBackStack() }) }
                     }
                 }

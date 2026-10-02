@@ -75,6 +75,9 @@ class Turn(val query: String, val deep: Boolean, val think: Boolean = false) {
     }
 }
 
+/** The one pack a question is limited to ("Ask this document"). */
+class AskScope(val packId: String, val title: String)
+
 class AskViewModel(app: Application) : AndroidViewModel(app) {
     private val holder = (app as CommonplaceApp).engine
     private val main = Handler(Looper.getMainLooper())
@@ -84,6 +87,22 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     /** The file id of the conversation on screen; a new topic starts a new one. */
     private var conversationId = System.currentTimeMillis()
     var input by mutableStateOf("")
+
+    /** While set, every question searches only this pack, follow-ups included, until the user removes it. */
+    var scope by mutableStateOf<AskScope?>(null)
+        private set
+
+    /** Limit the next questions to one pack. A conversation about the whole library starts over. */
+    fun searchOnly(packId: String, title: String) {
+        if (busy) return
+        newTopic()
+        scope = AskScope(packId, title)
+    }
+
+    fun clearScope() {
+        scope = null
+    }
+
     var thinking by mutableStateOf(holder.prefs.thinking)
         private set
 
@@ -175,6 +194,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         // Small talk carries nothing a later turn needs.
         val history = turns.filter { it.done && it.error == null && it.kind != TurnKind.CHAT }.takeLast(2).map { TurnRecord(it.query, it.answerText, it.sources) }
         val turn = Turn(query, deep, think)
+        val packs = listOfNotNull(scope?.packId)
         turns += turn
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -198,7 +218,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     return@launch
                 }
-                val result = engine.ask(AskInput(query, history, deep, think, holder.thermalHeadroom()), Listener(turn))
+                val result = engine.ask(AskInput(query, history, deep, think, holder.thermalHeadroom(), packs), Listener(turn))
                 main.post {
                     turn.kind = result.kind
                     turn.card = result.card

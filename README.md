@@ -1,33 +1,36 @@
 # Commonplace
 
-An offline research assistant for Android. It answers questions from a library of Wikipedia and other reference text stored on the phone, cites every claim, and never touches the network: the app has no `INTERNET` permission.
+An offline research assistant for Android. It answers questions from a library of Wikipedia and other reference text on the phone. It cites every claim. It never uses the network: the app has no `INTERNET` permission.
 
-Built for the poidh bounty "Build the Best Offline AI Research App for Android". Target hardware: Google Pixel on GrapheneOS, 12 GB RAM, no Google Play Services.
+I built it for the poidh bounty "Build the Best Offline AI Research App for Android". The target hardware is a Google Pixel with GrapheneOS, 12 GB of RAM and no Google Play Services.
 
 ## How it works
 
-The naive design spends the phone's compute reading raw Wikipedia at query time. Commonplace does the reading ahead of time on a desktop, and the phone mostly looks things up.
+A naive design spends the phone's compute on raw Wikipedia text at query time. Commonplace prepares the text ahead of time on a desktop. The phone mostly looks things up.
 
-1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search (512-bit binary codes in an IVF index, queried with the 23M-parameter leaf-mt encoder) run in parallel. Reciprocal-rank fusion merges them, and the Ettin-17m cross-encoder reranks the top 40.
-2. **An instant answer card.** The best passage, with the matching sentence highlighted, Wikidata facts and the source list appear before the model writes a word.
-3. **A small, fast model writes the answer.** Ling-3.0-tiny (7.9B total, 1.3B active parameters, MIT) runs fully in RAM through llama.cpp. It reads compact evidence, not whole articles. The system prompt's state is cached, so each question only pays for its own evidence.
-4. **Deterministic checks instead of a second model.** Citations to sources that do not exist are removed. Sentences with numbers that are not in the evidence are underlined. Arithmetic and unit conversions run in code, not in the model.
-5. **Hard questions get a plan.** Comparisons, "why" questions and follow-ups go through a short grammar-constrained planning call that splits them into sub-searches.
+1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index, and the 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. The Ettin-17m cross-encoder reranks the top 24 passages on the phone and the top 40 on the desktop.
+2. **An instant answer card.** The best passage, Wikidata facts and the source list appear before the model writes a word. The matching sentence is highlighted. For simple lookups, an extractive reader adds a short snippet.
+3. **A small model writes the answer.** Ling-3.0-tiny (7.9B total and 1.3B active parameters, MIT) runs fully in RAM through llama.cpp. It reads compact evidence, not whole articles. The app caches the state of the system prompt, so each question only pays for its own evidence.
+4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist. It underlines sentences with numbers that are not in the evidence. Arithmetic, unit conversions and Wikidata ratios run in code.
+5. **Comparisons and follow-ups.** A comparison runs one search for each item. A follow-up uses the earlier turns. A turn such as "make it shorter" rewrites the last answer and does not search.
+6. **Thinking mode.** The brain button next to the question box lets Ling reason before it answers. The default budget is 256 tokens, and you can change it in Settings.
 
-An optional deep mode swaps in Qwen3.6-35B-A3B, streamed from flash, for slow but stronger answers.
+The app also has voice input (Moonshine, on device), a History screen and a reader for passages and articles.
 
-## Status (2026-09-29)
+The question rewrite step ("Understand the question first" in Settings) is off by default. It fixes typos and follow-ups, and it adds a few seconds.
+
+## Status (2026-10-02)
 
 | Part | State |
 |---|---|
 | Rust core: packs, hybrid retrieval, rerank, orchestration, citations, tools, telemetry | Works on desktop and Android |
 | Desktop CLI (`commonplace ask / retrieve / bench / serve-eval`) | Works |
-| Android app (Compose): ask, streaming answers, sources, reader, library import, settings, diagnostics | Works in the emulator with English Wikipedia; the E2E script passes all steps (`artifacts/e2e/`) |
-| Packs: `enwiki` (41.5M passages, 12.8 GB), `enwiki-core` starter (7.2M passages, 2.75 GB), `wikidata-facts`, keyword-only `wikivoyage-en`, `stackexchange`, `openstax`, `arxiv-abs`, `medlineplus`, `simplewiki` (dev), model packs | Built locally; parts ready in `data/dist/` |
-| LiteRT-LM TPU backend | Code complete; needs the Pixel (gate G0) |
-| Doc2query and fact cards | Code complete; GPU runs not started |
-| Evaluation harness | Ready; waits for the seed questions |
-| Pixel 10 measurements | Not started (no device yet) |
+| Android app (Compose) | Runs on a Pixel 10 (GrapheneOS, Android 17, 12 GB) and in the emulator. `scripts/e2e_emulator.py` drives the emulator build. |
+| Packs | Built on the desktop (2026-10-02): English Wikipedia of 2026-09-01, Wikidata facts and 15 breadth packs ([docs/DATASETS.md](docs/DATASETS.md)). Upload to the `packs-2026-09` release is pending. |
+| Pixel 10 speed | Card median 0.91 s, first word about 7 s, Ling decode about 18 tok/s on a cool phone and 8-11 tok/s on a hot phone ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)) |
+| Quality (63 seed questions, desktop) | Score ratio 0.52 against Claude with web search ([docs/EVAL.md](docs/EVAL.md)) |
+| LiteRT-LM engine (Gemma 4 E2B) | Works on the CPU. The Tensor G5 NPU path is blocked by a library version mismatch. |
+| Not done | Per-pack switches, on-device document import and a catalog-based pack install are in progress. A heat test over many questions is open. |
 
 ## Try it
 
@@ -35,24 +38,24 @@ An optional deep mode swaps in Qwen3.6-35B-A3B, streamed from flash, for slow bu
 - **Desktop CLI:**
   ```sh
   nix develop            # or install the tools listed in docs/INSTALL.md
-  scripts/fetch-models.sh encoders llm-small
+  scripts/fetch-models.sh encoders llm-fast
   cd core && cargo build --release -p commonplace-cli -p packbuild && cd ..
-  core/target/release/commonplace --model data/models/llm/LFM2.5-1.2B-Instruct-Q4_0.gguf ask "Why is the sky blue?"
+  core/target/release/commonplace --model data/models/llm/Ling-3.0-tiny-Q4_0.gguf ask "Why is the sky blue?"
   ```
-  The CLI reads packs from `data/library/packs/`. [docs/PACKS.md](docs/PACKS.md) shows how to build them.
+  The CLI reads packs from `data/library/packs/`. To install a downloaded pack there, run `cat enwiki-core.tar.part* | tar -x -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
 
 ## Repository
 
 | Path | Contents |
 |---|---|
 | `core/` | Rust workspace: `commonplace-core`, `commonplace-llm` (llama.cpp FFI), `commonplace-ffi` (UniFFI), `commonplace-cli`, `packbuild` |
-| `android/` | Kotlin + Jetpack Compose app |
-| `pipeline/` | Python build steps: chunking, Plan A conversion, doc2query, fact cards, Wikidata |
-| `eval/` | Evaluation harness (Claude with web search as the baseline and judge) |
-| `scripts/` | Model and data downloads, Android build, emulator, E2E driver, dev push |
+| `android/` | Kotlin and Jetpack Compose app |
+| `pipeline/` | Python build steps: Wikipedia dump conversion, breadth pack converters, Wikidata, dense codes, reranker distillation |
+| `eval/` | Evaluation harness (Claude with web search as the baseline and judge) and the cited runs |
+| `scripts/` | Model and data downloads, Android build, emulator, E2E driver, dev push, release |
 | `docs/` | [INSTALL](docs/INSTALL.md), [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md), [PACKS](docs/PACKS.md), [BENCHMARKS](docs/BENCHMARKS.md), [EVAL](docs/EVAL.md) |
 | `third_party/llama.cpp` | Pinned submodule (`b11240`) |
 
 ## License
 
-Code: Apache-2.0. Packs carry the license of their source (Wikipedia: CC BY-SA 4.0; Wikidata: CC0). Model licenses are in [docs/MODELS.md](docs/MODELS.md).
+Code: Apache-2.0. Packs carry the license of their source (for example, Wikipedia: CC BY-SA 4.0, Wikidata: CC0). [docs/DATASETS.md](docs/DATASETS.md) lists the license of each pack. Model licenses are in [docs/MODELS.md](docs/MODELS.md).

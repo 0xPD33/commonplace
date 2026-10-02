@@ -1,0 +1,456 @@
+{
+  "run_id": "cv2-dev-intent",
+  "started": "2026-09-30T17:03:56+00:00",
+  "git": "no-commits",
+  "binary_sha256": "8c09429aba633ff4d50df20d81aec8db0570bb65a0cb9f4e4d9f689b51df5686",
+  "model": {
+    "path": "data/models/llm/Ling-3.0-tiny-Q4_0.gguf",
+    "sha256": "c1a548fd60cfb5a46d6e5fd7635224dec473664c9320a656132106bf7ce23cfb"
+  },
+  "flags": [],
+  "cli": [],
+  "deep": false,
+  "think": false,
+  "live_history": true,
+  "queries": "eval/conversation.jsonl",
+  "queries_sha256": "4029a9122f7b50d960252931f20d6f84de5e6ee281cd6a9b88018613aeb571ca",
+  "subset": null,
+  "library": "data/library",
+  "packs": [
+    {
+      "pack_id": "archwiki-en",
+      "pack_type": "knowledge",
+      "title": "ArchWiki",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 2168,
+        "passages": 34161
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "952c617468801335ce745047cd792e645fb376bfa753632b81b77cd3eeb756ae"
+    },
+    {
+      "pack_id": "arxiv-abs",
+      "pack_type": "knowledge",
+      "title": "arXiv abstracts",
+      "snapshot_date": "2026-09-25",
+      "build_date": "2026-09-29",
+      "counts": {
+        "articles": 3182867,
+        "passages": 3314444
+      },
+      "embedder": null,
+      "manifest_sha256": "d3aba562a0ebc79656e3592daf293cf941d0033fb77a2b533395251ef38355ad"
+    },
+    {
+      "pack_id": "cdc-travel",
+      "pack_type": "knowledge",
+      "title": "CDC travel health by destination",
+      "snapshot_date": "2026-09-30",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 244,
+        "passages": 13503
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "ca3cd4c71f382047b5acd052969975716b46374d230435434a2bcd45064746a3"
+    },
+    {
+      "pack_id": "devdocs-en",
+      "pack_type": "knowledge",
+      "title": "DevDocs (20 documentation sets)",
+      "snapshot_date": "2026-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 19321,
+        "passages": 153517
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "7dc9ce8eb583fffb1374cbbd3d66589331847dcc29b9d7b19bb22d5977997d78"
+    },
+    {
+      "pack_id": "enwiki",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia",
+      "snapshot_date": "2023-11-01",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 5854898,
+        "passages": 41488110
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "465dc879b3e335c420d06bf8909e8c15ece5d51a6684b05686fc9cf85de90339"
+    },
+    {
+      "pack_id": "enwiki-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (starter)",
+      "snapshot_date": "2023-11-01",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 2000000,
+        "passages": 7236412
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "5a4b6c52db930adafc7361e8136fdb4f88f68a4af19acdb3204ddc311e84f07b"
+    },
+    {
+      "pack_id": "enwiki-extra",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (articles missing from the 2023 set)",
+      "snapshot_date": "2025-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 1026478,
+        "passages": 6593073
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "97a102db912886d55dd1513c5f08a4c88eaeadbf64e32d4ecb852634d2a67f12"
+    },
+    {
+      "pack_id": "enwiki-extra-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (missing articles, starter)",
+      "snapshot_date": "2025-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 1026478,
+        "passages": 2234425
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "02942b947c3f0df17411e453ede9808142535b2fb73361c5e3dc486474de5dd0"
+    },
+    {
+      "pack_id": "factbook",
+      "pack_type": "knowledge",
+      "title": "CIA World Factbook (final edition)",
+      "snapshot_date": "2026-02",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 261,
+        "passages": 6505
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "5d3fd59264d9bfd67a595993cb2ecdcf52185edf0ec4ba4a34ff92c64df7defd"
+    },
+    {
+      "pack_id": "lfm25-1.2b",
+      "pack_type": "model",
+      "title": "LFM2.5 1.2B Instruct (Q4_0)",
+      "snapshot_date": "",
+      "build_date": "2026-09-28",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "abe2f51c9180860b438ae96826229f2b5a4c9879178d61af4bb553770589c9f1"
+    },
+    {
+      "pack_id": "ling3-tiny",
+      "pack_type": "model",
+      "title": "Ling 3.0 tiny (Q4_0)",
+      "snapshot_date": "",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "1b13dba82024fb4dbcdbe46cd921eaaa23c9fecac94c4c758aec1fcd7fbe93db"
+    },
+    {
+      "pack_id": "medlineplus",
+      "pack_type": "knowledge",
+      "title": "MedlinePlus health topics",
+      "snapshot_date": "2026-09-26",
+      "build_date": "2026-09-29",
+      "counts": {
+        "articles": 1014,
+        "passages": 3285
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "a131ec2954034a7fa50b81efd8402f0fae9b47f0da4a7bb42aaf7b807e6e9753"
+    },
+    {
+      "pack_id": "openstax",
+      "pack_type": "knowledge",
+      "title": "OpenStax textbooks",
+      "snapshot_date": "2024-01-29",
+      "build_date": "2026-09-29",
+      "counts": {
+        "articles": 4931,
+        "passages": 16409
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "2650b13c179d1c0fbb8ae5aa86b9f1c33dfc8cbb450d19c5dc49567278c933b5"
+    },
+    {
+      "pack_id": "qwen36-35b-a3b",
+      "pack_type": "model",
+      "title": "Qwen3.6 35B-A3B (IQ3_XXS)",
+      "snapshot_date": "",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "91c3f13dbb3c8f7800a472a01d0bdd0efb8f86020701b110da9b286f3d6df1d7"
+    },
+    {
+      "pack_id": "stackexchange",
+      "pack_type": "knowledge",
+      "title": "Stack Exchange Q&A (52 sites)",
+      "snapshot_date": "2024-12-31",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 1231965,
+        "passages": 4284890
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "dd7c8b2556f2a359bd05e43e11396a626d941ec5d11db5d39759e4f9dd96f21a"
+    },
+    {
+      "pack_id": "textbooks-en",
+      "pack_type": "knowledge",
+      "title": "Open textbooks (Pressbooks, LibreTexts)",
+      "snapshot_date": "2025-03",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 93008,
+        "passages": 863744
+      },
+      "embedder": null,
+      "manifest_sha256": "af96f29e077a40a4d44faba6d869156aec913f7415db319617cec4d81a9b33a2"
+    },
+    {
+      "pack_id": "wikem-en",
+      "pack_type": "knowledge",
+      "title": "WikEM emergency medicine",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 4236,
+        "passages": 41867
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "3d05c9108223c7c73f5c6a2a79e25e54758fcb1bb621f07e2a042a077959ac25"
+    },
+    {
+      "pack_id": "wikibooks-en",
+      "pack_type": "knowledge",
+      "title": "English Wikibooks",
+      "snapshot_date": "2026-04",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 83521,
+        "passages": 1010601
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "01f76a1f60efb537234d0876dcbfb367e547b4b5196f549928b7f726935fc16d"
+    },
+    {
+      "pack_id": "wikidata-facts",
+      "pack_type": "wikidata",
+      "title": "Wikidata facts",
+      "snapshot_date": "2026-05-07",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "1e12942df77a00c36aa2845b8b0dc7b46c25fd3b7ae9100f13204c978bea36d6"
+    },
+    {
+      "pack_id": "wikiquote-en",
+      "pack_type": "knowledge",
+      "title": "English Wikiquote",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 67668,
+        "passages": 831284
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "6875ce27ff35e44c5ce80dad15da1936a196c16ada5c46dffbf74d63f5df1d3e"
+    },
+    {
+      "pack_id": "wikiversity-en",
+      "pack_type": "knowledge",
+      "title": "English Wikiversity",
+      "snapshot_date": "2026-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 42937,
+        "passages": 449719
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "8b74074aacfe964ea82c8ccdc661431a724094de1bcef09641d6201552d4ad1b"
+    },
+    {
+      "pack_id": "wikivoyage-en",
+      "pack_type": "knowledge",
+      "title": "English Wikivoyage",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 32378,
+        "passages": 526315
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "86c54abc8fdf3a2518162b719317685811c644c57afccae008dad1749c610121"
+    },
+    {
+      "pack_id": "wiktionary-en",
+      "pack_type": "knowledge",
+      "title": "English Wiktionary (dictionary)",
+      "snapshot_date": "2026-09-28",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 614411,
+        "passages": 621042
+      },
+      "embedder": null,
+      "manifest_sha256": "35abe5abbebf9400756061296dd9a86a564d81050450717b5550a41ad90ec743"
+    }
+  ],
+  "host": {
+    "node": "desktop",
+    "machine": "x86_64",
+    "cpus": 32
+  },
+  "query_ids": [
+    "cv-fu-01",
+    "cv-fu-02",
+    "cv-fu-03",
+    "cv-fu-04",
+    "cv-fu-05",
+    "cv-fu-06",
+    "cv-fu-07",
+    "cv-fu-08",
+    "cv-fu-09",
+    "cv-fu-10",
+    "cv-fu-11",
+    "cv-fu-12",
+    "cv-cmp-01",
+    "cv-cmp-02",
+    "cv-cmp-03",
+    "cv-cmp-04",
+    "cv-cmp-05",
+    "cv-cmp-06",
+    "cv-cmp-07",
+    "cv-cmp-08",
+    "cv-ref-01",
+    "cv-ref-02",
+    "cv-ref-03",
+    "cv-ref-04",
+    "cv-ref-05",
+    "cv-ref-06",
+    "cv-chat-01",
+    "cv-chat-02",
+    "cv-chat-03",
+    "cv-chat-04",
+    "cv-d-fu-01",
+    "cv-d-fu-02",
+    "cv-d-fu-03",
+    "cv-d-fu-04",
+    "cv-d-fu-05",
+    "cv-d-fu-06",
+    "cv-d-fu-07",
+    "cv-d-fu-08",
+    "cv-d-ex-01",
+    "cv-d-ex-02",
+    "cv-d-ex-03",
+    "cv-d-ex-04",
+    "cv-d-ex-05",
+    "cv-d-cmp-01",
+    "cv-d-cmp-02",
+    "cv-d-cmp-03",
+    "cv-d-cmp-04",
+    "cv-d-cmp-05",
+    "cv-d-cmp-06",
+    "cv-d-cmp-07",
+    "cv-d-ref-01",
+    "cv-d-ref-02",
+    "cv-d-ref-03",
+    "cv-d-ref-04",
+    "cv-d-ref-05",
+    "cv-d-ref-06",
+    "cv-d-chat-01",
+    "cv-d-chat-02",
+    "cv-d-chat-03",
+    "cv-d-chat-04"
+  ],
+  "finished": "2026-09-30T17:14:44+00:00"
+}

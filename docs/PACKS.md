@@ -12,7 +12,7 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
   meta.sqlite        articles(id, title, title_norm, qid, popularity, url_title, oneliner,
                               first_passage, n_passages), redirects(from_norm, article_id), sources
   store/             passages: dict.zstd, frames.bin, frames.idx
-  cards/             optional fact cards, same frame layout, one record per passage
+  cards/             optional fact cards, same frame layout, one record per passage (no release pack has them)
   tantivy/           optional BM25 index (tantivy 0.26.2)
   dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
   wikidata.sqlite    wikidata packs only
@@ -42,7 +42,7 @@ Passages of one article have consecutive ids (`first_passage .. first_passage + 
 
 `manifest.json` lists every file with its size and SHA-256, the snapshot date, the license and attribution, the counts, and the `embedder` block.
 The app refuses a knowledge pack whose `embedder` differs from the installed packs.
-`replaces` names packs that this pack supersedes (for example, `enwiki-full` replaces `enwiki-core`).
+`replaces` names packs that this pack supersedes (`enwiki` replaces `enwiki-core`).
 
 ## Distribution
 
@@ -52,6 +52,7 @@ The app also enforces the 50 GB total footprint before an import starts.
 
 Each GitHub release asset must stay below 2 GiB, so `scripts/release.sh packs` splits at 2,000,000,000 bytes. Packs go in their own release tag, `packs-<snapshot>` (for example `packs-2026-09`), separate from the app releases.
 `scripts/release.sh packs <tag> [pack_id...]` verifies and splits the packs, then writes `SHA256SUMS` and `catalog.json` (title, description, type, sizes, license, `replaces`, `recommended`, and for each file its name, size, SHA-256 and download URL). It copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links. `scripts/release.sh upload <tag>` creates the pre-release and uploads the files.
+The release assets of the packs live under the GitHub release tag `packs-2026-09`. The app releases have their own tags. A user downloads every part and the `pack.json` file of a pack with a browser, then imports them with the file picker (INSTALL.md). On a desktop, `cat <pack_id>.tar.part* | tar -x -C data/library/packs` installs a pack.
 
 ## Build a pack
 
@@ -100,8 +101,8 @@ $PB verify --pack data/library/packs/enwiki-core
 | `articles.parquet` | `article_id` u32 (dense from 0), `title`, `qid` (nullable), `popularity` u64, `url_title`, `oneliner`, `first_passage` u32, `n_passages` u32 |
 | `passages.parquet` | `passage_id` u32 (dense from 0, grouped by article), `article_id` u32, `ordinal` u16, `section_path`, `text` |
 | `redirects.parquet` (optional) | `from_title`, `article_id` u32 |
-| `questions.parquet` (optional) | `passage_id` u32, `questions` (joined with newlines) |
-| `cards.parquet` (optional) | `passage_id` u32, `fact`, `source_ids` ("12,13") |
+| `questions.parquet` (optional, unused) | `passage_id` u32, `questions` (joined with newlines) |
+| `cards.parquet` (optional, unused) | `passage_id` u32, `fact`, `source_ids` ("12,13") |
 | `dense/` (optional) | `codes.u8` (n × 64), `assign.u32`, `centroids.f32`, `info.json` (`dims`), optional `ids.u32` |
 
-The text that `embed.py` embeds for a passage is `"{title} > {section_path}\n{text}"` (`"{title}\n{text}"` when there is no section). The 2023 Plan A codes used `"{title}\n{text}"`.
+The text that `embed.py` embeds for a passage is `"{title} > {section_path}\n{text}"` (`"{title}\n{text}"` when there is no section).

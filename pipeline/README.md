@@ -6,30 +6,14 @@ Python steps that make the Parquet inputs for `packbuild`. Run every command fro
 nix develop -c uv run --project pipeline python -m commonplace_pipeline.<module> ...
 ```
 
-## How to run
+## Steps
 
-**doc2query** (PLAN §6.3a) and **fact cards** (§6.3b) need an OpenAI-compatible server (vLLM, SGLang or llama-server).
-They write shards to `<out-dir>/shards/` at least every 10 minutes. After a stop, run the same command again: it skips the finished passages or sections.
-At the end, each command merges the shards into one file. `--merge-only` repeats only the merge.
+**Not used in the release:** `doc2query.py` and `cards.py` write synthetic questions and fact cards with an OpenAI-compatible server. I ran them only as small CPU tests. No release pack contains their output.
 
-```sh
-# questions.parquet: lead passages of the top 1M articles, then all passages of the top 200k
-python -m commonplace_pipeline.doc2query --work data/work/enwiki --base-url http://localhost:8000/v1 --model Qwen/Qwen3.5-2B \
-  --lead-articles 1000000 --full-articles 200000 --concurrency 128
-
-# cards.parquet: facts per (article, section) of the top 200k articles
-python -m commonplace_pipeline.cards --work data/work/enwiki --base-url http://localhost:8000/v1 --model Qwen/Qwen3.5-9B \
-  --articles 200000 --concurrency 64
-```
-
-The cards merge runs the hallucination filter again on every fact, so a filter change needs no new generation.
-It prints the drop rate and appends it to `<out-dir>/cards.log`. A drop rate above ~10% means that the prompt or the model needs work.
-By default, each request sends `chat_template_kwargs.enable_thinking=false`. Use `--extra '{}'` for a server that rejects it.
-
-**Wikidata facts** (§6.5):
+**Wikidata facts:**
 
 ```sh
-scripts/fetch-wikidata.sh                                    # ~15 GB into data/raw/wikidata, skips files on disk
+scripts/fetch-wikidata.sh                                    # ~20 GB into data/raw/wikidata, skips files on disk
 python -m commonplace_pipeline.wikidata --out data/work/wikidata   # ~2 min on 32 threads
 cd core && ./target/release/packbuild wikidata --input ../data/work/wikidata \
   --out ../data/library/packs/wikidata-facts --snapshot 2026-05-07
@@ -41,7 +25,7 @@ The step also writes `data/work/wikidata/title_qid.parquet` (enwiki title → QI
 
 ## Breadth packs
 
-`wikivoyage-en`, `stackexchange`, `openstax`, `arxiv-abs`, `medlineplus` (PLAN §6.1, M4) and the Kiwix packs (ADDENDUM §3.3).
+`wikivoyage-en`, `stackexchange` (52 sites), `openstax`, `arxiv-abs`, `medlineplus`, `cdc-travel`, `textbooks-en`, `wiktionary-en`, `factbook` and the Kiwix packs (`wikibooks-en`, `wikiquote-en`, `wikiversity-en`, `wikem-en`, `archwiki-en`, `devdocs-en`).
 `scripts/fetch-extra-packs.sh` downloads the pinned sources into `data/raw/`. The pins are at the top of the script.
 
 ```sh
@@ -94,13 +78,12 @@ The common-pile Stack Exchange rows have no scores, accepted flags or post bound
 
 `embed` embeds a work directory with mxbai-embed-large-v1 (fp16, CLS pooling, no prompt; the text is "title > section" + newline + passage) and writes `dense/` for `packbuild`: 512-bit sign codes, an IVF with about 1,500 codes per list, and the list assignments.
 It writes shards of 50,000 passages to `dense/shards/`; after a stop, the same command skips the finished shards. The 5060 Ti embeds about 330–640 passages per second (longer passages are slower).
-On 4,000 `enwiki` rows, the codes match the prebuilt Plan A codes (median Hamming distance 0 of 512 bits, max 3).
 
 ```sh
 nix develop -c uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/<id>
 ```
 
-For `enwiki-extra-core`, embed `enwiki-extra` and run `plan_a.py subset` again: the subset copies the codes.
+To make the starter pack, run `plan_a.py subset` on the embedded work directory. The subset copies the codes.
 
 ## Reranker distillation
 
@@ -120,7 +103,7 @@ python -m commonplace_pipeline.rerank hitk --pools nq-dev-pool.jsonl --answers n
 
 ## Wikipedia, monthly (public XML dumps, no account)
 
-`wikipedia.py` turns a monthly dump from dumps.wikimedia.org/enwiki/ into packbuild input. `convert` downloads one dump part at a time and deletes it after rendering, so the full ~25 GB never sits on disk. A new dump starts on the 1st of each month and is usually complete by the 3rd–5th.
+`wikipedia.py` turns a monthly dump from dumps.wikimedia.org/enwiki/ into packbuild input. The build also needs the pageviews file: `scripts/fetch-extra-packs.sh pageviews`. `convert` downloads one dump part at a time and deletes it after rendering, so the full ~25 GB never sits on disk. A new dump starts on the 1st of each month and is usually complete by the 3rd–5th.
 
 ```sh
 python -m commonplace_pipeline.wikipedia convert --date 20261001 --out data/work/enwiki-20261001      # ~2.5 h on 16 cores
@@ -132,4 +115,4 @@ core/target/release/packbuild build --input data/work/enwiki-20261001 --out data
   --attribution "Wikipedia contributors; Wikimedia dump enwiki-20261001"
 ```
 
-The first dump has nothing to reuse: 44.6M passages took 33.5 h on the 5060 Ti.
+The first dump has nothing to reuse: 44.6M passages took 33.5 h on the 5060 Ti. I have not measured the share of reused passages yet.

@@ -1,9 +1,26 @@
 # Benchmarks
 
-This file logs every measurement with the device, the build, and the date (PLAN.md §0 rule 2).
-The acceptance device is a Pixel 10 on GrapheneOS. The desktop and emulator rows check that the code paths work; they say nothing about phone speed. The Pixel rows are at the end.
+This file logs every measurement with the device, the build and the date. Older entries stay as history. Each entry says which library it used.
+The acceptance device is a Pixel 10 on GrapheneOS. The desktop and emulator rows check that the code paths work. They say nothing about phone speed.
 
 Build: working tree before the first commit (`CP_BUILD=dev`), llama.cpp `b11240`.
+
+## Current numbers (2026-10-02)
+
+Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), Ling-3.0-tiny Q4_0, the 2026 `enwiki-core`, `wikidata-facts` and the breadth packs. The reranker is `model_nb8.onnx` on the top 24 passages. The question rewrite is off (the default). Details are in the sections below.
+
+| Measure | Value |
+|---|---|
+| Card (search, rerank, instant answer) | Median 0.91 s |
+| Rerank of 24 passages | Median 424 ms |
+| First answer word | About 7 s (median 7.0 s with the rewrite on, 7.6 s with it off) |
+| Ling decode in the app | About 18 tok/s on a cool phone. 8-11 tok/s after the phone passes about 37 °C. |
+| `llama-bench` Ling, 6 big cores | Prefill 131.6 tok/s (pp512), decode 25.5 tok/s (tg64) |
+| Peak RSS with Ling | 5.1 GB. The memory limit is 6 GiB with the app on screen and 3 GiB when it is hidden. |
+| Voice input | +0.58 GB PSS while the mic is on |
+
+Desktop, 63 seed questions, Claude as the judge: score ratio 0.521 against Claude with web search (`v17-norewrite`, [EVAL.md](EVAL.md)). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
+Desktop, NQ-open retrieval with the 2026 Wikipedia (2,610 held-out questions): hit@5 0.738, hit@10 0.780, pool recall 0.825.
 
 ## Desktop CLI — AMD Ryzen 9 9950X3D, 62 GB RAM, 8 llama.cpp threads, AVX2 build (2026-09-29)
 
@@ -13,7 +30,7 @@ Build: working tree before the first commit (`CP_BUILD=dev`), llama.cpp `b11240`
 | LFM2.5-8B-A1B Q4_0 | same | 176 ms | 296 tok/s | 58.3 tok/s | 3.9 s | first query, thinking off |
 | LFM2.5-8B-A1B Q4_0 | "Compare the Nile and the Amazon rivers" | 176 ms | 297 tok/s | 56.8 tok/s | 9.2 s | planner + compute + synthesis |
 
-Full English Wikipedia (`enwiki`, 41.5M passages, 12.8 GB) with `wikidata-facts`, LFM2.5-8B-A1B Q4_0, five questions from the in-app benchmark list (`commonplace bench`):
+The 2023 English Wikipedia pack (`enwiki`, 41.5M passages, 12.8 GB; the 2026 pack of 44.6M passages replaced it on 2026-10-02) with `wikidata-facts`, LFM2.5-8B-A1B Q4_0, five questions from the in-app benchmark list (`commonplace bench`):
 
 | Metric | p50 | p90 |
 |---|---|---|
@@ -22,7 +39,7 @@ Full English Wikipedia (`enwiki`, 41.5M passages, 12.8 GB) with `wikidata-facts`
 | Full answer | 7.0 s | 11.5 s |
 | Decode | 58.7 tok/s | — |
 
-Retrieval breakdown on `enwiki`: BM25 over 41.5M passages 30–50 ms, leaf-mt encode 2 ms, binary IVF search (nprobe 48) 6–8 ms, rerank of 40 passages 110–175 ms.
+Retrieval breakdown on that 2023 pack: BM25 over 41.5M passages 30–50 ms, leaf-mt encode 2 ms, binary IVF search (nprobe 48) 6–8 ms, rerank of 40 passages 110–175 ms.
 
 Retrieval on the `simplewiki` pack (keyword search only, 718k passages): sparse 2 ms, rerank of 40 passages with Ettin-17m fp32 on 4 threads 163 ms, card 146–197 ms.
 
@@ -36,7 +53,7 @@ The app ran with the `simplewiki` pack and LFM2.5-1.2B Q4_0 (4 threads). The x86
 |---|---|---|---|---|---|
 | "Compare the Nile and the Amazon" | < 1 s | — | — | 13.2 s | planner used |
 | follow-up "Which one is longer?" | 688 ms | 5.7 s | 57.4 tok/s | 10.2 s | system prefix restored from the cache |
-| "What causes the northern lights?" on `enwiki-core` (7.2M passages) | 525 ms | 13.3 s | 54.5 tok/s | 16.3 s | planner used, first question after model load |
+| "What causes the northern lights?" on the 2023 `enwiki-core` (7.2M passages) | 525 ms | 13.3 s | 54.5 tok/s | 16.3 s | planner used, first question after model load |
 
 Source: `scripts/e2e_emulator.py` runs under `artifacts/e2e/` (screenshots + `report.json`).
 
@@ -54,7 +71,7 @@ Cores as the kernel reports them: 2 small (capacity 207), 5 medium (824), 1 big 
 | Warm phone (after several minutes), repacked, 4 threads | 58–66 tok/s | 15.5–17.8 tok/s |
 | 6 repeated decode runs, repacked, 4 threads, shell user | — | 25.0 tok/s, no swap |
 
-The app, `enwiki-core` + `wikidata-facts`, LFM2.5-8B-A1B:
+The app, the 2023 `enwiki-core` + `wikidata-facts`, LFM2.5-8B-A1B:
 
 | Build | Questions | Card | First word | Decode | Notes |
 |---|---|---|---|---|---|
@@ -130,7 +147,7 @@ Maple decodes 1.65× faster than Ling but prefills 21% slower. On the 63 seeds i
 
 - **Thinking mode**, Ling, "Why is the sky blue and not violet?": 384 reasoning tokens (the cap) took 34 s at 14 tok/s; first answer word at 35.1 s, total 46.2 s. The default cap is now 256 tokens (~18 s). Desktop: 7 s of reasoning, first word at 9.1 s.
 - **Featured snippet**: the int8 DeBERTa-v3-xsmall reader on the top 3 passages takes 234 ms on the Pixel ("Canberra", margin 15.6). Desktop: 23–59 ms.
-- **Gate G0, Tensor G5 NPU**: blocked. GrapheneOS exposes the Edge TPU libraries to apps (`libedgetpu_litert.so` is a vendor public library), and no Play Services are needed. But `litertlm-android` 0.17.1 (the newest on Maven) rejects the LiteRT v2.1.6 dispatch library ("Unsupported dispatch runtime version") and crashes inside the v2.2.0 one (SIGSEGV in `libLiteRtDispatch_GoogleTensor.so`). Without a dispatch library, the G5 `.litertlm` file cannot run at all: "Input tensor not found" on the CPU.
+- **Tensor G5 NPU**: blocked. GrapheneOS exposes the Edge TPU libraries to apps (`libedgetpu_litert.so` is a vendor public library), and no Play Services are needed. But `litertlm-android` 0.17.1 (the newest on Maven) rejects the LiteRT v2.1.6 dispatch library ("Unsupported dispatch runtime version") and crashes inside the v2.2.0 one (SIGSEGV in `libLiteRtDispatch_GoogleTensor.so`). Without a dispatch library, the G5 `.litertlm` file cannot run at all: "Input tensor not found" on the CPU.
 - **Gemma 4 E2B on LiteRT-LM CPU** (generic `.litertlm`), phone at 37 °C, same questions as the Ling runs:
 
 | Question | First word | Prefill (~800 tokens) | Decode | Peak RSS |
@@ -144,7 +161,7 @@ Source: `artifacts/pixel/telemetry-think-featured-gemma.jsonl`.
 
 ## Desktop: routing without the LLM planner (2026-09-29)
 
-Ten fixed questions (lookups, explanations, comparisons, a density, a unit conversion), `serve-eval`, full `enwiki`, 8 threads. "Before" is the older desktop binary, which ran the planner on every question except simple lookups.
+Ten fixed questions (lookups, explanations, comparisons, a density, a unit conversion), `serve-eval`, the 2023 full `enwiki`, 8 threads. "Before" is the older desktop binary, which ran the planner on every question except simple lookups.
 
 | Setup | Planner calls | LLM compute calls | First word, median | Total, median |
 |---|---|---|---|---|
@@ -193,14 +210,7 @@ Retrieval benchmark: the 3,610 NQ-open validation questions (Google queries with
 | Fusion (BM25 + dense + entity + prior) | 0.248 | 0.484 | 0.577 | 0.681 | 0.780 |
 | Installed reranker (Ettin-17m, fp32) | 0.487 | 0.632 | 0.680 | 0.733 | 0.782 |
 
-The same 2,610 questions as the library gained data on 2026-09-30 (installed reranker, fp32):
-
-| Library state | hit@1 | hit@3 | hit@5 | hit@10 | hit@40 (pool) |
-|---|---|---|---|---|---|
-| v0: start (00:10) | 0.487 | 0.632 | 0.680 | 0.733 | 0.782 |
-| v1: + nine keyword-only breadth packs, `enwiki` QIDs 72% → 97% | 0.495 | 0.638 | 0.684 | 0.736 | 0.787 |
-| v2: + `enwiki-extra` dense codes (6.59M) | 0.502 | 0.638 | 0.692 | 0.741 | 0.796 |
-| v3: + dense codes for the 6.07M `enwiki` rows the prebuilt index missed (100% of 41.5M) | 0.508 | 0.648 | 0.700 | 0.751 | 0.806 |
+The same 2,610 questions as the 2023 library gained data on 2026-09-30 (installed reranker, fp32). Nine breadth packs and more QIDs raised hit@5 from 0.680 to 0.684. Dense codes for 6.59M `enwiki-extra` passages raised it to 0.692. Dense codes for the 6.07M `enwiki` passages that the prebuilt index missed raised it to 0.700 (hit@1 0.487 to 0.508, pool 0.782 to 0.806). The 2026 Wikipedia raised hit@5 further, to 0.738 (see the seeds section below). The 2023 packs are deleted.
 
 Teacher candidates on 400 of those questions (512 tokens for bge and the 1b, 256 for the others; speed while the GPU also embedded):
 
@@ -217,9 +227,9 @@ Teacher candidates on 400 of those questions (512 tokens for bge and the 1b, 256
 | ONNX file | hit@1 | Spearman vs fp32 | ms per pair |
 |---|---|---|---|
 | `model.onnx` (fp32; desktop CLI) | 0.523 | 1 | 4.6 |
-| `model_qint8_arm64.onnx` (shipped; the Android app loads it) | 0.457 | 0.933 | 2.8 |
+| `model_qint8_arm64.onnx` (the Android app loaded it until 2026-10-02) | 0.457 | 0.933 | 2.8 |
 | Dynamic int8, weight MatMuls only | 0.477 | 0.940 | 3.8 |
-| `model_nb8.onnx`: MatMulNBits, 8-bit weights in blocks of 32, accuracy level 4 | 0.517 | 0.9998 | 5.2 |
+| `model_nb8.onnx` (the Android app loads it now): MatMulNBits, 8-bit weights in blocks of 32, accuracy level 4 | 0.517 | 0.9998 | 5.2 |
 | MatMulNBits, 4-bit | 0.493 | 0.986 | 5.4 |
 | Static int8 (QDQ, weight MatMuls, MinMax calibration on 256 training pairs) | 0.467 | 0.922 | 4.2 |
 
@@ -234,27 +244,25 @@ Teacher candidates on 400 of those questions (512 tokens for bge and the 1b, 256
 
 The gain is small (a third of the gap to the teacher), so the app and the CLI keep the installed model. More pools and epochs may help: dev hit@1 still rose at the last step.
 
-Dynamic quantization also quantizes the activations per tensor, and ModernBERT's activation outliers do not survive that. Weight-only 8-bit keeps fp32 quality. On x86 it is not faster; the Pixel speed is not measured yet (below).
+Dynamic quantization also quantizes the activations per tensor, and ModernBERT's activation outliers do not survive that. Weight-only 8-bit keeps fp32 quality. On x86 it is not faster. The Pixel speed is in the next section.
 
-## Desktop: judged seeds through the night (2026-09-30)
+## Desktop: judged seeds (2026-09-30 to 2026-10-02)
 
-63 seed questions, Ling-3.0-tiny Q4_0, Claude judge (both orders), desktop CLI, `data/library` at each step. One run's noise is about ±0.05; v12 and v12b repeat the same configuration. Rows are in `eval/history.csv`.
+63 seed questions, Ling-3.0-tiny Q4_0, Claude judge (both orders), desktop CLI. One run's noise is about +-0.05. Every run is a row in `eval/history.csv`. The first row is `v9-rewrite` (2026-09-29): 0.446 on the 2023 library.
+
+On the 2023 library, the score ratio moved between 0.434 and 0.479 while I added packs and dense codes (`v10` to `v12b`). An Ettin-68m reranker gave 0.486 (`v13-rerank68m`) at a card time of 3.9 s. The 68m model is too slow for the phone.
+
+The table shows the runs with the current library design. The run directories are in `eval/runs/`.
 
 | Run | Change | Score ratio | Correct. | Compl. | Grounded | recall@10 | Card p50 |
 |---|---|---|---|---|---|---|---|
-| v9-rewrite | before (2026-09-29) | 0.446 | 2.10 | 1.13 | 0.95 | — | ~0.4 s |
-| v10-wikidata-packs | complete Wikidata, QIDs, 9 new keyword-only packs | 0.470 | 2.28 | 1.20 | 0.94 | 0.203 | 1.0 s |
-| v11-extra-dense | + `enwiki-extra` dense codes | 0.479 | 2.32 | 1.26 | 0.98 | 0.198 | 1.0 s |
-| v12-enwiki-dense | + the 6.07M `enwiki` tail rows | 0.434 | 2.03 | 1.23 | 0.90 | 0.202 | 1.0 s |
-| v12b (repeat) | same as v12 | 0.447 | 2.09 | 1.21 | 0.94 | 0.202 | 1.0 s |
-| v13-rerank68m | v12 + Ettin-68m reranker (`--ettin-dir data/models/ettin-68m`) | **0.486** | 2.26 | 1.29 | **1.04** | **0.224** | 3.9 s |
+| v15-live-all-dense | 2023 Wikipedia, every breadth pack with dense codes (2026-09-30) | 0.464 | 2.26 | 1.22 | 0.92 | 0.174 | 0.84 s |
+| v16-enwiki2026 | 2026-09-01 Wikipedia (`wikipedia.py`) replaces `enwiki` and `enwiki-extra` (rewrite on) | 0.508 | 2.40 | 1.24 | 1.06 | 0.223 | 0.84 s |
+| **v17-norewrite** | same library, question rewrite off | **0.521** | **2.43** | **1.31** | **1.08** | 0.223 | 0.40 s |
 
-| v15-live-all-dense | every breadth pack with dense codes (2026-09-30 22:52) | 0.464 | 2.26 | 1.22 | 0.92 | 0.174 | 0.84 s |
-| **v16-enwiki2026** | test library: 2026-09-01 Wikipedia (`wikipedia.py`) replaces `enwiki` + `enwiki-extra` | **0.508** | **2.40** | 1.24 | **1.06** | **0.223** | 0.84 s |
+The 2026 Wikipedia is the largest gain. Out-of-corpus questions rose from 0.33 to 0.65 (2023 text could not answer them), explanation from 0.41 to 0.52 and comparison from 0.37 to 0.45. On NQ (2,610 held-out questions) the 2026 Wikipedia raised hit@5 from 0.697 to 0.738, hit@10 from 0.750 to 0.780 and pool recall from 0.805 to 0.825.
 
-v16 is the best run with the phone-sized 17m reranker. Out-of-corpus questions rose from 0.33 to 0.65 (2023 text could not answer them), explanation 0.41 → 0.52, comparison 0.37 → 0.45. On NQ (2,610 held-out questions) the 2026 Wikipedia raised hit@5 from 0.697 to 0.738, hit@10 from 0.750 to 0.780 and pool recall from 0.805 to 0.825.
-
-The tail rows are ordinary Wikipedia articles (median 86 page views vs 73 for the rest), and NQ improves with them, but on these popular-topic seeds they let loosely related passages in ("La Salle Causeway" for the Golden Gate designer). The 17m reranker does not keep them out; the 68m does. The card time is high because nine breadth packs were still keyword-only, which adds ~45 forced hits to each rerank pool.
+The v17 decode speed (34.9 tok/s median) is lower than in older runs (about 52 tok/s). I did not confirm the cause. A busy desktop CPU is likely.
 
 ## Pixel 10: reranker files (2026-10-02)
 
@@ -273,9 +281,11 @@ New debug build (nb8, 24 passages), in-app benchmark, thermal headroom up to 0.8
 
 **Without the question rewrite** (same build, preference `rewrite = false`, thermal headroom 0.87): card median 1.03 s (0.89–1.10 s; comparisons 0.89 s instead of 5.1 s), first word median 7.6 s. Judged seeds on the desktop: `v17-norewrite` 0.521 vs `v16-enwiki2026` 0.508 with the rewrite (within noise); desktop card p50 0.40 s vs 0.84 s. The three follow-up seeds score the same either way: without the rewrite the engine prefixes the previous turn's topic ("Canberra Why isn't it Sydney?"). The seeds hold almost no misspelled questions, which is where the rewrite should help most.
 
+A later build, with the rewrite preference off by default: card median 0.91 s on the Pixel.
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.
-- LiteRT-LM Gemma 4 E2B on the TPU under GrapheneOS (gate G0), and on LiteRT CPU.
+- LiteRT-LM Gemma 4 E2B on the Tensor G5 NPU under GrapheneOS (blocked, see above), and its quality on LiteRT CPU.
 - Query encode and 40-pair rerank latency in isolation.
 - The in-app benchmark (Diagnostics → Run benchmark) with the phone plugged in and awake, and the E2E script with `--push enwiki-core lfm25-8b-a1b`.

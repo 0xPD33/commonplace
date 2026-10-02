@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stratified dev/test split of eval/queries.jsonl into eval/dev.jsonl and eval/test.jsonl.
 
-The test split is locked (PLAN §12.1): the script refuses to run once eval/test.jsonl exists.
+The test split is locked : the script refuses to run once eval/test.jsonl exists.
 """
 
 import argparse

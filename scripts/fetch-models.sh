@@ -51,7 +51,7 @@ llm_fast()  { fetch $LING $LING_REV Ling-3.0-tiny-Q4_0.gguf llm/Ling-3.0-tiny-Q4
 llm_small() { fetch $LFM_S $LFM_S_REV LFM2.5-1.2B-Instruct-Q4_0.gguf llm/LFM2.5-1.2B-Instruct-Q4_0.gguf; }
 llm_lfm()   { fetch $LFM_F $LFM_F_REV LFM2.5-8B-A1B-Q4_0.gguf llm/LFM2.5-8B-A1B-Q4_0.gguf; }
 llm_deep()  { fetch $QWEN $QWEN_REV Qwen_Qwen3.6-35B-A3B-IQ3_XXS.gguf llm/Qwen_Qwen3.6-35B-A3B-IQ3_XXS.gguf; }
-llm_gemma() { # LiteRT-LM: generic CPU/GPU build and the Tensor G5 NPU build (gate G0)
+llm_gemma() { # LiteRT-LM: generic CPU/GPU build and the Tensor G5 NPU build (blocked, see docs/BENCHMARKS.md)
   fetch $GEMMA $GEMMA_REV gemma-4-E2B-it.litertlm llm/gemma-4-E2B-it.litertlm
   fetch $GEMMA $GEMMA_REV gemma-4-E2B-it_Google_Tensor_G5.litertlm llm/gemma-4-E2B-it_Google_Tensor_G5.litertlm
 }

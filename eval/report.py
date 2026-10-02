@@ -121,6 +121,8 @@ def render(meta, rows, overall, groups, by_cat, smoke):
     flags = " ".join(f"--{f}" for f in meta["flags"]) or "(none)"
     subset = f" --subset {meta['subset']}" if meta.get("subset") else ""
     run_flags = "".join(f" --{f}" for f in meta["flags"]) + (" --deep" if meta.get("deep") else "")
+    cli_args = "".join(f" --cli={c}" for c in meta.get("cli", []))
+    cli_text = " ".join(meta.get("cli", [])) or "(none)"
     library = meta.get("library", "data/library")
     packs = "\n".join(f"  - `{p['pack_id']}`: {p['title']}, snapshot {p['snapshot_date']}, built "
                       f"{p['build_date']}, "
@@ -135,9 +137,9 @@ def render(meta, rows, overall, groups, by_cat, smoke):
 
 ## Method
 
-- **Queries.** Our own set in `eval/queries.jsonl` (PLAN §12.1). `eval/split.py` makes a
-  stratified 200-query dev split and a locked 100-query test split. The published number is
-  the test number.
+- **Queries.** Our own seed questions in `eval/queries.jsonl`, in nine categories. The
+  multi-turn threads are in `eval/conversation.jsonl` (for tuning) and
+  `eval/conversation-test.jsonl` (locked: run it to report, never to tune).
 - **System under test.** The desktop CLI `commonplace serve-eval`, one process per run, with
   the model kept loaded.
 - **Baseline.** Claude with web search, called once per query through `claude -p`. The
@@ -151,15 +153,15 @@ def render(meta, rows, overall, groups, by_cat, smoke):
   The two orders are averaged. A query is a win when at least one order prefers our answer
   and no order prefers the baseline; a loss is the reverse; anything else is a tie.
 - **Headline.** `score_ratio = mean(ours) / mean(baseline)` over the judged queries.
-- **Latency.** Taken from the `record` of each answer on the host below. PLAN §12.2 takes
-  the published latency from device runs, not from this table.
+- **Latency.** Taken from the `record` of each answer on the host below. These are desktop
+  numbers. The phone numbers are in `docs/BENCHMARKS.md`.
 
 ## Run
 
 - Run id: `{rid}` ({meta['started']} → {meta.get('finished', '?')})
 - Git: `{meta['git']}`, binary sha256 `{meta['binary_sha256'][:16]}…`
 - Model: `{meta['model']['path']}`, sha256 `{meta['model']['sha256'][:16]}…`
-- Flags: {flags}; deep mode: {meta.get('deep', False)}
+- Flags: {flags}; extra CLI flags: {cli_text}; deep mode: {meta.get('deep', False)}
 - Queries: `{meta['queries']}`{f" (subset `{meta['subset']}`)" if meta.get('subset') else ''}, {overall['n']} answered
 - Host: {meta['host']['node']} ({meta['host']['machine']}, {meta['host']['cpus']} CPUs)
 - Baseline: {baseline_info([r['id'] for r in rows])}
@@ -169,7 +171,7 @@ def render(meta, rows, overall, groups, by_cat, smoke):
 
 ## Results
 
-Targets (PLAN §12.2):
+Targets (score ratio of at least 0.50):
 
 {target_lines(overall, by_cat)}
 
@@ -191,7 +193,7 @@ Per-query rows (answer, scores, recall, timings): `eval/runs/{rid}/per_query.jso
 Run inside the devshell from the repo root:
 
 ```sh
-nix develop -c python3 eval/run.py --queries {meta['queries']}{subset} --library {library} --model {meta['model']['path']}{run_flags} --run-id {rid}
+nix develop -c python3 eval/run.py --queries {meta['queries']}{subset} --library {library} --model {meta['model']['path']}{run_flags}{cli_args} --run-id {rid}
 nix develop -c python3 eval/baseline.py --queries {meta['queries']}{subset}
 nix develop -c python3 eval/recall.py --run {rid}
 nix develop -c python3 eval/judge.py --run {rid}

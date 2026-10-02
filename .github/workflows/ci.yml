@@ -41,6 +41,9 @@ jobs:
         with:
           workspaces: core
       - run: cargo install cargo-ndk --locked
+      - name: Install patchelf (Moonshine AAR repack)
+        run: sudo apt-get install -y patchelf
+      - uses: astral-sh/setup-uv@v6
       - name: Build the APK (fails if INTERNET appears in the merged manifest)
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/29.0.14206865

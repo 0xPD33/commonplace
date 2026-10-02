@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Download the permutans/wikidata-* tables that the wikidata step needs (Wikidata dump of 2026-05-07, ~15 GB).
+# Download the permutans/wikidata-* tables that the wikidata step needs (Wikidata dump of 2026-05-07, ~20 GB).
 # The author was still uploading source chunks on 2026-09-29 (finished that evening). This takes the latest revision and skips
 # files already on disk: rerun it to pick up new chunks, then rerun the wikidata step.
 set -euo pipefail

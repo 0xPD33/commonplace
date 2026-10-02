@@ -10,20 +10,18 @@ The app has no `INTERNET` permission. You download the files with a browser and 
 
 ### Steps
 
-1. On any computer or on the phone, open the GitHub release page of the app. Download `commonplace-<version>.apk`.
-2. Open the release `packs-2026-09`. Download all files of each pack that you want:
-   - the starter pack: `enwiki-core.tar.part001`, `enwiki-core.tar.part002`, ... and `enwiki-core.pack.json`
-   - the main model: `ling3-tiny.tar.part001`, ... and `ling3-tiny.pack.json`
-   - optional: more packs from the list below
-3. Put the files in the **Downloads** folder of the phone. The phone's browser saves them there.
-4. Install the APK. Android asks you to allow installs from your browser or file manager.
-5. Open Commonplace. Tap **Open Library**, then **Import pack**.
-6. Select all files of one pack. Long-press the first file, tap the others, then tap **Select**.
-   - The app copies the files and checks every byte (SHA-256) during the import.
+1. On the phone, open the GitHub release page of the app. Download `commonplace-<version>.apk` and install it. Android asks you to allow installs from your browser.
+2. Open Commonplace. The **Get started** card lists the starter packs and their total size. Tap it to open the Library.
+3. Under **Get more**, tap a pack. The sheet lists its files. Tap **Download** on each file. Your browser saves the files in **Downloads**.
+   - The starter set is `enwiki-core` (Wikipedia), `ling3-tiny` (the main model) and `wikidata-facts`.
+4. Tap **Install from Downloads**. Long-press a file, choose **Select all**, then tap **Select**.
+   - The app finds the complete packs among the selected files and installs them one after the other. It ignores other files.
+   - For an incomplete pack, the app lists the missing files.
+   - The app checks every byte (SHA-256) during the import.
    - When the import ends, the app offers to delete the downloaded files. Tap **Delete** to free the space.
-7. Import the model pack the same way.
-8. Go back and ask a question. The first question is slower, because the app loads the model into memory. On the Pixel 10 the first word appears after about 10 s.
+5. Go back and ask a question. The first question is slower, because the app loads the model into memory. On the Pixel 10 the first word appears after about 10 s.
 
+You can also download the files on a computer from the release `packs-2026-09` and copy them to the phone's **Downloads** folder. A pack that is not in the catalog installs the same way: select its `.pack.json` file and all its parts.
 Each pack has parts of at most 2 GB. Import all parts of a pack in one step.
 
 To confirm that the app is offline, turn on airplane mode. You can also open **Settings > Apps > Commonplace > Permissions**: the app has no network permission.

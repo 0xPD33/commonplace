@@ -102,6 +102,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.loadCatalog
 import kotlinx.coroutines.launch
 import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
@@ -300,6 +301,7 @@ private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, 
 
 @Composable
 private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: () -> Unit) {
+    val ctx = LocalContext.current
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(24.dp).testTag("empty_library"),
         horizontalAlignment = Alignment.Start,
@@ -315,8 +317,26 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
         Spacer(Modifier.height(16.dp))
         OfflineBadge(onOffline)
         Spacer(Modifier.height(24.dp))
-        Step(1, "Download the starter pack", "On any device, download the files of a pack (the parts and the .pack.json) from the Commonplace releases page into Downloads.")
-        Step(2, "Import it here", "Tap Import in Library and select all the files. Commonplace checks every byte before it uses them.")
+        val starters = remember { loadCatalog(ctx).filter { it.recommended } }
+        if (starters.isNotEmpty()) {
+            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
+                Column(Modifier.padding(16.dp)) {
+                    SectionLabel("Get started")
+                    Spacer(Modifier.height(8.dp))
+                    Text("Download the starter packs in your browser: ${bytes(starters.sumOf { it.downloadBytes })} in total.", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    for (p in starters) {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(p.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                            Text(bytes(p.downloadBytes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+        Step(1, "Download the starter packs", "Open Library, tap a pack under Get more, and download all of its files in your browser. They land in Downloads.")
+        Step(2, "Install them here", "Tap Install from Downloads in Library and select all the files. Commonplace checks every byte before it uses them.")
         Step(3, "Ask anything", "Search works at once. Add a model pack for written answers with citations.")
         Spacer(Modifier.height(24.dp))
         Button(onClick = onLibrary, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("go_import")) { Text("Open Library") }

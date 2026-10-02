@@ -158,6 +158,9 @@ def main() -> int:
     ap.add_argument("--compare-with", default="the Mississippi River", help="typed after the Compare with… draft")
     ap.add_argument("--answer-timeout", type=float, default=240)
     ap.add_argument("--import-dir", help="dist dir of a split pack (packbuild split): test the SAF import with it")
+    ap.add_argument("--catalog-dir", help="split packs plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads")
+    ap.add_argument("--withhold", default="", help="file of --catalog-dir that is missing at the first install and added for the second")
+    ap.add_argument("--only", nargs="*", default=[], help="run only these steps")
     args = ap.parse_args()
 
     stamp = time.strftime("%Y%m%d-%H%M%S")
@@ -227,6 +230,105 @@ def main() -> int:
             left = adb("shell", "ls", "/sdcard/Download/").split()
             if left:
                 raise RuntimeError(f"files left in Downloads: {left}")
+            r.back()
+
+    if args.catalog_dir:
+
+        @step("catalog")
+        def _():
+            # The APK carries a test catalog of two packs; a third pack in the directory is not in it.
+            d = Path(args.catalog_dir)
+            catalog = json.loads((d / "catalog.json").read_text())["packs"]
+            files = sorted(f.name for f in d.iterdir() if f.is_file() and f.name != "catalog.json")
+            ids = sorted(f.removesuffix(".pack.json") for f in files if f.endswith(".pack.json"))
+            outside = [i for i in ids if i not in {p["pack_id"] for p in catalog}]
+            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            for f in files:
+                if f != args.withhold:
+                    adb("push", "-q", str(d / f), "/sdcard/Download/")
+            adb("shell", "sh", "-c", "'echo unrelated > /sdcard/Download/notes.txt'")
+            for i in ids:
+                adb("shell", "run-as", PKG, "rm", "-rf", f"files/library/packs/{i}")
+            adb("shell", "am", "force-stop", PKG)
+            adb("shell", "am", "start", "-n", f"{PKG}/.MainActivity")
+            ui.tap(ui.wait(60, tag="open_library"))
+            ui.wait(10, tag="library_list")
+            ui.wait(10, tag="available_row")
+            text = ui.all_text()
+            for p in catalog:
+                if p["title"] not in text:
+                    raise RuntimeError(f"{p['title']} is not listed under Get more")
+            if "Starter" not in text:
+                raise RuntimeError("no Starter tag")
+            r.shot("catalog-available", f"Get more lists {len(catalog)} packs")
+
+            ui.tap(ui.wait(10, tag="available_row"))
+            ui.wait(10, tag="pack_sheet")
+            ui.wait(10, contains="Download every file below")
+            buttons = [n for n in ui.nodes() if n.get("resource-id", "").endswith("download_file")]
+            first = next(p for p in catalog if p["recommended"])
+            if len(buttons) != len(first["files"]):
+                raise RuntimeError(f"{len(buttons)} download buttons for {len(first['files'])} files")
+            r.shot("catalog-sheet", f"{first['title']}: {len(buttons)} files")
+            ui.tap(buttons[0])
+            time.sleep(2)
+            r.shot("catalog-download", "Download opens the URL in a browser, or says there is none")
+            r.back()
+            if ui.find(tag="pack_sheet") is None:
+                raise RuntimeError("the sheet is gone after the browser")
+            ui.tap(ui.wait(10, tag="sheet_install"))
+
+            def select_all():
+                ui.wait(20, contains=".pack.json")
+                node = ui.find(contains=".pack.json")
+                x, y = ui.center(node)
+                adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "900")
+                ui.tap(ui.wait(10, text="More options"))
+                ui.tap(ui.wait(10, text="Select all"))
+                time.sleep(1)
+                r.shot("catalog-picker", "all files selected")
+                ui.tap(ui.wait(10, text="Select"))
+
+            select_all()
+            for _ in range(8):
+                if ui.find(tag="import_progress") is not None:
+                    r.shot("catalog-progress")
+                    break
+            t0 = time.time()
+            ui.wait(180, text="Delete the downloaded files?")
+            r.shot("catalog-imported", f"after {time.time() - t0:.1f}s of waiting")
+            ui.tap(ui.wait(10, text="Delete"))
+            ui.wait(10, contains="Deleted")
+            note = " ".join(n.get("text", "") for n in ui.wait(10, tag="error_note").iter("node"))
+            if args.withhold and args.withhold not in note:
+                raise RuntimeError(f"missing file not named: {note!r}")
+            r.shot("catalog-missing", note.replace("\n", " "))
+            installed = adb("shell", "run-as", PKG, "ls", "files/library/packs").split()
+            incomplete = {p["pack_id"] for p in catalog if args.withhold in {f["name"] for f in p["files"]}}
+            want = [i for i in ids if i not in incomplete]
+            if [i for i in ids if i in installed] != want:
+                raise RuntimeError(f"installed {installed}, expected {want} among {ids}")
+            left = sorted(adb("shell", "ls", "/sdcard/Download/").split())
+            print("  left in Downloads:", left)
+
+            if args.withhold:
+                adb("push", "-q", str(d / args.withhold), "/sdcard/Download/")
+                ui.tap(ui.wait(10, tag="import_pack"))
+                select_all()
+                ui.wait(180, text="Delete the downloaded files?")
+                ui.tap(ui.wait(10, text="Delete"))
+                ui.wait(10, contains="Deleted")
+                time.sleep(1)
+                installed = adb("shell", "run-as", PKG, "ls", "files/library/packs").split()
+                if not set(ids) <= set(installed):
+                    raise RuntimeError(f"after the second install: {installed}")
+                if ui.find(tag="error_note") is not None:
+                    raise RuntimeError("problems are still shown")
+                left = sorted(adb("shell", "ls", "/sdcard/Download/").split())
+                if left != ["notes.txt"]:
+                    raise RuntimeError(f"left in Downloads: {left}")
+                r.shot("catalog-complete", "the missing part was added and installed; notes.txt stays")
+            ui.wait(10, tag="library_list")
             r.back()
 
     @step("welcome")
@@ -371,6 +473,8 @@ def main() -> int:
             adb("shell", "cmd", "uimode", "night", "no")
 
     for name, fn in flows:
+        if args.only and name not in args.only:
+            continue
         try:
             fn()
         except Exception as e:  # noqa: BLE001 - record and continue so one failure keeps the rest of the report

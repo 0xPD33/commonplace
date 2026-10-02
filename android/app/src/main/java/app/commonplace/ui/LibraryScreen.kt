@@ -1,12 +1,13 @@
 package app.commonplace.ui
 
 import android.app.Application
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,7 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
-import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.DataObject
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MoreVert
@@ -55,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,7 +64,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.commonplace.CommonplaceApp
+import app.commonplace.engine.CatalogPack
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.SelectedFile
+import app.commonplace.engine.availablePacks
+import app.commonplace.engine.loadCatalog
+import app.commonplace.engine.planImport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,56 +96,73 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** Source files that were read and verified; offered for deletion afterwards. */
     var deletable by mutableStateOf<List<Pair<Uri, Long>>>(emptyList())
 
-    fun importUris(uris: List<Uri>) {
+    /** What the last selection could not install: missing files and failed imports. */
+    var problems by mutableStateOf<List<String>>(emptyList())
+
+    /** Install every pack whose files are all among `uris`, one pack after the other. Unrelated files are ignored. */
+    fun importUris(uris: List<Uri>, catalog: List<CatalogPack>) {
         if (uris.isEmpty() || import.running) return
         import.running = true
+        problems = emptyList()
         val cr = getApplication<Application>().contentResolver
         // The process scope, not viewModelScope: leaving Library must not skip the library refresh.
         holder.scope.launch {
-            val opened = mutableListOf<Pair<Triple<Uri, String, Long>, ParcelFileDescriptor>>()
-            val result = runCatching {
-                val named = uris.map { uri ->
-                    var name = uri.lastPathSegment ?: "part"
-                    var size = 0L
+            val selected = uris.map { uri ->
+                var name = uri.lastPathSegment ?: "part"
+                var size = 0L
+                runCatching {
                     cr.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)?.use { c ->
                         if (c.moveToFirst()) {
                             name = c.getString(0) ?: name
                             size = c.getLong(1)
                         }
                     }
-                    Triple(uri, name, size)
                 }
-                for (n in named) cr.openFileDescriptor(n.first, "r")?.let { opened += n to it }
-                withContext(Dispatchers.Main) {
-                    import.done = 0
-                    import.total = named.sumOf { it.third }.coerceAtLeast(1)
-                    import.message = "Importing ${named.count { !it.second.endsWith(".json") }} files…"
-                    import.finishedParts.clear()
-                }
-                val listener = object : ImportListener {
-                    override fun onProgress(bytesDone: ULong, bytesTotal: ULong) {
-                        holder.scope.launch(Dispatchers.Main) { import.done = bytesDone.toLong() }
-                    }
-
-                    override fun onPartDone(name: String) {
-                        holder.scope.launch(Dispatchers.Main) { import.finishedParts += name }
-                    }
-                }
-                // detachFd hands each descriptor to Rust, which closes it.
-                val parts = opened.map { (n, fd) -> ImportPart(n.second, fd.detachFd(), n.third.toULong()) }
-                opened.clear()
-                holder.engineOrNull!!.importPack(parts, listener) to named
+                SelectedFile(uri, name, size)
             }
-            opened.forEach { runCatching { it.second.close() } }
+            val plan = planImport(catalog, selected)
+            val failed = plan.missing.toMutableList()
+            if (plan.jobs.isEmpty() && failed.isEmpty()) failed += "None of the selected files belongs to a pack."
+            val installed = mutableListOf<String>()
+            val sources = mutableListOf<Pair<Uri, Long>>()
+            plan.jobs.forEachIndexed { i, job ->
+                val opened = mutableListOf<Pair<SelectedFile<Uri>, ParcelFileDescriptor>>()
+                val result = runCatching {
+                    for (f in job.files) cr.openFileDescriptor(f.handle, "r")?.let { opened += f to it }
+                    withContext(Dispatchers.Main) {
+                        import.done = 0
+                        import.total = job.files.sumOf { it.size }.coerceAtLeast(1)
+                        import.message = "Installing ${job.title}" + if (plan.jobs.size > 1) " (${i + 1} of ${plan.jobs.size})…" else "…"
+                        import.finishedParts.clear()
+                    }
+                    val listener = object : ImportListener {
+                        override fun onProgress(bytesDone: ULong, bytesTotal: ULong) {
+                            holder.scope.launch(Dispatchers.Main) { import.done = bytesDone.toLong() }
+                        }
+
+                        override fun onPartDone(name: String) {
+                            holder.scope.launch(Dispatchers.Main) { import.finishedParts += name }
+                        }
+                    }
+                    // detachFd hands each descriptor to Rust, which closes it.
+                    val parts = opened.map { (f, fd) -> ImportPart(f.name, fd.detachFd(), f.size.toULong()) }
+                    opened.clear()
+                    holder.engineOrNull!!.importPack(parts, listener)
+                }
+                opened.forEach { runCatching { it.second.close() } }
+                result.onSuccess {
+                    installed += it
+                    sources += job.files.map { f -> f.handle to f.size }
+                }.onFailure { failed += "${job.title}: import failed: ${it.message}" }
+            }
             withContext(Dispatchers.Main) {
                 import.running = false
-                result.onSuccess { (id, named) ->
-                    snackbar = "Installed $id"
-                    deletable = named.map { it.first to it.third }
-                }.onFailure { snackbar = "Import failed: ${it.message}" }
+                problems = failed
+                if (installed.isNotEmpty()) snackbar = "Installed ${installed.joinToString(", ")}"
+                deletable = sources
             }
             holder.refreshLibrary()
-            if (result.isSuccess) holder.ensureModel(null)
+            if (installed.isNotEmpty()) holder.ensureModel(null)
         }
     }
 
@@ -173,13 +197,20 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
-    val holder = (androidx.compose.ui.platform.LocalContext.current.applicationContext as CommonplaceApp).engine
+    val ctx = LocalContext.current
+    val holder = (ctx.applicationContext as CommonplaceApp).engine
     val lib by holder.library.collectAsState()
     val model by holder.model.collectAsState()
     val snack = remember { SnackbarHostState() }
     LaunchedEffect(vm.snackbar) { vm.snackbar?.let { snack.showSnackbar(it); vm.snackbar = null } }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { vm.importUris(it) }
+    val catalog = remember { loadCatalog(ctx) }
+    val picker = rememberLauncherForActivityResult(PickFromDownloads()) { vm.importUris(it, catalog) }
     var confirmRemove by remember { mutableStateOf<String?>(null) }
+    var detail by remember { mutableStateOf<CatalogPack?>(null) }
+    val installedIds = remember(lib) {
+        lib?.let { l -> l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull("wikidata-facts".takeIf { l.hasWikidata }) }.orEmpty().toSet()
+    }
+    val available = remember(catalog, installedIds) { if (lib == null) emptyList() else availablePacks(catalog, installedIds) }
 
     Scaffold(
         topBar = {
@@ -192,8 +223,8 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
             if (!vm.import.running) {
                 ExtendedFloatingActionButton(
                     onClick = { picker.launch(arrayOf("*/*")) },
-                    icon = { Icon(Icons.Outlined.Add, null) },
-                    text = { Text("Import pack") },
+                    icon = { Icon(Icons.Outlined.Download, null) },
+                    text = { Text("Install from Downloads") },
                     modifier = Modifier.testTag("import_pack"),
                 )
             }
@@ -210,10 +241,20 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
                 if (l != null) StorageMeter(l.totalBytes.toLong(), l.capBytes.toLong(), Modifier.padding(vertical = 8.dp))
             }
             if (vm.import.running) item { ImportProgress(vm.import) }
+            if (vm.problems.isNotEmpty() && !vm.import.running) {
+                item { ErrorNote("Not installed:\n" + vm.problems.joinToString("\n") { "• $it" }) }
+            }
+            if (available.isNotEmpty()) {
+                item { SectionLabel("Get more", Modifier.padding(top = 12.dp)) }
+                items(available, key = { "available-" + it.packId }) { p -> AvailableRow(p, onClick = { detail = p }) }
+            }
             item { SectionLabel("Knowledge", Modifier.padding(top = 12.dp)) }
             if (l == null || l.packs.isEmpty()) {
                 item {
-                    InfoNote("No knowledge packs yet. Download the parts of a pack and its .pack.json on any device, then tap Import pack and select all of them.")
+                    InfoNote(
+                        if (catalog.isEmpty()) "No knowledge packs yet. Download the parts of a pack and its .pack.json on any device, then tap Install from Downloads and select all of them."
+                        else "No knowledge packs yet. Pick one under Get more, download its files in your browser, then tap Install from Downloads.",
+                    )
                 }
             }
             items(l?.packs ?: emptyList(), key = { it.packId }) { p ->
@@ -263,6 +304,20 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
         }
     }
 
+    detail?.let { p ->
+        PackSheet(
+            p,
+            onDismiss = { detail = null },
+            onDownload = { url ->
+                try {
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                } catch (_: ActivityNotFoundException) {
+                    vm.snackbar = "No browser app found on this phone"
+                }
+            },
+            onInstall = { detail = null; picker.launch(arrayOf("*/*")) },
+        )
+    }
     confirmRemove?.let { id ->
         AlertDialog(
             onDismissRequest = { confirmRemove = null },
@@ -277,7 +332,7 @@ fun LibraryScreen(onBack: () -> Unit, vm: LibraryViewModel = viewModel()) {
         AlertDialog(
             onDismissRequest = { vm.deletable = emptyList() },
             title = { Text("Delete the downloaded files?") },
-            text = { Text("The pack is installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
+            text = { Text("Installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
             confirmButton = { TextButton(onClick = vm::deleteSources, modifier = Modifier.testTag("delete_sources")) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { vm.deletable = emptyList() }) { Text("Keep") } },
         )

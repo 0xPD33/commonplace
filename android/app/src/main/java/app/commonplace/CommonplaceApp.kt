@@ -17,7 +17,7 @@ class CommonplaceApp : Application() {
     @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        // Backgrounded under pressure: drop the LLM, keep the retrieval readers (PLAN.md §8.2).
+        // Backgrounded under pressure: drop the LLM, keep the retrieval readers.
         if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) engine.unloadModel()
     }
 }

@@ -37,7 +37,7 @@ pub fn system_info() -> String {
     unsafe { CStr::from_ptr(sys::llama_print_system_info()) }.to_string_lossy().into_owned()
 }
 
-/// On arm64 the fast Q4_0 kernels need DOTPROD and MATMUL_INT8 (PLAN.md §4.1 build trap).
+/// On arm64 the fast Q4_0 kernels need DOTPROD and MATMUL_INT8.
 pub fn check_cpu_features() -> Result<()> {
     if cfg!(target_arch = "aarch64") {
         let info = system_info();

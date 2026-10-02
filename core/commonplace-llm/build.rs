@@ -37,7 +37,7 @@ fn main() {
             .define("ANDROID_STL", "c++_static")
             .define("GGML_NATIVE", "OFF");
         if abi == "arm64-v8a" {
-            // Build trap (PLAN.md §4.1): without the explicit arch the dotprod check can silently fail.
+            // Build trap: without the explicit arch the dotprod check can silently fail.
             cfg.define("GGML_CPU_ARM_ARCH", "armv8.2-a+dotprod+i8mm").define("GGML_CPU_KLEIDIAI", "ON");
         }
     } else {

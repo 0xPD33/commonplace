@@ -1,4 +1,4 @@
-//! The orchestrator: Plan → Retrieve → Compute → Synthesize (PLAN.md §9), with streaming events.
+//! The orchestrator: Plan → Retrieve → Compute → Synthesize, with streaming events.
 
 use crate::citations::{self, Segment};
 use crate::encoders::{Head, QueryEncoder, Reader, Reranker};
@@ -434,7 +434,7 @@ impl Engine {
         out
     }
 
-    /// Ratios, differences and densities from Wikidata numbers, computed in Rust (PLAN.md §9.5).
+    /// Ratios, differences and densities from Wikidata numbers, computed in Rust.
     /// Entities keep their order in the question, so "Russia than France" divides Russia by France.
     fn wikidata_calcs(lib: &Library, route: &Route) -> Vec<String> {
         let Some((_, wd)) = &lib.wikidata else { return vec![] };
@@ -569,7 +569,7 @@ impl Engine {
         // Stage 0-1: route, retrieve, instant card.
         stage(&mut rec, Stage::Searching, String::new());
         // Stage 0: the model rewrites the message into a standalone, typo-free search query using the last
-        // turns (PLAN.md §9.1). The user's own words and the history still go to the answer.
+        // turns. The user's own words and the history still go to the answer.
         let rewritten = match llm.as_ref().filter(|_| s.rewrite) {
             Some((_, l)) => Self::rewrite(l.as_ref(), req, &mut rec),
             None => None,
@@ -646,7 +646,7 @@ impl Engine {
         rec.card_ms = card.card_ms;
         sink.event(Event::Card(card.clone()));
 
-        // Stage 2b: featured snippet, the reader's answer span in the top passages (PLAN.md §9.3a).
+        // Stage 2b: featured snippet, the reader's answer span in the top passages.
         // Only simple lookups: why/how and multi-part questions have no single span. The written answer
         // still follows; skipping the LLM waits for a calibrated answerability check (gate G4).
         let mut card = card;
@@ -658,7 +658,7 @@ impl Engine {
                 .filter_map(|h| reader.read(&route.query, &h.passage.text).ok().flatten().map(|s| (s, h)))
                 .max_by(|a, b| a.0.margin.total_cmp(&b.0.margin));
             rec.reader_ms = Some(ms(t));
-            // Agreement (PLAN.md §9.3a): the span must appear in two passages or in a Wikidata fact.
+            // Agreement: the span must appear in two passages or in a Wikidata fact.
             // One passage alone can name the wrong claimant ("John W. Starr" invented a light bulb too).
             let agrees = |span: &str| {
                 let s = span.to_lowercase();
@@ -691,7 +691,7 @@ impl Engine {
 
         // Stage 2: subqueries. A planner call costs ~19 s on the Pixel CPU (and often returns no subqueries),
         // so it runs only in deep mode and for follow-ups that entity carry-over could not resolve.
-        // Comparisons get one template search per entity instead (PLAN.md §9.1).
+        // Comparisons get one template search per entity instead.
         let mut question = route.query.clone();
         let mut plan = Plan::default();
         let wants_plan = req.deep || (route.needs_rewrite && route.entities.is_empty());

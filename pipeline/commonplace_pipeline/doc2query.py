@@ -1,4 +1,4 @@
-"""doc2query (PLAN §6.3a): generate 3-5 search questions per passage with an LLM.
+"""doc2query: generate 3-5 search questions per passage with an LLM.
 
 Coverage order: the lead passage of the top --lead-articles articles, then every passage of the top
 --full-articles articles. Output: <out-dir>/questions.parquet (passage_id uint32, questions str, "\\n"-joined).

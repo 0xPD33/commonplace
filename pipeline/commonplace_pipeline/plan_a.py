@@ -1,4 +1,4 @@
-"""Plan A (PLAN.md §6.4): turn the prebuilt mxbai binary codes and the row-aligned 2023-11
+"""Plan A: turn the prebuilt mxbai binary codes and the row-aligned 2023-11
 Wikipedia passages into packbuild input, with no embedding compute.
 
 Subcommands:

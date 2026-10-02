@@ -37,7 +37,7 @@ android {
     }
 }
 
-// The app must never gain network access (PLAN.md §0 rule 4). Fails the build if any
+// The app must never gain network access. Fails the build if any
 // dependency manifest sneaks INTERNET back into the merged manifest.
 androidComponents {
     onVariants { variant ->

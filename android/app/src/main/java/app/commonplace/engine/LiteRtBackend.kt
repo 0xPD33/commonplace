@@ -18,7 +18,7 @@ import java.io.File
 import java.util.concurrent.CountDownLatch
 
 /**
- * LiteRT-LM on the Tensor TPU (gate G0, PLAN.md §17). Tries the NPU first and falls back to
+ * LiteRT-LM on the Tensor TPU. Tries the NPU first and falls back to
  * the CPU. The Rust orchestrator calls [generate] on its own worker thread and blocks on it.
  * LiteRT-LM has no GBNF; for JSON calls the orchestrator parses the output tolerantly.
  */

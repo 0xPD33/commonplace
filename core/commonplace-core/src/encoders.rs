@@ -309,7 +309,7 @@ pub struct Span {
     pub margin: f32,
 }
 
-/// SQuAD2 extractive reader (PLAN.md §9.3a): the best answer span in a passage, or none.
+/// SQuAD2 extractive reader: the best answer span in a passage, or none.
 pub struct Reader {
     session: Mutex<Session>,
     tok: Tokenizer,

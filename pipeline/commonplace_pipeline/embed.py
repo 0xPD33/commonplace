@@ -7,7 +7,7 @@ The document text is "{title}\n{text}" (plus " > {section}" after the title when
 CLS pooling, no prompt, fp16. A code is the sign of the first 512 dimensions, packed like numpy.packbits.
 Shards of --shard passages go to <work>/dense/shards/; a restart skips finished shards.
 dense/hashes.u64 holds a 64-bit hash of each embedded text. `--reuse <last month's work dir>` copies the codes of
-unchanged texts, embeds only new or changed ones, and keeps that dir's IVF centroids (ADDENDUM §6).
+unchanged texts, embeds only new or changed ones, and keeps that dir's IVF centroids.
 
   uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/openstax
 """

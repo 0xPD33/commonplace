@@ -1,4 +1,4 @@
-//! Prompt texts (PLAN.md §10). The synthesis system prompt is the cached prefix.
+//! Prompt texts. The synthesis system prompt is the cached prefix.
 
 pub fn synthesis_system(snapshot_date: &str) -> String {
     format!(

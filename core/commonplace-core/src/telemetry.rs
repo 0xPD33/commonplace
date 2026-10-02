@@ -1,4 +1,4 @@
-//! Per-query telemetry (PLAN.md §9.8): stage timings, counts, token rates, RSS, thermal.
+//! Per-query telemetry: stage timings, counts, token rates, RSS, thermal.
 
 use crate::llm::GenStats;
 use crate::retrieval::RetrievalStats;

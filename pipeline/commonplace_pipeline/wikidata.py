@@ -1,4 +1,4 @@
-"""Wikidata facts (PLAN §6.5) from the permutans/wikidata-* Parquet tables (see scripts/fetch-wikidata.sh).
+"""Wikidata facts from the permutans/wikidata-* Parquet tables (see scripts/fetch-wikidata.sh).
 
 Stage 1 (pyarrow, one process per claims file) keeps statements on the properties in
 configs/wikidata-props.tsv and flattens them. Stage 2 (DuckDB) keeps items with an enwiki sitelink,

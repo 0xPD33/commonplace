@@ -2,7 +2,7 @@
 
 Each source row is one thread as flat text: title line, question, question comments, then answers (accepted
 first, then by votes), each followed by its comments. The rows carry no scores, accepted flags, or post
-boundaries, so PLAN §6.2's score filter cannot be applied. Instead:
+boundaries, so a score filter cannot be applied. Instead:
 - thread filter: distinct authors >= a per-site threshold (a proxy for answers and attention);
 - comment filter: drop segments that start with "@" or are very short;
 - one article per thread, capped at the first MAX_PASSAGES passages (question and top answers come first).

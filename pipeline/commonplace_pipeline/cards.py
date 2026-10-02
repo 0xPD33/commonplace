@@ -1,4 +1,4 @@
-"""Fact cards (PLAN §6.3b): short standalone facts per (article, section), each citing its passages.
+"""Fact cards: short standalone facts per (article, section), each citing its passages.
 
 The prompt numbers the section's passages {p1}..{pN}; the parser maps those back to global passage ids.
 A fact is dropped when a number, date or capitalized name in it is not literally in its cited passages

@@ -50,6 +50,9 @@ The app refuses a knowledge pack whose `embedder` differs from the installed pac
 The app imports the parts through the Android file picker (SAF). It extracts the stream directly, hashes each part and each file as it reads, checks everything against `pack.json` and `manifest.json`, and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
 The app also enforces the 50 GB total footprint before an import starts.
 
+Each GitHub release asset must stay below 2 GiB, so `scripts/release.sh packs` splits at 2,000,000,000 bytes. Packs go in their own release tag, `packs-<snapshot>` (for example `packs-2026-09`), separate from the app releases.
+`scripts/release.sh packs <tag> [pack_id...]` verifies and splits the packs, then writes `SHA256SUMS` and `catalog.json` (title, description, type, sizes, license, `replaces`, `recommended`, and for each file its name, size, SHA-256 and download URL). It copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links. `scripts/release.sh upload <tag>` creates the pre-release and uploads the files.
+
 ## Build a pack
 
 Run all commands from the repository root inside `nix develop` (or with the tools from `docs/INSTALL.md`).

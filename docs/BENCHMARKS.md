@@ -283,6 +283,17 @@ New debug build (nb8, 24 passages), in-app benchmark, thermal headroom up to 0.8
 
 A later build, with the rewrite preference off by default: card median 0.91 s on the Pixel.
 
+## Desktop: a user document and NQ-open retrieval (2026-10-02, build 9f28876)
+
+A user document must not push Wikipedia passages out of the results for general questions. Test: 600 held-out NQ-open questions (ids 1000–1599), the installed reranker order of the 40-passage fused pool, the full desktop library without the model packs. Arm B adds one document with `add-doc`: 30 pages (217 passages) of `enwiki` text from the articles that NQ questions 0–399 retrieve. This is the worst case, because the document repeats Wikipedia text.
+
+| Library | hit@1 | hit@5 | hit@10 | Pool time, 600 questions |
+|---|---|---|---|---|
+| All packs | 0.522 | 0.748 | 0.782 | 202 s |
+| All packs + the document | 0.522 | 0.748 | 0.782 | 219 s |
+
+A document passage reached the top 5 for 4 of 600 questions. No question lost or gained a hit@5. Indexing the document took 4.4 s on the desktop CPU.
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.

@@ -3,7 +3,7 @@ package app.commonplace.engine
 import android.content.Context
 import org.json.JSONObject
 
-data class CatalogFile(val name: String, val bytes: Long, val url: String)
+data class CatalogFile(val name: String, val bytes: Long, val sha256: String, val url: String)
 
 data class CatalogPack(
     val packId: String,
@@ -36,7 +36,7 @@ fun loadCatalog(ctx: Context): List<CatalogPack> = runCatching {
             installedBytes = p.getLong("installed_bytes"),
             files = List(files.length()) { j ->
                 val f = files.getJSONObject(j)
-                CatalogFile(f.getString("name"), f.getLong("bytes"), f.getString("url"))
+                CatalogFile(f.getString("name"), f.getLong("bytes"), f.getString("sha256"), f.getString("url"))
             },
         )
     }
@@ -50,15 +50,17 @@ fun availablePacks(catalog: List<CatalogPack>, installedIds: Set<String>): List<
 
 class SelectedFile<T>(val handle: T, val name: String, val size: Long)
 
-class ImportJob<T>(val packId: String, val title: String, val files: List<SelectedFile<T>>)
+/** `sha256` maps a file name to the hash from the catalog; the core checks each file against it. */
+class ImportJob<T>(val packId: String, val title: String, val files: List<SelectedFile<T>>, val sha256: Map<String, String> = emptyMap())
 
 class ImportPlan<T>(val jobs: List<ImportJob<T>>, val missing: List<String>)
 
-private val PART = Regex("""^(.+)\.tar\.part\d+$""")
+private val PART = Regex("""^(.+)\.tar(?:\.part\d+)?$""")
 
 /**
  * Sort the selected files into packs. A catalog pack imports when every file is there by name and size.
- * Other `<id>.pack.json` files with `<id>.tar.partNNN` parts form a pack as well. Unrelated files are ignored.
+ * Other `<id>.tar` files import alone, and `<id>.pack.json` with `<id>.tar.partNNN` parts form a pack as well.
+ * Unrelated files are ignored.
  */
 fun <T> planImport(catalog: List<CatalogPack>, selected: List<SelectedFile<T>>): ImportPlan<T> {
     val jobs = mutableListOf<ImportJob<T>>()
@@ -71,7 +73,7 @@ fun <T> planImport(catalog: List<CatalogPack>, selected: List<SelectedFile<T>>):
         claimed += names
         val absent = pack.files.filter { f -> have.none { it.name == f.name && it.size == f.bytes } }
         if (absent.isEmpty()) {
-            jobs += ImportJob(pack.packId, pack.title, have.distinctBy { it.name })
+            jobs += ImportJob(pack.packId, pack.title, have.distinctBy { it.name }, pack.files.associate { it.name to it.sha256 })
         } else {
             missing += "${pack.title}: " + absent.joinToString(", ") { f ->
                 if (have.any { it.name == f.name }) "${f.name} (incomplete download)" else f.name
@@ -86,6 +88,7 @@ fun <T> planImport(catalog: List<CatalogPack>, selected: List<SelectedFile<T>>):
         val hasIndex = files.any { it.name.endsWith(".pack.json") }
         val hasParts = files.any { !it.name.endsWith(".pack.json") }
         when {
+            files.size == 1 && files[0].name == "$id.tar" -> jobs += ImportJob(id, id, files)
             !hasIndex -> missing += "$id: $id.pack.json"
             !hasParts -> missing += "$id: the .tar.part files"
             else -> jobs += ImportJob(id, id, files)

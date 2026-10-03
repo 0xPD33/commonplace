@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Write catalog.json for a packs release from the split parts and the pack manifests.
-Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo OWNER/REPO --out FILE
-Lists every <pack_id>.pack.json under DIR. <library>/<pack_id>/manifest.json supplies the metadata."""
-import argparse, hashlib, json, sys
+"""Write catalog.json for a packs release from the pack files and the pack manifests.
+Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo NAMESPACE/NAME --out FILE [--readme FILE]
+Lists every <pack_id>.tar in DIR. <library>/<pack_id>/manifest.json supplies the metadata.
+--repo is the Hugging Face dataset repo; the files live in its folder TAG. --readme writes the dataset card."""
+import argparse, hashlib, json
 from pathlib import Path
 
 RECOMMENDED = {"enwiki-core", "ling3-tiny", "wikidata-facts"}
@@ -35,24 +36,21 @@ DESCRIPTIONS = {
 ap = argparse.ArgumentParser()
 for a in ("dist", "library", "tag", "repo", "out"):
     ap.add_argument("--" + a, required=True)
+ap.add_argument("--readme")
 args = ap.parse_args()
 dist, library = Path(args.dist), Path(args.library)
-base = f"https://github.com/{args.repo}/releases/download/{args.tag}"
+base = f"https://huggingface.co/datasets/{args.repo}/resolve/main/{args.tag}"
 
 packs = []
-for idx_path in sorted(dist.rglob("*.pack.json")):
-    idx = json.loads(idx_path.read_text())
-    pid = idx["pack_id"]
+credits = {}
+for tar in sorted(dist.glob("*.tar")):
+    pid = tar.stem
     m = json.loads((library / pid / "manifest.json").read_text())
-    files = [{"name": idx_path.name, "bytes": idx_path.stat().st_size,
-              "sha256": hashlib.sha256(idx_path.read_bytes()).hexdigest()}]
-    for p in idx["parts"]:
-        f = idx_path.parent / p["name"]
-        if f.stat().st_size != p["bytes"]:
-            sys.exit(f"{f}: size differs from {idx_path.name}")
-        files.append({k: p[k] for k in ("name", "bytes", "sha256")})
-    for f in files:
-        f["url"] = f"{base}/{f['name']}"
+    credits[pid] = m["attribution"]
+    with tar.open("rb") as f:
+        sha256 = hashlib.file_digest(f, "sha256").hexdigest()
+    size = tar.stat().st_size
+    files = [{"name": tar.name, "bytes": size, "sha256": sha256, "url": f"{base}/{tar.name}?download=true"}]
     packs.append({
         "pack_id": pid,
         "title": m["title"],
@@ -62,10 +60,49 @@ for idx_path in sorted(dist.rglob("*.pack.json")):
         "license": m["license"],
         "replaces": m["replaces"],
         "recommended": pid in RECOMMENDED,
-        "download_bytes": sum(f["bytes"] for f in files),
+        "download_bytes": size,
         "installed_bytes": m["size_bytes"],
         "files": files,
     })
 packs.sort(key=lambda p: (not p["recommended"], p["pack_id"]))
 doc = {"catalog_version": 1, "tag": args.tag, "repo": args.repo, "packs": packs}
 Path(args.out).write_text(json.dumps(doc, indent=2) + "\n")
+
+if args.readme:
+    cell = lambda s: " ".join(s.split()).replace("|", "/")
+    human = lambda n: f"{n / 1e9:.2f} GB" if n >= 1e9 else f"{n / 1e6:.1f} MB"
+    rows = "\n".join(
+        f"| `{args.tag}/{p['files'][0]['name']}` | {human(p['download_bytes'])} | {cell(p['license'])} | {cell(credits[p['pack_id']])} | `{p['files'][0]['sha256']}` |"
+        for p in packs
+    )
+    Path(args.readme).write_text(f"""---
+license: other
+pretty_name: Commonplace packs
+tags:
+- offline
+- retrieval
+- wikipedia
+- commonplace
+---
+
+# Commonplace packs
+
+These files are the knowledge packs and model packs of the Commonplace Android app. The app works offline and has no network permission. You download the files with a browser and install them with the app.
+
+Release: `{args.tag}`. Each pack is one `.tar` file in the folder `{args.tag}/`. The folder also holds `catalog.json` and `SHA256SUMS`.
+
+## Install
+
+- On a phone: open Commonplace, go to Library, tap a pack under Get more, and tap Download. Then tap Install from Downloads. The app checks every byte (SHA-256) during the import.
+- On a computer: run `tar -xf <pack_id>.tar -C data/library/packs`.
+
+## Packs
+
+| File | Size | License | Credit | SHA-256 |
+|---|---|---|---|---|
+{rows}
+
+## Licenses
+
+Each pack keeps the license of its source, so this card uses `license: other`. Every pack contains its own `NOTICE.txt` with the credit, the license name and the full license texts. Read the `NOTICE.txt` of a pack before you reuse it.
+""")

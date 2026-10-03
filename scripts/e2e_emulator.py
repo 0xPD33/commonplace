@@ -317,8 +317,8 @@ def main() -> int:
     ap.add_argument("--compare-with", default="the Mississippi River", help="typed after the Compare with… draft")
     ap.add_argument("--answer-timeout", type=float, default=240)
     ap.add_argument("--import-dir", help="dist dir of a split pack (packbuild split): test the SAF import with it")
-    ap.add_argument("--catalog-dir", help="split packs plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads")
-    ap.add_argument("--withhold", default="", help="file of --catalog-dir that is missing at the first install and added for the second")
+    ap.add_argument("--catalog-dir", help="single-file packs (<id>.tar) plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads")
+    ap.add_argument("--withhold", default="", help=".tar file of --catalog-dir that is missing at the first install and added for the second")
     ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
     ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
     ap.add_argument("--only", nargs="*", default=[], help="run only these steps (pack-switch, my-pdf, my-txt, my-progress, my-errors, plus the names above)")
@@ -400,13 +400,18 @@ def main() -> int:
             # The APK carries a test catalog of two packs; a third pack in the directory is not in it.
             d = Path(args.catalog_dir)
             catalog = json.loads((d / "catalog.json").read_text())["packs"]
-            files = sorted(f.name for f in d.iterdir() if f.is_file() and f.name != "catalog.json")
-            ids = sorted(f.removesuffix(".pack.json") for f in files if f.endswith(".pack.json"))
+            files = sorted(f.name for f in d.iterdir() if f.suffix == ".tar")
+            ids = [f.removesuffix(".tar") for f in files]
             outside = [i for i in ids if i not in {p["pack_id"] for p in catalog}]
             adb("shell", "rm", "-rf", "/sdcard/Download/*")
             for f in files:
                 if f != args.withhold:
                     adb("push", "-q", str(d / f), "/sdcard/Download/")
+            if args.withhold:
+                # The withheld file arrives cut short: the app names it and does not install the pack.
+                (out / args.withhold).write_bytes((d / args.withhold).read_bytes()[: 1 << 20])
+                adb("push", "-q", str(out / args.withhold), "/sdcard/Download/")
+                (out / args.withhold).unlink()
             adb("shell", "sh", "-c", "'echo unrelated > /sdcard/Download/notes.txt'")
             for i in ids:
                 adb("shell", "run-as", PKG, "rm", "-rf", f"files/library/packs/{i}")
@@ -425,12 +430,12 @@ def main() -> int:
 
             ui.tap(ui.wait(10, tag="available_row"))
             ui.wait(10, tag="pack_sheet")
-            ui.wait(10, contains="Download every file below")
+            ui.wait(10, contains="Download the file below")
             buttons = [n for n in ui.nodes() if n.get("resource-id", "").endswith("download_file")]
             first = next(p for p in catalog if p["recommended"])
-            if len(buttons) != len(first["files"]):
+            if len(buttons) != 1 or len(first["files"]) != 1:
                 raise RuntimeError(f"{len(buttons)} download buttons for {len(first['files'])} files")
-            r.shot("catalog-sheet", f"{first['title']}: {len(buttons)} files")
+            r.shot("catalog-sheet", f"{first['title']}: one Download button, {first['download_bytes']} bytes")
             ui.tap(buttons[0])
             time.sleep(2)
             r.shot("catalog-download", "Download opens the URL in a browser, or says there is none")
@@ -440,8 +445,8 @@ def main() -> int:
             ui.tap(ui.wait(10, tag="sheet_install"))
 
             def select_all():
-                ui.wait(20, contains=".pack.json")
-                node = ui.find(contains=".pack.json")
+                ui.wait(20, contains=".tar")
+                node = ui.find(contains=".tar")
                 x, y = ui.center(node)
                 adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "900")
                 ui.tap(ui.wait(10, text="More options"))
@@ -461,8 +466,8 @@ def main() -> int:
             ui.tap(ui.wait(10, text="Delete"))
             ui.wait(10, contains="Deleted")
             note = " ".join(n.get("text", "") for n in ui.wait(10, tag="error_note").iter("node"))
-            if args.withhold and args.withhold not in note:
-                raise RuntimeError(f"missing file not named: {note!r}")
+            if args.withhold and f"{args.withhold} (incomplete download)" not in note:
+                raise RuntimeError(f"cut-short file not named: {note!r}")
             r.shot("catalog-missing", note.replace("\n", " "))
             installed = adb("shell", "run-as", PKG, "ls", "files/library/packs").split()
             incomplete = {p["pack_id"] for p in catalog if args.withhold in {f["name"] for f in p["files"]}}
@@ -488,7 +493,22 @@ def main() -> int:
                 left = sorted(adb("shell", "ls", "/sdcard/Download/").split())
                 if left != ["notes.txt"]:
                     raise RuntimeError(f"left in Downloads: {left}")
-                r.shot("catalog-complete", "the missing part was added and installed; notes.txt stays")
+                r.shot("catalog-complete", "the missing file was added and installed; notes.txt stays")
+
+            # The last byte lies after the end of the tar archive, so the manifest checks pass. Only the catalog SHA-256 fails.
+            name = catalog[0]["files"][0]["name"]
+            data = bytearray((d / name).read_bytes())
+            data[-1] ^= 1
+            (out / name).write_bytes(data)
+            adb("push", "-q", str(out / name), "/sdcard/Download/")
+            (out / name).unlink()
+            ui.tap(ui.wait(10, tag="import_pack"))
+            select_all()
+            note = " ".join(n.get("text", "") for n in ui.wait(180, tag="error_note").iter("node"))
+            if "sha256 mismatch" not in note:
+                raise RuntimeError(f"the changed {name} was not refused: {note!r}")
+            r.shot("catalog-sha", note.replace("\n", " "))
+            adb("shell", "rm", "-f", f"/sdcard/Download/{name}")
             ui.wait(10, tag="library_list")
             r.back()
 

@@ -298,11 +298,13 @@ pub struct ArticleView {
 
 #[derive(uniffi::Record)]
 pub struct ImportPart {
-    /// Display name, e.g. `enwiki-core.tar.part001` or `enwiki-core.pack.json`.
+    /// Display name, e.g. `enwiki-core.tar`, `enwiki-core.tar.part001` or `enwiki-core.pack.json`.
     pub name: String,
     /// Detached file descriptor; Rust takes ownership and closes it.
     pub fd: i32,
     pub size: u64,
+    /// Expected SHA-256 of the file (hex), from the catalog. When it is `None`, a `.pack.json` index supplies it.
+    pub sha256: Option<String>,
 }
 
 #[derive(uniffi::Record)]
@@ -763,7 +765,7 @@ impl CommonplaceEngine {
     /// Stream-import a pack from its parts (any order; sorted by name). Returns the pack id.
     pub fn import_pack(&self, parts: Vec<ImportPart>, listener: Arc<dyn ImportListener>) -> R<String> {
         let mut index: Option<import::PartIndex> = None;
-        let mut tars: Vec<(String, OwnedFd, u64)> = Vec::new();
+        let mut tars: Vec<(String, OwnedFd, u64, Option<String>)> = Vec::new();
         for p in parts {
             // SAFETY: Kotlin detached this fd and hands us ownership.
             let fd = unsafe { OwnedFd::from_raw_fd(p.fd) };
@@ -772,7 +774,7 @@ impl CommonplaceEngine {
                 std::fs::File::from(fd).read_to_string(&mut s).map_err(anyhow::Error::from)?;
                 index = Some(serde_json::from_str(&s).map_err(anyhow::Error::from)?);
             } else {
-                tars.push((p.name, fd, p.size));
+                tars.push((p.name, fd, p.size, p.sha256));
             }
         }
         if tars.is_empty() {
@@ -793,11 +795,13 @@ impl CommonplaceEngine {
         }
         let expected: Vec<Option<String>> = tars
             .iter()
-            .map(|(name, _, _)| index.as_ref().and_then(|ix| ix.parts.iter().find(|p| &p.name == name).map(|p| p.sha256.clone())))
+            .map(|(name, _, _, sha)| {
+                sha.clone().or_else(|| index.as_ref().and_then(|ix| ix.parts.iter().find(|p| &p.name == name).map(|p| p.sha256.clone())))
+            })
             .collect();
         let names: Vec<String> = tars.iter().map(|t| t.0.clone()).collect();
         let readers: Vec<Box<dyn Read + Send>> =
-            tars.into_iter().map(|(_, fd, _)| Box::new(std::io::BufReader::with_capacity(1 << 20, std::fs::File::from(fd))) as Box<dyn Read + Send>).collect();
+            tars.into_iter().map(|(_, fd, _, _)| Box::new(std::io::BufReader::with_capacity(1 << 20, std::fs::File::from(fd))) as Box<dyn Read + Send>).collect();
         let mut prog = ImportProgressAdapter { l: listener, names, total, last: 0 };
         let packs_dir = Library::packs_dir(&self.engine.cfg.library_dir);
         let m = import::import(readers, expected, &packs_dir, &mut prog, &|m| lib.check_compatible(m))?;

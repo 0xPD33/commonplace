@@ -3,13 +3,17 @@
 #   KEYSTORE=path.jks KEY_ALIAS=commonplace scripts/release.sh app <version>
 #     Signed arm64 APK. Fails if the APK has the INTERNET permission.
 #     (apksigner asks for the keystore password; set KS_PASS=... to pass it non-interactively)
-#   scripts/release.sh packs <tag> [pack_id...]       e.g. packs-2026-09 enwiki-core ling3-tiny wikidata-facts
-#     Verify and split the packs (default: the starter set), then write SHA256SUMS and catalog.json.
-#     Packs already in OUT stay in the catalog. LIBRARY=dir reads the pack directories (default data/library/packs).
-#     REPO=owner/name sets the download URLs (default 0xPD33/commonplace, a default that may change).
+#   HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]   e.g. packs-2026-09 enwiki-core ling3-tiny wikidata-facts
+#     Verify the packs (default: the starter set) and write each one as a single file <pack_id>.tar.
+#     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs already in OUT stay in the catalog.
+#     HF_REPO is the Hugging Face dataset repo (required, no default). The catalog URLs point into its folder <tag>:
+#     https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true
+#     LIBRARY=dir reads the pack directories (default data/library/packs).
 #     CATALOG_ASSET=file receives a copy of catalog.json for the APK build (default android/app/src/main/assets/catalog.json).
-#   scripts/release.sh upload <tag>
-#     Create the GitHub pre-release <tag> and upload everything in OUT. This is the only subcommand that writes to GitHub.
+#   HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>
+#     Create the dataset repo if it is missing, upload the .tar files, catalog.json and SHA256SUMS of OUT to its folder <tag>,
+#     and upload README.md to the repo root. Needs a write token (HF_TOKEN, or run `uvx --from huggingface_hub hf auth login`).
+#     Run the same command again to resume an interrupted upload. This is the only subcommand that writes to Hugging Face.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:?usage: $0 app <version> | packs <tag> [pack_id...] | upload <tag>}
@@ -17,6 +21,9 @@ NAME=${2:?usage: $0 $MODE <version-or-tag> ...}
 shift 2
 OUT=${OUT:-dist/$NAME}
 [[ $MODE == upload ]] || mkdir -p "$OUT"
+need_repo() {
+  [[ ${HF_REPO:-} =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || { echo "set HF_REPO to the Hugging Face dataset repo, <namespace>/<name>" >&2; exit 1; }
+}
 
 case $MODE in
 app)
@@ -38,27 +45,28 @@ app)
   ls -la "$OUT"
   ;;
 packs)
+  need_repo
   PACKS=("$@")
   [[ ${#PACKS[@]} -gt 0 ]] || PACKS=(enwiki-core ling3-tiny wikidata-facts)
   : "${LIBRARY:=data/library/packs}"
-  : "${REPO:=0xPD33/commonplace}"
   : "${CATALOG_ASSET:=android/app/src/main/assets/catalog.json}"
   PB=${PB:-core/target/release/packbuild}
   for p in "${PACKS[@]}"; do
     "$PB" verify --pack "$LIBRARY/$p"
-    # GitHub rejects release assets of 2 GiB (2147483648 bytes) or more.
-    "$PB" split --pack "$LIBRARY/$p" --out "$OUT" --part-size 2000000000
+    "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
   done
-  [[ -z $(find "$OUT" -size +2147483647c) ]] || { echo "release asset over the 2 GiB limit" >&2; exit 1; }
-  rm -f "$OUT/catalog.json" "$OUT/SHA256SUMS"
-  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$REPO" --out "$OUT/catalog.json"
+  rm -f "$OUT/catalog.json" "$OUT/SHA256SUMS" "$OUT/README.md"
+  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$HF_REPO" --out "$OUT/catalog.json" --readme "$OUT/README.md"
   cp "$OUT/catalog.json" "$CATALOG_ASSET"
-  (cd "$OUT" && sha256sum -- * > SHA256SUMS)
+  (cd "$OUT" && sha256sum -- *.tar catalog.json > SHA256SUMS)
   ls -la "$OUT"
   ;;
 upload)
-  gh release view "$NAME" >/dev/null 2>&1 || gh release create "$NAME" --prerelease --title "$NAME" --notes "Commonplace packs $NAME. Check downloads against SHA256SUMS."
-  gh release upload "$NAME" "$OUT"/* --clobber
+  need_repo
+  HF=(uvx --from "huggingface_hub>=2.1" hf)
+  "${HF[@]}" repos create "$HF_REPO" --type dataset --public --exist-ok
+  "${HF[@]}" upload "$HF_REPO" "$OUT" "$NAME" --repo-type dataset --include "*.tar" --include catalog.json --include SHA256SUMS --commit-message "Add packs $NAME"
+  "${HF[@]}" upload "$HF_REPO" "$OUT/README.md" README.md --repo-type dataset --commit-message "Update the dataset card for $NAME"
   ;;
 *)
   echo "unknown mode: $MODE" >&2

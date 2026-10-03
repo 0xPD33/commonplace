@@ -168,7 +168,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                         }
                     }
                     // detachFd hands each descriptor to Rust, which closes it.
-                    val parts = opened.map { (f, fd) -> ImportPart(f.name, fd.detachFd(), f.size.toULong()) }
+                    val parts = opened.map { (f, fd) -> ImportPart(f.name, fd.detachFd(), f.size.toULong(), job.sha256[f.name]) }
                     opened.clear()
                     holder.engineOrNull!!.importPack(parts, listener)
                 }
@@ -346,8 +346,8 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (knowledge.isEmpty()) {
                 item {
                     InfoNote(
-                        if (catalog.isEmpty()) "No knowledge packs yet. Download the parts of a pack and its .pack.json on any device, then tap Install from Downloads and select all of them."
-                        else "No knowledge packs yet. Pick one under Get more, download its files in your browser, then tap Install from Downloads.",
+                        if (catalog.isEmpty()) "No knowledge packs yet. Download a pack file (.tar) on any device, then tap Install from Downloads and select it."
+                        else "No knowledge packs yet. Pick one under Get more, download it in your browser, then tap Install from Downloads.",
                     )
                 }
             }

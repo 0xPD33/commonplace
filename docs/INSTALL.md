@@ -6,23 +6,23 @@ You need an Android phone with a 64-bit ARM CPU and Android 12 or later. Commonp
 
 Storage: the starter pack (3.5 GB) and the main model (4.6 GB) need about 8.2 GB. Wikidata facts need 3.2 GB more. All of English Wikipedia (`enwiki`, 19.2 GB, dump of 2026-09-01) replaces the starter pack.
 
-The app has no `INTERNET` permission. You download the files with a browser and import them with the Android file picker.
+The app has no `INTERNET` permission. You download the packs with a browser from the Hugging Face dataset `<HF_REPO>` and import them with the Android file picker. Each pack is one `.tar` file.
 
 ### Steps
 
 1. On the phone, open the GitHub release page of the app. Download `commonplace-<version>.apk` and install it. Android asks you to allow installs from your browser.
 2. Open Commonplace. The **Get started** card lists the starter packs and their total size. Tap it to open the Library.
-3. Under **Get more**, tap a pack. The sheet lists its files. Tap **Download** on each file. Your browser saves the files in **Downloads**.
-   - The starter set is `enwiki-core` (Wikipedia), `ling3-tiny` (the main model) and `wikidata-facts`.
+3. Under **Get more**, tap a pack. The sheet shows the file and its size. Tap **Download**. Your browser saves the file in **Downloads**. Do this for each pack.
+   - The starter set is 3 downloads: `enwiki-core` (Wikipedia), `ling3-tiny` (the main model) and `wikidata-facts`.
 4. Tap **Install from Downloads**. Long-press a file, choose **Select all**, then tap **Select**.
-   - The app finds the complete packs among the selected files and installs them one after the other. It ignores other files.
-   - For an incomplete pack, the app lists the missing files.
+   - The app finds the packs among the selected files and installs them one after the other. It ignores other files.
+   - For an incomplete download, the app names the file.
    - The app checks every byte (SHA-256) during the import.
    - When the import ends, the app offers to delete the downloaded files. Tap **Delete** to free the space.
 5. Go back and ask a question. The first question is slower, because the app loads the model into memory. On the Pixel 10 the first word appears after about 10 s.
 
-You can also download the files on a computer from the release `packs-2026-09` and copy them to the phone's **Downloads** folder. A pack that is not in the catalog installs the same way: select its `.pack.json` file and all its parts.
-Each pack has parts of at most 2 GB. Import all parts of a pack in one step.
+You can also download on a computer: get the `.tar` files from the folder `packs-2026-09` of the dataset `<HF_REPO>`, copy them to the phone's **Downloads** folder over USB, then tap **Install from Downloads** on the phone. A `.tar` pack that is not in the catalog installs the same way. On a computer without a phone, run `tar -xf <pack_id>.tar -C data/library/packs`.
+A third-party pack can come in parts: select its `<pack_id>.pack.json` file and all its `.tar.partNNN` files in one step.
 
 To confirm that the app is offline, turn on airplane mode. You can also open **Settings > Apps > Commonplace > Permissions**: the app has no network permission.
 
@@ -83,7 +83,7 @@ core/target/release/commonplace retrieve "tides" --k 10
 core/target/release/commonplace info
 ```
 
-The CLI reads packs from `data/library/packs/`. To install a downloaded pack, run `cat <pack>.tar.part* | tar -x -C data/library/packs`.
+The CLI reads packs from `data/library/packs/`. To install a downloaded pack, run `tar -xf <pack_id>.tar -C data/library/packs`.
 Add `--think` to `ask` for thinking mode and `--rewrite` to turn on the question rewrite step.
 
 ### Development on a device or emulator

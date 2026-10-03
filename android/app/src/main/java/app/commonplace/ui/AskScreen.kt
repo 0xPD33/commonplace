@@ -343,7 +343,7 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
             }
             Spacer(Modifier.height(12.dp))
         }
-        Step(1, "Download the starter packs", "Open Library, tap a pack under Get more, and download all of its files in your browser. They land in Downloads.")
+        Step(1, "Download the starter packs", "Open Library, tap each pack under Get more, and download it in your browser. The files land in Downloads.")
         Step(2, "Install them here", "Tap Install from Downloads in Library and select all the files. Commonplace checks every byte before it uses them.")
         Step(3, "Ask anything", "Search works at once. Add a model pack for written answers with citations.")
         Spacer(Modifier.height(24.dp))

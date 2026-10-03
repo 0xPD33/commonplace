@@ -78,7 +78,7 @@ fun PackSheet(p: CatalogPack, onDismiss: () -> Unit, onDownload: (String) -> Uni
             Text(p.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(sizes(p), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 4.dp))
             Spacer(Modifier.height(16.dp))
-            InfoNote("Download every file below, then tap Install from Downloads.")
+            InfoNote(if (p.files.size == 1) "Download the file below, then tap Install from Downloads." else "Download every file below, then tap Install from Downloads.")
             Spacer(Modifier.height(12.dp))
             for (f in p.files) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {

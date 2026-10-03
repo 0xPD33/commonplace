@@ -57,13 +57,17 @@ The app builds a knowledge pack on the device from a document that the user adds
 
 ## Distribution
 
-`packbuild split` writes one plain tar stream of `<pack_id>/` in parts of at most 2 GB, plus `<pack_id>.pack.json` with the SHA-256 of each part.
-The app imports the parts through the Android file picker (SAF). It extracts the stream directly, hashes each part and each file as it reads, checks everything against `pack.json` and `manifest.json`, and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
+`packbuild split --single` writes one plain tar stream of `<pack_id>/` as `<pack_id>.tar`. Without `--single`, it writes parts of at most `--part-size` bytes (2 GB by default) plus `<pack_id>.pack.json` with the SHA-256 of each part. The app still imports such multi-part packs, for example from a third party.
+The app imports the file through the Android file picker (SAF). It extracts the stream directly, hashes the file and each file inside it as it reads, checks everything against `manifest.json` (and against the SHA-256 of the catalog, for a catalog pack), and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
 The app also enforces the 50 GB total footprint before an import starts.
 
-Each GitHub release asset must stay below 2 GiB, so `scripts/release.sh packs` splits at 2,000,000,000 bytes. Packs go in their own release tag, `packs-<snapshot>` (for example `packs-2026-09`), separate from the app releases.
-`scripts/release.sh packs <tag> [pack_id...]` verifies and splits the packs, then writes `SHA256SUMS` and `catalog.json` (title, description, type, sizes, license, `replaces`, `recommended`, and for each file its name, size, SHA-256 and download URL). It copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links. `scripts/release.sh upload <tag>` creates the pre-release and uploads the files.
-The release assets of the packs live under the GitHub release tag `packs-2026-09`. The app releases have their own tags. A user downloads every part and the `pack.json` file of a pack with a browser, then imports them with the file picker (INSTALL.md). On a desktop, `cat <pack_id>.tar.part* | tar -x -C data/library/packs` installs a pack.
+The catalog packs live in a Hugging Face dataset repo, one `.tar` file per pack. Hugging Face has no 2 GiB limit, so a user downloads one file per pack. The packs of a release go in the folder `packs-<snapshot>` of the repo (for example `packs-2026-09`). The app releases have their own tags on GitHub.
+`HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]` verifies the packs and writes the `.tar` files, `SHA256SUMS`, `catalog.json` and `README.md` (the dataset card) to `dist/<tag>`. `HF_REPO` has no default.
+`catalog.json` has the title, description, type, sizes, license, `replaces` and `recommended` of each pack, and the name, size, SHA-256 and download URL of its file. The URL is `https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true`. The query `download=true` makes the browser save the file.
+`README.md` has the license front matter and a table with the file, size, license, credit and SHA-256 of each pack. Each pack also holds its own `NOTICE.txt` with the full license texts.
+The script copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links.
+`HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>` creates the dataset repo if it is missing and uploads the files with the Hugging Face CLI (run through `uvx`). It needs a write token (`HF_TOKEN`). It is the only mode that writes to Hugging Face.
+A user downloads the `.tar` file of each pack with a browser, then imports the files with the file picker (INSTALL.md). On a desktop, `tar -xf <pack_id>.tar -C data/library/packs` installs a pack.
 
 ## Build a pack
 
@@ -103,8 +107,8 @@ $PB dense --input data/work/wikivoyage-en --pack data/library/packs/wikivoyage-e
 # New QIDs or redirects (plan_a.py enrich --title-qid) for a built pack: rewrite meta.sqlite only.
 $PB meta --input data/work/<id> --pack data/library/packs/<id>
 
-# Parts for download.
-$PB split --pack data/library/packs/enwiki-core --out dist/
+# One file for download (scripts/release.sh packs does this for a whole release).
+$PB split --single --pack data/library/packs/enwiki-core --out dist/
 $PB verify --pack data/library/packs/enwiki-core
 ```
 

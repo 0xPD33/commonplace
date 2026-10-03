@@ -18,9 +18,9 @@ flowchart LR
     SRC["Dump, ZIM, dataset, GGUF"] --> CHUNK["Chunk into passages"]
     CHUNK --> EMB["mxbai embeddings on GPU"]
     EMB --> PB["packbuild"]
-    PB --> PARTS["Pack parts with SHA-256"]
+    PB --> PARTS["One .tar file per pack"]
   end
-  PARTS --> REL["GitHub release packs-2026-09"]
+  PARTS --> REL["Hugging Face dataset, folder packs-2026-09"]
   REL --> BR
   subgraph Phone["Phone: no INTERNET permission"]
     BR["Browser download"] --> SAF["SAF import, SHA-256 checks"]
@@ -101,7 +101,7 @@ The question rewrite step ("Understand the question first" in Settings) is off b
 | Rust core: packs, hybrid retrieval, rerank, orchestration, citations, tools, telemetry | Works on desktop and Android |
 | Desktop CLI (`commonplace ask / retrieve / bench / serve-eval`) | Works |
 | Android app (Compose) | Runs on a Pixel 10 (GrapheneOS, Android 17, 12 GB) and in the emulator. `scripts/e2e_emulator.py` drives the emulator build. |
-| Packs | Built on the desktop (2026-10-02): English Wikipedia of 2026-09-01, Wikidata facts and 15 breadth packs ([docs/DATASETS.md](docs/DATASETS.md)). Upload to the `packs-2026-09` release is pending. |
+| Packs | Built on the desktop (2026-10-02): English Wikipedia of 2026-09-01, Wikidata facts and 15 breadth packs ([docs/DATASETS.md](docs/DATASETS.md)). Upload to the `packs-2026-09` folder of the Hugging Face dataset `<HF_REPO>` is pending. |
 | Pixel 10 speed | Card median 0.91 s, first word about 7 s, Ling decode about 18 tok/s on a cool phone and 8-11 tok/s on a hot phone ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)) |
 | Quality (63 seed questions, desktop) | Score ratio 0.52 against Claude with web search ([docs/EVAL.md](docs/EVAL.md)) |
 | LiteRT-LM engine (Gemma 4 E2B) | Works on the CPU. The Tensor G5 NPU path is blocked by a library version mismatch. |
@@ -117,7 +117,7 @@ The question rewrite step ("Understand the question first" in Settings) is off b
   cd core && cargo build --release -p commonplace-cli -p packbuild && cd ..
   core/target/release/commonplace --model data/models/llm/Ling-3.0-tiny-Q4_0.gguf ask "Why is the sky blue?"
   ```
-  The CLI reads packs from `data/library/packs/`. To install a downloaded pack there, run `cat enwiki-core.tar.part* | tar -x -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
+  The CLI reads packs from `data/library/packs/`. To install a downloaded pack there, run `tar -xf enwiki-core.tar -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
 
 ## Repository
 

@@ -138,14 +138,17 @@ enum Cmd {
         #[command(flatten)]
         notices: NoticeArgs,
     },
-    /// Split a pack directory into ≤ part-size tar parts plus `<pack_id>.pack.json`.
+    /// Write a pack directory as ≤ part-size tar parts plus `<pack_id>.pack.json`, or as one `<pack_id>.tar` with --single.
     Split {
         #[arg(long)]
         pack: PathBuf,
         #[arg(long)]
         out: PathBuf,
-        #[arg(long, default_value_t = 2_000_000_000)]
+        #[arg(long, default_value_t = 2_000_000_000, conflicts_with = "single")]
         part_size: u64,
+        /// One file `<pack_id>.tar` and no `.pack.json`.
+        #[arg(long)]
+        single: bool,
     },
     /// Re-hash an installed pack against its manifest.
     Verify {
@@ -590,22 +593,28 @@ fn build_model(
     Ok(())
 }
 
-/// Tar stream split across files of at most `part_size` bytes.
+/// Tar stream split across files of at most `part_size` bytes, or one file `<stem>.tar` when `single`.
 struct PartWriter {
     dir: PathBuf,
     stem: String,
     part_size: u64,
+    single: bool,
     cur: Option<(File, Sha256, u64, String)>,
     parts: Vec<import::PartEntry>,
 }
 
 impl PartWriter {
-    fn roll(&mut self) -> std::io::Result<()> {
+    fn close(&mut self) -> std::io::Result<()> {
         if let Some((mut f, h, n, name)) = self.cur.take() {
             f.flush()?;
             self.parts.push(import::PartEntry { name, bytes: n, sha256: hex::encode(h.finalize()) });
         }
-        let name = format!("{}.tar.part{:03}", self.stem, self.parts.len() + 1);
+        Ok(())
+    }
+
+    fn roll(&mut self) -> std::io::Result<()> {
+        self.close()?;
+        let name = if self.single { format!("{}.tar", self.stem) } else { format!("{}.tar.part{:03}", self.stem, self.parts.len() + 1) };
         self.cur = Some((File::create(self.dir.join(&name))?, Sha256::new(), 0, name));
         Ok(())
     }
@@ -628,25 +637,24 @@ impl Write for PartWriter {
     }
 }
 
-fn split(pack: &Path, out: &Path, part_size: u64) -> Result<()> {
+fn split(pack: &Path, out: &Path, part_size: u64, single: bool) -> Result<()> {
     let m = Manifest::read(pack)?;
     std::fs::create_dir_all(out)?;
-    let mut pw = PartWriter { dir: out.to_path_buf(), stem: m.pack_id.clone(), part_size, cur: None, parts: vec![] };
+    let part_size = if single { u64::MAX } else { part_size };
+    let mut pw = PartWriter { dir: out.to_path_buf(), stem: m.pack_id.clone(), part_size, single, cur: None, parts: vec![] };
     {
         let mut tb = tar::Builder::new(&mut pw);
         tb.mode(tar::HeaderMode::Deterministic);
         tb.append_dir_all(&m.pack_id, pack)?;
         tb.finish()?;
     }
-    pw.roll()?;
-    // The final roll opens an empty trailing part; drop it.
-    if let Some((_, _, _, name)) = pw.cur.take() {
-        std::fs::remove_file(out.join(name))?;
-    }
-    let idx = import::PartIndex { pack_id: m.pack_id.clone(), parts: pw.parts };
-    std::fs::write(out.join(format!("{}.pack.json", m.pack_id)), serde_json::to_vec_pretty(&idx)?)?;
-    for p in &idx.parts {
+    pw.close()?;
+    for p in &pw.parts {
         eprintln!("{}  {:>12}  {}", p.sha256, p.bytes, p.name);
+    }
+    if !single {
+        let idx = import::PartIndex { pack_id: m.pack_id.clone(), parts: pw.parts };
+        std::fs::write(out.join(format!("{}.pack.json", m.pack_id)), serde_json::to_vec_pretty(&idx)?)?;
     }
     Ok(())
 }
@@ -676,7 +684,7 @@ fn main() -> Result<()> {
             build_model(&gguf, &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
             add_notices(&out, &notices, None, None)
         }
-        Cmd::Split { pack, out, part_size } => split(&pack, &out, part_size),
+        Cmd::Split { pack, out, part_size, single } => split(&pack, &out, part_size, single),
         Cmd::Verify { pack } => {
             let bad = import::verify(&pack)?;
             if bad.is_empty() {

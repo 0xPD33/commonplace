@@ -71,10 +71,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.commonplace.CommonplaceApp
+import app.commonplace.engine.Catalog
 import app.commonplace.engine.CatalogPack
 import app.commonplace.engine.DocumentText
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.SelectedFile
+import app.commonplace.engine.availableBundles
 import app.commonplace.engine.availablePacks
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.planImport
@@ -121,8 +123,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     /** The state a switch was just set to, shown until the engine has reloaded the library. */
     val toggling = mutableStateMapOf<String, Boolean>()
 
-    /** Install every pack whose files are all among `uris`, one pack after the other. Unrelated files are ignored. */
-    fun importUris(uris: List<Uri>, catalog: List<CatalogPack>) {
+    /** Install every bundle or pack whose files are all among `uris`, one after the other. Unrelated files are ignored. */
+    fun importUris(uris: List<Uri>, catalog: Catalog) {
         if (uris.isEmpty() || import.running) return
         import.running = true
         import.passages = false
@@ -152,10 +154,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 val opened = mutableListOf<Pair<SelectedFile<Uri>, ParcelFileDescriptor>>()
                 val result = runCatching {
                     for (f in job.files) cr.openFileDescriptor(f.handle, "r")?.let { opened += f to it }
+                    val label = "Installing ${job.title}" + if (plan.jobs.size > 1) " (${i + 1} of ${plan.jobs.size})" else ""
                     withContext(Dispatchers.Main) {
                         import.done = 0
                         import.total = job.files.sumOf { it.size }.coerceAtLeast(1)
-                        import.message = "Installing ${job.title}" + if (plan.jobs.size > 1) " (${i + 1} of ${plan.jobs.size})…" else "…"
+                        import.message = "$label…"
                         import.finishedParts.clear()
                     }
                     val listener = object : ImportListener {
@@ -165,6 +168,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
                         override fun onPartDone(name: String) {
                             holder.scope.launch(Dispatchers.Main) { import.finishedParts += name }
+                        }
+
+                        // A bundle holds several packs: the card names the one that is being read.
+                        override fun onPack(packId: String) {
+                            if (job.packIds.size > 1) {
+                                holder.scope.launch(Dispatchers.Main) { import.message = "$label: $packId (${job.packIds.indexOf(packId) + 1} of ${job.packIds.size})…" }
+                            }
                         }
                     }
                     // detachFd hands each descriptor to Rust, which closes it.
@@ -176,7 +186,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 result.onSuccess {
                     installed += it
                     sources += job.files.map { f -> f.handle to f.size }
-                }.onFailure { failed += "${job.title}: import failed: ${it.message}" }
+                }.onFailure { failed += "${job.title}: import failed: ${reason(it)}" }
             }
             withContext(Dispatchers.Main) {
                 import.running = false
@@ -185,7 +195,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 deletable = sources
             }
             holder.refreshLibrary()
-            if (installed.isNotEmpty()) holder.ensureModel(null)
+            // Also after a failed bundle: the packs that were complete before the error are installed.
+            if (plan.jobs.isNotEmpty()) holder.ensureModel(null)
         }
     }
 
@@ -245,6 +256,8 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 }
 
                 override fun onPartDone(name: String) {}
+
+                override fun onPack(packId: String) {}
             }
             val result = runCatching {
                 require(size <= DocumentText.MAX_BYTES) { "$name is larger than 50 MB." }
@@ -303,6 +316,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
         lib?.let { l -> l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata }) }.orEmpty().toSet()
     }
     val available = remember(catalog, installedIds) { if (lib == null) emptyList() else availablePacks(catalog, installedIds) }
+    val bundles = remember(catalog, installedIds) { if (lib == null) emptyList() else availableBundles(catalog, installedIds) }
 
     Scaffold(
         topBar = {
@@ -336,8 +350,12 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (vm.problems.isNotEmpty() && !vm.import.running) {
                 item { ErrorNote("Not installed:\n" + vm.problems.joinToString("\n") { "• $it" }) }
             }
-            if (available.isNotEmpty()) {
+            if (bundles.isNotEmpty() || available.isNotEmpty()) {
                 item { SectionLabel("Get more", Modifier.padding(top = 12.dp)) }
+                items(bundles, key = { "bundle-" + it.first.packId }) { (b, n) -> AvailableRow(b, onClick = { detail = b }, installed = n) }
+                if (bundles.isNotEmpty() && available.isNotEmpty()) {
+                    item { Text("Individual packs", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
                 items(available, key = { "available-" + it.packId }) { p -> AvailableRow(p, onClick = { detail = p }) }
             }
             item { SectionLabel("Knowledge", Modifier.padding(top = 12.dp)) }
@@ -346,7 +364,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (knowledge.isEmpty()) {
                 item {
                     InfoNote(
-                        if (catalog.isEmpty()) "No knowledge packs yet. Download a pack file (.tar) on any device, then tap Install from Downloads and select it."
+                        if (catalog.packs.isEmpty()) "No knowledge packs yet. Download a pack file (.tar) on any device, then tap Install from Downloads and select it."
                         else "No knowledge packs yet. Pick one under Get more, download it in your browser, then tap Install from Downloads.",
                     )
                 }
@@ -436,6 +454,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
     detail?.let { p ->
         PackSheet(
             p,
+            contents = p.members.map { id -> catalog.packs.firstOrNull { it.packId == id }?.let { "${it.title} · ${bytes(it.downloadBytes)}" } ?: id },
             onDismiss = { detail = null },
             onDownload = { url ->
                 try {

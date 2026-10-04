@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Write catalog.json for a packs release from the pack files and the pack manifests.
-Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo NAMESPACE/NAME --out FILE [--readme FILE]
+Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo NAMESPACE/NAME --out FILE [--readme FILE] [--bundle SPEC]...
 Lists every <pack_id>.tar in DIR. <library>/<pack_id>/manifest.json supplies the metadata.
+--bundle 'ID|TITLE|DESCRIPTION|PACK_ID PACK_ID...' (repeatable) lists the bundle file commonplace-ID.tar when DIR has it.
 --repo is the Hugging Face dataset repo; the files live in its folder TAG. --readme writes the dataset card."""
 import argparse, hashlib, json
 from pathlib import Path
 
 RECOMMENDED = {"enwiki-core", "ling3-tiny", "wikidata-facts"}
+RECOMMENDED_BUNDLES = {"starter"}
 DESCRIPTIONS = {
     "enwiki-core": "The 2 million most useful English Wikipedia articles.",
     "enwiki": "All of English Wikipedia. Replaces the starter pack.",
@@ -37,20 +39,48 @@ ap = argparse.ArgumentParser()
 for a in ("dist", "library", "tag", "repo", "out"):
     ap.add_argument("--" + a, required=True)
 ap.add_argument("--readme")
+ap.add_argument("--bundle", action="append", default=[])
 args = ap.parse_args()
 dist, library = Path(args.dist), Path(args.library)
 base = f"https://huggingface.co/datasets/{args.repo}/resolve/main/{args.tag}"
+bundle_specs = [b.split("|") for b in args.bundle]
+bundle_files = {f"commonplace-{b[0]}.tar" for b in bundle_specs}
+
+
+def file_entry(tar):
+    with tar.open("rb") as f:
+        sha256 = hashlib.file_digest(f, "sha256").hexdigest()
+    return {"name": tar.name, "bytes": tar.stat().st_size, "sha256": sha256, "url": f"{base}/{tar.name}?download=true"}
+
+
+bundles = []
+for bid, title, description, members in bundle_specs:
+    tar = dist / f"commonplace-{bid}.tar"
+    if not tar.exists():
+        continue
+    ids = members.split()
+    file = file_entry(tar)
+    bundles.append({
+        "bundle_id": bid,
+        "title": title,
+        "description": description,
+        "pack_ids": ids,
+        "recommended": bid in RECOMMENDED_BUNDLES,
+        "download_bytes": file["bytes"],
+        "installed_bytes": sum(json.loads((library / i / "manifest.json").read_text())["size_bytes"] for i in ids),
+        "files": [file],
+    })
 
 packs = []
 credits = {}
 for tar in sorted(dist.glob("*.tar")):
+    if tar.name in bundle_files:
+        continue
     pid = tar.stem
     m = json.loads((library / pid / "manifest.json").read_text())
     credits[pid] = m["attribution"]
-    with tar.open("rb") as f:
-        sha256 = hashlib.file_digest(f, "sha256").hexdigest()
-    size = tar.stat().st_size
-    files = [{"name": tar.name, "bytes": size, "sha256": sha256, "url": f"{base}/{tar.name}?download=true"}]
+    files = [file_entry(tar)]
+    size = files[0]["bytes"]
     packs.append({
         "pack_id": pid,
         "title": m["title"],
@@ -65,7 +95,7 @@ for tar in sorted(dist.glob("*.tar")):
         "files": files,
     })
 packs.sort(key=lambda p: (not p["recommended"], p["pack_id"]))
-doc = {"catalog_version": 1, "tag": args.tag, "repo": args.repo, "packs": packs}
+doc = {"catalog_version": 1, "tag": args.tag, "repo": args.repo, "bundles": bundles, "packs": packs}
 Path(args.out).write_text(json.dumps(doc, indent=2) + "\n")
 
 if args.readme:
@@ -75,6 +105,19 @@ if args.readme:
         f"| `{args.tag}/{p['files'][0]['name']}` | {human(p['download_bytes'])} | {cell(p['license'])} | {cell(credits[p['pack_id']])} | `{p['files'][0]['sha256']}` |"
         for p in packs
     )
+    bundle_rows = "\n".join(
+        f"| `{args.tag}/{b['files'][0]['name']}` | {cell(b['title'])}: {', '.join(f'`{i}`' for i in b['pack_ids'])} | {human(b['download_bytes'])} | `{b['files'][0]['sha256']}` |"
+        for b in bundles
+    )
+    bundle_section = f"""## Bundles
+
+A bundle is one `.tar` file with several packs. It only saves downloads: every pack inside is a normal pack, and the individual pack files below stay available.
+
+| File | Contents | Size | SHA-256 |
+|---|---|---|---|
+{bundle_rows}
+
+""" if bundles else ""
     Path(args.readme).write_text(f"""---
 license: other
 pretty_name: Commonplace packs
@@ -89,14 +132,14 @@ tags:
 
 These files are the knowledge packs and model packs of the Commonplace Android app. The app works offline and has no network permission. You download the files with a browser and install them with the app.
 
-Release: `{args.tag}`. Each pack is one `.tar` file in the folder `{args.tag}/`. The folder also holds `catalog.json` and `SHA256SUMS`.
+Release: `{args.tag}`. Each pack is one `.tar` file in the folder `{args.tag}/`, and each bundle is one `.tar` file with several packs. The folder also holds `catalog.json` and `SHA256SUMS`.
 
 ## Install
 
-- On a phone: open Commonplace, go to Library, tap a pack under Get more, and tap Download. Then tap Install from Downloads. The app checks every byte (SHA-256) during the import.
-- On a computer: run `tar -xf <pack_id>.tar -C data/library/packs`.
+- On a phone: open Commonplace, go to Library, tap a bundle or a pack under Get more, and tap Download. Then tap Install from Downloads. The app checks every byte (SHA-256) during the import. The import needs about twice the file size in free space. You can delete the download afterwards.
+- On a computer: run `tar -xf <file>.tar -C data/library/packs`. This works for a pack and for a bundle.
 
-## Packs
+{bundle_section}## Packs
 
 | File | Size | License | Credit | SHA-256 |
 |---|---|---|---|---|

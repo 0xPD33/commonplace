@@ -18,7 +18,7 @@ flowchart LR
     SRC["Dump, ZIM, dataset, GGUF"] --> CHUNK["Chunk into passages"]
     CHUNK --> EMB["mxbai embeddings on GPU"]
     EMB --> PB["packbuild"]
-    PB --> PARTS["One .tar file per pack"]
+    PB --> PARTS["One .tar file per pack, and bundles of several packs"]
   end
   PARTS --> REL["Hugging Face dataset, folder packs-2026-09"]
   REL --> BR
@@ -109,7 +109,7 @@ The question rewrite step ("Understand the question first" in Settings) is off b
 
 ## Try it
 
-- **Phone:** see [docs/INSTALL.md](docs/INSTALL.md).
+- **Phone:** download the Starter set (one file, 11.3 GB), then tap Install from Downloads in the app. See [docs/INSTALL.md](docs/INSTALL.md).
 - **Desktop CLI:**
   ```sh
   nix develop            # or install the tools listed in docs/INSTALL.md
@@ -117,7 +117,7 @@ The question rewrite step ("Understand the question first" in Settings) is off b
   cd core && cargo build --release -p commonplace-cli -p packbuild && cd ..
   core/target/release/commonplace --model data/models/llm/Ling-3.0-tiny-Q4_0.gguf ask "Why is the sky blue?"
   ```
-  The CLI reads packs from `data/library/packs/`. To install a downloaded pack there, run `tar -xf enwiki-core.tar -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
+  The CLI reads packs from `data/library/packs/`. To install a downloaded pack or bundle there, run `tar -xf <file>.tar -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
 
 ## Repository
 

@@ -325,17 +325,26 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
         Spacer(Modifier.height(16.dp))
         OfflineBadge(onOffline)
         Spacer(Modifier.height(24.dp))
-        val starters = remember { loadCatalog(ctx).filter { it.recommended } }
+        // The starter bundle is one file. A catalog without bundles lists the starter packs instead.
+        val starters = remember { loadCatalog(ctx).let { c -> c.bundles.filter { it.recommended }.ifEmpty { c.packs.filter { it.recommended } } } }
+        val oneFile = starters.size == 1
         if (starters.isNotEmpty()) {
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
                 Column(Modifier.padding(16.dp)) {
                     SectionLabel("Get started")
                     Spacer(Modifier.height(8.dp))
-                    Text("Download the starter packs in your browser: ${bytes(starters.sumOf { it.downloadBytes })} in total.", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        if (oneFile) "Download one file in your browser: ${bytes(starters[0].downloadBytes)}."
+                        else "Download the starter packs in your browser: ${bytes(starters.sumOf { it.downloadBytes })} in total.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                     Spacer(Modifier.height(8.dp))
                     for (p in starters) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(p.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                            Column(Modifier.weight(1f)) {
+                                Text(p.title, style = MaterialTheme.typography.titleSmall)
+                                if (oneFile) Text(p.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                             Text(bytes(p.downloadBytes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -343,8 +352,13 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
             }
             Spacer(Modifier.height(12.dp))
         }
-        Step(1, "Download the starter packs", "Open Library, tap each pack under Get more, and download it in your browser. The files land in Downloads.")
-        Step(2, "Install them here", "Tap Install from Downloads in Library and select all the files. Commonplace checks every byte before it uses them.")
+        if (oneFile) {
+            Step(1, "Download the ${starters[0].title}", "Open Library, tap ${starters[0].title} under Get more, and download the file in your browser. It lands in Downloads.")
+            Step(2, "Install it here", "Tap Install from Downloads in Library and select the file. Commonplace checks every byte before it uses it.")
+        } else {
+            Step(1, "Download the starter packs", "Open Library, tap each pack under Get more, and download it in your browser. The files land in Downloads.")
+            Step(2, "Install them here", "Tap Install from Downloads in Library and select all the files. Commonplace checks every byte before it uses them.")
+        }
         Step(3, "Ask anything", "Search works at once. Add a model pack for written answers with citations.")
         Spacer(Modifier.height(24.dp))
         Button(onClick = onLibrary, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("go_import")) { Text("Open Library") }

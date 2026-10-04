@@ -59,15 +59,24 @@ The app builds a knowledge pack on the device from a document that the user adds
 
 `packbuild split --single` writes one plain tar stream of `<pack_id>/` as `<pack_id>.tar`. Without `--single`, it writes parts of at most `--part-size` bytes (2 GB by default) plus `<pack_id>.pack.json` with the SHA-256 of each part. The app still imports such multi-part packs, for example from a third party.
 The app imports the file through the Android file picker (SAF). It extracts the stream directly, hashes the file and each file inside it as it reads, checks everything against `manifest.json` (and against the SHA-256 of the catalog, for a catalog pack), and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
-The app also enforces the 50 GB total footprint before an import starts.
+The app also enforces the 50 GB total footprint before an import starts. For a bundle, it uses the size of the whole file.
 
-The catalog packs live in a Hugging Face dataset repo, one `.tar` file per pack. Hugging Face has no 2 GiB limit, so a user downloads one file per pack. The packs of a release go in the folder `packs-<snapshot>` of the repo (for example `packs-2026-09`). The app releases have their own tags on GitHub.
+A bundle is a distribution container, not a new pack format: one tar stream with several top-level `<pack_id>/` directories, one after the other. Pack format version 1 does not change, and a bundle has no manifest of its own. `packbuild bundle --pack <dir>... --out <file>.tar` writes the packs in the given order. The importer handles each pack like a single pack:
+- It checks the pack against its own `manifest.json`, runs the compatibility check for that manifest, and moves the pack into place when the next pack starts. The last pack waits until the whole file is read.
+- If a pack replaces an installed pack with the same id, the import replaces it, as for a single pack.
+- If an error stops the import, the packs that were complete before it stay installed. The error names the failed pack.
+- The SHA-256 of the whole file (from the catalog) is checked while the file is read. A mismatch is reported before the last pack goes into place.
+- The app tells the user which pack it installs (`ImportListener.on_pack`), and `import_pack` returns the ids of all installed packs.
+
+The catalog packs live in a Hugging Face dataset repo, one `.tar` file per pack. Hugging Face has no 2 GiB limit, so a user downloads one file per pack. Bundles reduce this further: the Starter set (`enwiki-core`, `ling3-tiny` and `wikidata-facts`, 11.3 GB) is one file, so getting started is one download. The Reference shelf (13 breadth packs, about 2 GB) is one file as well. Large packs (`enwiki`, `arxiv-abs`, `stackexchange`, `lfm25-1.2b`) stay single. The individual `.tar` file of every pack stays published too. The packs of a release go in the folder `packs-<snapshot>` of the repo (for example `packs-2026-09`). The app releases have their own tags on GitHub.
 `HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]` verifies the packs and writes the `.tar` files, `SHA256SUMS`, `catalog.json` and `README.md` (the dataset card) to `dist/<tag>`. `HF_REPO` has no default.
+The `BUNDLES` list at the top of `scripts/release.sh` defines the bundles: one line per bundle with the id, title, description and pack ids in tar order. The script writes the bundle `commonplace-<bundle_id>.tar` when all its packs are in the `pack_id` list of the call. A bundle that is already in the output directory stays in the catalog. `BUNDLES=...` in the environment replaces the list, for a test.
 `catalog.json` has the title, description, type, sizes, license, `replaces` and `recommended` of each pack, and the name, size, SHA-256 and download URL of its file. The URL is `https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true`. The query `download=true` makes the browser save the file.
-`README.md` has the license front matter and a table with the file, size, license, credit and SHA-256 of each pack. Each pack also holds its own `NOTICE.txt` with the full license texts.
+The top-level list `bundles` has `bundle_id`, `title`, `description`, `pack_ids`, `download_bytes`, `installed_bytes`, `files` (as for a pack) and `recommended` (only the starter bundle). A catalog without `bundles` is still valid.
+`README.md` has the license front matter and a table of the bundles, then a table with the file, size, license, credit and SHA-256 of each pack. Each pack also holds its own `NOTICE.txt` with the full license texts.
 The script copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links.
 `HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>` creates the dataset repo if it is missing and uploads the files with the Hugging Face CLI (run through `uvx`). It needs a write token (`HF_TOKEN`). It is the only mode that writes to Hugging Face.
-A user downloads the `.tar` file of each pack with a browser, then imports the files with the file picker (INSTALL.md). On a desktop, `tar -xf <pack_id>.tar -C data/library/packs` installs a pack.
+A user downloads the `.tar` file of a bundle or of each pack with a browser, then imports the files with the file picker (INSTALL.md). On a desktop, `tar -xf <file>.tar -C data/library/packs` installs a pack or a bundle, because each pack is a top-level directory of the file.
 
 ## Build a pack
 
@@ -110,6 +119,8 @@ $PB meta --input data/work/<id> --pack data/library/packs/<id>
 # One file for download (scripts/release.sh packs does this for a whole release).
 $PB split --single --pack data/library/packs/enwiki-core --out dist/
 $PB verify --pack data/library/packs/enwiki-core
+# One file for several packs (a bundle).
+$PB bundle --pack data/library/packs/factbook data/library/packs/cdc-travel --out dist/commonplace-test.tar
 ```
 
 ### Pipeline input schema (Parquet)

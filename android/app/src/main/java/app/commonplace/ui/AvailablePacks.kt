@@ -49,8 +49,9 @@ class PickDocument : ActivityResultContracts.OpenDocument() {
         )
 }
 
+/** A pack, or a bundle. `installed` counts the packs of a bundle that are already on the phone. */
 @Composable
-fun AvailableRow(p: CatalogPack, onClick: () -> Unit) {
+fun AvailableRow(p: CatalogPack, onClick: () -> Unit, installed: Int = 0) {
     Surface(onClick = onClick, shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("available_row")) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -63,14 +64,18 @@ fun AvailableRow(p: CatalogPack, onClick: () -> Unit) {
                 }
             }
             Text(p.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(sizes(p), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+            Text(
+                if (p.members.isEmpty()) sizes(p) else "1 file · ${bytes(p.downloadBytes)}" + if (installed > 0) " · $installed of ${p.members.size} installed" else "",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun PackSheet(p: CatalogPack, onDismiss: () -> Unit, onDownload: (String) -> Unit, onInstall: () -> Unit) {
+fun PackSheet(p: CatalogPack, contents: List<String>, onDismiss: () -> Unit, onDownload: (String) -> Unit, onInstall: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         // The sheet is its own window, so it needs its own testTagsAsResourceId (see MainActivity).
         Column(Modifier.semantics { testTagsAsResourceId = true }.padding(horizontal = 20.dp).padding(bottom = 24.dp).verticalScroll(rememberScrollState()).testTag("pack_sheet")) {
@@ -78,7 +83,17 @@ fun PackSheet(p: CatalogPack, onDismiss: () -> Unit, onDownload: (String) -> Uni
             Text(p.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(sizes(p), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(top = 4.dp))
             Spacer(Modifier.height(16.dp))
-            InfoNote(if (p.files.size == 1) "Download the file below, then tap Install from Downloads." else "Download every file below, then tap Install from Downloads.")
+            InfoNote(
+                when {
+                    contents.isNotEmpty() -> "Download the file below, then tap Install from Downloads. The import needs about twice the file size in free space. Delete the download afterwards."
+                    p.files.size == 1 -> "Download the file below, then tap Install from Downloads."
+                    else -> "Download every file below, then tap Install from Downloads."
+                },
+            )
+            if (contents.isNotEmpty()) {
+                SectionLabel("Includes", Modifier.padding(top = 12.dp))
+                for (c in contents) Text("• $c", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp).testTag("bundle_pack"))
+            }
             Spacer(Modifier.height(12.dp))
             for (f in p.files) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -95,4 +110,5 @@ fun PackSheet(p: CatalogPack, onDismiss: () -> Unit, onDownload: (String) -> Uni
     }
 }
 
-private fun sizes(p: CatalogPack) = "${bytes(p.downloadBytes)} download · ${bytes(p.installedBytes)} installed · ${p.license}"
+private fun sizes(p: CatalogPack) =
+    "${bytes(p.downloadBytes)} download · ${bytes(p.installedBytes)} installed" + if (p.license.isNotBlank()) " · ${p.license}" else ""

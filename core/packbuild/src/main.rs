@@ -150,6 +150,13 @@ enum Cmd {
         #[arg(long)]
         single: bool,
     },
+    /// Write several pack directories, in the given order, as one tar stream `--out <file>.tar` (a bundle).
+    Bundle {
+        #[arg(long, required = true, num_args = 1..)]
+        pack: Vec<PathBuf>,
+        #[arg(long)]
+        out: PathBuf,
+    },
     /// Re-hash an installed pack against its manifest.
     Verify {
         #[arg(long)]
@@ -637,15 +644,17 @@ impl Write for PartWriter {
     }
 }
 
-fn split(pack: &Path, out: &Path, part_size: u64, single: bool) -> Result<()> {
-    let m = Manifest::read(pack)?;
+/// One tar stream of the pack directories, named `stem`. A bundle has several packs; the parts of a split pack have one.
+fn split(packs: &[PathBuf], stem: &str, out: &Path, part_size: u64, single: bool) -> Result<()> {
     std::fs::create_dir_all(out)?;
     let part_size = if single { u64::MAX } else { part_size };
-    let mut pw = PartWriter { dir: out.to_path_buf(), stem: m.pack_id.clone(), part_size, single, cur: None, parts: vec![] };
+    let mut pw = PartWriter { dir: out.to_path_buf(), stem: stem.to_string(), part_size, single, cur: None, parts: vec![] };
     {
         let mut tb = tar::Builder::new(&mut pw);
         tb.mode(tar::HeaderMode::Deterministic);
-        tb.append_dir_all(&m.pack_id, pack)?;
+        for pack in packs {
+            tb.append_dir_all(&Manifest::read(pack)?.pack_id, pack)?;
+        }
         tb.finish()?;
     }
     pw.close()?;
@@ -653,8 +662,8 @@ fn split(pack: &Path, out: &Path, part_size: u64, single: bool) -> Result<()> {
         eprintln!("{}  {:>12}  {}", p.sha256, p.bytes, p.name);
     }
     if !single {
-        let idx = import::PartIndex { pack_id: m.pack_id.clone(), parts: pw.parts };
-        std::fs::write(out.join(format!("{}.pack.json", m.pack_id)), serde_json::to_vec_pretty(&idx)?)?;
+        let idx = import::PartIndex { pack_id: stem.to_string(), parts: pw.parts };
+        std::fs::write(out.join(format!("{stem}.pack.json")), serde_json::to_vec_pretty(&idx)?)?;
     }
     Ok(())
 }
@@ -684,7 +693,11 @@ fn main() -> Result<()> {
             build_model(&gguf, &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
             add_notices(&out, &notices, None, None)
         }
-        Cmd::Split { pack, out, part_size, single } => split(&pack, &out, part_size, single),
+        Cmd::Split { pack, out, part_size, single } => split(std::slice::from_ref(&pack), &Manifest::read(&pack)?.pack_id, &out, part_size, single),
+        Cmd::Bundle { pack, out } => {
+            ensure!(out.extension().is_some_and(|e| e == "tar"), "--out must be a .tar file");
+            split(&pack, &out.file_stem().unwrap().to_string_lossy(), out.parent().unwrap_or(Path::new("")), u64::MAX, true)
+        }
         Cmd::Verify { pack } => {
             let bad = import::verify(&pack)?;
             if bad.is_empty() {

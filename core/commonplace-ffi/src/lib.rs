@@ -356,6 +356,8 @@ pub trait ImportListener: Send + Sync {
     fn on_progress(&self, bytes_done: u64, bytes_total: u64);
     /// A part was fully read and verified; the app may offer to delete the source file.
     fn on_part_done(&self, name: String);
+    /// The stream starts the pack `pack_id`; a bundle has several. Not called for a document.
+    fn on_pack(&self, pack_id: String);
 }
 
 /// LiteRT-LM (or any Kotlin-side engine). Called on a Rust worker thread; must block until done.
@@ -532,6 +534,9 @@ impl import::ImportProgress for ImportProgressAdapter {
     }
     fn part_done(&mut self, index: usize) {
         self.l.on_part_done(self.names[index].clone());
+    }
+    fn pack_started(&mut self, pack_id: &str) {
+        self.l.on_pack(pack_id.to_string());
     }
 }
 
@@ -762,8 +767,9 @@ impl CommonplaceEngine {
         std::fs::read_to_string(Library::packs_dir(&self.engine.cfg.library_dir).join(pack_id).join("NOTICE.txt")).unwrap_or_default()
     }
 
-    /// Stream-import a pack from its parts (any order; sorted by name). Returns the pack id.
-    pub fn import_pack(&self, parts: Vec<ImportPart>, listener: Arc<dyn ImportListener>) -> R<String> {
+    /// Stream-import the packs of a file, or of its parts (any order; sorted by name). A bundle file holds several packs.
+    /// Returns the ids of the installed packs. After an error, the packs that were complete before it stay installed.
+    pub fn import_pack(&self, parts: Vec<ImportPart>, listener: Arc<dyn ImportListener>) -> R<Vec<String>> {
         let mut index: Option<import::PartIndex> = None;
         let mut tars: Vec<(String, OwnedFd, u64, Option<String>)> = Vec::new();
         for p in parts {
@@ -804,9 +810,10 @@ impl CommonplaceEngine {
             tars.into_iter().map(|(_, fd, _, _)| Box::new(std::io::BufReader::with_capacity(1 << 20, std::fs::File::from(fd))) as Box<dyn Read + Send>).collect();
         let mut prog = ImportProgressAdapter { l: listener, names, total, last: 0 };
         let packs_dir = Library::packs_dir(&self.engine.cfg.library_dir);
-        let m = import::import(readers, expected, &packs_dir, &mut prog, &|m| lib.check_compatible(m))?;
+        let imported = import::import(readers, expected, &packs_dir, &mut prog, &|m| lib.check_compatible(m));
+        // Reload after an error too: the packs that were complete before it are installed.
         self.engine.reload_library()?;
-        Ok(m.pack_id)
+        Ok(imported?.into_iter().map(|m| m.pack_id).collect())
     }
 
     /// Index a document the user added (text per page, page 1 first) as the pack `doc-<hash>`. Returns the pack id.

@@ -5,7 +5,8 @@
 #     (apksigner asks for the keystore password; set KS_PASS=... to pass it non-interactively)
 #   HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]   e.g. packs-2026-09 enwiki-core ling3-tiny wikidata-facts
 #     Verify the packs (default: the starter set) and write each one as a single file <pack_id>.tar.
-#     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs already in OUT stay in the catalog.
+#     Also write the bundles (see BUNDLES below) whose packs are all in the list as commonplace-<bundle_id>.tar.
+#     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs and bundles already in OUT stay in the catalog.
 #     HF_REPO is the Hugging Face dataset repo (required, no default). The catalog URLs point into its folder <tag>:
 #     https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true
 #     LIBRARY=dir reads the pack directories (default data/library/packs).
@@ -21,6 +22,10 @@ NAME=${2:?usage: $0 $MODE <version-or-tag> ...}
 shift 2
 OUT=${OUT:-dist/$NAME}
 [[ $MODE == upload ]] || mkdir -p "$OUT"
+# Bundles: one .tar file that holds several packs, so a user downloads one file. Edit this list to change them.
+# One line per bundle: id|title|description|pack ids in tar order. BUNDLES=... in the environment replaces the list.
+BUNDLES=${BUNDLES:-'starter|Starter set|Wikipedia (2M articles), the answer model and Wikidata facts.|enwiki-core ling3-tiny wikidata-facts
+breadth|Reference shelf|Textbooks, Wikibooks, Wikiquote, Wikivoyage, Wiktionary, Wikiversity, programming documentation, ArchWiki, medical and travel health pages, and the World Factbook.|textbooks-en wikibooks-en wikiquote-en wikivoyage-en wiktionary-en wikiversity-en devdocs-en archwiki-en wikem-en openstax medlineplus cdc-travel factbook'}
 need_repo() {
   [[ ${HF_REPO:-} =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || { echo "set HF_REPO to the Hugging Face dataset repo, <namespace>/<name>" >&2; exit 1; }
 }
@@ -55,8 +60,19 @@ packs)
     "$PB" verify --pack "$LIBRARY/$p"
     "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
   done
+  BUNDLE_ARGS=()
+  while IFS='|' read -r id title desc members; do
+    [[ -n $id ]] || continue
+    BUNDLE_ARGS+=(--bundle "$id|$title|$desc|$members")
+    dirs=()
+    for m in $members; do
+      [[ " ${PACKS[*]} " == *" $m "* ]] || continue 2
+      dirs+=("$LIBRARY/$m")
+    done
+    "$PB" bundle --pack "${dirs[@]}" --out "$OUT/commonplace-$id.tar"
+  done <<<"$BUNDLES"
   rm -f "$OUT/catalog.json" "$OUT/SHA256SUMS" "$OUT/README.md"
-  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$HF_REPO" --out "$OUT/catalog.json" --readme "$OUT/README.md"
+  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$HF_REPO" --out "$OUT/catalog.json" --readme "$OUT/README.md" "${BUNDLE_ARGS[@]}"
   cp "$OUT/catalog.json" "$CATALOG_ASSET"
   (cd "$OUT" && sha256sum -- *.tar catalog.json > SHA256SUMS)
   ls -la "$OUT"

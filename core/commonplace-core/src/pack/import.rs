@@ -1,10 +1,12 @@
 //! Streaming pack import: the parts of one tar stream are read in order, each file is hashed while
 //! it is extracted, and the result is checked against `manifest.json` before it is moved into place.
+//! A stream (a bundle) can hold several packs, one top-level `<pack_id>/` directory after the other.
 
 use super::{Manifest, dir_size};
 use anyhow::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::{Component, Path, PathBuf};
@@ -27,6 +29,8 @@ pub trait ImportProgress {
     fn bytes(&mut self, done: u64);
     /// Called when a part has been fully read and its hash checked.
     fn part_done(&mut self, index: usize);
+    /// Called when the stream starts a pack.
+    fn pack_started(&mut self, pack_id: &str);
 }
 
 struct PartsReader<'a, P: ImportProgress> {
@@ -35,7 +39,7 @@ struct PartsReader<'a, P: ImportProgress> {
     cur: usize,
     hasher: Sha256,
     done: u64,
-    progress: &'a mut P,
+    progress: &'a RefCell<&'a mut P>,
 }
 
 impl<P: ImportProgress> Read for PartsReader<'_, P> {
@@ -45,7 +49,7 @@ impl<P: ImportProgress> Read for PartsReader<'_, P> {
             if n > 0 {
                 self.hasher.update(&buf[..n]);
                 self.done += n as u64;
-                self.progress.bytes(self.done);
+                self.progress.borrow_mut().bytes(self.done);
                 return Ok(n);
             }
             let got = hex::encode(std::mem::take(&mut self.hasher).finalize());
@@ -54,7 +58,7 @@ impl<P: ImportProgress> Read for PartsReader<'_, P> {
             {
                 return Err(std::io::Error::other(format!("part {} sha256 mismatch", self.cur + 1)));
             }
-            self.progress.part_done(self.cur);
+            self.progress.borrow_mut().part_done(self.cur);
             self.cur += 1;
         }
         Ok(0)
@@ -91,22 +95,55 @@ fn safe_rel(p: &Path) -> Result<PathBuf> {
     Ok(out)
 }
 
-/// Import a pack from its parts, in order. `packs_dir` is the library's pack directory.
-/// Returns the installed manifest. The tar stream holds a single top-level `<pack_id>/` directory.
+/// Check the extracted pack `id` in `staging` against its manifest and move it into place.
+fn install(
+    staging: &Path,
+    packs_dir: &Path,
+    id: &str,
+    hashes: &HashMap<String, (u64, String)>,
+    validate: &dyn Fn(&Manifest) -> Result<()>,
+) -> Result<Manifest> {
+    let src = staging.join(id);
+    let manifest = Manifest::read(&src)?;
+    ensure!(manifest.pack_id == id, "manifest pack_id {} != directory {}", manifest.pack_id, id);
+    validate(&manifest)?;
+    for f in &manifest.files {
+        let (n, h) = hashes.get(&f.path).with_context(|| format!("missing file {}", f.path))?;
+        ensure!(*n == f.bytes && *h == f.sha256, "{}: size or sha256 mismatch", f.path);
+    }
+    let dest = packs_dir.join(id);
+    if dest.exists() {
+        let old = packs_dir.join(format!(".old-{id}"));
+        let _ = std::fs::remove_dir_all(&old);
+        std::fs::rename(&dest, &old)?;
+        std::fs::rename(&src, &dest)?;
+        let _ = std::fs::remove_dir_all(&old);
+    } else {
+        std::fs::rename(&src, &dest)?;
+    }
+    Ok(manifest)
+}
+
+/// Import the packs of a tar stream from its parts, in order. `packs_dir` is the library's pack directory.
+/// The stream holds one top-level `<pack_id>/` directory per pack. Returns the installed manifests.
+/// A pack moves into place when the next one starts; the last waits until the whole stream is read and hashed.
+/// After an error, the packs that were complete before it stay installed. The error names the failed pack.
 pub fn import<P: ImportProgress>(
     parts: Vec<Box<dyn Read + Send + '_>>,
     expected_part_hashes: Vec<Option<String>>,
     packs_dir: &Path,
     progress: &mut P,
     validate: &dyn Fn(&Manifest) -> Result<()>,
-) -> Result<Manifest> {
+) -> Result<Vec<Manifest>> {
     ensure!(parts.len() == expected_part_hashes.len(), "hash list length mismatch");
     let staging = packs_dir.join(".staging");
     let _ = std::fs::remove_dir_all(&staging);
     std::fs::create_dir_all(&staging)?;
 
-    let reader = PartsReader { parts, expected: expected_part_hashes, cur: 0, hasher: Sha256::new(), done: 0, progress };
+    let progress = RefCell::new(progress);
+    let reader = PartsReader { parts, expected: expected_part_hashes, cur: 0, hasher: Sha256::new(), done: 0, progress: &progress };
     let mut ar = tar::Archive::new(reader);
+    let mut installed = Vec::new();
     let mut hashes: HashMap<String, (u64, String)> = HashMap::new();
     let mut root: Option<String> = None;
     for entry in ar.entries()? {
@@ -115,9 +152,11 @@ pub fn import<P: ImportProgress>(
         let mut comps = rel.components();
         let Some(top) = comps.next() else { continue };
         let top = top.as_os_str().to_string_lossy().into_owned();
-        match &root {
-            None => root = Some(top.clone()),
-            Some(r) => ensure!(*r == top, "archive has more than one top-level directory"),
+        if root.as_ref() != Some(&top) {
+            if let Some(id) = root.replace(top.clone()) {
+                installed.push(install(&staging, packs_dir, &id, &std::mem::take(&mut hashes), validate).with_context(|| id.clone())?);
+            }
+            progress.borrow_mut().pack_started(&top);
         }
         let inner: PathBuf = comps.collect();
         let dest = staging.join(&top).join(&inner);
@@ -140,27 +179,10 @@ pub fn import<P: ImportProgress>(
     // Drain the reader so the final part's hash is checked.
     std::io::copy(ar.into_inner().by_ref(), &mut std::io::sink())?;
 
-    let root = root.context("empty archive")?;
-    let src = staging.join(&root);
-    let manifest = Manifest::read(&src)?;
-    ensure!(manifest.pack_id == root, "manifest pack_id {} != directory {}", manifest.pack_id, root);
-    validate(&manifest)?;
-    for f in &manifest.files {
-        let (n, h) = hashes.get(&f.path).with_context(|| format!("missing file {}", f.path))?;
-        ensure!(*n == f.bytes && *h == f.sha256, "{}: size or sha256 mismatch", f.path);
-    }
-    let dest = packs_dir.join(&root);
-    if dest.exists() {
-        let old = packs_dir.join(format!(".old-{root}"));
-        let _ = std::fs::remove_dir_all(&old);
-        std::fs::rename(&dest, &old)?;
-        std::fs::rename(&src, &dest)?;
-        let _ = std::fs::remove_dir_all(&old);
-    } else {
-        std::fs::rename(&src, &dest)?;
-    }
+    let id = root.context("empty archive")?;
+    installed.push(install(&staging, packs_dir, &id, &hashes, validate).with_context(|| id.clone())?);
     let _ = std::fs::remove_dir_all(&staging);
-    Ok(manifest)
+    Ok(installed)
 }
 
 /// Re-hash every file of an installed pack against its manifest.

@@ -16,6 +16,7 @@ import json
 import re
 import subprocess
 import sys
+import tarfile
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -272,6 +273,19 @@ def pick_from_downloads(r: Run, filename: str) -> None:
     raise TimeoutError(f"{filename} not shown in the picker")
 
 
+def select_all(r: Run) -> None:
+    """The picker is open on Downloads: long-press the first .tar, choose Select all, confirm."""
+    ui = r.ui
+    ui.wait(20, contains=".tar")
+    x, y = ui.center(ui.find(contains=".tar"))
+    adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "900")
+    ui.tap(ui.wait(10, text="More options"))
+    ui.tap(ui.wait(10, text="Select all"))
+    time.sleep(1)
+    r.shot("catalog-picker", "all files selected")
+    ui.tap(ui.wait(10, text="Select"))
+
+
 def tap_add_document(r: Run) -> None:
     """Scroll until the button is clear of the system bar and the floating button, then tap it."""
     ui = r.ui
@@ -317,7 +331,7 @@ def main() -> int:
     ap.add_argument("--compare-with", default="the Mississippi River", help="typed after the Compare with… draft")
     ap.add_argument("--answer-timeout", type=float, default=240)
     ap.add_argument("--import-dir", help="dist dir of a split pack (packbuild split): test the SAF import with it")
-    ap.add_argument("--catalog-dir", help="single-file packs (<id>.tar) plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads")
+    ap.add_argument("--catalog-dir", help="single-file packs (<id>.tar) plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads. With bundles in the catalog, the bundle step tests the first one.")
     ap.add_argument("--withhold", default="", help=".tar file of --catalog-dir that is missing at the first install and added for the second")
     ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
     ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
@@ -399,8 +413,10 @@ def main() -> int:
         def _():
             # The APK carries a test catalog of two packs; a third pack in the directory is not in it.
             d = Path(args.catalog_dir)
-            catalog = json.loads((d / "catalog.json").read_text())["packs"]
-            files = sorted(f.name for f in d.iterdir() if f.suffix == ".tar")
+            doc = json.loads((d / "catalog.json").read_text())
+            catalog = doc["packs"]
+            bundle_files = {f["name"] for b in doc.get("bundles", []) for f in b["files"]}
+            files = sorted(f.name for f in d.iterdir() if f.suffix == ".tar" and f.name not in bundle_files)
             ids = [f.removesuffix(".tar") for f in files]
             outside = [i for i in ids if i not in {p["pack_id"] for p in catalog}]
             adb("shell", "rm", "-rf", "/sdcard/Download/*")
@@ -444,18 +460,7 @@ def main() -> int:
                 raise RuntimeError("the sheet is gone after the browser")
             ui.tap(ui.wait(10, tag="sheet_install"))
 
-            def select_all():
-                ui.wait(20, contains=".tar")
-                node = ui.find(contains=".tar")
-                x, y = ui.center(node)
-                adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "900")
-                ui.tap(ui.wait(10, text="More options"))
-                ui.tap(ui.wait(10, text="Select all"))
-                time.sleep(1)
-                r.shot("catalog-picker", "all files selected")
-                ui.tap(ui.wait(10, text="Select"))
-
-            select_all()
+            select_all(r)
             for _ in range(8):
                 if ui.find(tag="import_progress") is not None:
                     r.shot("catalog-progress")
@@ -480,7 +485,7 @@ def main() -> int:
             if args.withhold:
                 adb("push", "-q", str(d / args.withhold), "/sdcard/Download/")
                 ui.tap(ui.wait(10, tag="import_pack"))
-                select_all()
+                select_all(r)
                 ui.wait(180, text="Delete the downloaded files?")
                 ui.tap(ui.wait(10, text="Delete"))
                 ui.wait(10, contains="Deleted")
@@ -503,13 +508,162 @@ def main() -> int:
             adb("push", "-q", str(out / name), "/sdcard/Download/")
             (out / name).unlink()
             ui.tap(ui.wait(10, tag="import_pack"))
-            select_all()
+            select_all(r)
             note = " ".join(n.get("text", "") for n in ui.wait(180, tag="error_note").iter("node"))
             if "sha256 mismatch" not in note:
                 raise RuntimeError(f"the changed {name} was not refused: {note!r}")
             r.shot("catalog-sha", note.replace("\n", " "))
             adb("shell", "rm", "-f", f"/sdcard/Download/{name}")
             ui.wait(10, tag="library_list")
+            r.back()
+
+    catalog_doc = json.loads((Path(args.catalog_dir) / "catalog.json").read_text()) if args.catalog_dir else {}
+    if catalog_doc.get("bundles"):
+
+        @step("bundle")
+        def _():
+            # The first bundle of the catalog: one tar file with several packs. A bundle over 100 MB skips the corrupted copies.
+            d = Path(args.catalog_dir)
+            b = catalog_doc["bundles"][0]
+            ids, name = b["pack_ids"], b["files"][0]["name"]
+            outside = next(p["pack_id"] for p in catalog_doc["packs"] if not any(p["pack_id"] in x["pack_ids"] for x in catalog_doc["bundles"]))
+            small = b["download_bytes"] < 100e6
+
+            def check(ok: bool, msg: str) -> None:
+                if not ok:
+                    raise RuntimeError(msg)
+
+            def installed() -> list[str]:
+                return adb("shell", "run-as", PKG, "ls", "files/library/packs").split()
+
+            def restart() -> None:
+                adb("shell", "am", "force-stop", PKG)
+                adb("shell", "am", "start", "-n", f"{PKG}/.MainActivity")
+
+            def reset(remove: list[str]) -> None:
+                adb("shell", "rm", "-rf", "/sdcard/Download/*")
+                for i in remove:
+                    adb("shell", "run-as", PKG, "rm", "-rf", f"files/library/packs/{i}")
+                restart()
+                open_library(r)
+
+            def push(src: Path) -> None:
+                adb("push", "-q", str(src), "/sdcard/Download/")
+                adb("shell", "sh", "-c", "'echo unrelated > /sdcard/Download/notes.txt'")
+
+            def rows() -> list[tuple[int, str]]:
+                return [(ui.center(n)[1], subtree_text(n)) for n in ui.nodes() if n.get("resource-id", "").endswith("available_row")]
+
+            def note() -> str:
+                return " ".join(n.get("text", "") for n in ui.wait(300, tag="error_note").iter("node"))
+
+            def wait_import(label: str) -> list[str]:
+                """Wait until the import ends. Returns the texts that the progress card showed."""
+                seen: list[str] = []
+                end = time.time() + 300
+                while time.time() < end:
+                    nodes = ui.nodes()
+                    if any(n.get("text") == "Delete the downloaded files?" or n.get("resource-id", "").endswith("error_note") for n in nodes):
+                        break
+                    card = next((n for n in nodes if n.get("resource-id", "").endswith("import_progress")), None)
+                    if card is not None and subtree_text(card) not in seen:
+                        seen.append(subtree_text(card))
+                        r.shot(f"{label}-progress", seen[-1])
+                return seen
+
+            def install(label: str) -> None:
+                """Install from Downloads with every file selected."""
+                ui.tap(ui.wait(10, tag="import_pack"))
+                select_all(r)
+                wait_import(label)
+
+            def delete_sources() -> None:
+                ui.wait(60, text="Delete the downloaded files?")
+                r.shot("bundle-verified", "installed and verified")
+                ui.tap(ui.wait(10, text="Delete"))
+                ui.wait(10, contains="Deleted")
+                check(sorted(adb("shell", "ls", "/sdcard/Download/").split()) == ["notes.txt"], "the unrelated file must stay in Downloads")
+
+            def corrupt(label: str, offset: int, want: str, kept: list[str]) -> None:
+                """A copy of the bundle with one flipped byte is refused. The packs that were complete before the damage stay."""
+                reset(ids)
+                data = bytearray((d / name).read_bytes())
+                data[offset] ^= 1
+                (out / name).write_bytes(data)
+                push(out / name)
+                (out / name).unlink()
+                install(label)
+                text = note()
+                check(want in text and "mismatch" in text, f"unexpected refusal: {text!r}")
+                have = installed()
+                check([i for i in ids if i in have] == kept, f"installed {have}, expected {kept} of {ids}")
+                ui.scroll_find(contains=f"{len(kept)} of {len(ids)} installed")
+                r.shot(label, text.replace("\n", " "))
+
+            # Get started on an empty library points to the one bundle file. The packs directory moves aside for a moment.
+            adb("shell", "run-as", PKG, "mv", "files/library/packs", "files/library/packs.aside")
+            adb("shell", "run-as", PKG, "mkdir", "files/library/packs")
+            try:
+                restart()
+                card = subtree_text(ui.wait(90, tag="get_started"))
+                size = f"{b['download_bytes'] / 1e9:.1f} GB" if b["download_bytes"] >= 1e9 else f"{b['download_bytes'] / 1e6:.0f} MB"
+                check(b["title"] in card and "Download one file" in card and size in card, f"Get started card: {card!r}")
+                r.shot("bundle-get-started", card)
+                ui.tap(ui.scroll_find(tag="go_import"))
+                ui.wait(10, tag="library_list")
+            finally:
+                adb("shell", "am", "force-stop", PKG)
+                adb("shell", "run-as", PKG, "sh", "-c", "'rm -rf files/library/packs && mv files/library/packs.aside files/library/packs'")
+
+            # Get more lists the bundle first, then the individual packs under their own label.
+            reset(ids + [outside])
+            ui.wait(10, tag="available_row")
+            label_y = ui.center(ui.wait(10, text="Individual packs"))[1]
+            above = [t for y, t in rows() if y < label_y]
+            below = [t for y, t in rows() if y > label_y]
+            check(above and b["title"] in above[0] and all("1 file" in t for t in above), f"bundle rows: {above!r}")
+            check(below and not any("1 file" in t for t in below), f"pack rows: {below!r}")
+            r.shot("bundle-available", above[0].replace(" | ", " · "))
+            ui.tap(next(n for n in ui.nodes() if n.get("resource-id", "").endswith("available_row") and b["title"] in subtree_text(n)))
+            ui.wait(10, tag="pack_sheet")
+            listed = [n for n in ui.nodes() if n.get("resource-id", "").endswith("bundle_pack")]
+            buttons = [n for n in ui.nodes() if n.get("resource-id", "").endswith("download_file")]
+            check(len(listed) == len(ids) and len(buttons) == 1, f"{len(listed)} packs and {len(buttons)} Download buttons in the sheet")
+            r.shot("bundle-sheet", f"{len(listed)} packs, one Download button")
+
+            # One import installs every pack of the file. The unrelated file in Downloads is ignored.
+            push(d / name)
+            ui.tap(ui.wait(10, tag="sheet_install"))
+            select_all(r)
+            seen = wait_import("bundle")
+            named =[t for t in seen if re.search(rf"Installing .+: \S+ \(\d+ of {len(ids)}\)", t)]
+            check(small or named, f"the progress card never named a pack: {seen!r}")
+            delete_sources()
+            check(set(ids) <= set(installed()), f"installed {installed()}, expected {ids}")
+            ui.wait(10, tag="library_list")
+            check(not any(b["title"] in t for _, t in rows()), "the bundle row is still listed after its packs are installed")
+            r.shot("bundle-installed", f"{ids} installed; progress texts seen: {len(seen)}, naming a pack: {len(named)}")
+
+            # A single pack file still installs.
+            reset([outside])
+            push(d / f"{outside}.tar")
+            install("single")
+            delete_sources()
+            check(outside in installed(), f"{outside} was not installed")
+            r.shot("single-pack-installed", outside)
+
+            if small:
+                with tarfile.open(d / name) as tf:
+                    big = max((m for m in tf.getmembers() if m.isfile() and m.name.startswith(ids[1] + "/")), key=lambda m: m.size)
+                corrupt("bundle-corrupt-middle", big.offset_data + big.size // 2, ids[1], ids[:1])
+                # The last byte lies after the end of the tar stream: only the SHA-256 of the whole file fails, so the last pack waits.
+                corrupt("bundle-corrupt-last-byte", b["files"][0]["bytes"] - 1, "sha256", ids[:-1])
+                reset(ids)
+                push(d / name)
+                install("bundle-again")
+                delete_sources()
+                check(set(ids) <= set(installed()), f"after the retry: {installed()}")
+                r.shot("bundle-retry", "the good file installs after the refused copies")
             r.back()
 
     @step("welcome")

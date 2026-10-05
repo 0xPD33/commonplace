@@ -13,3 +13,4 @@ date,run_id,smoke,git,model,flags,n,n_judged,score_ratio,win,tie,loss,recall@10,
 2026-09-30T21:06:46+00:00,v15-live-all-dense,False,no-commits,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.4644,0,0,63,0.1738,0.2675,843,2685,4738,53.9289,0
 2026-10-02T06:46:14+00:00,v16-enwiki2026,False,no-commits,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5085,0,0,63,0.2229,0.3297,842,2549,4500,54.4088,0
 2026-10-02T13:10:18+00:00,v17-norewrite,False,no-commits,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5205,0,2,61,0.2229,0.3297,398,3193,5752,34.9444,0
+2026-10-05T19:14:30+00:00,v18-release,False,ba59346,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5285,0,2,61,0.2247,0.3297,355,2238,4117,52.3184,0

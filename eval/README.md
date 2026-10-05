@@ -21,7 +21,8 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
-| `v17-norewrite` | Seeds, 2026 library, rewrite off. The current best run. It is the source of `docs/EVAL.md`. | 0.521 |
+| `v18-release` | Seeds, the release build: clean passage text, entity linking by the other names in the question, no stray citation labels. It is the source of `docs/EVAL.md`. | 0.529 |
+| `v17-norewrite` | Seeds, 2026 library, rewrite off | 0.521 |
 | `v16-enwiki2026` | Seeds, 2026 library, rewrite on | 0.508 |
 | `v15-live-all-dense` | Seeds, 2023 library with all breadth packs | 0.464 |
 | `cv2-dev-base` | The 60 tuning threads (2026-09-30) | 0.616 |

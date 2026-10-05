@@ -90,7 +90,7 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 | Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.91 s (median). The first word of the written answer comes after about 7 s. The model then writes about 18 tokens per second. |
 | Public GitHub repository with code, assets and instructions | This repository holds all code. The packs are on [Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs), and [docs/PACKS.md](docs/PACKS.md) shows how to build them again. |
 | Documents the models, datasets and indexes | [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md) and [PACKS](docs/PACKS.md). |
-| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 52% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). See the limits below. |
+| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). See the limits below. |
 
 How I measure quality: Claude Opus 5.5 with web search answers each question as the baseline. A second Claude call grades both answers blind on correctness, completeness, grounding and usefulness. The score ratio is our mean score divided by the baseline's mean score.
 
@@ -98,7 +98,7 @@ Limits of this measurement:
 
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
 - The baseline wins almost every single question (61 losses, 2 ties). Commonplace gets half the points, not half the wins.
-- Multi-step questions (0.45) and numeric questions (0.42) are below 0.50.
+- Multi-step (0.49), how-to (0.49) and numeric questions (0.47) are below 0.50.
 - The quality numbers come from the desktop build with the same model and all packs, including the full Wikipedia. I did not measure the Starter set alone.
 - The phone uses an 8-bit copy of the reranker. In my tests it stays within 1 point of hit@1 of the full model.
 
@@ -111,7 +111,7 @@ xychart-beta
   title "Score compared with Claude and web search (1.0 = equal)"
   x-axis ["Facts", "Explain", "Compare", "Multi-step", "Numbers", "Travel", "How-to", "Outside", "Rare", "All"]
   y-axis "Score ratio" 0 --> 1
-  bar [0.64, 0.53, 0.56, 0.45, 0.42, 0.55, 0.49, 0.65, 0.43, 0.52]
+  bar [0.55, 0.56, 0.56, 0.49, 0.47, 0.50, 0.49, 0.63, 0.62, 0.53]
   line [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 ```
 

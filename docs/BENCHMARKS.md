@@ -19,7 +19,7 @@ Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), Ling-3.0-tiny 
 | Peak RSS with Ling | 5.1 GB. The memory limit is 6 GiB with the app on screen and 3 GiB when it is hidden. |
 | Voice input | +0.58 GB PSS while the mic is on |
 
-Desktop, 63 seed questions, Claude as the judge: score ratio 0.521 against Claude with web search (`v17-norewrite`, [EVAL.md](EVAL.md)). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
+Desktop, 63 seed questions, Claude as the judge: score ratio 0.529 against Claude with web search (`v18-release`, [EVAL.md](EVAL.md)). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
 Desktop, NQ-open retrieval with the 2026 Wikipedia (2,610 held-out questions): hit@5 0.738, hit@10 0.780, pool recall 0.825.
 
 ## Desktop CLI — AMD Ryzen 9 9950X3D, 62 GB RAM, 8 llama.cpp threads, AVX2 build (2026-09-29)
@@ -258,7 +258,8 @@ The table shows the runs with the current library design. The run directories ar
 |---|---|---|---|---|---|---|---|
 | v15-live-all-dense | 2023 Wikipedia, every breadth pack with dense codes (2026-09-30) | 0.464 | 2.26 | 1.22 | 0.92 | 0.174 | 0.84 s |
 | v16-enwiki2026 | 2026-09-01 Wikipedia (`wikipedia.py`) replaces `enwiki` and `enwiki-extra` (rewrite on) | 0.508 | 2.40 | 1.24 | 1.06 | 0.223 | 0.84 s |
-| **v17-norewrite** | same library, question rewrite off | **0.521** | **2.43** | **1.31** | **1.08** | 0.223 | 0.40 s |
+| v17-norewrite | same library, question rewrite off | 0.521 | 2.43 | 1.31 | 1.08 | 0.223 | 0.40 s |
+| **v18-release** | clean passage text (no reference marks), entity linking by the other names in the question, no stray citation labels or source lists (2026-10-05) | **0.529** | **2.44** | **1.33** | **1.06** | 0.225 | 0.36 s |
 
 The 2026 Wikipedia is the largest gain. Out-of-corpus questions rose from 0.33 to 0.65 (2023 text could not answer them), explanation from 0.41 to 0.52 and comparison from 0.37 to 0.45. On NQ (2,610 held-out questions) the 2026 Wikipedia raised hit@5 from 0.697 to 0.738, hit@10 from 0.750 to 0.780 and pool recall from 0.805 to 0.825.
 

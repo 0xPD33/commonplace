@@ -4,11 +4,42 @@ Commonplace is an offline research assistant for Android. You ask a question, an
 
 I built it for the poidh bounty [Build the Best Offline AI Research App for Android](https://poidh.xyz/mainnet/bounty/31). I test it on a Google Pixel 10 with GrapheneOS and 12 GB of RAM.
 
-[The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source)
+[Screens](#screens) · [The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source)
 
 [![A tour of Commonplace on a Pixel 10: ask a question, open a cited source, compare two mountains, switch to dark mode](docs/media/commonplace-showcase.jpg)](docs/media/commonplace-showcase.mp4)
 
 *A 95-second tour with sound, recorded on a Pixel 10 ([MP4, 17 MB](docs/media/commonplace-showcase.mp4)). The video speeds up the waits and shows each speed-up on screen.*
+
+## Screens
+
+All screenshots come from the app in airplane mode. The answers are real.
+
+<table>
+  <tr>
+    <td width="25%"><img src="docs/images/answer-explain.png" alt="An answer to 'What causes the northern lights?' with the best passage, a Wikidata fact and numbered citations"></td>
+    <td width="25%"><img src="docs/images/answer-compare.png" alt="A comparison of Mars and Venus with a side-by-side Wikidata table and a written answer"></td>
+    <td width="25%"><img src="docs/images/source.png" alt="The source reader with the passage, its credit, license and web address"></td>
+    <td width="25%"><img src="docs/images/my-documents.png" alt="An answer from a user's own PDF, limited to that document"></td>
+  </tr>
+  <tr>
+    <td>Ask a question. The best passage appears first, then the written answer with citations.</td>
+    <td>Compare two things. Facts from Wikidata appear side by side.</td>
+    <td>Open any source to check it. Each source shows its credit and license.</td>
+    <td>Add your own PDF and ask questions about it.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/library.png" alt="The Library with the storage meter and an on/off switch for each pack"></td>
+    <td><img src="docs/images/get-more.png" alt="The download sheet of the Reference shelf bundle with its 13 packs"></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>Switch each source on or off. The meter shows the 50 GB limit.</td>
+    <td>Get more packs. One file holds several packs.</td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
 
 ## The idea
 

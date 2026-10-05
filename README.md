@@ -4,7 +4,53 @@ Commonplace is an offline research assistant for Android. You ask a question, an
 
 I built it for the poidh bounty [Build the Best Offline AI Research App for Android](https://poidh.xyz/mainnet/bounty/31). I test it on a Google Pixel 10 with GrapheneOS and 12 GB of RAM.
 
-[Install on a phone](#install-on-a-phone) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Bounty requirements](#bounty-requirements) · [How it works](#how-it-works) · [Build from source](docs/INSTALL.md#build-from-source)
+[The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source)
+
+## The idea
+
+A phone is too slow to read Wikipedia for every question. So a desktop computer does the reading once: it splits the text into short passages and builds search indexes for them. You download the result one time. After that, your phone only looks things up and writes a short answer from what it finds.
+
+```mermaid
+flowchart TB
+  subgraph once["Once, on a desktop computer"]
+    direction LR
+    S["Wikipedia, Wikidata and<br/>other open reference works"] --> P["Split into short passages,<br/>build the search indexes"]
+  end
+  subgraph phone["Every day, on your phone, offline"]
+    direction LR
+    Q["You ask<br/>a question"] --> F["The app finds the<br/>best passages in 1 s"]
+    F --> W["A small AI model<br/>writes the answer"]
+    W --> A["You get the answer<br/>with its sources"]
+  end
+  once -- "one download over Wi-Fi" --> phone
+```
+
+## What happens when you ask
+
+You see the best passage and its source in under a second. The written answer follows a few seconds later. The answer cites the passages it uses, and you can open each one to check it.
+
+```mermaid
+sequenceDiagram
+  actor You
+  participant S as Search
+  participant M as AI model
+  You->>S: Compare the Nile and the Amazon
+  S-->>You: Best passages, facts and sources, in under 1 s
+  S->>M: A few short passages
+  M-->>You: A written answer with citations, first word after about 7 s
+  Note over You,M: All of this runs on your phone. Nothing leaves it.
+```
+
+## Offline by design
+
+You do not have to trust a setting. Android itself blocks the network for Commonplace, because the app does not ask for the `INTERNET` permission. You download the packs once with your browser, and the app imports them from the Downloads folder.
+
+```mermaid
+flowchart LR
+  B["Your browser"] -- "download once" --> D["Downloads folder"]
+  D -- "import and check" --> C["Commonplace"]
+  C -. "blocked: the app has<br/>no INTERNET permission" .-x N["Internet"]
+```
 
 ## Install on a phone
 
@@ -52,9 +98,42 @@ Limits of this measurement:
 - The quality numbers come from the desktop build with the same model and all packs, including the full Wikipedia. I did not measure the Starter set alone.
 - The phone uses an 8-bit copy of the reranker. In my tests it stays within 1 point of hit@1 of the full model.
 
-## How it works
+### Quality by type of question
 
-A simple design makes the phone read raw Wikipedia text for each question. Commonplace prepares the text ahead of time on a desktop computer. The phone mostly looks things up.
+A score ratio of 1.0 means as good as Claude with web search. The line marks 0.5. "Outside" means questions whose answer is not in the packs. "Rare" means topics that few people read about. Each type has only 3 to 11 questions.
+
+```mermaid
+xychart-beta
+  title "Score compared with Claude and web search (1.0 = equal)"
+  x-axis ["Facts", "Explain", "Compare", "Multi-step", "Numbers", "Travel", "How-to", "Outside", "Rare", "All"]
+  y-axis "Score ratio" 0 --> 1
+  bar [0.64, 0.53, 0.56, 0.45, 0.42, 0.55, 0.49, 0.65, 0.43, 0.52]
+  line [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+```
+
+### What fits on the phone
+
+The Starter set needs 11.3 GB. This chart shows the case with every pack installed, in GB.
+
+```mermaid
+pie showData
+  title All packs: 35.5 GB of the 50 GB limit
+  "Wikipedia, all articles" : 19.2
+  "AI model, Ling-3.0-tiny" : 4.6
+  "arXiv abstracts" : 3.3
+  "Wikidata facts" : 3.2
+  "Stack Exchange" : 2.5
+  "Reference shelf, 13 packs" : 2.0
+  "Small AI model" : 0.7
+  "Free under the limit" : 14.5
+```
+
+## Under the hood
+
+These two diagrams show the parts of the system and each step from a question to an answer.
+
+<details>
+<summary>Show the technical diagrams</summary>
 
 ### System overview
 
@@ -128,6 +207,8 @@ flowchart TD
   GEN --> CHK["Citation post-check"]
   CHK --> ANS["Answer with citations"]
 ```
+
+</details>
 
 ### Design choices
 

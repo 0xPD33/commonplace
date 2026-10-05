@@ -135,33 +135,21 @@ Limits of this measurement:
 
 ### Quality by type of question
 
-A score ratio of 1.0 means as good as Claude with web search. The line marks 0.5. "Outside" means questions whose answer is not in the packs. "Rare" means topics that few people read about. Each type has only 3 to 11 questions.
+Each bar is the score ratio for one type of question. 1.0 means as good as Claude with web search, and the dashed line marks 0.5. Each type has only 3 to 11 questions, so a single type moves a lot between runs.
 
-```mermaid
-xychart-beta
-  title "Score compared with Claude and web search (1.0 = equal)"
-  x-axis ["Facts", "Explain", "Compare", "Multi-step", "Numbers", "Travel", "How-to", "Outside", "Rare", "All"]
-  y-axis "Score ratio" 0 --> 1
-  bar [0.55, 0.56, 0.56, 0.49, 0.47, 0.50, 0.49, 0.63, 0.62, 0.53]
-  line [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-quality-dark.svg">
+  <img src="docs/images/chart-quality-light.svg" width="760" alt="Score ratio against Claude with web search: all questions 0.53; answer not in the library 0.63, rare topics 0.62, explanations 0.56, comparisons 0.56, facts 0.55, travel 0.50, multi-step 0.49, how-to 0.49, numbers 0.47">
+</picture>
 
 ### What fits on the phone
 
-The Starter set needs 11.3 GB. This chart shows the case with every pack installed, in GB.
+The Starter set needs 11.3 GB. Every pack together needs 35.5 GB, which leaves room under the 50 GB limit.
 
-```mermaid
-pie showData
-  title All packs: 35.5 GB of the 50 GB limit
-  "Wikipedia, all articles" : 19.2
-  "AI model, Ling-3.0-tiny" : 4.6
-  "arXiv abstracts" : 3.3
-  "Wikidata facts" : 3.2
-  "Stack Exchange" : 2.5
-  "Reference shelf, 13 packs" : 2.0
-  "Small AI model" : 0.7
-  "Free under the limit" : 14.5
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-storage-dark.svg">
+  <img src="docs/images/chart-storage-light.svg" width="760" alt="Storage in GB. Starter set 11.3: Wikipedia 3.5, AI model 4.6, Wikidata facts 3.2. Every pack 35.5: Wikipedia 19.2, AI models 5.3, Wikidata facts 3.2, arXiv and Stack Exchange 5.8, Reference shelf 2.0. Limit 50">
+</picture>
 
 ## Under the hood
 
@@ -175,33 +163,31 @@ These two diagrams show the parts of the system and each step from a question to
 The desktop builds the packs. The phone imports them from files and never uses the network. In the Library, each knowledge pack and the Wikidata pack has an on/off switch. "My documents" indexes your own PDF, text or Markdown files on the phone.
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Desktop["Desktop build: pipeline/ and packbuild"]
-    SRC["Dump, ZIM, dataset, GGUF"] --> CHUNK["Chunk into passages"]
-    CHUNK --> EMB["mxbai embeddings on GPU"]
-    EMB --> PB["packbuild"]
-    PB --> PARTS["One .tar file per pack, and bundles of several packs"]
+    direction LR
+    SRC["Dumps, ZIMs,<br/>datasets, GGUF"] --> CHUNK["Chunk into<br/>passages"] --> EMB["mxbai embeddings<br/>on the GPU"] --> PB["packbuild: one .tar<br/>per pack, bundles"]
   end
-  PARTS --> REL["Hugging Face dataset, folder packs-2026-09"]
-  REL --> BR
+  PB --> HF["Hugging Face dataset, folder packs-2026-09"]
+  HF --> BR
   subgraph Phone["Phone: no INTERNET permission"]
-    BR["Browser download"] --> SAF["SAF import, SHA-256 checks"]
+    direction TB
+    BR["Browser download"] --> SAF["Import from Downloads,<br/>SHA-256 checks"]
     SAF --> LIB
     subgraph LIB["Library"]
-      KP["Knowledge packs"]
+      direction LR
+      KP["Knowledge packs,<br/>each with a switch"]
       WD["wikidata-facts"]
       MP["Model packs"]
-      UD["My documents"]
-    end
-    SW["Per-pack on/off switch"] -.-> KP
-    subgraph App["App layers"]
-      UI["Compose UI, Kotlin"] --> FFI["UniFFI"]
-      FFI --> CORE["commonplace-core, Rust"]
-      CORE --> ORT["ONNX Runtime encoders"]
-      CORE --> LLM["commonplace-llm, llama.cpp"]
+      UD["My documents,<br/>indexed on the phone"]
     end
     LIB --> CORE
-    CORE -.->|"indexes on the phone"| UD
+    subgraph App["App layers"]
+      direction LR
+      UI["Compose UI,<br/>Kotlin"] --> FFI["UniFFI"] --> CORE["commonplace-core,<br/>Rust"]
+      CORE --> ORT["ONNX Runtime<br/>encoders"]
+      CORE --> LLM["llama.cpp via<br/>commonplace-llm"]
+    end
   end
 ```
 

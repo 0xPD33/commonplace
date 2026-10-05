@@ -12,6 +12,20 @@
         "ling3-tiny",
         "wikidata-facts"
       ],
+      "members": [
+        {
+          "pack_id": "enwiki-core",
+          "title": "English Wikipedia (starter)"
+        },
+        {
+          "pack_id": "ling3-tiny",
+          "title": "Ling 3.0 tiny (Q4_0)"
+        },
+        {
+          "pack_id": "wikidata-facts",
+          "title": "Wikidata facts"
+        }
+      ],
       "recommended": true,
       "download_bytes": 11312024064,
       "installed_bytes": 11311999263,
@@ -42,6 +56,60 @@
         "medlineplus",
         "cdc-travel",
         "factbook"
+      ],
+      "members": [
+        {
+          "pack_id": "textbooks-en",
+          "title": "Open textbooks (Pressbooks, LibreTexts)"
+        },
+        {
+          "pack_id": "wikibooks-en",
+          "title": "English Wikibooks"
+        },
+        {
+          "pack_id": "wikiquote-en",
+          "title": "English Wikiquote"
+        },
+        {
+          "pack_id": "wikivoyage-en",
+          "title": "English Wikivoyage"
+        },
+        {
+          "pack_id": "wiktionary-en",
+          "title": "English Wiktionary (dictionary)"
+        },
+        {
+          "pack_id": "wikiversity-en",
+          "title": "English Wikiversity"
+        },
+        {
+          "pack_id": "devdocs-en",
+          "title": "DevDocs (20 documentation sets)"
+        },
+        {
+          "pack_id": "archwiki-en",
+          "title": "ArchWiki"
+        },
+        {
+          "pack_id": "wikem-en",
+          "title": "WikEM emergency medicine"
+        },
+        {
+          "pack_id": "openstax",
+          "title": "OpenStax textbooks"
+        },
+        {
+          "pack_id": "medlineplus",
+          "title": "MedlinePlus health topics"
+        },
+        {
+          "pack_id": "cdc-travel",
+          "title": "CDC travel health by destination"
+        },
+        {
+          "pack_id": "factbook",
+          "title": "CIA World Factbook (final edition)"
+        }
       ],
       "recommended": false,
       "download_bytes": 1995067392,

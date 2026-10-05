@@ -1,5 +1,7 @@
 //! Small text helpers shared by routing, evidence selection and the citation check.
 
+use regex::Regex;
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
@@ -10,6 +12,43 @@ pub static STOPWORDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
         .split_whitespace()
         .collect()
 });
+
+static REF_MARKS: LazyLock<Regex> = LazyLock::new(|| {
+    let mark = r"\[(?:[1-9]\d{0,2}|(?:note|nb) \d{1,3}|citation needed|[a-z])\]";
+    Regex::new(&format!("{mark}(?: ?{mark})*")).unwrap()
+});
+static CODE_LINE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[={}<>\\]|\w\(").unwrap());
+
+/// Removes wiki reference marks: `year[1]`, `orbit.[2][3]`, `end. [1] Next`, `[citation needed]`, `[note 4]`,
+/// `[nb 2]` and `[a]` after punctuation. Other brackets stay: `[sic]`, `[...]`, a list number that starts a line,
+/// a mark that is not followed by whitespace, and any mark on a line that looks like code (`x = a[1]`).
+pub fn strip_ref_marks(text: &str) -> Cow<'_, str> {
+    if !text.contains('[') {
+        return Cow::Borrowed(text);
+    }
+    let mut out = String::with_capacity(text.len());
+    for line in text.split_inclusive('\n') {
+        let mut last = 0;
+        if !CODE_LINE.is_match(line) {
+            for m in REF_MARKS.find_iter(line) {
+                let (head, tail) = (&line[..m.start()], &line[m.end()..]);
+                let before = head.trim_end_matches(' ');
+                let letter = m.as_str().as_bytes()[2] == b']' && m.as_str().as_bytes()[1].is_ascii_lowercase();
+                let ok = match before.chars().next_back() {
+                    None => tail.trim().is_empty(),
+                    Some(c) if before.len() < head.len() => !letter && ".,;:!?)\"”’".contains(c),
+                    Some(c) => ".,;:!?)\"'”’".contains(c) || (!letter && (c.is_alphanumeric() || c == '%')),
+                };
+                if ok && tail.chars().next().is_none_or(char::is_whitespace) {
+                    out.push_str(&line[last..before.len()]);
+                    last = m.end();
+                }
+            }
+        }
+        out.push_str(&line[last..]);
+    }
+    if out.len() == text.len() { Cow::Borrowed(text) } else { Cow::Owned(out) }
+}
 
 /// Lowercased content words, crudely stemmed to 6 characters for overlap scoring.
 pub fn terms(s: &str) -> Vec<String> {

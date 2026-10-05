@@ -9,6 +9,7 @@ pub mod sparse;
 
 use anyhow::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 pub const FORMAT_VERSION: u32 = 1;
@@ -231,13 +232,26 @@ impl Pack {
         })
     }
 
+    /// Every reader of passage text (cards, reader, article view, evidence) comes through `passage` or `passages`,
+    /// so wiki reference marks go here. DevDocs is code, where `[1]` is an index, and user documents stay as written.
+    fn read(&self, b: &[u8]) -> Result<PassageRecord> {
+        let mut rec = PassageRecord::decode(b)?;
+        if !self.manifest.user_document
+            && self.manifest.pack_id != "devdocs-en"
+            && let Cow::Owned(t) = crate::text::strip_ref_marks(&rec.text)
+        {
+            rec.text = t;
+        }
+        Ok(rec)
+    }
+
     pub fn passage(&self, id: u32) -> Result<PassageRecord> {
-        PassageRecord::decode(&self.store.get(id as u64)?)
+        self.read(&self.store.get(id as u64)?)
     }
 
     pub fn passages(&self, ids: &[u32]) -> Result<Vec<PassageRecord>> {
         let ids: Vec<u64> = ids.iter().map(|&i| i as u64).collect();
-        self.store.get_many(&ids)?.iter().map(|b| PassageRecord::decode(b)).collect()
+        self.store.get_many(&ids)?.iter().map(|b| self.read(b)).collect()
     }
 
     pub fn facts(&self, id: u32) -> Result<Vec<Fact>> {

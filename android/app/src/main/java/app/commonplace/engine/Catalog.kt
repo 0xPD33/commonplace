@@ -7,7 +7,8 @@ data class CatalogFile(val name: String, val bytes: Long, val sha256: String, va
 
 /**
  * One download of the catalog: a pack, or a bundle (one file with several packs).
- * For a bundle, `packId` is the bundle id and `members` lists the pack ids inside its file. `members` is empty for a pack.
+ * For a bundle, `packId` is the bundle id and `members` lists the pack ids inside its file, with their titles in
+ * `memberTitles`. `members` is empty for a pack.
  */
 data class CatalogPack(
     val packId: String,
@@ -20,6 +21,7 @@ data class CatalogPack(
     val installedBytes: Long,
     val files: List<CatalogFile>,
     val members: List<String> = emptyList(),
+    val memberTitles: Map<String, String> = emptyMap(),
 )
 
 class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
@@ -33,6 +35,7 @@ fun loadCatalog(ctx: Context): Catalog = runCatching {
             val files = p.getJSONArray("files")
             val replaces = p.optJSONArray("replaces")
             val members = p.optJSONArray("pack_ids")
+            val titled = p.optJSONArray("members")
             CatalogPack(
                 packId = p.getString(idKey),
                 title = p.getString("title"),
@@ -47,6 +50,7 @@ fun loadCatalog(ctx: Context): Catalog = runCatching {
                     CatalogFile(f.getString("name"), f.getLong("bytes"), f.getString("sha256"), f.getString("url"))
                 },
                 members = List(members?.length() ?: 0) { members!!.getString(it) },
+                memberTitles = List(titled?.length() ?: 0) { titled!!.getJSONObject(it) }.associate { it.getString("pack_id") to it.getString("title") },
             )
         }
     }.orEmpty()

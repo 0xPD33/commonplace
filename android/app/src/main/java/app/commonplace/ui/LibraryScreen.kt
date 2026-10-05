@@ -378,8 +378,8 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                         add(bytes(p.sizeBytes.toLong()))
                         if (p.hasDense) add("semantic search")
                         if (p.hasCards) add("fact cards")
-                        add(p.license)
                     }.joinToString(" · "),
+                    license = p.license,
                     enabled = vm.toggling[p.packId] ?: p.enabled,
                     onEnabled = { vm.setEnabled(p.packId, it) },
                     onVerify = { vm.verify(p.packId) },
@@ -454,7 +454,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
     detail?.let { p ->
         PackSheet(
             p,
-            contents = p.members.map { id -> catalog.packs.firstOrNull { it.packId == id }?.let { "${it.title} · ${bytes(it.downloadBytes)}" } ?: id },
+            contents = p.members.map { id -> p.memberTitles[id] ?: id },
             onDismiss = { detail = null },
             onDownload = { url ->
                 try {
@@ -524,6 +524,8 @@ private fun PackRow(
     detail: String,
     onVerify: () -> Unit,
     onRemove: () -> Unit,
+    /** One line; the full text is in the pack's notice. */
+    license: String = "",
     /** `null` for rows that cannot be switched off (models). */
     enabled: Boolean? = null,
     onEnabled: (Boolean) -> Unit = {},
@@ -540,9 +542,12 @@ private fun PackRow(
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Column(dim) {
-                    Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                    if (license.isNotEmpty()) {
+                        Text(license, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
                 if (enabled == false) Text("Off: not searched", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (onAsk != null && enabled != false) {

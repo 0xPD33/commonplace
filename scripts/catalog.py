@@ -65,6 +65,7 @@ for bid, title, description, members in bundle_specs:
         "title": title,
         "description": description,
         "pack_ids": ids,
+        "members": [{"pack_id": i, "title": json.loads((library / i / "manifest.json").read_text())["title"]} for i in ids],
         "recommended": bid in RECOMMENDED_BUNDLES,
         "download_bytes": file["bytes"],
         "installed_bytes": sum(json.loads((library / i / "manifest.json").read_text())["size_bytes"] for i in ids),

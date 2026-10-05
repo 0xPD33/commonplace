@@ -99,11 +99,12 @@ pub fn sentence_window(text: &str, qterms: &HashSet<String>, max_tokens: usize) 
     out
 }
 
-/// The sentence of `text` that best matches the query, for the card highlight.
+/// The sentence of `text` that best matches the query, for the card highlight. The first of equal matches wins.
 pub fn best_sentence(text: &str, query: &str) -> String {
     let q: HashSet<String> = terms(query).into_iter().collect();
     sentences(text)
         .into_iter()
+        .rev()
         .map(|s| (s, terms(s).iter().filter(|w| q.contains(*w)).count()))
         .max_by_key(|(_, c)| *c)
         .map(|(s, _)| s.to_string())

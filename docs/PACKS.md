@@ -29,6 +29,7 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
 
 To read passage `p`, the app decompresses frame `p / 64` only.
 Passages of one article have consecutive ids (`first_passage .. first_passage + n_passages`).
+The app removes wiki reference marks (`[1]`, `[2][3]`, `[citation needed]`, `[a]` after punctuation) from the text when it reads a passage, so the packs keep the text as built. It skips `devdocs-en` and user documents (`Pack::passage`, `text::strip_ref_marks`).
 
 ### Dense index (`dense/`)
 
@@ -72,7 +73,7 @@ The catalog packs live in a Hugging Face dataset repo, one `.tar` file per pack.
 `HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]` verifies the packs and writes the `.tar` files, `SHA256SUMS`, `catalog.json` and `README.md` (the dataset card) to `dist/<tag>`. `HF_REPO` has no default.
 The `BUNDLES` list at the top of `scripts/release.sh` defines the bundles: one line per bundle with the id, title, description and pack ids in tar order. The script writes the bundle `commonplace-<bundle_id>.tar` when all its packs are in the `pack_id` list of the call. A bundle that is already in the output directory stays in the catalog. `BUNDLES=...` in the environment replaces the list, for a test.
 `catalog.json` has the title, description, type, sizes, license, `replaces` and `recommended` of each pack, and the name, size, SHA-256 and download URL of its file. The URL is `https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/<tag>/<file>?download=true`. The query `download=true` makes the browser save the file.
-The top-level list `bundles` has `bundle_id`, `title`, `description`, `pack_ids`, `download_bytes`, `installed_bytes`, `files` (as for a pack) and `recommended` (only the starter bundle). A catalog without `bundles` is still valid.
+The top-level list `bundles` has `bundle_id`, `title`, `description`, `pack_ids`, `members` (`pack_id` and `title` of each pack in `pack_ids`), `download_bytes`, `installed_bytes`, `files` (as for a pack) and `recommended` (only the starter bundle). A catalog without `bundles` is still valid.
 `README.md` has the license front matter and a table of the bundles, then a table with the file, size, license, credit and SHA-256 of each pack. Each pack also holds its own `NOTICE.txt` with the full license texts.
 The script copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links.
 `HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>` creates the dataset repo if it is missing and uploads the files with the Hugging Face CLI (run through `uvx`). It needs a write token (`HF_TOKEN`). It is the only mode that writes to Hugging Face.

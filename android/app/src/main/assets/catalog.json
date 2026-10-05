@@ -1,136 +1,62 @@
 {
   "catalog_version": 1,
   "tag": "packs-2026-09",
-  "repo": "0xPD33/commonplace",
-  "packs": [
+  "repo": "0xPD33/commonplace-packs",
+  "bundles": [
     {
-      "pack_id": "enwiki-core",
-      "title": "English Wikipedia (starter)",
-      "description": "The 2 million most useful English Wikipedia articles.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-09-01",
-      "license": "CC BY-SA 4.0 and GFDL",
-      "replaces": [],
+      "bundle_id": "starter",
+      "title": "Starter set",
+      "description": "Wikipedia (2M articles), the answer model and Wikidata facts.",
+      "pack_ids": [
+        "enwiki-core",
+        "ling3-tiny",
+        "wikidata-facts"
+      ],
       "recommended": true,
-      "download_bytes": 3537203575,
-      "installed_bytes": 3537181524,
+      "download_bytes": 11312024064,
+      "installed_bytes": 11311999263,
       "files": [
         {
-          "name": "enwiki-core.pack.json",
-          "bytes": 375,
-          "sha256": "5c518874f75a5cf202b35f990d88670ebdb5d101f8592713b227095deba5c4f7",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki-core.pack.json"
-        },
-        {
-          "name": "enwiki-core.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "a13f4c33979e6ea6aa6e165d8b4cded62bc81de438e5e095f345ef8f8b1eb1ab",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki-core.tar.part001"
-        },
-        {
-          "name": "enwiki-core.tar.part002",
-          "bytes": 1537203200,
-          "sha256": "e23d9b5a316b727e62af3b4da67804fc4f0536f5873386cd1e59f8d38aa2d45a",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki-core.tar.part002"
+          "name": "commonplace-starter.tar",
+          "bytes": 11312024064,
+          "sha256": "ee8434aa8334c8cfec977f02486c41c8b10a76d0eab49fe13bc4764db7c56525",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-starter.tar?download=true"
         }
       ]
     },
     {
-      "pack_id": "ling3-tiny",
-      "title": "Ling 3.0 tiny (Q4_0)",
-      "description": "Fast answer model (Ling 3.0 tiny).",
-      "pack_type": "model",
-      "snapshot": "",
-      "license": "MIT",
-      "replaces": [],
-      "recommended": true,
-      "download_bytes": 4623924758,
-      "installed_bytes": 4623919555,
-      "files": [
-        {
-          "name": "ling3-tiny.pack.json",
-          "bytes": 534,
-          "sha256": "48cafdb14e5c2378d1a7a4584b47482091641d4eb9a3b88be1bad080337cbf95",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/ling3-tiny.pack.json"
-        },
-        {
-          "name": "ling3-tiny.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "c57b19f39d6064a5c3ea063d2ecd69ec277470bfdad03383f92fca20452762d7",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/ling3-tiny.tar.part001"
-        },
-        {
-          "name": "ling3-tiny.tar.part002",
-          "bytes": 2000000000,
-          "sha256": "1fbfaffea9232c511d427e705a130d5edd81693f55fed6ebdc27d428d1b36e42",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/ling3-tiny.tar.part002"
-        },
-        {
-          "name": "ling3-tiny.tar.part003",
-          "bytes": 623924224,
-          "sha256": "d65d07f00d17900a1e58ca933ba03c92dc9585590e2985f0dd268a5b82fda814",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/ling3-tiny.tar.part003"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikidata-facts",
-      "title": "Wikidata facts",
-      "description": "Structured facts from Wikidata.",
-      "pack_type": "wikidata",
-      "snapshot": "2026-05-07",
-      "license": "CC0 1.0",
-      "replaces": [],
-      "recommended": true,
-      "download_bytes": 3150899072,
-      "installed_bytes": 3150898184,
-      "files": [
-        {
-          "name": "wikidata-facts.pack.json",
-          "bytes": 384,
-          "sha256": "a92d2748497c038809a4fcc723d09af97d358e0febc24086964bb32f42c71483",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikidata-facts.pack.json"
-        },
-        {
-          "name": "wikidata-facts.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "0c4152d43335ade817183c852a30e2075a07b8b393c0b2c040303b0f9c054fbb",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikidata-facts.tar.part001"
-        },
-        {
-          "name": "wikidata-facts.tar.part002",
-          "bytes": 1150898688,
-          "sha256": "b6b755862341ec5b770089507e700f9774374a6884cc700945c3e8ffad20a9bd",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikidata-facts.tar.part002"
-        }
-      ]
-    },
-    {
-      "pack_id": "archwiki-en",
-      "title": "ArchWiki",
-      "description": "ArchWiki.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-07",
-      "license": "GFDL 1.3 or later",
-      "replaces": [],
+      "bundle_id": "breadth",
+      "title": "Reference shelf",
+      "description": "Textbooks, Wikibooks, Wikiquote, Wikivoyage, Wiktionary, Wikiversity, programming documentation, ArchWiki, medical and travel health pages, and the World Factbook.",
+      "pack_ids": [
+        "textbooks-en",
+        "wikibooks-en",
+        "wikiquote-en",
+        "wikivoyage-en",
+        "wiktionary-en",
+        "wikiversity-en",
+        "devdocs-en",
+        "archwiki-en",
+        "wikem-en",
+        "openstax",
+        "medlineplus",
+        "cdc-travel",
+        "factbook"
+      ],
       "recommended": false,
-      "download_bytes": 12258001,
-      "installed_bytes": 12239037,
+      "download_bytes": 1995067392,
+      "installed_bytes": 1994826475,
       "files": [
         {
-          "name": "archwiki-en.pack.json",
-          "bytes": 209,
-          "sha256": "d3b69be2d33e95ef6c9d00fa5c20d00772a9401ea35e357a397b81b785648c64",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/archwiki-en.pack.json"
-        },
-        {
-          "name": "archwiki-en.tar.part001",
-          "bytes": 12257792,
-          "sha256": "eeb84e7f269d417122b846d47d4b7fccb40a7d354aa52bed2669fc62ab45d2c3",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/archwiki-en.tar.part001"
+          "name": "commonplace-breadth.tar",
+          "bytes": 1995067392,
+          "sha256": "36a7db9870c411e082316e2d48aad0fc570efab995697f4ef53422d39c32c525",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-breadth.tar?download=true"
         }
       ]
-    },
+    }
+  ],
+  "packs": [
     {
       "pack_id": "arxiv-abs",
       "title": "arXiv abstracts",
@@ -140,78 +66,14 @@
       "license": "CC0 1.0 (arXiv metadata)",
       "replaces": [],
       "recommended": false,
-      "download_bytes": 3342380401,
+      "download_bytes": 3342380032,
       "installed_bytes": 3342364569,
       "files": [
         {
-          "name": "arxiv-abs.pack.json",
-          "bytes": 369,
-          "sha256": "5186bb4c4c9b7ad7670aa290ac466933e80e1fbf0bc1f4778d805b0e193119d6",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/arxiv-abs.pack.json"
-        },
-        {
-          "name": "arxiv-abs.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "08ec296e12be4ade8581328144ddcc1a1ff86c98cdf8d75f5be473d464c0e0ba",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/arxiv-abs.tar.part001"
-        },
-        {
-          "name": "arxiv-abs.tar.part002",
-          "bytes": 1342380032,
-          "sha256": "f3e57fbfcb5fe409aca78af1c07bd7101877aa9f4692d9a7115f0968bbd6757a",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/arxiv-abs.tar.part002"
-        }
-      ]
-    },
-    {
-      "pack_id": "cdc-travel",
-      "title": "CDC travel health by destination",
-      "description": "CDC travel health advice by destination.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-09-30",
-      "license": "Public domain (U.S. government work)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 2246862,
-      "installed_bytes": 2228023,
-      "files": [
-        {
-          "name": "cdc-travel.pack.json",
-          "bytes": 206,
-          "sha256": "e37cd115088ca2244e757158d415d2b5926ad186785e378bf27e30c276deca67",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/cdc-travel.pack.json"
-        },
-        {
-          "name": "cdc-travel.tar.part001",
-          "bytes": 2246656,
-          "sha256": "bae25eaf760093e1488690bb0cfd6745fa0b110325ad1d6eeb445112760c8195",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/cdc-travel.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "devdocs-en",
-      "title": "DevDocs (20 documentation sets)",
-      "description": "Programming documentation from DevDocs.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-08",
-      "license": "Per docset: Apache-2.0 (Docker, Kotlin, TypeScript, Rust); MIT (Node.js, Rust); BSD-3-Clause (NumPy, pandas); PostgreSQL License; PSF License (Python); CC BY 4.0 (React); CC BY 3.0 (Go); CC BY-SA 3.0 (C, C++); CC BY-SA 2.5+ (CSS, HTML, JavaScript); GFDL (Bash); GPL-2.0 (Git); LGPL-2.1 (Nix); public domain (SQLite)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 49249487,
-      "installed_bytes": 49230186,
-      "files": [
-        {
-          "name": "devdocs-en.pack.json",
-          "bytes": 207,
-          "sha256": "d6e933f792d847704573ccdc225533e7bafa228ee0753a12c036875a5571efd0",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/devdocs-en.pack.json"
-        },
-        {
-          "name": "devdocs-en.tar.part001",
-          "bytes": 49249280,
-          "sha256": "270d598d89f7f89c9d08ec090fb4aeb8e2a0f0e2b6a300d40f36ce37eae44ca7",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/devdocs-en.tar.part001"
+          "name": "arxiv-abs.tar",
+          "bytes": 3342380032,
+          "sha256": "05706d90516f827d513728cf1d68991e60bd7fdb1e66ddb867a4c88bfdede444",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/arxiv-abs.tar?download=true"
         }
       ]
     },
@@ -226,100 +88,14 @@
         "enwiki-core"
       ],
       "recommended": false,
-      "download_bytes": 19212017248,
+      "download_bytes": 19212015616,
       "installed_bytes": 19211998119,
       "files": [
         {
-          "name": "enwiki.pack.json",
-          "bytes": 1632,
-          "sha256": "f2f112912426084fa6774f85627948bdf69c4f57f1056a7d561d7186c7800c17",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.pack.json"
-        },
-        {
-          "name": "enwiki.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "85e6bc676d7f1eec4170217382875fc69a50b6248c582ffc413a9834cb935ab0",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part001"
-        },
-        {
-          "name": "enwiki.tar.part002",
-          "bytes": 2000000000,
-          "sha256": "ca992d52f3729ff7d4db0c3a735c7494365aac25da8e7c5c46aa88bfd1c2f3f2",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part002"
-        },
-        {
-          "name": "enwiki.tar.part003",
-          "bytes": 2000000000,
-          "sha256": "375cb766eff8d2597ead08ab47268c6783a4113db398fbe27ba1a9f2c8fe8034",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part003"
-        },
-        {
-          "name": "enwiki.tar.part004",
-          "bytes": 2000000000,
-          "sha256": "9b4c8ab9fbac4a40321e2f8b4c8cb30afc27be7d622461119b3017c5fa569ae3",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part004"
-        },
-        {
-          "name": "enwiki.tar.part005",
-          "bytes": 2000000000,
-          "sha256": "738826ba694900715a92ba29689713b21dd42af847adc3e65153e7e3a4179709",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part005"
-        },
-        {
-          "name": "enwiki.tar.part006",
-          "bytes": 2000000000,
-          "sha256": "98c0fc8b2de067f93f752fb49b245d48a8be88ddfd8d888f85bea75afff504d9",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part006"
-        },
-        {
-          "name": "enwiki.tar.part007",
-          "bytes": 2000000000,
-          "sha256": "a1c3251c28076c2271a02fb54714b68bfc28c4cd7ff255cb377b7747047aea4e",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part007"
-        },
-        {
-          "name": "enwiki.tar.part008",
-          "bytes": 2000000000,
-          "sha256": "7936e06755da3dbb72494bbc02ce9936b98b653f6a4ad078338e03f68263ab2d",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part008"
-        },
-        {
-          "name": "enwiki.tar.part009",
-          "bytes": 2000000000,
-          "sha256": "c9ea7a6df2df50ad46d155ae992c9395c729d8b9247e37594ca7ed8accedb5c7",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part009"
-        },
-        {
-          "name": "enwiki.tar.part010",
-          "bytes": 1212015616,
-          "sha256": "e0e9e56724d2828c74dab2edf785c6684e8e67876019a99a47245da032964371",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/enwiki.tar.part010"
-        }
-      ]
-    },
-    {
-      "pack_id": "factbook",
-      "title": "CIA World Factbook (final edition)",
-      "description": "CIA World Factbook, final edition.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-02",
-      "license": "Public domain (U.S. government work); JSON mirror CC0",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 3347146,
-      "installed_bytes": 3327642,
-      "files": [
-        {
-          "name": "factbook.pack.json",
-          "bytes": 202,
-          "sha256": "beaae48fd4e56f8dff6b2527cc35a2adebc8cb203dd8a6f1b54d20bcb6016b46",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/factbook.pack.json"
-        },
-        {
-          "name": "factbook.tar.part001",
-          "bytes": 3346944,
-          "sha256": "46064c6a07e66687070cfec0103d2660039885b1de99bd3ae0d9a7e857a12a27",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/factbook.tar.part001"
+          "name": "enwiki.tar",
+          "bytes": 19212015616,
+          "sha256": "07034519b2ce2c440ea2fc5fab24e13538ba2044524aebe8397bd2ef3cf568c8",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/enwiki.tar?download=true"
         }
       ]
     },
@@ -332,72 +108,14 @@
       "license": "LFM Open License v1.0 (commercial use only below US$10M annual revenue)",
       "replaces": [],
       "recommended": false,
-      "download_bytes": 695769296,
+      "download_bytes": 695769088,
       "installed_bytes": 695763780,
       "files": [
         {
-          "name": "lfm25-1.2b.pack.json",
-          "bytes": 208,
-          "sha256": "8e5579c8333077bc3b91475b8cffe77053fdf04ded98a425da2abadbb8bcddac",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/lfm25-1.2b.pack.json"
-        },
-        {
-          "name": "lfm25-1.2b.tar.part001",
+          "name": "lfm25-1.2b.tar",
           "bytes": 695769088,
           "sha256": "9d13e03e35e8c6858eb50ec361450c10102e73931cf88ab139f4b506aac9b554",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/lfm25-1.2b.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "medlineplus",
-      "title": "MedlinePlus health topics",
-      "description": "MedlinePlus health topics.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-09-26",
-      "license": "Public domain (U.S. NLM)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 1555152,
-      "installed_bytes": 1533329,
-      "files": [
-        {
-          "name": "medlineplus.pack.json",
-          "bytes": 208,
-          "sha256": "76ee976410d7b95d9a049a0d2186a54d80c5e349550778835ec6efae45c829c2",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/medlineplus.pack.json"
-        },
-        {
-          "name": "medlineplus.tar.part001",
-          "bytes": 1554944,
-          "sha256": "80d2abcb991e4f1a597b14cd3b067a1f0dcce310368563a4722c0df02f0b8e15",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/medlineplus.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "openstax",
-      "title": "OpenStax textbooks",
-      "description": "OpenStax college textbooks.",
-      "pack_type": "knowledge",
-      "snapshot": "2024-01-29",
-      "license": "CC BY 4.0 (text of 2024-01-29)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 7874250,
-      "installed_bytes": 7851871,
-      "files": [
-        {
-          "name": "openstax.pack.json",
-          "bytes": 202,
-          "sha256": "f273ecdda33dd02235b000362ad463b936acd43750605fad3069766bcaffd1a3",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/openstax.pack.json"
-        },
-        {
-          "name": "openstax.tar.part001",
-          "bytes": 7874048,
-          "sha256": "fab16eba30580a95ddd3fb6aa01b956ff40c482bbca490f3e53ea0d70dfababa",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/openstax.tar.part001"
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/lfm25-1.2b.tar?download=true"
         }
       ]
     },
@@ -410,208 +128,14 @@
       "license": "CC BY-SA 2.5/3.0/4.0 (per post)",
       "replaces": [],
       "recommended": false,
-      "download_bytes": 2459784060,
+      "download_bytes": 2459783680,
       "installed_bytes": 2459763676,
       "files": [
         {
-          "name": "stackexchange.pack.json",
-          "bytes": 380,
-          "sha256": "b879545ede1df082d8e72f2e68e37cf93f0f1bfe5fd9df7385916c3a3c092d63",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/stackexchange.pack.json"
-        },
-        {
-          "name": "stackexchange.tar.part001",
-          "bytes": 2000000000,
-          "sha256": "c78129ab59e9577622b5f1601ec0d83a2703982550166bfe6ff1395d5e16b99a",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/stackexchange.tar.part001"
-        },
-        {
-          "name": "stackexchange.tar.part002",
-          "bytes": 459783680,
-          "sha256": "efd73a65d8443f56574bc252c832f7ba13ea06819467ee2a99bdf2d053f779f4",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/stackexchange.tar.part002"
-        }
-      ]
-    },
-    {
-      "pack_id": "textbooks-en",
-      "title": "Open textbooks (Pressbooks, LibreTexts)",
-      "description": "Open textbooks from Pressbooks and LibreTexts.",
-      "pack_type": "knowledge",
-      "snapshot": "2025-03",
-      "license": "CC BY, CC BY-SA, CC0, public domain or GFDL (per book; see CREDITS.txt)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 524660948,
-      "installed_bytes": 524641290,
-      "files": [
-        {
-          "name": "textbooks-en.pack.json",
-          "bytes": 212,
-          "sha256": "cec44e40864ef71f1826cbdf1ac8291a0f8e22aa6b40353d8d6ec228d45bcc6d",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/textbooks-en.pack.json"
-        },
-        {
-          "name": "textbooks-en.tar.part001",
-          "bytes": 524660736,
-          "sha256": "55bc50a029f19657bf7dad7048564364d8f8bd48e16c457888a89d4fc0c85af0",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/textbooks-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikem-en",
-      "title": "WikEM emergency medicine",
-      "description": "WikEM emergency medicine.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-07",
-      "license": "CC BY-SA 4.0",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 12132043,
-      "installed_bytes": 12111807,
-      "files": [
-        {
-          "name": "wikem-en.pack.json",
-          "bytes": 203,
-          "sha256": "c6cec00e9c6348fe2e0a32024e9beed5cdc7c8488abfe0181e10ae8a9824d90f",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikem-en.pack.json"
-        },
-        {
-          "name": "wikem-en.tar.part001",
-          "bytes": 12131840,
-          "sha256": "6cd915371efc02c426c379ad816aa11f0d9f447edecd8b8e497115017b559113",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikem-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikibooks-en",
-      "title": "English Wikibooks",
-      "description": "English Wikibooks.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-04",
-      "license": "CC BY-SA 4.0 and GFDL",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 432516308,
-      "installed_bytes": 432497367,
-      "files": [
-        {
-          "name": "wikibooks-en.pack.json",
-          "bytes": 212,
-          "sha256": "9549ca87458183769191ec4cbeb94f3a6e283d8b31a05c4857e7d746b86a5ca1",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikibooks-en.pack.json"
-        },
-        {
-          "name": "wikibooks-en.tar.part001",
-          "bytes": 432516096,
-          "sha256": "793b85c8f82d4acdf90e9fa2cd1d1c42271d63649a7f14dca07552b6944da9ed",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikibooks-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikiquote-en",
-      "title": "English Wikiquote",
-      "description": "English Wikiquote.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-07",
-      "license": "CC BY-SA 4.0 (editors' selection; the quotations remain their authors' works)",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 368731348,
-      "installed_bytes": 368711871,
-      "files": [
-        {
-          "name": "wikiquote-en.pack.json",
-          "bytes": 212,
-          "sha256": "a1c7d4a8141ea657ccb37101fdf95c37864805f3219219c244cece6756a6a8cf",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikiquote-en.pack.json"
-        },
-        {
-          "name": "wikiquote-en.tar.part001",
-          "bytes": 368731136,
-          "sha256": "b943f90e55f9f9a41271f18782ef67987c8891aad79cb2d30519dc58fbd3a4c7",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikiquote-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikiversity-en",
-      "title": "English Wikiversity",
-      "description": "English Wikiversity.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-08",
-      "license": "CC BY-SA 4.0 and GFDL",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 182987480,
-      "installed_bytes": 182968855,
-      "files": [
-        {
-          "name": "wikiversity-en.pack.json",
-          "bytes": 216,
-          "sha256": "21dca2c0eeac3e5103e04505e55ef6c58ffd0698d78cd46c4fd515cb6da448e0",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikiversity-en.pack.json"
-        },
-        {
-          "name": "wikiversity-en.tar.part001",
-          "bytes": 182987264,
-          "sha256": "04b96ccd241e4242905b818db310ba1113963ceb3ba65bff32dd7ef58419d5cd",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikiversity-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wikivoyage-en",
-      "title": "English Wikivoyage",
-      "description": "English Wikivoyage travel guides.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-09-01",
-      "license": "CC BY-SA 4.0",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 208185558,
-      "installed_bytes": 208166656,
-      "files": [
-        {
-          "name": "wikivoyage-en.pack.json",
-          "bytes": 214,
-          "sha256": "93a517f78904dcb8cd57cbddb7dc8be8a062c2720d5a312356efa9934d2abf98",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikivoyage-en.pack.json"
-        },
-        {
-          "name": "wikivoyage-en.tar.part001",
-          "bytes": 208185344,
-          "sha256": "1eb23d7cf1c71a13fb877ac08db0c7b4297c595620e35aeef6758f879af1629e",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wikivoyage-en.tar.part001"
-        }
-      ]
-    },
-    {
-      "pack_id": "wiktionary-en",
-      "title": "English Wiktionary (dictionary)",
-      "description": "English Wiktionary dictionary.",
-      "pack_type": "knowledge",
-      "snapshot": "2026-09-28",
-      "license": "CC BY-SA 4.0 and GFDL",
-      "replaces": [],
-      "recommended": false,
-      "download_bytes": 189337814,
-      "installed_bytes": 189318541,
-      "files": [
-        {
-          "name": "wiktionary-en.pack.json",
-          "bytes": 214,
-          "sha256": "47d307ea8531d89fb96fd7a04aa7abb360c89bc0e37a6bce4a9d2e1c046720c3",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wiktionary-en.pack.json"
-        },
-        {
-          "name": "wiktionary-en.tar.part001",
-          "bytes": 189337600,
-          "sha256": "3b70d1f8c52f7fc890afff093a4e9d7373e406680ce1d1e29d39e5dba0c6bc70",
-          "url": "https://github.com/0xPD33/commonplace/releases/download/packs-2026-09/wiktionary-en.tar.part001"
+          "name": "stackexchange.tar",
+          "bytes": 2459783680,
+          "sha256": "05bf71d0b0a85f92fb057fec9d7a9000f09e4444f761685868dcb1a6bf55caca",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/stackexchange.tar?download=true"
         }
       ]
     }

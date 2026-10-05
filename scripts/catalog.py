@@ -109,13 +109,23 @@ if args.readme:
         f"| `{args.tag}/{b['files'][0]['name']}` | {cell(b['title'])}: {', '.join(f'`{i}`' for i in b['pack_ids'])} | {human(b['download_bytes'])} | `{b['files'][0]['sha256']}` |"
         for b in bundles
     )
+    member = lambda i: json.loads((library / i / "manifest.json").read_text())
+    member_rows = "\n".join(
+        f"| `{i}` | {cell(member(i)['license'])} | {cell(member(i)['attribution'])} |" for b in bundles for i in b["pack_ids"]
+    )
     bundle_section = f"""## Bundles
 
-A bundle is one `.tar` file with several packs. It only saves downloads: every pack inside is a normal pack, and the individual pack files below stay available.
+A bundle is one `.tar` file with several packs. It only saves downloads: every pack inside is a normal pack. A pack inside a bundle has no file of its own.
 
 | File | Contents | Size | SHA-256 |
 |---|---|---|---|
 {bundle_rows}
+
+Packs inside the bundles:
+
+| Pack | License | Credit |
+|---|---|---|
+{member_rows}
 
 """ if bundles else ""
     Path(args.readme).write_text(f"""---

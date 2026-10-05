@@ -6,6 +6,7 @@
 #   HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]   e.g. packs-2026-09 enwiki-core ling3-tiny wikidata-facts
 #     Verify the packs (default: the starter set) and write each one as a single file <pack_id>.tar.
 #     Also write the bundles (see BUNDLES below) whose packs are all in the list as commonplace-<bundle_id>.tar.
+#     A pack inside such a bundle gets no single file.
 #     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs and bundles already in OUT stay in the catalog.
 #     HF_REPO is the Hugging Face dataset repo (required, no default). The catalog URLs point into its folder <tag>:
 #     https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true
@@ -56,9 +57,16 @@ packs)
   : "${LIBRARY:=data/library/packs}"
   : "${CATALOG_ASSET:=android/app/src/main/assets/catalog.json}"
   PB=${PB:-core/target/release/packbuild}
+  # A pack inside a bundle that gets built ships only in that bundle.
+  BUNDLED=" "
+  while IFS='|' read -r id _ _ members; do
+    [[ -n $id ]] || continue
+    for m in $members; do [[ " ${PACKS[*]} " == *" $m "* ]] || continue 2; done
+    BUNDLED+="$members "
+  done <<<"$BUNDLES"
   for p in "${PACKS[@]}"; do
     "$PB" verify --pack "$LIBRARY/$p"
-    "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
+    [[ $BUNDLED == *" $p "* ]] || "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
   done
   BUNDLE_ARGS=()
   while IFS='|' read -r id title desc members; do

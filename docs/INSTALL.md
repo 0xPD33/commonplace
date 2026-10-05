@@ -6,7 +6,7 @@ You need an Android phone with a 64-bit ARM CPU and Android 12 or later. Commonp
 
 Storage: the Starter set is one file of 11.3 GB. It holds the starter Wikipedia pack (3.5 GB), the main model (4.6 GB) and Wikidata facts (3.2 GB). The phone needs about twice the file size in free space during the import: the downloaded file and the installed packs. After the import you can delete the download. All of English Wikipedia (`enwiki`, 19.2 GB, dump of 2026-09-01) replaces the starter pack.
 
-The app has no `INTERNET` permission. You download the files with a browser from the Hugging Face dataset `<HF_REPO>` and import them with the Android file picker. Each pack is one `.tar` file. A bundle is one `.tar` file that holds several packs, so you download fewer files. Every pack of a bundle also stays available as its own file.
+The app has no `INTERNET` permission. You download the files with a browser from the Hugging Face dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs) and import them with the Android file picker. Each pack is one `.tar` file. A bundle is one `.tar` file that holds several packs, so you download fewer files. A pack inside a bundle has no file of its own.
 
 ### Steps
 
@@ -24,7 +24,7 @@ The app has no `INTERNET` permission. You download the files with a browser from
    - When the import ends, the app offers to delete the downloaded files. Tap **Delete** to free the space.
 5. Go back and ask a question. The first question is slower, because the app loads the model into memory. On the Pixel 10 the first word appears after about 10 s.
 
-You can also download on a computer: get the `.tar` files from the folder `packs-2026-09` of the dataset `<HF_REPO>`, copy them to the phone's **Downloads** folder over USB, then tap **Install from Downloads** on the phone. A `.tar` pack that is not in the catalog installs the same way. On a computer without a phone, run `tar -xf <file>.tar -C data/library/packs`. This works for a pack and for a bundle, because each pack is a top-level directory of the file.
+You can also download on a computer: get the `.tar` files from the folder `packs-2026-09` of the dataset `0xPD33/commonplace-packs`, copy them to the phone's **Downloads** folder over USB, then tap **Install from Downloads** on the phone. A `.tar` pack that is not in the catalog installs the same way. On a computer without a phone, run `tar -xf <file>.tar -C data/library/packs`. This works for a pack and for a bundle, because each pack is a top-level directory of the file.
 A third-party pack can come in parts: select its `<pack_id>.pack.json` file and all its `.tar.partNNN` files in one step.
 
 To confirm that the app is offline, turn on airplane mode. You can also open **Settings > Apps > Commonplace > Permissions**: the app has no network permission.

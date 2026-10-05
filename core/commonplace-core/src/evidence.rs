@@ -37,8 +37,11 @@ impl Evidence {
                 s.push_str(&format!("[{}] {} — {} ({}):\n{}\n\n", src.n, h.article.title, h.passage.section_path, pack, src.shown));
             }
         }
-        for f in &self.wikidata {
-            s.push_str(&format!("[W] {}\n", f.line()));
+        if !self.wikidata.is_empty() {
+            s.push_str("Wikidata facts (no number, never cite):\n");
+            for f in &self.wikidata {
+                s.push_str(&format!("- {}\n", f.line()));
+            }
         }
         for c in &self.computed {
             s.push_str(&format!("COMPUTED: {c}\n"));

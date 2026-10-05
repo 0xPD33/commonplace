@@ -16,7 +16,7 @@ pub enum Segment {
 /// Split `answer` into segments. Valid citations are 1..=n_sources.
 pub fn check(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>) -> Vec<Segment> {
     let mut out: Vec<Segment> = Vec::new();
-    for sent in split_keep_ws(answer) {
+    for sent in split_keep_ws(strip_sources_block(answer)) {
         let (plain, cites) = strip_citations(&sent, n_sources);
         let unverified = numbers(&plain).iter().any(|n| !evidence_numbers.contains(n) && !matches_without_trailing_zero(n, evidence_numbers));
         let mut text = String::new();
@@ -44,6 +44,37 @@ pub fn check(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>) -
     out
 }
 
+/// The model sometimes ends its answer with a list of sources. The app shows the real ones, so the block
+/// goes: the first line that is only a "Sources" or "References" heading (plain, markdown or with a colon)
+/// and everything below it. A heading with its entries on the same line ("Sources: [1], [2]") counts only
+/// as the last line, so an answer line such as "Sources: wind and solar" stays.
+fn strip_sources_block(text: &str) -> &str {
+    let mut start = 0;
+    for line in text.split_inclusive('\n') {
+        let below = &text[start + line.len()..];
+        if start > 0 && is_sources_heading(line).is_some_and(|alone| alone || below.trim().is_empty()) {
+            let kept = text[..start].trim_end();
+            // A rule line ("---") that set the block apart goes with it.
+            let last = kept.rsplit('\n').next().unwrap_or("").trim();
+            let rule = last.len() >= 3 && last.chars().all(|c| matches!(c, '-' | '_' | '*'));
+            let kept = if rule { kept[..kept.len() - last.len()].trim_end() } else { kept };
+            return if kept.is_empty() { text } else { kept };
+        }
+        start += line.len();
+    }
+    text
+}
+
+/// `Some(true)` for a heading alone on its line, `Some(false)` for a heading followed by entries.
+fn is_sources_heading(line: &str) -> Option<bool> {
+    let decor = |c: char| matches!(c, '#' | '*' | '_' | '>' | '-' | ' ');
+    let line = line.trim().trim_matches(decor);
+    let (head, rest) = line.split_once(':').unwrap_or((line, ""));
+    let head = head.trim_matches(decor).to_lowercase();
+    let known = matches!(head.as_str(), "sources" | "source" | "references" | "reference" | "citations" | "bibliography" | "sources cited" | "sources used" | "works cited");
+    known.then(|| rest.trim_matches(decor).is_empty())
+}
+
 fn flush(out: &mut Vec<Segment>, text: &mut String, unverified: bool) {
     if text.is_empty() {
         return;
@@ -67,7 +98,13 @@ enum Piece {
     Cite(u32),
 }
 
-/// Parse `[n]`, `[n][m]`, `[n, m]`. Invalid numbers are dropped with their brackets.
+/// The Wikidata facts and COMPUTED lines have no source number, but a model may cite them anyway ("[W]").
+fn is_fact_label(s: &str) -> bool {
+    ["W", "Wikidata", "COMPUTED"].iter().any(|l| s.eq_ignore_ascii_case(l))
+}
+
+/// Parse `[n]`, `[n][m]`, `[n, m]`. Invalid numbers are dropped with their brackets, and so are labels
+/// of lines that have no number ("[W]", "[1, W]" keeps the 1).
 fn strip_citations(s: &str, n_sources: u32) -> (String, Vec<Piece>) {
     let mut plain = String::new();
     let mut pieces = Vec::new();
@@ -76,11 +113,12 @@ fn strip_citations(s: &str, n_sources: u32) -> (String, Vec<Piece>) {
     while let Some(open) = rest.find('[') {
         let Some(close_rel) = rest[open..].find(']') else { break };
         let inner = &rest[open + 1..open + close_rel];
-        let nums: Option<Vec<u32>> =
-            inner.split(',').map(|x| x.trim().parse::<u32>().ok()).collect::<Option<Vec<_>>>().filter(|v| !v.is_empty());
+        let items: Vec<&str> = inner.split(',').map(str::trim).collect();
+        let nums: Option<Vec<u32>> = items.iter().filter(|x| !is_fact_label(x)).map(|x| x.parse::<u32>().ok()).collect();
         cur.push_str(&rest[..open]);
         plain.push_str(&rest[..open]);
         match nums {
+            Some(ns) if ns.is_empty() => cur.truncate(cur.trim_end_matches(' ').len()),
             Some(ns) => {
                 // Drop the space before a citation so "claim [1]." renders as "claim¹."
                 let trimmed = cur.trim_end().len();

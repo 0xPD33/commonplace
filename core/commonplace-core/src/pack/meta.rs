@@ -104,6 +104,18 @@ impl MetaDb {
         Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
     }
 
+    /// The exact title and its "X (…)" senses, most popular first. `candidates` can miss a sense: people
+    /// and works named X ("Ruby Rose") are viewed more and fill its first rows.
+    pub fn senses(&self, norm: &str, limit: usize) -> Result<Vec<Article>> {
+        let c = self.conn.lock().unwrap();
+        let mut st = c.prepare_cached(&format!(
+            "SELECT {ARTICLE_COLS} FROM articles WHERE title_norm = ?1 OR (title_norm >= ?1 || ' (' AND title_norm < ?1 || ' )')
+             ORDER BY popularity DESC LIMIT ?2"
+        ))?;
+        let rows = st.query_map(rusqlite::params![norm, limit as i64], row_article)?;
+        Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+    }
+
     /// Resolve an all-caps code ("US", "UK") through its case-sensitive redirect key.
     pub fn lookup_code(&self, code: &str) -> Result<Option<Article>> {
         let c = self.conn.lock().unwrap();

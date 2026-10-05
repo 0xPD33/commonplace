@@ -6,6 +6,10 @@ I built it for the poidh bounty [Build the Best Offline AI Research App for Andr
 
 [The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source)
 
+[![A tour of Commonplace on a Pixel 10: ask a question, open a cited source, compare two mountains, switch to dark mode](docs/media/commonplace-showcase.jpg)](docs/media/commonplace-showcase.mp4)
+
+*A 95-second tour with sound, recorded on a Pixel 10 ([MP4, 17 MB](docs/media/commonplace-showcase.mp4)). The video speeds up the waits and shows each speed-up on screen.*
+
 ## The idea
 
 A phone is too slow to read Wikipedia for every question. So a desktop computer does the reading once: it splits the text into short passages and builds search indexes for them. You download the result one time. After that, your phone only looks things up and writes a short answer from what it finds.

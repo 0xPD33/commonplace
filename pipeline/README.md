@@ -25,7 +25,7 @@ The step also writes `data/work/wikidata/title_qid.parquet` (enwiki title → QI
 
 ## Breadth packs
 
-`wikivoyage-en`, `stackexchange` (52 sites), `openstax`, `arxiv-abs`, `medlineplus`, `cdc-travel`, `textbooks-en`, `wiktionary-en`, `factbook` and the Kiwix packs (`wikibooks-en`, `wikiquote-en`, `wikiversity-en`, `wikem-en`, `archwiki-en`, `devdocs-en`).
+`wikivoyage-en`, `stackexchange` (51 sites), `openstax`, `arxiv-abs`, `medlineplus`, `cdc-travel`, `textbooks-en`, `wiktionary-en`, `factbook` and the Kiwix packs (`wikibooks-en`, `wikiquote-en`, `wikiversity-en`, `wikem-en`, `archwiki-en`, `devdocs-en`).
 `scripts/fetch-extra-packs.sh` downloads the pinned sources into `data/raw/`. The pins are at the top of the script.
 
 ```sh

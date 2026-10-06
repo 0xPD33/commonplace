@@ -10,14 +10,16 @@ import java.io.File
 /**
  * Tap-to-talk speech input with Moonshine Medium Streaming (English, MIT).
  *
- * The model files come from `filesDir/stt/moonshine-medium-streaming-en` (scripts/dev-push.sh stt),
+ * The model files come from the installed voice pack (`filesDir/library/packs/voice-en`), else from
+ * `filesDir/stt/moonshine-medium-streaming-en` (scripts/dev-push.sh stt),
  * loaded with loadFromFiles so the library's downloader never runs. The model holds ~0.75 GB while
  * loaded, so [stop] frees it as soon as the last line is flushed, before the LLM needs the RAM.
  * Callbacks run on the main thread.
  */
 class VoiceInput(context: Context) {
     private val app = context.applicationContext
-    private val modelDir = File(app.filesDir, "stt/moonshine-medium-streaming-en")
+    private val modelDirs = listOf(File(app.filesDir, "library/packs/voice-en"), File(app.filesDir, "stt/moonshine-medium-streaming-en"))
+    private val modelDir: File? get() = modelDirs.firstOrNull { File(it, "encoder.ort").isFile }
     private val main = Handler(Looper.getMainLooper())
     private val lock = Any()
 
@@ -26,7 +28,7 @@ class VoiceInput(context: Context) {
     private val flushing = mutableSetOf<MicTranscriber>()
     private var session = 0
 
-    val installed: Boolean get() = File(modelDir, "encoder.ort").isFile
+    val installed: Boolean get() = modelDir != null
 
     /** Loads the model (mapped from flash) and opens the mic. Blocks: call off the main thread. */
     fun start(onText: (String) -> Unit, onLine: (String) -> Unit, onError: (Throwable) -> Unit) {
@@ -39,7 +41,7 @@ class VoiceInput(context: Context) {
                 close(m) // the line that lands after stop() is the flush; a no-op while listening
             }
             .onError(onError)
-        m.loadFromFiles(modelDir.path, JNI.MOONSHINE_MODEL_ARCH_MEDIUM_STREAMING)
+        m.loadFromFiles((modelDir ?: error("voice model not installed")).path, JNI.MOONSHINE_MODEL_ARCH_MEDIUM_STREAMING)
         synchronized(lock) {
             if (id == session) {
                 m.start()

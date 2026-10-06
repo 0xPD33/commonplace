@@ -258,7 +258,7 @@ Known limits:
 
 - The phone gets slower when it gets hot. A long test of heat over many questions is still open.
 - Multi-step and numeric questions are the weakest categories ([EVAL](docs/EVAL.md)).
-- Voice input (Moonshine, on the phone) works only in developer builds, because the release does not include the voice model yet.
+- Voice input (Moonshine, on the phone) is English only and needs the optional `voice-en` pack. Real speech recognition is tested on the desktop, not yet on a phone's microphone.
 - The Tensor G5 NPU is not used. The LiteRT-LM library for it does not match the phone's runtime version.
 
 ## Desktop command line

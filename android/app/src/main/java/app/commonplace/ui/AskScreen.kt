@@ -163,7 +163,7 @@ fun AskScreen(
                 title = {
                     Column {
                         Text("Commonplace", style = MaterialTheme.typography.titleLarge, fontStyle = FontStyle.Italic)
-                        ModelStatusLine(model, installed = library?.models?.isNotEmpty() == true)
+                        ModelStatusLine(model, installed = library?.models?.any { it.kind != ModelKind.VOICE } == true)
                     }
                 },
                 actions = {
@@ -196,7 +196,7 @@ fun AskScreen(
                     onToggleThink = vm::toggleThinking,
                     listening = vm.listening,
                     voiceError = vm.voiceError,
-                    onMic = if (vm.voiceAvailable) onMic else null,
+                    onMic = if (library != null && vm.voiceAvailable) onMic else null, // `library` changes when a pack is installed or removed
                     focus = inputFocus,
                     scope = vm.scope,
                     onClearScope = vm::clearScope,

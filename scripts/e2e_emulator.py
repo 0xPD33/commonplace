@@ -332,6 +332,7 @@ def main() -> int:
     ap.add_argument("--answer-timeout", type=float, default=240)
     ap.add_argument("--import-dir", help="dist dir of a split pack (packbuild split): test the SAF import with it")
     ap.add_argument("--catalog-dir", help="single-file packs (<id>.tar) plus the catalog.json built into the APK (see the catalog step): test Get more and Install from Downloads. With bundles in the catalog, the bundle step tests the first one.")
+    ap.add_argument("--voice-tar", help="voice-en.tar (packbuild split --single): enables the voice step, which installs it from Downloads")
     ap.add_argument("--withhold", default="", help=".tar file of --catalog-dir that is missing at the first install and added for the second")
     ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
     ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
@@ -1017,6 +1018,50 @@ def main() -> int:
         r.shot("licenses-scrolled", "scrolled well into the list")
         r.back()
         r.back()
+
+    if args.voice_tar:
+
+        @step("voice")
+        def _():
+            # Install the voice pack from Downloads (no developer copy of the model), listen, stop, then remove the pack.
+            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            adb("push", "-q", args.voice_tar, "/sdcard/Download/voice-en.tar")
+            adb("shell", "run-as", PKG, "sh", "-c", "'rm -rf files/stt files/library/packs/voice-en'")
+            fresh_app(r, remove_docs=False)
+            if ui.find(tag="mic_toggle") is not None:
+                raise RuntimeError("the mic shows without a voice model")
+            r.shot("voice-before", "no voice pack: no mic button")
+            open_library(r)
+            ui.tap(ui.wait(10, tag="import_pack"))
+            pick_from_downloads(r, "voice-en.tar")
+            ui.wait(300, text="Delete the downloaded files?")
+            ui.tap(ui.wait(10, text="Delete"))
+            text = subtree_text(scroll_to_row(r, "Voice input (Moonshine Medium, English)"))
+            if "speak your question" not in text or "MIT" not in text or "loaded" in text:
+                raise RuntimeError(f"voice row: {text!r}")
+            r.shot("voice-library", text)
+            r.back()
+            ui.tap(ui.wait(10, tag="mic_toggle"))
+            ui.wait(120, contains="Stop listening")
+            time.sleep(3)
+            r.shot("voice-listening", "mic on: the model loaded from the pack")
+            ui.tap(ui.wait(10, tag="mic_toggle"))
+            ui.wait(10, contains="Speak your question")
+            if not adb("shell", "pidof", PKG, check=False).strip():
+                raise RuntimeError("the app died after stop")
+            r.shot("voice-stopped", "listening stopped")
+            open_library(r)
+            ui.tap(row_child(scroll_to_row(r, "Voice input (Moonshine Medium, English)"), desc="Actions"))
+            ui.tap(ui.wait(5, text="Remove"))
+            ui.wait(5, contains="Remove voice-en?")  # a model pack's dialog names the pack id
+            ui.tap(ui.wait(5, text="Remove"))
+            ui.wait(15, contains="Removed")
+            r.back()
+            ui.wait(10, tag="ask_input")
+            time.sleep(1)
+            if ui.find(tag="mic_toggle") is not None:
+                raise RuntimeError("the mic stays after the pack was removed")
+            r.shot("voice-removed", "pack removed: no mic button, no restart")
 
     @step("ask-document")
     def _():

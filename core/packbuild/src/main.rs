@@ -109,17 +109,22 @@ enum Cmd {
         #[command(flatten)]
         notices: NoticeArgs,
     },
-    /// Wrap a GGUF file as a model pack.
+    /// Wrap a GGUF file, or a directory of model files (`--dir` with `--file`), as a model pack.
     Model {
+        #[arg(long, required_unless_present = "dir", conflicts_with = "dir")]
+        gguf: Option<PathBuf>,
+        /// Copy every file of this directory into the pack. `--file` names the main one.
+        #[arg(long, requires = "file")]
+        dir: Option<PathBuf>,
         #[arg(long)]
-        gguf: PathBuf,
+        file: Option<String>,
         #[arg(long)]
         out: PathBuf,
         #[arg(long)]
         pack_id: String,
         #[arg(long)]
         title: String,
-        #[arg(long, value_parser = ["llm-fast", "llm-small", "llm-deep"])]
+        #[arg(long, value_parser = ["llm-fast", "llm-small", "llm-deep", "stt"])]
         role: String,
         #[arg(long)]
         hf_repo: String,
@@ -550,7 +555,9 @@ fn build_wikidata(input: &Path, out: &Path, snapshot: &str) -> Result<()> {
 
 #[allow(clippy::too_many_arguments)]
 fn build_model(
-    gguf: &Path,
+    gguf: Option<&Path>,
+    dir: Option<&Path>,
+    file: Option<&str>,
     out: &Path,
     pack_id: &str,
     title: &str,
@@ -563,17 +570,30 @@ fn build_model(
     link: bool,
 ) -> Result<()> {
     std::fs::create_dir_all(out)?;
-    let name = gguf.file_name().context("gguf file name")?.to_string_lossy().into_owned();
-    let dest = out.join(&name);
-    let _ = std::fs::remove_file(&dest);
-    if link {
-        std::fs::hard_link(gguf, &dest)?;
+    let name = if let Some(dir) = dir {
+        for e in std::fs::read_dir(dir)? {
+            let e = e?;
+            std::fs::copy(e.path(), out.join(e.file_name())).with_context(|| format!("copy {}", e.path().display()))?;
+        }
+        let name = file.context("--dir needs --file")?;
+        ensure!(out.join(name).is_file(), "{name} is not in {}", dir.display());
+        name.to_string()
     } else {
-        std::fs::copy(gguf, &dest)?;
-    }
+        let gguf = gguf.context("give --gguf or --dir")?;
+        let name = gguf.file_name().context("gguf file name")?.to_string_lossy().into_owned();
+        let dest = out.join(&name);
+        let _ = std::fs::remove_file(&dest);
+        if link {
+            std::fs::hard_link(gguf, &dest)?;
+        } else {
+            std::fs::copy(gguf, &dest)?;
+        }
+        name
+    };
     let role = match role {
         "llm-fast" => ModelRole::LlmFast,
         "llm-small" => ModelRole::LlmSmall,
+        "stt" => ModelRole::Stt,
         _ => ModelRole::LlmDeep,
     };
     let _ = std::fs::remove_file(out.join("manifest.json"));
@@ -689,8 +709,8 @@ fn main() -> Result<()> {
             build_wikidata(&input, &out, &snapshot)?;
             add_notices(&out, &notices, None, None)
         }
-        Cmd::Model { gguf, out, pack_id, title, role, hf_repo, revision, license, n_ctx, link, attribution, notices } => {
-            build_model(&gguf, &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
+        Cmd::Model { gguf, dir, file, out, pack_id, title, role, hf_repo, revision, license, n_ctx, link, attribution, notices } => {
+            build_model(gguf.as_deref(), dir.as_deref(), file.as_deref(), &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
             add_notices(&out, &notices, None, None)
         }
         Cmd::Split { pack, out, part_size, single } => split(std::slice::from_ref(&pack), &Manifest::read(&pack)?.pack_id, &out, part_size, single),

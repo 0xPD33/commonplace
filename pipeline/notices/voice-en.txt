@@ -1,0 +1,35 @@
+Moonshine Medium Streaming EN, voice input (pack voice-en)
+
+CREDIT
+Model: Moonshine Medium Streaming (English) by Moonshine AI (Useful Sensors, Inc.), https://github.com/moonshine-ai/moonshine.
+Files: the quantized model files published at https://download.moonshine.ai/model/medium-streaming-en/quantized_26_08_21. Commonplace did not change them.
+
+LICENSE
+MIT License. The upstream LICENSE file (https://github.com/moonshine-ai/moonshine/blob/main/LICENSE) puts every streaming model and every English model under the MIT License. Its SECTION 1 follows word for word. SECTION 2 of that file (the Moonshine Community License) covers only legacy non-streaming models for other languages and does not apply here.
+
+NOTICES
+The model can mistake words. It is provided as is, without warranties of any kind. Moonshine AI did not make this pack and does not endorse it.
+
+
+======================================================================
+MIT License
+
+Copyright (c) 2025 Useful Sensors, Inc. (dba Moonshine AI)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

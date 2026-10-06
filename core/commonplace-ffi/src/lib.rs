@@ -49,6 +49,8 @@ pub enum ModelKind {
     Fast,
     Small,
     Deep,
+    /// Voice input. `load_model` finds no such model.
+    Voice,
 }
 
 impl From<ModelKind> for ModelRole {
@@ -57,6 +59,7 @@ impl From<ModelKind> for ModelRole {
             ModelKind::Fast => ModelRole::LlmFast,
             ModelKind::Small => ModelRole::LlmSmall,
             ModelKind::Deep => ModelRole::LlmDeep,
+            ModelKind::Voice => ModelRole::Stt,
         }
     }
 }
@@ -66,6 +69,7 @@ fn kind(r: &ModelRole) -> ModelKind {
         ModelRole::LlmFast => ModelKind::Fast,
         ModelRole::LlmSmall => ModelKind::Small,
         ModelRole::LlmDeep => ModelKind::Deep,
+        ModelRole::Stt => ModelKind::Voice,
     }
 }
 
@@ -95,7 +99,7 @@ pub struct ModelPackInfo {
     pub kind: ModelKind,
     pub size_bytes: u64,
     pub license: String,
-    /// Absolute path of the model file (GGUF, or .litertlm for the LiteRT backend).
+    /// Absolute path of the model file (GGUF, .litertlm for the LiteRT backend, or the main file of a voice pack).
     pub file_path: String,
 }
 

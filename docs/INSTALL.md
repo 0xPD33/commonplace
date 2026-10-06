@@ -41,6 +41,7 @@ You get each of these files in the same way: tap it under **Get more**, download
 | `arxiv-abs.tar` | 3.3 GB | 3.2 million arXiv abstracts |
 | `stackexchange.tar` | 2.5 GB | 1.2 million question threads from 51 Stack Exchange sites |
 | `lfm25-1.2b.tar` | 0.7 GB | LFM2.5-1.2B, a small model for phones with 8 GB of RAM. Select it in Settings. |
+| `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
 
 All files together use 35.5 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
 

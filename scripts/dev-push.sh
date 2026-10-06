@@ -2,7 +2,7 @@
 # Debug builds only: copy installed pack directories from data/library/packs into the app's
 # internal library over adb (adb push to /data/local/tmp, then run-as cp).
 # Usage: scripts/dev-push.sh <pack_id>...   (packs must exist under data/library/packs/)
-#        scripts/dev-push.sh stt            (voice-input model from data/models/stt/, run scripts/fetch-models.sh stt first)
+#        scripts/dev-push.sh stt            (voice-input model from data/models/stt/ for developer builds; users install the voice-en pack. Run scripts/fetch-models.sh stt first)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PKG=app.commonplace

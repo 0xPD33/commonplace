@@ -206,6 +206,26 @@
           "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/stackexchange.tar?download=true"
         }
       ]
+    },
+    {
+      "pack_id": "voice-en",
+      "title": "Voice input (Moonshine Medium, English)",
+      "description": "Speak your question instead of typing it. English only.",
+      "pack_type": "model",
+      "snapshot": "",
+      "license": "MIT",
+      "replaces": [],
+      "recommended": false,
+      "download_bytes": 269154816,
+      "installed_bytes": 269143657,
+      "files": [
+        {
+          "name": "voice-en.tar",
+          "bytes": 269154816,
+          "sha256": "1127f1c60094c7c253503f35569f8fc0ea4de726b14a785e25adc6b2452e6a56",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/voice-en.tar?download=true"
+        }
+      ]
     }
   ]
 }

@@ -243,7 +243,7 @@ def main():
     w("    Answer reader by nlpconnect, ONNX export by tomasmcm")
     w("    (https://huggingface.co/nlpconnect/deberta-v3-xsmall-squad2)")
     w("Moonshine Medium Streaming (English)  MIT")
-    w("    Voice input model by Moonshine AI. It is not in the app file: you copy it to the phone to use voice input.")
+    w("    Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.")
     w("    (https://github.com/moonshine-ai/moonshine)")
     w("")
     w("4. FONT")

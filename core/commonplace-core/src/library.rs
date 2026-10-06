@@ -1,4 +1,4 @@
-//! The installed library: `<root>/packs/<pack_id>/` for knowledge, Wikidata and model packs.
+//! The installed library: `<root>/packs/<pack_id>/` for knowledge, Wikidata and find(|m| m.role() == Some(role) && *role != ModelRole::Stt &&odel packs.
 
 use crate::pack::{self, Embedder, Manifest, ModelRole, Pack, PackType};
 use crate::tools::wikidata::WikidataDb;
@@ -148,7 +148,7 @@ impl Library {
         Ok(())
     }
 
-    /// The GGUF model pack with `role`. LiteRT packs (`.litertlm`) belong to the Kotlin backend.
+    /// The GGUF model pack with `role`. LiteRT packs (`.litertlm`) and the voice pack (`Stt`) belong to the Kotlin side.
     pub fn model(&self, role: &ModelRole) -> Option<&ModelPack> {
         self.models.iter().find(|m| m.role() == Some(role) && !m.file().is_some_and(|f| f.extension().is_some_and(|e| e == "litertlm")))
     }

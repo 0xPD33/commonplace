@@ -145,7 +145,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
-            val choices = lib?.models?.filter { it.kind != ModelKind.DEEP && !it.filePath.endsWith(".litertlm") } ?: emptyList()
+            val choices = lib?.models?.filter { it.kind != ModelKind.DEEP && it.kind != ModelKind.VOICE && !it.filePath.endsWith(".litertlm") } ?: emptyList()
             if (choices.size > 1) {
                 Spacer(Modifier.height(8.dp))
                 for (m in choices) {

@@ -30,7 +30,7 @@ deberta-v3-xsmall-squad2  Apache-2.0
     Answer reader by nlpconnect, ONNX export by tomasmcm
     (https://huggingface.co/nlpconnect/deberta-v3-xsmall-squad2)
 Moonshine Medium Streaming (English)  MIT
-    Voice input model by Moonshine AI. It is not in the app file: you copy it to the phone to use voice input.
+    Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.
     (https://github.com/moonshine-ai/moonshine)
 
 4. FONT

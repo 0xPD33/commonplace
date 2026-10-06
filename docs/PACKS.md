@@ -16,7 +16,7 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
   tantivy/           optional BM25 index (tantivy 0.26.2)
   dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
   wikidata.sqlite    wikidata packs only
-  <model>.gguf       model packs only
+  <model>.gguf       model packs only (a voice pack, role `stt`, holds the Moonshine files instead; `model.file` names the main one)
 ```
 
 ### Frame store (`store/`, `cards/`)
@@ -106,6 +106,11 @@ $PB build --input data/work/enwiki-core --out data/library/packs/enwiki-core --p
 $PB model --gguf data/models/llm/Ling-3.0-tiny-Q4_0.gguf --out data/library/packs/ling3-tiny --pack-id ling3-tiny \
   --title "Ling 3.0 tiny (Q4_0)" --role llm-fast --hf-repo bartowski/Ling-3.0-tiny-GGUF \
   --revision ea072726af0d2e8ba325b2f90fc0efa762105a91 --license MIT --link
+# The voice pack: every file of a directory, role stt (only the Kotlin app loads it).
+$PB model --dir data/models/stt/moonshine-medium-streaming-en --file encoder.ort --out data/library/packs/voice-en --pack-id voice-en \
+  --title "Voice input (Moonshine Medium, English)" --role stt --hf-repo download.moonshine.ai/model/medium-streaming-en \
+  --revision quantized_26_08_21 --license MIT --notice pipeline/notices/voice-en.txt \
+  --attribution "Moonshine Medium Streaming EN by Moonshine AI (UsefulSensors); download.moonshine.ai"
 
 # Notices: copy the notice into a built pack and fix its license or attribution (sources: pipeline/notices/).
 $PB notice --pack data/library/packs/wikem-en --notice pipeline/notices/wikem-en.txt --license "CC BY-SA 4.0"

@@ -43,7 +43,7 @@ You get each of these files in the same way: tap it under **Get more**, download
 | `lfm25-1.2b.tar` | 0.7 GB | LFM2.5-1.2B, a small model for phones with 8 GB of RAM. Select it in Settings. |
 | `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
 
-All files together use 35.5 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
+All files together use 35.8 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
 
 In the Library, each knowledge pack has a switch. A pack that is off stays installed but the app does not search it.
 

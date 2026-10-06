@@ -114,7 +114,7 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 |---|---|
 | Runs on Android and GrapheneOS hardware | I run it on a Pixel 10 with GrapheneOS (Android 17). The minimum is Android 12 on a 64-bit ARM CPU. |
 | Works in a maximum of 12 GB of RAM | The peak memory of the app with the main model is 5.1 GB on the Pixel 10 ([BENCHMARKS](docs/BENCHMARKS.md)). |
-| Uses no more than 50 GB in total | The Starter set uses 11.3 GB. All packs together use 35.5 GB, plus the app. The app refuses an import that takes the total above 50 GB. |
+| Uses no more than 50 GB in total | The Starter set uses 11.3 GB. All packs together use 35.8 GB, plus the app. The app refuses an import that takes the total above 50 GB. |
 | Works offline, with no network requests during use | The APK has no `INTERNET` permission, so Android blocks all network access. The release script stops if the permission appears. You download the packs once with the browser. |
 | No Google Play Services | The app uses no Google Play Services library: the APK contains no `com.google.android.gms` classes. |
 | Explanation, comparison, synthesis and reasoning | A comparison runs one search for each item and computes ratios from Wikidata in code. Follow-up questions use the earlier turns. A thinking mode lets the model reason before it answers. |
@@ -144,11 +144,11 @@ Each bar is the score ratio for one type of question. 1.0 means as good as Claud
 
 ### What fits on the phone
 
-The Starter set needs 11.3 GB. Every pack together needs 35.5 GB, which leaves room under the 50 GB limit.
+The Starter set needs 11.3 GB. Every pack together needs 35.8 GB, which leaves room under the 50 GB limit.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-storage-dark.svg">
-  <img src="docs/images/chart-storage-light.svg" width="760" alt="Storage in GB. Starter set 11.3: Wikipedia 3.5, AI model 4.6, Wikidata facts 3.2. Every pack 35.5: Wikipedia 19.2, AI models 5.3, Wikidata facts 3.2, arXiv and Stack Exchange 5.8, Reference shelf 2.0. Limit 50">
+  <img src="docs/images/chart-storage-light.svg" width="760" alt="Storage in GB. Starter set 11.3: Wikipedia 3.5, AI model 4.6, Wikidata facts 3.2. Every pack 35.8: Wikipedia 19.2, AI and voice models 5.6, Wikidata facts 3.2, arXiv and Stack Exchange 5.8, Reference shelf 2.0. Limit 50">
 </picture>
 
 ## Under the hood

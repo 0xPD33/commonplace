@@ -6,9 +6,9 @@ I built it for the poidh bounty [Build the Best Offline AI Research App for Andr
 
 [Screens](#screens) · [The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source)
 
-[![A tour of Commonplace on a Pixel 10: ask a question, open a cited source, compare two mountains, switch to dark mode](docs/media/commonplace-showcase.jpg)](docs/media/commonplace-showcase.mp4)
+[![Commonplace on a Pixel 10: you type "How tall is Mount Everest?", the best passage and Wikidata facts appear, then the answer streams in with citations](docs/media/commonplace-ask.gif)](docs/media/commonplace-showcase.mp4)
 
-*A 95-second tour with sound, recorded on a Pixel 10 ([MP4, 17 MB](docs/media/commonplace-showcase.mp4)). The video speeds up the waits and shows each speed-up on screen.*
+*Ask, read the evidence, get the answer: 16 seconds from the tour, recorded on a Pixel 10. The full 95-second tour with sound is an [MP4 (17 MB)](docs/media/commonplace-showcase.mp4). The video speeds up the waits and shows each speed-up on screen.*
 
 ## Screens
 

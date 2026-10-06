@@ -672,6 +672,7 @@ fn split(packs: &[PathBuf], stem: &str, out: &Path, part_size: u64, single: bool
     {
         let mut tb = tar::Builder::new(&mut pw);
         tb.mode(tar::HeaderMode::Deterministic);
+        tb.sparse(false); // plain entries: the 0.1.0 app rejects GNU sparse entries
         for pack in packs {
             tb.append_dir_all(&Manifest::read(pack)?.pack_id, pack)?;
         }

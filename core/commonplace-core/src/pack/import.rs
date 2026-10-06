@@ -162,7 +162,8 @@ pub fn import<P: ImportProgress>(
         let dest = staging.join(&top).join(&inner);
         match entry.header().entry_type() {
             tar::EntryType::Directory => std::fs::create_dir_all(&dest)?,
-            tar::EntryType::Regular => {
+            // Published packs hold GNU sparse entries (tar 0.4.46 writes them by default); reading fills the holes.
+            tar::EntryType::Regular | tar::EntryType::GNUSparse => {
                 if let Some(p) = dest.parent() {
                     std::fs::create_dir_all(p)?;
                 }

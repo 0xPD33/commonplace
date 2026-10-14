@@ -128,10 +128,9 @@ How I measure quality: Claude Opus 5.5 with web search answers each question as 
 Limits of this measurement:
 
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
-- The baseline wins almost every single question (61 losses, 2 ties). Commonplace gets half the points, not half the wins.
-- Multi-step (0.49), how-to (0.49) and numeric questions (0.47) are below 0.50.
-- The score ratio of 0.53 comes from the desktop build of 2026-10-05 with the same model and all packs, including the full Wikipedia. With the phone's settings and only the Starter set, the same harness gave 0.48 before the fixes of 2026-10-10 and 0.50 after them (desktop runs, [BENCHMARKS](docs/BENCHMARKS.md#desktop-judged-evals-with-the-phone-settings-2026-10-10)).
-- Later changes, such as the new answer prompt and the distilled reranker, have pairwise measurements against the earlier build, but no new score ratio.
+- The baseline wins almost every single question (61 losses, 1 tie, 1 win). Commonplace gets half the points, not half the wins.
+- Travel (0.39), fact (0.43) and how-to questions (0.46) are below 0.50.
+- The score ratio of 0.53 comes from the 0.2.0 build with the phone's settings and only the Starter set, run on the desktop (2026-10-14). The builds of 2026-10-10 scored 0.48 and 0.50 with the same settings ([BENCHMARKS](docs/BENCHMARKS.md#desktop-judged-evals-with-the-phone-settings-2026-10-10)). The desktop build of 2026-10-05 with all packs, including the full Wikipedia, scored 0.53.
 - The phone uses a selective int8 copy of the reranker. On NQ it stays within 1 point of hit@1 of the full model (0.510 against 0.515).
 
 ### Quality by type of question
@@ -140,7 +139,7 @@ Each bar is the score ratio for one type of question. 1.0 means as good as Claud
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-quality-dark.svg">
-  <img src="docs/images/chart-quality-light.svg" width="760" alt="Score ratio against Claude with web search: all questions 0.53; answer not in the library 0.63, rare topics 0.62, explanations 0.56, comparisons 0.56, facts 0.55, travel 0.50, multi-step 0.49, how-to 0.49, numbers 0.47">
+  <img src="docs/images/chart-quality-light.svg" width="760" alt="Score ratio against Claude with web search: all questions 0.53; answer not in the library 0.79, numbers 0.69, rare topics 0.65, multi-step 0.57, comparisons 0.55, explanations 0.51, how-to 0.46, facts 0.43, travel 0.39">
 </picture>
 
 ### What fits on the phone

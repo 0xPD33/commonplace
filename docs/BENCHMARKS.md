@@ -5,7 +5,7 @@ The acceptance device is a Pixel 10 on GrapheneOS. The desktop and emulator rows
 
 Build: working tree before the first commit (`CP_BUILD=dev`), llama.cpp `b11240`.
 
-## Current numbers (2026-10-13)
+## Current numbers (2026-10-14)
 
 Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), the 0.2.0 debug build (working tree on `c552cf4`), Ling-3.0-tiny Q4_0, the Starter set and the breadth packs. The reranker is the distilled Ettin-17m `model_sel8.onnx` on the top 24 passages. The question rewrite is off (the default). Details are in "Pixel 10: the 0.2.0 build" below.
 
@@ -20,7 +20,7 @@ Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), the 0.2.0 debu
 | Peak RSS with Ling | 5.3 GB (5.1 GB on 2026-10-02). The memory limit is 6 GiB with the app on screen and 3 GiB when it is hidden. |
 | Voice input | +0.58 GB PSS while the mic is on |
 
-Desktop, 63 seed questions, Claude as the judge: score ratio 0.529 against Claude with web search (`v18-release`, [EVAL.md](EVAL.md)). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
+Desktop, 63 seed questions, Claude as the judge: score ratio 0.530 against Claude with web search, with the phone's settings and the Starter set (`v19-phone-starter`, 2026-10-14, [EVAL.md](EVAL.md)). The desktop build of 2026-10-05 with all packs scored 0.529 (`v18-release`). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
 Desktop, NQ-open retrieval with the 2026 Wikipedia (2,610 held-out questions): hit@5 0.738, hit@10 0.780, pool recall 0.825.
 
 ## Desktop CLI — AMD Ryzen 9 9950X3D, 62 GB RAM, 8 llama.cpp threads, AVX2 build (2026-09-29)
@@ -433,6 +433,17 @@ The file saves 7.3 to 9.4 s per start. The rest is the load of the 4.9 GB model 
 | Peak RSS (VmHWM) | 5,315 MB | 5,294 MB |
 
 Over all 10 questions: card median 0.50 s (395-733 ms), first word median 7.2 s (5.9-13.4 s). The comparison question reranks 48 passages (335-351 ms). The hot last question is the slowest: prefill and decode both slow down, and the thermal rule drops one decode thread. Acceptance limits: card ≤ 1.5 s and first word ≤ 10 s at p50. Both pass.
+
+**Wikidata hops on the Pixel** (2026-10-14, debug build `be6d684`): seed-mh-07 (1964 Summer Olympics, then Japan's highest point) answers Mount Fuji with a card of 663 ms and a first word at 11.2 s. seed-mh-08 (Angkor Wat, then Cambodia's currency) answers the riel with a card of 475 ms and a first word at 10.5 s. The phone log has no separate time for the hop; both cards stay inside the 1.5 s limit.
+
+## Desktop: judged eval of the 0.2.0 build (2026-10-14)
+
+`v19-phone-starter`: the 0.2.0 build (`2398cb4`), `run.py --phone` on the Starter set. The distilled `model_sel8.onnx` reranker, the answer prompt with examples and every change of 2026-10-10 to 2026-10-13 run together. Claude Opus 5.5 is the baseline and the judge. The run directory is in `eval/runs/`, and [EVAL.md](EVAL.md) is its report.
+
+- Score ratio 0.530 (1 win, 1 tie, 61 losses). The builds of 2026-10-10 scored 0.48 and 0.50 with the same settings. The gain is inside the judge noise (±0.05): the run shows that quality held with all changes together, not that it rose.
+- By type: numbers 0.69, multi-hop 0.57, comparison 0.55 and explanation 0.51. Travel (0.39), facts (0.43) and how-to (0.46) stay below 0.50.
+- Recall@10 0.351, recall@40 0.472, and 0.269 among the sources the model saw (any-pack gold, so not comparable with the Wikipedia-only recall of `v18-release`).
+- Desktop latency: card p50 140 ms, first word p50 2.5 s.
 
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.

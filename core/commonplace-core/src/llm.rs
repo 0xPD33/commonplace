@@ -15,20 +15,22 @@ pub struct GenParams {
     /// Thinking mode: at most this many reasoning tokens, streamed as `<think>…</think>` before the
     /// answer. `None` switches thinking off. Backends without a thinking mode ignore it.
     pub think_budget: Option<u32>,
+    /// Never evict this system prompt's cached prefill (the answer prompt, which every question uses).
+    pub keep_prefix: bool,
 }
 
 impl GenParams {
     pub fn synthesis(max_tokens: u32) -> Self {
-        Self { max_tokens, temperature: 0.3, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None }
+        Self { max_tokens, temperature: 0.3, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None, keep_prefix: false }
     }
 
     /// Short deterministic output without a grammar (query rewriting).
     pub fn greedy(max_tokens: u32) -> Self {
-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None }
+        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None, keep_prefix: false }
     }
 
     pub fn json(max_tokens: u32, grammar: &str) -> Self {
-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None }
+        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None, keep_prefix: false }
     }
 }
 

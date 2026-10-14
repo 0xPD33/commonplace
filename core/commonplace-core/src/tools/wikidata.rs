@@ -2,9 +2,9 @@
 
 use anyhow::Result;
 use rusqlite::{Connection, OpenFlags, params};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 pub const SCHEMA: &str = "
 CREATE TABLE props(pid TEXT PRIMARY KEY, label TEXT NOT NULL, priority INTEGER NOT NULL) WITHOUT ROWID;
@@ -27,13 +27,87 @@ pub struct WdFact {
 }
 
 impl WdFact {
-    /// Evidence line, e.g. `Malta — population: 563,443 (2024)`.
+    /// Line with the entity name, e.g. `Malta — population: 563,443 (2024)`.
     pub fn line(&self) -> String {
         match &self.point_in_time {
             Some(t) => format!("{} — {}: {} ({})", self.entity, self.label, self.value, t),
             None => format!("{} — {}: {}", self.entity, self.label, self.value),
         }
     }
+
+    /// Line under the entity's heading, e.g. `population: 563,443 (2024)`.
+    pub fn short_line(&self) -> String {
+        match &self.point_in_time {
+            Some(t) => format!("{}: {} ({t})", self.label, self.value),
+            None => format!("{}: {}", self.label, self.value),
+        }
+    }
+
+    /// The QID as a number (`Q30` → 30): the passage and article id of a Wikidata source.
+    pub fn qid_num(&self) -> u32 {
+        self.qid.trim_start_matches('Q').parse().unwrap_or(0)
+    }
+}
+
+#[derive(Deserialize)]
+struct PropFile {
+    dims: usize,
+    props: Vec<PropEntry>,
+}
+
+#[derive(Deserialize)]
+struct PropEntry {
+    id: String,
+    label: String,
+    /// Its values are numbers.
+    #[serde(default)]
+    quantity: bool,
+    scale: f32,
+    /// int8 values as hex.
+    v: String,
+}
+
+/// A property, or a ratio of two ("P1082/P2046"), with its cosine to the question minus the mean cosine of all
+/// properties: how much more than the average property the question asks about it.
+#[derive(Debug, Clone)]
+pub struct PropScore {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub quantity: bool,
+    pub score: f32,
+}
+
+struct PropVector {
+    id: String,
+    label: String,
+    quantity: bool,
+    v: Vec<f32>,
+}
+
+/// Unit vectors written by `pipeline/commonplace_pipeline/prop_vectors.py`, in the query encoder's space, and their size.
+static PROP_VECTORS: LazyLock<(Vec<PropVector>, usize)> = LazyLock::new(|| {
+    let f: PropFile = serde_json::from_str(include_str!("../wikidata_props.json")).expect("wikidata_props.json");
+    let props = f
+        .props
+        .into_iter()
+        .map(|p| {
+            let v: Vec<f32> = hex::decode(&p.v).expect("wikidata_props.json hex").into_iter().map(|b| b as i8 as f32 * p.scale).collect();
+            let norm = v.iter().map(|x| x * x).sum::<f32>().sqrt().max(1e-12);
+            PropVector { id: p.id, label: p.label, quantity: p.quantity, v: v.into_iter().map(|x| x / norm).collect() }
+        })
+        .collect();
+    (props, f.dims)
+});
+
+/// Every property's score for a question embedding; empty when the embedding has other dimensions.
+pub fn prop_scores(emb: &[f32]) -> Vec<PropScore> {
+    let (props, dims) = &*PROP_VECTORS;
+    if emb.len() != *dims || props.is_empty() {
+        return vec![];
+    }
+    let cos: Vec<f32> = props.iter().map(|p| p.v.iter().zip(emb).map(|(a, b)| a * b).sum()).collect();
+    let mean = cos.iter().sum::<f32>() / cos.len() as f32;
+    props.iter().zip(cos).map(|(p, c)| PropScore { id: &p.id, label: &p.label, quantity: p.quantity, score: c - mean }).collect()
 }
 
 pub fn format_num(x: f64) -> String {

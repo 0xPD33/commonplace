@@ -5,12 +5,12 @@ use crate::encoders::{Head, QueryEncoder, Reader, Reranker};
 use crate::evidence::{self, Evidence};
 use crate::library::{Library, ModelPack};
 use crate::llm::{GenParams, GenStats, LlmBackend};
-use crate::pack::ModelRole;
+use crate::pack::{ModelRole, normalize_title};
 use crate::prompts;
 use crate::retrieval::{Hit, RetrievalSettings, Retriever, select_diverse};
 use crate::route::{self, Route};
 use crate::telemetry::{self, QueryRecord};
-use crate::tools::{calc, units, wikidata::WdFact, wikidata::format_num};
+use crate::tools::{calc, units, wikidata::PropScore, wikidata::WdFact, wikidata::format_num, wikidata::prop_scores};
 use anyhow::{Context, Result, anyhow, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
@@ -153,6 +153,37 @@ pub struct CardPassage {
 /// confident wrong ones (seen: 17.4 for a wrong answer), so the UI always names the source.
 const FEATURED_MIN_MARGIN: f32 = 3.0;
 
+/// Intent-head probability of "compare" at which a question that names two things compares them, and a
+/// follow-up that names one thing is compared with the last topic: "Is France bigger?" scores 0.38, "How big
+/// is France?" 0.03. "Is Saturn bigger than Neptune?" scores 0.38 though it reads more like calc (0.45).
+const COMPARE_PROB: f32 = 0.25;
+
+/// Follow-up-head probability at which a message that names nothing continues a last question that named
+/// exactly one thing ("How many books did he write?" after "Who is Stephen King?"). New topics after such a
+/// question scored up to 0.29 in the conversation set; the head's own bar is 0.5.
+const FOLLOW_UP_LOW: f32 = 0.35;
+
+/// `wikidata::prop_scores` score at which the question asks about a property. In a 77-question check, the
+/// asked property of 43 of 47 answerable questions was among an entity's 3 best facts at this score or above.
+const FACT_RELEVANCE: f32 = 0.10;
+/// The same for the best passage's entity, which the question may not be about ("part of" scores 0.105 for
+/// "When was the US created?" and the article "History of the United States").
+const GUESSED_FACT_RELEVANCE: f32 = 0.15;
+/// Item-valued facts per entity that a Wikidata hop follows, best match first.
+const HOP_BRIDGES: usize = 8;
+/// Reranker score at which a hop's chain of facts is relevant. In a check on 155 seed and conversation turns,
+/// the three right chains scored 11.0 to 11.6, the best wrong one 10.0 ("2016 United States presidential
+/// election — country: United States. United States — head of government: Donald Trump").
+const HOP_RELEVANCE: f32 = 10.5;
+/// Asked-about facts per entity in the evidence.
+const FACTS_PER_ENTITY: usize = 3;
+/// Numbers every compared entity has, in the evidence of a comparison.
+const SHARED_NUMBERS: usize = 3;
+/// `wikidata::prop_scores` score of the best quantity at which a question without its names asks for a number
+/// ("which was bigger, the or the ?" 0.189, "compare and" 0.120). Set on 26 comparisons; on 22 others it let
+/// through 12 of 12 that ask for a number and 1 of 10 that do not.
+const NUMBER_ASKED: f32 = 0.16;
+
 /// Featured snippet: a short answer span, the sentence around it, and where it came from.
 #[derive(Debug, Clone, Serialize)]
 pub struct Featured {
@@ -292,7 +323,7 @@ impl Engine {
     pub fn pool(&self, query: &str) -> Result<(Arc<Library>, Vec<Hit>)> {
         let lib = self.library();
         let s = self.settings.read().unwrap().clone();
-        let route = route::route(&lib, query, false, self.rr.as_ref(), &[], &[]);
+        let route = route::route(&lib, query, self.rr.as_ref(), &[], &[]);
         let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval, scope: &[] };
         let mut st = Default::default();
         let mut hits = retriever.fused(&route.query, &route.entities, &mut st)?;
@@ -344,19 +375,27 @@ impl Engine {
         let lib = self.library();
         let mp = lib.model(&role).with_context(|| format!("no {role:?} model installed"))?;
         *self.llm.write().unwrap() = None;
-        let threads = self.settings.read().unwrap().llm_threads;
+        let (threads, rewrite) = {
+            let s = self.settings.read().unwrap();
+            (s.llm_threads, s.rewrite)
+        };
         let llm = loader(mp, threads)?;
-        Self::warm_up(llm.as_ref(), &lib.snapshot_date());
+        Self::warm_up(llm.as_ref(), &lib.snapshot_date(), rewrite);
         *self.llm.write().unwrap() = Some((role, llm));
         Ok(())
     }
 
-    /// Prefill the fixed rewrite and answer prompts once, so the first question does not pay for them
-    /// (the backend caches a system prompt's state after its first use). Seconds on a phone CPU.
-    pub fn warm_up(llm: &dyn LlmBackend, snapshot_date: &str) {
+    /// Prefill the fixed answer prompt once, and the rewrite prompt when that step is on, so the first
+    /// question does not pay for them (the backend caches a system prompt's state after its first use, and
+    /// with a state directory loads the answer prompt's state from disk instead of prefilling it).
+    /// Seconds on a phone CPU.
+    pub fn warm_up(llm: &dyn LlmBackend, snapshot_date: &str, rewrite: bool) {
         let one = GenParams::greedy(1);
-        let _ = llm.generate(prompts::REWRITE_SYSTEM, "Message: hello", &one, &mut |_| false);
-        let _ = llm.generate(&prompts::synthesis_system(snapshot_date), "Question: hello", &one, &mut |_| false);
+        if rewrite {
+            let _ = llm.generate(prompts::REWRITE_SYSTEM, "Message: hello", &one, &mut |_| false);
+        }
+        let answer = GenParams { keep_prefix: true, ..one };
+        let _ = llm.generate(&prompts::synthesis_system(snapshot_date, true), "Question: hello", &answer, &mut |_| false);
     }
 
     pub fn unload_model(&self) {
@@ -389,41 +428,45 @@ impl Engine {
         }
     }
 
+    /// A Wikidata entity in the source list: its facts are the snippet, and the QID is the passage and article id.
+    fn wikidata_ref(lib: &Library, w: &evidence::WdSource) -> SourceRef {
+        let (pack_id, pack_title, license) = lib.wikidata.as_ref().map(|(m, _)| (m.pack_id.clone(), m.title.clone(), m.license.clone())).unwrap_or_default();
+        let f = &w.facts[0];
+        SourceRef {
+            n: w.n,
+            pack_id,
+            pack_title,
+            passage_id: f.qid_num(),
+            article_id: f.qid_num(),
+            title: f.entity.clone(),
+            section: String::new(),
+            snippet: w.shown.join("; ").chars().take(160).collect(),
+            score: 0.0,
+            license,
+            source_url: format!("https://www.wikidata.org/wiki/{}", f.qid),
+        }
+    }
+
     /// The Wikidata pack, unless a pack scope leaves it out.
     fn wikidata<'a>(lib: &'a Library, scope: &[String]) -> Option<&'a crate::tools::wikidata::WikidataDb> {
         let (m, wd) = lib.wikidata.as_ref()?;
         (scope.is_empty() || scope.contains(&m.pack_id)).then_some(wd)
     }
 
-    fn wikidata_facts(lib: &Library, route: &Route, total: usize, scope: &[String]) -> Vec<WdFact> {
-        let Some(wd) = Self::wikidata(lib, scope) else { return vec![] };
-        let qids: Vec<&str> = route.entities.iter().filter_map(|e| e.article.qid.as_deref()).collect();
-        if qids.is_empty() {
-            return vec![];
+    /// The card's facts and the evidence's facts. The card shows up to `total` facts of the named entities,
+    /// those the question asks about first. The evidence keeps only the asked-about facts and, for a
+    /// comparison, the numbers every entity has. `scores` are `wikidata::prop_scores` of the question.
+    fn wikidata_facts(lib: &Library, route: &Route, top: Option<&Hit>, scores: &[PropScore], compare: bool, total: usize, scope: &[String]) -> (Vec<WdFact>, Vec<WdFact>) {
+        let Some(wd) = Self::wikidata(lib, scope) else { return (vec![], vec![]) };
+        let mut qids: Vec<&str> = route.entities.iter().filter_map(|e| e.article.qid.as_deref()).collect();
+        let named = qids.len();
+        // The best passage's article joins with the facts the question clearly asks about: the question may name
+        // nothing, or name something else ("the inventor of the World Wide Web").
+        if let Some(q) = top.and_then(|h| h.article.qid.as_deref()).filter(|q| !qids.contains(q) && !scores.is_empty()) {
+            qids.push(q);
         }
-        let per = (total / qids.len()).max(3);
-        let mut qterms: std::collections::HashSet<String> = crate::text::terms(&route.query).into_iter().collect();
-        // Everyday words for the most asked properties (terms are 6-character stems).
-        for (words, prop) in [
-            (&["tall", "high", "height"][..], "elevat"),
-            (&["big", "large", "size", "square"], "area"),
-            (&["people", "inhabi", "live", "reside"], "popula"),
-            (&["born", "birth", "old", "age"], "birth"),
-            (&["died", "death", "dead"], "death"),
-            (&["founde", "built", "establ", "old"], "incept"),
-            (&["long", "length"], "length"),
-            (&["money", "curren"], "curren"),
-            (&["speak", "langua", "spoken"], "langua"),
-            (&["leader", "presid", "prime", "ruler", "head"], "head"),
-            (&["study", "studie", "univer", "colleg", "school", "attend", "gradua", "alma"], "educat"),
-            (&["wife", "husban", "marrie", "spouse"], "spouse"),
-            (&["child", "childr", "son", "sons", "daught", "kids"], "child"),
-            (&["work", "worked", "employ", "job"], "employ"),
-            (&["award", "awards", "prize", "prizes", "won", "honour", "honor"], "award"),
-        ] {
-            if words.iter().any(|w| qterms.contains(*w)) {
-                qterms.insert(prop.to_string());
-            }
+        if qids.is_empty() {
+            return (vec![], vec![]);
         }
         let all: Vec<Vec<WdFact>> = qids
             .iter()
@@ -436,22 +479,97 @@ impl Engine {
                     .collect()
             })
             .collect();
-        let mut out = Vec::new();
-        for facts in &all {
+        let score = |f: &WdFact| scores.iter().find(|s| s.id == f.pid).map(|s| s.score);
+        let asked = |f: &WdFact| score(f).filter(|s| *s >= FACT_RELEVANCE);
+        let bar = |i: usize| if i < named { FACT_RELEVANCE } else { GUESSED_FACT_RELEVANCE };
+        let shared = |f: &WdFact| all[..named].iter().all(|o| o.iter().any(|g| g.pid == f.pid));
+        let mut card = Vec::new();
+        let mut evidence = Vec::new();
+        let per = (total / named.max(1)).max(3);
+        // A comparison lines up the numbers every named entity has, best match first.
+        let mut numbers: Vec<&WdFact> = if named >= 2 && compare { all[0].iter().filter(|f| f.value_num.is_some() && shared(f)).collect() } else { vec![] };
+        numbers.sort_by(|a, b| score(b).unwrap_or(f32::MIN).total_cmp(&score(a).unwrap_or(f32::MIN)));
+        numbers.truncate(SHARED_NUMBERS);
+        for (i, facts) in all.iter().enumerate() {
             let mut facts = facts.clone();
-            // Facts the question asks about first, then properties every entity has (so a comparison lines
+            // Asked-about facts first (best first), then properties every entity has (so a comparison lines
             // up), then the pack's priority order (stable sort).
-            let shared = |f: &WdFact| all.iter().all(|o| o.iter().any(|g| g.pid == f.pid));
-            facts.sort_by_key(|f| (!crate::text::terms(&f.label).iter().any(|t| qterms.contains(t)), !shared(f)));
-            out.extend(facts.into_iter().take(per));
+            facts.sort_by(|a, b| {
+                let key = |f: &WdFact| (-asked(f).unwrap_or(f32::NEG_INFINITY), !shared(f));
+                let (x, y) = (key(a), key(b));
+                x.0.total_cmp(&y.0).then(x.1.cmp(&y.1))
+            });
+            let picked: Vec<&WdFact> = if scores.is_empty() {
+                facts.iter().take(per).collect()
+            } else {
+                let mut p: Vec<&WdFact> = facts.iter().filter(|f| score(f).is_some_and(|s| s >= bar(i))).take(FACTS_PER_ENTITY).collect();
+                if i < named {
+                    let lined_up: Vec<&WdFact> = facts.iter().filter(|f| numbers.iter().any(|n| n.pid == f.pid) && !p.iter().any(|g| g.pid == f.pid)).collect();
+                    p.extend(lined_up);
+                }
+                p
+            };
+            evidence.extend(picked.into_iter().cloned());
+            if i < named {
+                card.extend(facts.into_iter().take(per));
+            } else if named == 0 {
+                card.extend(evidence.iter().cloned());
+            }
         }
-        out.truncate(total.max(per));
-        out
+        card.truncate(total.max(per));
+        if scores.is_empty() {
+            evidence = card.clone();
+        }
+        (card, evidence)
     }
 
-    /// Ratios, differences and densities from Wikidata numbers, computed in Rust.
-    /// Entities keep their order in the question, so "Russia than France" divides Russia by France.
-    fn wikidata_calcs(lib: &Library, route: &Route, scope: &[String]) -> Vec<String> {
+    /// The property the question asks about most, when no entity has it, from an entity one item-valued fact
+    /// away: "the country that hosted the 1964 Summer Olympics" gives "country: Japan", then Japan's "highest
+    /// point". Returns the bridge fact and the asked fact when the reranker finds the chain relevant.
+    fn wikidata_hop(lib: &Library, rr: &Reranker, route: &Route, top: Option<&Hit>, scores: &[PropScore], scope: &[String]) -> Result<Vec<WdFact>> {
+        let Some(wd) = Self::wikidata(lib, scope) else { return Ok(vec![]) };
+        let Some(want) = scores.iter().filter(|s| !s.id.contains('/')).max_by(|a, b| a.score.total_cmp(&b.score)).filter(|s| s.score >= FACT_RELEVANCE) else {
+            return Ok(vec![]);
+        };
+        let mut qids: Vec<&str> = route.entities.iter().filter_map(|e| e.article.qid.as_deref()).collect();
+        if let Some(q) = top.and_then(|h| h.article.qid.as_deref()).filter(|q| !qids.contains(q)) {
+            qids.push(q);
+        }
+        let raw: Vec<Vec<WdFact>> = qids.iter().map(|q| wd.facts(q, 40).unwrap_or_default()).collect();
+        if raw.iter().flatten().any(|f| f.pid == want.id) {
+            return Ok(vec![]);
+        }
+        let score = |f: &WdFact| scores.iter().find(|s| s.id == f.pid).map_or(f32::MIN, |s| s.score);
+        let mut chains: Vec<[WdFact; 2]> = Vec::new();
+        'entities: for facts in &raw {
+            // A class's facts do not hold for its members.
+            let mut bridges: Vec<&WdFact> = facts.iter().filter(|f| f.value_num.is_none() && f.value != f.entity && !matches!(f.pid.as_str(), "P31" | "P279")).collect();
+            bridges.sort_by(|a, b| score(b).total_cmp(&score(a)));
+            for b in bridges.into_iter().take(HOP_BRIDGES) {
+                for v in b.value.split(", ") {
+                    let found = lib.scoped(scope).filter_map(|(_, p)| p.meta.lookup_title(&normalize_title(v)).ok().flatten()).max_by_key(|a| a.popularity);
+                    let Some(q) = found.and_then(|a| a.qid).filter(|q| *q != b.qid) else { continue };
+                    let asked = wd.facts(&q, 100).unwrap_or_default().into_iter().find(|f| f.pid == want.id && !f.value.split(", ").any(|v| v == b.entity));
+                    if let Some(f) = asked {
+                        chains.push([b.clone(), f]);
+                        continue 'entities;
+                    }
+                }
+            }
+        }
+        if chains.is_empty() {
+            return Ok(vec![]);
+        }
+        let docs: Vec<String> = chains.iter().map(|[b, f]| format!("{}. {}", b.line(), f.line())).collect();
+        let rel = rr.score(&route.query, &docs)?;
+        let best = (0..chains.len()).max_by(|&a, &b| rel[a].total_cmp(&rel[b])).filter(|&i| rel[i] >= HOP_RELEVANCE);
+        Ok(best.map(|i| chains.swap_remove(i).to_vec()).unwrap_or_default())
+    }
+
+    /// Ratios, differences and derived values (population density) from Wikidata numbers, computed in Rust,
+    /// for the number the question asks about. Entities keep their order in the question, so "Russia than
+    /// France" divides Russia by France.
+    fn wikidata_calcs(lib: &Library, route: &Route, scores: &[PropScore], scope: &[String]) -> Vec<String> {
         let Some(wd) = Self::wikidata(lib, scope) else { return vec![] };
         let lower = route.query.to_lowercase();
         let mut ents: Vec<(usize, &str, Vec<WdFact>)> = route
@@ -463,52 +581,47 @@ impl Engine {
             })
             .collect();
         ents.sort_by_key(|e| e.0);
-        // (value, unit, property label) of the first fact whose label contains `frag`.
-        let num = |facts: &[WdFact], frag: &str| {
-            facts.iter().find(|f| f.label.contains(frag)).and_then(|f| {
+        let pid_num = |facts: &[WdFact], pid: &str| {
+            facts.iter().find(|f| f.pid == pid).and_then(|f| {
                 let v = f.value_num?;
-                Some((v, f.value.strip_prefix(&format_num(v)).unwrap_or("").trim().to_string(), f.label.clone()))
+                Some((v, f.value.strip_prefix(&format_num(v)).unwrap_or("").trim().to_string()))
             })
         };
+        // (value, unit) of a property, or of a ratio of two ("P1082/P2046").
+        let value = |facts: &[WdFact], id: &str| match id.split_once('/') {
+            Some((a, b)) => {
+                let ((x, _), (y, uy)) = (pid_num(facts, a)?, pid_num(facts, b)?);
+                (y > 0.0).then(|| (x / y, format!("per {uy}").trim().to_string()))
+            }
+            None => pid_num(facts, id),
+        };
+        // Each entity's best-matching number. A comparison needs the same one for both: "How far is Mars from
+        // the Sun?" matches the distance, which only Mars has, so the areas are not compared.
+        let best = |facts: &[WdFact]| scores.iter().filter(|s| value(facts, s.id).is_some()).max_by(|a, b| a.score.total_cmp(&b.score));
         let round2 = |x: f64| (x * 100.0).round() / 100.0;
         let mut out = Vec::new();
-        if lower.contains("density") {
+        let Some(prop) = ents.first().and_then(|(_, _, f)| best(f)).filter(|p| p.score >= FACT_RELEVANCE) else { return out };
+        let label = prop.label;
+        if let Some((pa, pb)) = prop.id.split_once('/') {
             for (_, name, facts) in &ents {
-                if let (Some((p, _, _)), Some((a, u, _))) = (num(facts, "population"), num(facts, "area"))
-                    && a > 0.0
-                {
-                    out.push(format!("population density of {name} = {} ÷ {} {u} = {} per {u}", format_num(p), format_num(a), format_num(round2(p / a))));
+                if let (Some((x, ux)), Some((y, uy)), Some((v, u))) = (pid_num(facts, pa), pid_num(facts, pb), value(facts, prop.id)) {
+                    let ux = if ux.is_empty() { String::new() } else { format!(" {ux}") };
+                    out.push(format!("{label} of {name} = {}{ux} ÷ {} {uy} = {} {u}", format_num(x), format_num(y), format_num(round2(v))));
                 }
             }
         }
-        const PROPS: &[(&[&str], &[&str])] = &[
-            (&["taller", "tall", "height", "higher", "high"], &["elevation", "height"]),
-            (&["larger", "bigger", "smaller", "large", "big", "area", "size"], &["area"]),
-            (&["longer", "shorter", "long", "length"], &["length"]),
-            (&["populous", "population", "people", "inhabitants"], &["population"]),
-            (&["deeper", "deep", "depth"], &["depth"]),
-            (&["heavier", "lighter", "mass", "weigh"], &["mass"]),
-        ];
-        if let [(_, a, fa), (_, b, fb), ..] = ents.as_slice() {
-            'props: for (words, frags) in PROPS {
-                if !words.iter().any(|w| lower.contains(w)) {
-                    continue;
-                }
-                for frag in *frags {
-                    if let (Some((x, ux, label)), Some((y, uy, _))) = (num(fa, frag), num(fb, frag))
-                        && ux == uy
-                        && y != 0.0
-                    {
-                        let unit = if ux.is_empty() { String::new() } else { format!(" {ux}") };
-                        out.push(format!("{label} of {a} ÷ {label} of {b} = {}", format_num(round2(x / y))));
-                        out.push(format!("{label} of {a} − {label} of {b} = {}{unit}", format_num(round2(x - y))));
-                        // In words too: the model misreads a negative difference ("Is France bigger?" → "Yes").
-                        let rel = if x > y { "greater than" } else if x < y { "less than" } else { "equal to" };
-                        out.push(format!("{label} of {a} is {rel} {label} of {b}"));
-                        break 'props;
-                    }
-                }
-            }
+        if let [(_, a, fa), (_, b, fb), ..] = ents.as_slice()
+            && best(fb).is_some_and(|p| p.id == prop.id)
+            && let (Some((x, ux)), Some((y, uy))) = (value(fa, prop.id), value(fb, prop.id))
+            && ux == uy
+            && y != 0.0
+        {
+            let unit = if ux.is_empty() { String::new() } else { format!(" {ux}") };
+            out.push(format!("{label} of {a} ÷ {label} of {b} = {}", format_num(round2(x / y))));
+            out.push(format!("{label} of {a} − {label} of {b} = {}{unit}", format_num(round2(x - y))));
+            // In words too: the model misreads a negative difference ("Is France bigger?" → "Yes").
+            let rel = if x > y { "greater than" } else if x < y { "less than" } else { "equal to" };
+            out.push(format!("{label} of {a} is {rel} {label} of {b}"));
         }
         out
     }
@@ -550,10 +663,10 @@ impl Engine {
 
         // Small talk and reformat requests ("make it shorter") need no search, but a model to write the
         // reply. The empty card lets the app show it; a reformat also sends the last turn's sources, which
-        // its citations use.
-        let label = match (&self.enc, &llm) {
-            (Some(enc), Some(_)) => Head::turn().classify(&enc.encode(&req.query)?),
-            _ => "question",
+        // its citations use. An expand request ("tell me more") is a question about the last topic.
+        let label = match &self.enc {
+            Some(enc) => Head::turn().classify(&enc.encode(&req.query)?),
+            None => "question",
         };
         let kind = match label {
             "reformat" if !req.history.is_empty() => TurnKind::Reformat,
@@ -594,7 +707,7 @@ impl Engine {
             None => (req.query.clone(), vec![]),
         };
         rec.topics = topics.clone();
-        let mut route = route::route(&lib, &search_text, !req.history.is_empty(), self.rr.as_ref(), &topics, &req.packs);
+        let mut route = route::route(&lib, &search_text, self.rr.as_ref(), &topics, &req.packs);
         // The intent head reads the standalone question. Its best guess sets the cheap choices; only a
         // confident "calc" may start the slow LLM compute call.
         let emb = self.enc.as_ref().map(|e| e.encode(&route.query)).transpose()?;
@@ -604,37 +717,104 @@ impl Engine {
         route.compare |= intent == "compare" || rewritten.as_ref().is_some_and(|rw| rw.compare);
         route.complex |= route.compare || intent != "lookup";
         rec.intent = intent.to_string();
-        rec.complex = route.complex;
         let raw_query = route.query.clone();
-        // Follow-ups: a pronoun ("how many books does he have") or a question that names nothing of its own
-        // ("a summary of Confessions" after asking about Augustine) searches with the previous turn's topic.
-        // Only a pronoun also inherits the entity (card facts); otherwise the reranker judges the context.
-        // Without the rewrite step, carry the previous turn's topic by rule.
-        let follow_up = rewritten.is_none() && (route.needs_rewrite || (!req.history.is_empty() && route.entities.is_empty()));
-        if follow_up && let Some(prev) = req.history.last() {
-            let mut prev_entities = route::route(&lib, &prev.query, false, self.rr.as_ref(), &[], &req.packs).entities;
-            if prev_entities.is_empty() {
-                // "Who invented the telephone?" has no name in it, but its answer does.
-                let head: String = prev.answer.chars().take(300).collect();
-                prev_entities = route::link_entities(&lib, &head, &req.packs);
+        // Follow-ups without the rewrite step. A message that the follow-up head reads as needing the last turn
+        // takes its topic, and its entities when the message names at most one thing; so does a comparison that
+        // names one thing ("Is France bigger?"). An expand request searches the last question again.
+        let prev = req.history.last().filter(|_| rewritten.is_none());
+        let expand = label == "expand" && prev.is_some();
+        let compares = !expand && emb.as_deref().is_some_and(|e| Head::intent().prob(e, "compare") >= COMPARE_PROB);
+        if (route.compare || compares) && route.entities.len() < 2 {
+            // A comparison of common nouns ("Compare lions and tigers") names its things in lowercase.
+            let things = route::compared_things(&lib, &route.query, self.rr.as_ref(), &req.packs);
+            if things.len() >= 2 {
+                route.entities = things;
+                route.entities.truncate(3);
+            }
+        }
+        let own = route.entities.len();
+        let follow = emb.as_deref().map_or(0.0, |e| Head::follow_up().prob(e, "followup"));
+        let about_one = |p: &Turn| route::route(&lib, &p.query, self.rr.as_ref(), &[], &req.packs).entities.len() == 1;
+        route.needs_rewrite = prev.is_some_and(|p| expand || follow >= 0.5 || (own == 0 && follow >= FOLLOW_UP_LOW && about_one(p)));
+        let inherit = expand || (own == 0 && route.needs_rewrite) || (prev.is_some() && own == 1 && (route.needs_rewrite || compares));
+        if (inherit || route.needs_rewrite) && let Some(prev) = prev {
+            // The topic is what the last question names. A last question that named nothing and followed up
+            // itself ("What did she discover?" after "Who was Marie Curie?") passes on the one before.
+            let mut prev_entities = vec![];
+            let mut topic = prev;
+            for t in req.history.iter().rev().take(2) {
+                topic = t;
+                prev_entities = route::route(&lib, &t.query, self.rr.as_ref(), &[], &req.packs).entities;
+                let follows = |enc: &QueryEncoder| -> Result<bool> { Ok(Head::follow_up().classify(&enc.encode(&t.query)?) == "followup") };
+                if !prev_entities.is_empty() || !self.enc.as_ref().map(follows).transpose()?.unwrap_or(false) {
+                    break;
+                }
+            }
+            let from_answer = prev_entities.is_empty();
+            if from_answer {
+                // "Who invented the telephone?" has no name in it, but the first sentence of its answer does.
+                let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
+                let first = crate::text::sentences(&plain).into_iter().next().unwrap_or_default();
+                prev_entities = route::link_entities(&lib, first, &req.packs);
+                prev_entities.sort_by_key(|e| first.find(&e.surface));
                 prev_entities.truncate(2);
             }
-            let names: Vec<String> = prev_entities.iter().map(|e| e.article.title.clone()).collect();
-            if !names.is_empty() {
+            // The last question's own words steer better than names picked from its answer ("What is a leopard?"
+            // answered "…genus Panthera, found in Africa…").
+            let names: Vec<String> = if from_answer { vec![] } else { prev_entities.iter().map(|e| e.article.title.clone()).collect() };
+            // A bare follow-up that names one new thing of the old one's kind ("What about Venus?" after "How hot is
+            // Mars?") asks the last question about it alone: the new name replaces the old one there.
+            let swap = match (prev_entities.as_slice(), route.entities.as_slice()) {
+                ([old], [new])
+                    if !expand
+                        && !from_answer
+                        && !(route.compare || compares)
+                        && (old.pack, old.article.id) != (new.pack, new.article.id)
+                        && topic.query.contains(&old.surface)
+                        && route.query.replacen(&new.surface, "", 1).split_whitespace().filter(|w| w.chars().any(char::is_alphanumeric)).count() <= 2
+                        && route::same_kind(&lib, &req.packs, &old.article, &new.article) =>
+                {
+                    Some(topic.query.replacen(&old.surface, &new.surface, 1))
+                }
+                _ => None,
+            };
+            if expand {
+                route.query = format!("{} {}", names.join(" "), prev.query).trim_start().to_string();
+                route.entities.clear();
+                route.needs_rewrite = false;
+                route.compare = false;
+            } else if let Some(q) = &swap {
+                route.query = q.clone();
+            } else if !names.is_empty() {
                 route.query = format!("{} {}", names.join(" "), route.query);
-            } else if route.needs_rewrite {
+            } else {
                 route.query = format!("{} {}", prev.query, route.query);
             }
-            if route.needs_rewrite {
+            // Names read from an answer steer the search, but take no slot among compared things: "What is a
+            // crocodile?" answered "…in Africa, Asia…" compares no continent.
+            if inherit && swap.is_none() && !(from_answer && (route.compare || compares)) {
                 route.entities.extend(prev_entities);
                 route.entities.truncate(3);
             }
         }
+        route.compare |= compares && route.entities.len() >= 2;
+        route.complex |= route.compare;
+        rec.complex = route.complex;
         rec.search_query = route.query.clone();
         let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval, scope: &req.packs };
-        let keep = s.retrieval.rerank_keep;
-        let mut hits = retriever.retrieve(&route.query, &route.entities, keep, &mut rec.retrieval)?;
-        let wd = Self::wikidata_facts(&lib, &route, 6, &req.packs);
+        let ranked = retriever.ranked(&route.query, &route.entities, &mut rec.retrieval)?;
+        // At most three passages per article, so one long article cannot crowd out the others. "Tell me more"
+        // wants new facts: the passages the last turn showed only fill slots that no other passage can.
+        let shown: HashSet<(&str, u32)> = prev.filter(|_| expand).map_or_else(HashSet::new, |p| p.sources.iter().map(|r| (r.pack_id.as_str(), r.passage_id)).collect());
+        let pick = |ranked: &[Hit]| {
+            let (old, fresh): (Vec<Hit>, Vec<Hit>) = ranked.iter().cloned().partition(|h| shown.contains(&(lib.packs[h.pack as usize].manifest.pack_id.as_str(), h.pid)));
+            let mut hits = select_diverse(&fresh, s.retrieval.rerank_keep, 3, &[]);
+            hits.extend(select_diverse(&old, s.retrieval.rerank_keep - hits.len(), 3, &[]));
+            hits
+        };
+        let mut hits = pick(&ranked);
+        let scores = emb.as_deref().map(prop_scores).unwrap_or_default();
+        let (card_facts, mut wd) = Self::wikidata_facts(&lib, &route, hits.first(), &scores, route.compare || intent == "calc", 6, &req.packs);
         let unit_line = units::convert_query(&route.query);
         let card = {
             let top = card_passage(&hits, &route.entities).map(|h| {
@@ -650,7 +830,7 @@ impl Engine {
             Card {
                 query: req.query.clone(),
                 top,
-                facts: wd.clone(),
+                facts: card_facts,
                 computed: unit_line.iter().cloned().collect(),
                 sources: hits.iter().map(|h| Self::source_ref(&lib, h, 0)).collect(),
                 entities: route.entities.iter().map(|e| e.article.title.clone()).collect(),
@@ -693,6 +873,27 @@ impl Engine {
                 sink.event(Event::Card(card.clone()));
             }
         }
+
+        // After the card: each chain the hop reranks costs ~18 ms on the Pixel.
+        if let Some(rr) = self.rr.as_ref() {
+            let chain = Self::wikidata_hop(&lib, rr, &route, hits.first(), &scores, &req.packs)?;
+            if let Some((bridge, asked)) = chain.split_first() {
+                if !wd.iter().any(|f| f.qid == bridge.qid && f.pid == bridge.pid) {
+                    let at = wd.iter().rposition(|f| f.qid == bridge.qid).map_or(wd.len(), |i| i + 1);
+                    wd.insert(at, bridge.clone());
+                }
+                wd.extend(asked.iter().cloned());
+            }
+        }
+
+        // A deep answer has room for context beyond the best passages; a short one would lose a source to it.
+        let ranked = if req.deep {
+            let ranked = retriever.expand(&route.query, ranked, &mut rec.retrieval)?;
+            hits = pick(&ranked);
+            ranked
+        } else {
+            ranked
+        };
 
         let Some((_, llm)) = llm.filter(|_| !sink.cancelled()) else {
             let sources = hits.iter().enumerate().map(|(i, h)| Self::source_ref(&lib, h, i as u32 + 1)).collect();
@@ -747,7 +948,11 @@ impl Engine {
             rec.subqueries = plan.subqueries.clone();
         }
         if !plan.subqueries.is_empty() || question != route.query {
-            let mut pool: Vec<Hit> = if route.needs_rewrite { Vec::new() } else { retriever.fused(&route.query, &route.entities, &mut rec.retrieval)? };
+            // The first search's pool keeps its rerank scores while the question is the same.
+            let mut pool: Vec<Hit> = if route.needs_rewrite { Vec::new() } else { ranked.clone() };
+            if question != route.query {
+                pool.iter_mut().for_each(|h| h.rerank = None);
+            }
             let mut queries = plan.subqueries.clone();
             if route.needs_rewrite || queries.is_empty() {
                 queries.push(question.clone());
@@ -763,8 +968,16 @@ impl Engine {
             }
             pool.sort_by(|a, b| b.fused.total_cmp(&a.fused));
             pool.truncate(s.retrieval.fuse_keep * 2);
-            let reranked = retriever.rerank(&question, pool, 24, &mut rec.retrieval)?;
+            let mut reranked = retriever.rerank(&question, pool, 24, &mut rec.retrieval)?;
             let must: Vec<(u8, u32)> = if route.compare { route.entities.iter().map(|e| (e.pack, e.article.id)).collect() } else { vec![] };
+            if route.compare {
+                // A compared thing that no passage in the pool covers still gets its article's lead.
+                for e in &route.entities {
+                    if !reranked.iter().any(|h| (h.pack, h.article.id) == (e.pack, e.article.id)) {
+                        reranked.extend(retriever.load(&[((e.pack, e.article.first_passage), 0.0)])?);
+                    }
+                }
+            }
             hits = select_diverse(&reranked, if req.deep { 16 } else { 10 }, 3, &must);
         }
         if sink.cancelled() {
@@ -792,12 +1005,26 @@ impl Engine {
         if let Some(u) = unit_line {
             ev.add_computed(u);
         }
-        stage(&mut rec, Stage::Reading, ev.sources.len().to_string());
+        // The user's own numbers ("walking 5 km an hour") are known, to the compute check and the answer check.
+        ev.numbers.extend(crate::text::numbers(&req.query));
+        ev.numbers.extend(crate::text::numbers(&question));
+        stage(&mut rec, Stage::Reading, ev.count().to_string());
 
         // Stage 3b: compute. Wikidata values first (no LLM); the LLM compute call re-reads the whole evidence
         // (10–13 s on the Pixel), so it runs only for an explicit calculation that Wikidata cannot answer.
         let wants_numbers = plan.needs_numbers || plan.intent == "calc" || intent == "calc";
-        let calcs = if wants_numbers || route.compare || route.entities.len() >= 2 { Self::wikidata_calcs(&lib, &route, &req.packs) } else { vec![] };
+        // Only a question that asks for a number gets one computed: "Compare Mars and Venus" would get the ratio of
+        // whichever number matches best, and the answer would lead with it.
+        let asks_number = |e: &QueryEncoder| -> Result<bool> {
+            let masked = prop_scores(&e.encode(&without_names(&route))?);
+            Ok(masked.iter().any(|s| s.quantity && s.score >= NUMBER_ASKED))
+        };
+        let calcs = match &self.enc {
+            Some(e) if (wants_numbers || route.compare || route.entities.len() >= 2) && !route.entities.is_empty() && asks_number(e)? => {
+                Self::wikidata_calcs(&lib, &route, &scores, &req.packs)
+            }
+            _ => vec![],
+        };
         let deterministic = !calcs.is_empty();
         for c in calcs {
             ev.add_computed(c);
@@ -818,7 +1045,12 @@ impl Engine {
             if let Some(c) = parse_json::<Calcs>(&out) {
                 for calc in c.calcs.into_iter().take(4) {
                     let lits = calc::literals(&calc.expr);
-                    if lits.is_empty() || !lits.iter().all(|l| ev.numbers.contains(l.trim_end_matches(".0")) || ev.numbers.contains(l)) {
+                    // One-digit integers are constants ("/ 2", "4 / 3"), not data the model could make up.
+                    let known = |l: &String| {
+                        let short = l.trim_end_matches(".0");
+                        ev.numbers.contains(short) || ev.numbers.contains(l) || (short.len() == 1 && short.as_bytes()[0].is_ascii_digit())
+                    };
+                    if lits.is_empty() || !lits.iter().all(known) {
                         continue;
                     }
                     if let Ok(v) = calc::eval(&calc.expr) {
@@ -828,16 +1060,18 @@ impl Engine {
             }
         }
 
-        let sources: Vec<SourceRef> = ev.sources.iter().map(|src| Self::source_ref(&lib, &src.hit, src.n)).collect();
+        let mut sources: Vec<SourceRef> = ev.sources.iter().map(|src| Self::source_ref(&lib, &src.hit, src.n)).collect();
+        sources.extend(ev.wikidata.iter().map(|w| Self::wikidata_ref(&lib, w)));
         sink.event(Event::Sources(sources.clone()));
         rec.n_sources = sources.len();
 
         // Stage 4: synthesis with the cached system prefix (after the reasoning, in thinking mode).
         stage(&mut rec, if req.think { Stage::Thinking } else { Stage::Writing }, String::new());
         let rendered = ev.render(&lib);
+        rec.evidence = rendered.clone();
         rec.evidence_tokens = crate::text::approx_tokens(&rendered);
         ev.numbers.extend(crate::text::numbers(&lib.snapshot_date()));
-        let system = prompts::synthesis_system(&lib.snapshot_date());
+        let system = prompts::synthesis_system(&lib.snapshot_date(), !req.deep);
         // Keep the user's own words in front of the model; a rewrite from a small planner can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
         // The last exchange, so a follow-up builds on it. Its citations point at another turn's sources.
@@ -846,10 +1080,11 @@ impl Engine {
             (t.query.as_str(), trunc(&crate::text::sentences(&plain).into_iter().take(2).collect::<Vec<_>>().join(" "), 300))
         });
         let user = prompts::synthesis_user(&rendered, &asked, earlier.as_ref().map(|(q, a)| (*q, a.as_str())));
-        let n = ev.sources.len() as u32;
+        let n = ev.count();
         let max = if req.deep { s.deep_max_answer_tokens } else { s.max_answer_tokens };
         let mut params = GenParams::synthesis(max);
         params.think_budget = req.think.then_some(s.think_budget);
+        params.keep_prefix = true;
         let mut raw = String::new();
         let mut first: Option<f64> = None;
         let mut thought_done = !req.think;
@@ -893,6 +1128,15 @@ impl Engine {
         card.computed = ev.computed.clone();
         Ok(finish(rec, segments, sources, card))
     }
+}
+
+/// The question without the names of its entities: "which was bigger, the or the ?".
+fn without_names(route: &Route) -> String {
+    let mut q = route.query.to_lowercase();
+    for e in &route.entities {
+        q = q.replace(&e.surface.to_lowercase(), " ");
+    }
+    q.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// Drop a first line that only repeats the question (some models echo it before answering).

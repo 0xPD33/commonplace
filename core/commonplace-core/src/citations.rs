@@ -98,7 +98,7 @@ enum Piece {
     Cite(u32),
 }
 
-/// The Wikidata facts and COMPUTED lines have no source number, but a model may cite them anyway ("[W]").
+/// Labels in place of a source number: COMPUTED lines have none, and a model may write "[W]" for a Wikidata source.
 fn is_fact_label(s: &str) -> bool {
     ["W", "Wikidata", "COMPUTED"].iter().any(|l| s.eq_ignore_ascii_case(l))
 }

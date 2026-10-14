@@ -61,8 +61,16 @@ impl FrameStore {
         u64::from_le_bytes(self.idx[o..o + 8].try_into().unwrap())
     }
 
+    fn decompressor(&self) -> Result<zstd::bulk::Decompressor<'_>> {
+        Ok(zstd::bulk::Decompressor::with_prepared_dictionary(&self.dict)?)
+    }
+
     /// Decompress one frame and return all its records.
     pub fn frame(&self, f: u64) -> Result<Frame> {
+        self.frame_with(&mut self.decompressor()?, f)
+    }
+
+    fn frame_with(&self, d: &mut zstd::bulk::Decompressor, f: u64) -> Result<Frame> {
         ensure!(f < self.n_frames, "frame {f} out of range");
         let (a, b) = (self.frame_offset(f) as usize, self.frame_offset(f + 1) as usize);
         let src = &self.bin[a..b];
@@ -70,7 +78,6 @@ impl FrameStore {
             .ok()
             .flatten()
             .context("frame lacks content size")? as usize;
-        let mut d = zstd::bulk::Decompressor::with_prepared_dictionary(&self.dict)?;
         let raw = d.decompress(src, size)?;
         Frame::parse(raw)
     }
@@ -81,19 +88,20 @@ impl FrameStore {
         Ok(frame.record((id % self.per_frame as u64) as usize).to_vec())
     }
 
-    /// Fetch many records, decompressing each needed frame once.
+    /// Fetch many records, decompressing each needed frame once. Frames decompress in parallel.
     pub fn get_many(&self, ids: &[u64]) -> Result<Vec<Vec<u8>>> {
-        let mut frames: std::collections::HashMap<u64, Frame> = Default::default();
-        let mut out = Vec::with_capacity(ids.len());
-        for &id in ids {
-            ensure!(id < self.n_records, "record {id} out of range");
-            let f = id / self.per_frame as u64;
-            if !frames.contains_key(&f) {
-                frames.insert(f, self.frame(f)?);
-            }
-            out.push(frames[&f].record((id % self.per_frame as u64) as usize).to_vec());
+        let per = self.per_frame as u64;
+        if let Some(id) = ids.iter().find(|&&id| id >= self.n_records) {
+            bail!("record {id} out of range");
         }
-        Ok(out)
+        let mut fs: Vec<u64> = ids.iter().map(|id| id / per).collect();
+        fs.sort_unstable();
+        fs.dedup();
+        let frames: Vec<Frame> = fs
+            .par_iter()
+            .map_init(|| self.decompressor(), |d, &f| self.frame_with(d.as_mut().map_err(|e| anyhow::anyhow!("{e}"))?, f))
+            .collect::<Result<_>>()?;
+        Ok(ids.iter().map(|id| frames[fs.binary_search(&(id / per)).unwrap()].record((id % per) as usize).to_vec()).collect())
     }
 }
 

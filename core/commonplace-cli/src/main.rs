@@ -68,6 +68,9 @@ struct Opts {
     no_doc2query: bool,
     #[arg(long, global = true)]
     telemetry: Option<PathBuf>,
+    /// Save the warm system-prompt state here and load it on the next run.
+    #[arg(long, global = true)]
+    llm_state: Option<PathBuf>,
     /// Retrieval tuning (defaults in RetrievalSettings): fused pool size before the rerank.
     #[arg(long, global = true)]
     fuse_keep: Option<usize>,
@@ -166,6 +169,7 @@ enum PackAction {
 
 fn engine(o: &Opts) -> Result<Engine> {
     let threads = o.threads;
+    let state_dir = o.llm_state.clone();
     let cfg = EngineConfig {
         library_dir: o.library.clone(),
         leaf_dir: o.leaf_dir.exists().then(|| o.leaf_dir.clone()),
@@ -181,7 +185,7 @@ fn engine(o: &Opts) -> Result<Engine> {
     let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, t| {
         let file = mp.file().context("model pack has no file")?;
         let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
-        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(threads), cpus: vec![], in_ram: true })?;
+        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone() })?;
         Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
     });
     let e = Engine::new(cfg, Some(loader))?;
@@ -211,8 +215,8 @@ fn engine(o: &Opts) -> Result<Engine> {
     }
     if !o.no_llm {
         if let Some(path) = &o.model {
-            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads: threads, cpus: vec![], in_ram: true })?;
-            Engine::warm_up(&llm, &e.library().snapshot_date());
+            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads: threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
+            Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite);
             e.set_llm(ModelRole::LlmFast, Some(Arc::new(llm)));
         } else if e.library().model(&ModelRole::LlmFast).is_some() {
             e.load_model(ModelRole::LlmFast)?;
@@ -288,6 +292,7 @@ fn outcome_json(o: &AskOutcome) -> serde_json::Value {
         "sources": o.sources,
         "card": o.card,
         "record": o.record,
+        "evidence": o.record.evidence,
     })
 }
 

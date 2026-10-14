@@ -16,10 +16,19 @@ pub struct Source {
     pub from_cards: bool,
 }
 
+/// One entity's Wikidata facts: a numbered source after the passages.
+#[derive(Debug, Clone)]
+pub struct WdSource {
+    pub n: u32,
+    pub facts: Vec<WdFact>,
+    /// The fact lines the model saw.
+    pub shown: Vec<String>,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Evidence {
     pub sources: Vec<Source>,
-    pub wikidata: Vec<WdFact>,
+    pub wikidata: Vec<WdSource>,
     pub computed: Vec<String>,
     /// Normalized numbers present anywhere in the evidence.
     pub numbers: HashSet<String>,
@@ -37,16 +46,24 @@ impl Evidence {
                 s.push_str(&format!("[{}] {} — {} ({}):\n{}\n\n", src.n, h.article.title, h.passage.section_path, pack, src.shown));
             }
         }
-        if !self.wikidata.is_empty() {
-            s.push_str("Wikidata facts (no number, never cite):\n");
-            for f in &self.wikidata {
-                s.push_str(&format!("- {}\n", f.line()));
+        // A fact without a date is the value current at the snapshot, not in a year the question names.
+        let (pack, snapshot) = lib.wikidata.as_ref().map_or(("wikidata", ""), |(m, _)| (m.pack_id.as_str(), m.snapshot_date.as_str()));
+        for w in &self.wikidata {
+            s.push_str(&format!("[{}] {} ({pack}, as of {snapshot}):\n", w.n, w.facts[0].entity));
+            for line in &w.shown {
+                s.push_str(&format!("- {line}\n"));
             }
+            s.push('\n');
         }
         for c in &self.computed {
             s.push_str(&format!("COMPUTED: {c}\n"));
         }
         s.trim_end().to_string()
+    }
+
+    /// Passages and Wikidata entities: the valid citation numbers are 1 to this.
+    pub fn count(&self) -> u32 {
+        (self.sources.len() + self.wikidata.len()) as u32
     }
 
     pub fn add_computed(&mut self, line: String) {
@@ -114,10 +131,22 @@ pub fn best_sentence(text: &str, query: &str) -> String {
         .unwrap_or_default()
 }
 
+/// `wikidata`: facts grouped by entity; each entity becomes one numbered source after the passages.
 pub fn assemble(lib: &Library, hits: &[Hit], query: &str, budget_tokens: usize, wikidata: Vec<WdFact>) -> Evidence {
     let qterms: HashSet<String> = terms(query).into_iter().collect();
     let mut ev = Evidence::default();
-    let mut used = wikidata.iter().map(|f| approx_tokens(&f.line()) + 2).sum::<usize>();
+    let mut groups: Vec<(Vec<WdFact>, Vec<String>)> = Vec::new();
+    for f in wikidata {
+        let line = f.short_line();
+        match groups.last_mut().filter(|(g, _)| g[0].qid == f.qid) {
+            Some((g, shown)) => {
+                g.push(f);
+                shown.push(line);
+            }
+            None => groups.push((vec![f], vec![line])),
+        }
+    }
+    let mut used = groups.iter().map(|(g, shown)| approx_tokens(&g[0].entity) + 14 + shown.iter().map(|l| approx_tokens(l) + 2).sum::<usize>()).sum::<usize>();
     for h in hits {
         let facts: Vec<Fact> = lib.packs[h.pack as usize].facts(h.pid).unwrap_or_default();
         let (shown, from_cards) = if facts.is_empty() {
@@ -134,9 +163,14 @@ pub fn assemble(lib: &Library, hits: &[Hit], query: &str, budget_tokens: usize, 
         ev.numbers.extend(numbers(&h.article.title));
         ev.sources.push(Source { n: ev.sources.len() as u32 + 1, hit: h.clone(), shown, from_cards });
     }
-    for f in &wikidata {
-        ev.numbers.extend(numbers(&f.line()));
+    for (facts, shown) in groups {
+        for line in &shown {
+            ev.numbers.extend(numbers(line));
+        }
+        ev.wikidata.push(WdSource { n: ev.count() + 1, facts, shown });
     }
-    ev.wikidata = wikidata;
+    if let Some((m, _)) = lib.wikidata.as_ref().filter(|_| !ev.wikidata.is_empty()) {
+        ev.numbers.extend(numbers(&m.snapshot_date));
+    }
     ev
 }

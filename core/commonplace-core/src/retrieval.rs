@@ -14,7 +14,11 @@ pub struct RetrievalSettings {
     pub sparse_k: usize,
     pub dense_k: usize,
     pub hamming_k: usize,
+    /// Lists a dense index probes at most.
     pub nprobe: usize,
+    /// Codes a dense index scans: each pack probes as many lists as hold about this many codes (at most
+    /// `nprobe`). Packs with long lists (Stack Exchange) would otherwise scan five times Wikipedia's codes.
+    pub probe_codes: usize,
     pub rrf_k: f32,
     pub w_sparse: f32,
     pub w_dense: f32,
@@ -27,6 +31,10 @@ pub struct RetrievalSettings {
     /// Weight of the retrieval (fusion) rank in the final score: the first fused hit gets `rerank_blend`,
     /// the last gets 0. 0 lets the reranker alone decide.
     pub rerank_blend: f32,
+    /// Deep answers: after the rerank, the top `expand_articles` articles each add up to `expand_passages`
+    /// passages next to their best hit, reranked in one more small batch. 0 turns this off.
+    pub expand_articles: usize,
+    pub expand_passages: usize,
     pub use_sparse: bool,
     pub use_dense: bool,
     pub use_rerank: bool,
@@ -39,6 +47,7 @@ impl Default for RetrievalSettings {
             dense_k: 200,
             hamming_k: 1000,
             nprobe: 48,
+            probe_codes: 48_000,
             rrf_k: 60.0,
             w_sparse: 1.0,
             w_dense: 1.0,
@@ -48,6 +57,8 @@ impl Default for RetrievalSettings {
             rerank_keep: 8,
             keyword_only_keep: 5,
             rerank_blend: 0.0,
+            expand_articles: 1,
+            expand_passages: 4,
             use_sparse: true,
             use_dense: true,
             use_rerank: true,
@@ -76,6 +87,15 @@ impl Hit {
             format!("{} — {}: {}", self.article.title, self.passage.section_path, self.passage.text)
         }
     }
+
+    /// The rerank text with the article's one-line summary before the passage.
+    fn bridged_text(&self) -> String {
+        match self.article.oneliner.as_deref().filter(|o| !self.passage.text.starts_with(o)) {
+            Some(o) if self.passage.section_path.is_empty() => format!("{}: {o} {}", self.article.title, self.passage.text),
+            Some(o) => format!("{} — {}: {o} {}", self.article.title, self.passage.section_path, self.passage.text),
+            None => self.rerank_text(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -85,6 +105,7 @@ pub struct RetrievalStats {
     pub dense_ms: f64,
     pub fuse_ms: f64,
     pub rerank_ms: f64,
+    pub expand_ms: f64,
     pub n_sparse: usize,
     pub n_dense: usize,
     pub n_fused: usize,
@@ -129,11 +150,9 @@ impl Retriever<'_> {
                 let q = enc.encode(query)?;
                 let enc_ms = ms(t);
                 let t = Instant::now();
-                let r = self
-                    .lib
-                    .scoped(self.scope)
-                    .filter_map(|(i, p)| p.dense.as_ref().map(|d| (i, d.search(&q, self.s.nprobe, self.s.hamming_k, self.s.dense_k))))
-                    .collect();
+                use rayon::prelude::*;
+                let packs: Vec<(u8, &crate::pack::dense::DenseIndex)> = self.lib.scoped(self.scope).filter_map(|(i, p)| p.dense.as_ref().map(|d| (i, d))).collect();
+                let r = packs.par_iter().map(|(i, d)| (*i, d.search(&q, d.lists_for(self.s.probe_codes).min(self.s.nprobe), self.s.hamming_k, self.s.dense_k))).collect();
                 Ok((r, enc_ms, ms(t)))
             });
             (sparse.join().unwrap(), dense.join().unwrap())
@@ -150,7 +169,8 @@ impl Retriever<'_> {
         let mut fused: HashMap<(u8, u32), f32> = HashMap::new();
         let k = self.s.rrf_k;
         for (w, lists) in [(self.s.w_sparse, &sparse), (self.s.w_dense, &dense)] {
-            // One ranked list per source: packs share the scorer, so their scores compare directly.
+            // One ranked list per source. Dense scores compare across packs (one embedder); BM25 scores only roughly,
+            // because each index has its own term statistics.
             let mut merged: Vec<(u8, u32, f32)> = lists.iter().flat_map(|(p, l)| l.iter().map(move |&(id, s)| (*p, id, s))).collect();
             merged.sort_unstable_by(|a, b| b.2.total_cmp(&a.2));
             for (rank, (pack, pid, _)) in merged.iter().enumerate() {
@@ -198,43 +218,59 @@ impl Retriever<'_> {
         Ok(hits)
     }
 
+    fn pack_penalty(&self, pack: u8) -> f32 {
+        if self.lib.packs[pack as usize].manifest.pack_id.starts_with("wikiquote") { QUOTE_PENALTY } else { 0.0 }
+    }
+
     /// Load passages and article metadata for (pack, pid) pairs, preserving order.
     pub fn load(&self, ids: &[((u8, u32), f32)]) -> Result<Vec<Hit>> {
         let mut by_pack: HashMap<u8, Vec<(usize, u32)>> = HashMap::new();
         for (i, ((pack, pid), _)) in ids.iter().enumerate() {
             by_pack.entry(*pack).or_default().push((i, *pid));
         }
+        use rayon::prelude::*;
+        let per_pack: Vec<Vec<(usize, Hit)>> = by_pack
+            .into_par_iter()
+            .map(|(pack, items)| -> Result<Vec<(usize, Hit)>> {
+                let p = &self.lib.packs[pack as usize];
+                let pids: Vec<u32> = items.iter().map(|x| x.1).collect();
+                let recs = p.passages(&pids)?;
+                let mut aids: Vec<u32> = recs.iter().map(|r| r.article_id).collect();
+                aids.sort_unstable();
+                aids.dedup();
+                let arts: HashMap<u32, Article> = p.meta.articles(&aids)?.into_iter().map(|a| (a.id, a)).collect();
+                Ok(items
+                    .into_iter()
+                    .zip(recs)
+                    .filter_map(|((i, pid), rec)| {
+                        let a = arts.get(&rec.article_id)?.clone();
+                        Some((i, Hit { pack, pid, article: a, passage: rec, fused: ids[i].1, rerank: None }))
+                    })
+                    .collect())
+            })
+            .collect::<Result<_>>()?;
         let mut out: Vec<Option<Hit>> = vec![None; ids.len()];
-        for (pack, items) in by_pack {
-            let p = &self.lib.packs[pack as usize];
-            let pids: Vec<u32> = items.iter().map(|x| x.1).collect();
-            let recs = p.passages(&pids)?;
-            let mut aids: Vec<u32> = recs.iter().map(|r| r.article_id).collect();
-            aids.sort_unstable();
-            aids.dedup();
-            let arts: HashMap<u32, Article> = p.meta.articles(&aids)?.into_iter().map(|a| (a.id, a)).collect();
-            for ((i, pid), rec) in items.into_iter().zip(recs) {
-                if let Some(a) = arts.get(&rec.article_id) {
-                    out[i] = Some(Hit { pack, pid, article: a.clone(), passage: rec, fused: ids[i].1, rerank: None });
-                }
-            }
+        for (i, h) in per_pack.into_iter().flatten() {
+            out[i] = Some(h);
         }
         Ok(out.into_iter().flatten().collect())
     }
 
-    /// Step 5: cross-encoder rerank; keeps the best `keep`.
+    /// Step 5: cross-encoder rerank; keeps the best `keep`. A hit that already has a rerank score keeps it, so
+    /// the caller must clear scores that belong to another query.
     pub fn rerank(&self, query: &str, mut hits: Vec<Hit>, keep: usize, st: &mut RetrievalStats) -> Result<Vec<Hit>> {
         let t = Instant::now();
         if let Some(rr) = self.rr.filter(|_| self.s.use_rerank)
             && !hits.is_empty()
         {
-            let docs: Vec<String> = hits.iter().map(Hit::rerank_text).collect();
-            let scores = rr.score(query, &docs)?;
+            let todo: Vec<usize> = (0..hits.len()).filter(|&i| hits[i].rerank.is_none()).collect();
+            let docs: Vec<String> = todo.iter().map(|&i| hits[i].rerank_text()).collect();
+            let scores = if docs.is_empty() { vec![] } else { rr.score(query, &docs)? };
             // `hits` arrive in fusion order, so the index is the retrieval rank.
             let n = hits.len() as f32;
-            for (i, (h, s)) in hits.iter_mut().zip(scores).enumerate() {
+            for (&i, s) in todo.iter().zip(scores) {
                 let blend = self.s.rerank_blend * (1.0 - i as f32 / n);
-                h.rerank = Some(s - list_penalty(&h.article.title) + blend);
+                hits[i].rerank = Some(s - list_penalty(&hits[i].article.title) - self.pack_penalty(hits[i].pack) + blend);
             }
             hits.sort_unstable_by(|a, b| b.score().total_cmp(&a.score()));
         }
@@ -245,15 +281,56 @@ impl Retriever<'_> {
         Ok(hits)
     }
 
-    pub fn retrieve(&self, query: &str, entities: &[Entity], keep: usize, st: &mut RetrievalStats) -> Result<Vec<Hit>> {
+    /// Passages beside the best hit of each of the top `expand_articles` articles, reranked and merged into
+    /// `ranked`. The answer can sit next to the passage that matched ("Early life" after a biography's lead), and
+    /// neighbors share the hit's zstd frame, so loading them is cheap.
+    pub fn expand(&self, query: &str, mut ranked: Vec<Hit>, st: &mut RetrievalStats) -> Result<Vec<Hit>> {
+        let t = Instant::now();
+        let Some(rr) = self.rr.filter(|_| self.s.use_rerank) else { return Ok(ranked) };
+        let mut tops: Vec<&Hit> = Vec::new();
+        for h in &ranked {
+            if tops.len() < self.s.expand_articles && !tops.iter().any(|t| (t.pack, t.article.id) == (h.pack, h.article.id)) {
+                tops.push(h);
+            }
+        }
+        let mut ids: Vec<((u8, u32), f32)> = Vec::new();
+        let mut hit_score: HashMap<(u8, u32), f32> = HashMap::new();
+        for h in tops {
+            let (lo, hi) = (h.article.first_passage, h.article.first_passage + h.article.n_passages);
+            let w = 2 * self.s.expand_passages as u32;
+            let mut near: Vec<u32> =
+                (h.pid.saturating_sub(w).max(lo)..(h.pid + w + 1).min(hi)).filter(|&p| !ranked.iter().any(|r| (r.pack, r.pid) == (h.pack, p))).collect();
+            near.sort_by_key(|p| p.abs_diff(h.pid));
+            for p in near.into_iter().take(self.s.expand_passages) {
+                ids.push(((h.pack, p), h.fused));
+                hit_score.insert((h.pack, p), h.score());
+            }
+        }
+        if !ids.is_empty() {
+            let mut extra = self.load(&ids)?;
+            // A neighbor often names neither the question's words nor its subject ("he took a first in physics
+            // from Oxford"), so it is scored after the article's one-line summary, and ranks below its hit.
+            let docs: Vec<String> = extra.iter().map(Hit::bridged_text).collect();
+            for (h, s) in extra.iter_mut().zip(rr.score(query, &docs)?) {
+                let below_hit = hit_score[&(h.pack, h.pid)] - 1e-3;
+                h.rerank = Some((s - list_penalty(&h.article.title) - self.pack_penalty(h.pack)).min(below_hit));
+            }
+            ranked.extend(extra);
+            ranked.sort_unstable_by(|a, b| b.score().total_cmp(&a.score()));
+        }
+        st.expand_ms = ms(t);
+        Ok(ranked)
+    }
+
+    /// The fused pool, reranked: every scored hit, best first.
+    pub fn ranked(&self, query: &str, entities: &[Entity], st: &mut RetrievalStats) -> Result<Vec<Hit>> {
         let hits = self.fused(query, entities, st)?;
-        let ranked = self.rerank(query, hits, usize::MAX, st)?;
-        // At most three passages per article, so one long article cannot crowd out the others.
-        Ok(select_diverse(&ranked, keep, 3, &[]))
+        self.rerank(query, hits, usize::MAX, st)
     }
 }
 
 /// Pick up to `n` hits, at most `per_article` per article, making sure each `must` article appears once.
+/// The `must` hits come first, so an evidence budget cannot cut them; the rest follow by score.
 pub fn select_diverse(hits: &[Hit], n: usize, per_article: usize, must: &[(u8, u32)]) -> Vec<Hit> {
     let mut out: Vec<Hit> = Vec::new();
     let mut count: HashMap<(u8, u32), usize> = HashMap::new();
@@ -263,6 +340,7 @@ pub fn select_diverse(hits: &[Hit], n: usize, per_article: usize, must: &[(u8, u
             *count.entry(*m).or_default() += 1;
         }
     }
+    let pinned = out.len();
     for h in hits {
         if out.len() >= n {
             break;
@@ -276,7 +354,7 @@ pub fn select_diverse(hits: &[Hit], n: usize, per_article: usize, must: &[(u8, u
             out.push(h.clone());
         }
     }
-    out.sort_by(|a, b| b.score().total_cmp(&a.score()));
+    out[pinned..].sort_by(|a, b| b.score().total_cmp(&a.score()));
     out
 }
 
@@ -290,3 +368,7 @@ fn list_penalty(title: &str) -> f32 {
         || t.split_once(" in ").is_some_and(|(year, _)| year.len() == 4 && year.bytes().all(|b| b.is_ascii_digit()));
     if listy { LIST_PENALTY } else { 0.0 }
 }
+
+/// Rerank penalty for quotation pages (Wikiquote): they repeat the topic's name in every line, so the reranker
+/// scores them high, but they seldom state the fact a question asks for.
+const QUOTE_PENALTY: f32 = 0.5;

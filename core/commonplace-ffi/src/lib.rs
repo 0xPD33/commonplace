@@ -414,6 +414,33 @@ impl LlmBackend for ForeignAdapter {
     }
 }
 
+/// A Wikidata source: one entity, whose QID number is the passage and article id (`engine::SourceRef`).
+struct WikidataPage {
+    qid: String,
+    title: String,
+    /// The entity's facts, one per line.
+    text: String,
+    pack_title: String,
+    license: String,
+    attribution: String,
+    source_url: String,
+}
+
+/// `None` when `pack_id` is not the Wikidata pack.
+fn wikidata_page(lib: &Library, pack_id: &str, id: u32) -> Option<R<WikidataPage>> {
+    let (m, wd) = lib.wikidata.as_ref().filter(|(m, _)| m.pack_id == pack_id)?;
+    let qid = format!("Q{id}");
+    Some(wd.facts(&qid, 60).map_err(CpError::from).map(|facts| WikidataPage {
+        title: facts.first().map_or_else(|| qid.clone(), |f| f.entity.clone()),
+        text: facts.iter().map(|f| f.short_line()).collect::<Vec<_>>().join("\n"),
+        pack_title: m.title.clone(),
+        license: m.license.clone(),
+        attribution: m.attribution.clone(),
+        source_url: format!("https://www.wikidata.org/wiki/{qid}"),
+        qid,
+    }))
+}
+
 // ---------- conversions ----------
 
 fn source_item(s: &engine::SourceRef) -> SourceItem {
@@ -581,20 +608,21 @@ impl CommonplaceEngine {
             telemetry_path: Some(data_dir.join("telemetry.jsonl")),
         };
         let cpus: Vec<usize> = if opts.pin_big_cores { commonplace_llm::big_cores() } else { vec![] };
+        let state_dir = data_dir.join("llm-state");
         let loader: LlmLoader = Box::new(move |mp, threads| {
             let file = mp.file().ok_or_else(|| anyhow::anyhow!("model pack has no file"))?;
             let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
             let deep = mp.role() == Some(&ModelRole::LlmDeep);
             let batch_threads = (cpus.len() as u32).max(threads);
-            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: !deep })?;
+            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: !deep, state_dir: Some(state_dir.clone()) })?;
             Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
         });
         let engine = Engine::new(cfg, Some(loader))?;
         {
             let mut s = engine.settings.write().unwrap();
             s.llm_threads = opts.llm_threads;
-            // Phone rerank budget: the 8-bit weight-only reranker on the top 24 fused passages costs about what the
-            // int8 one did on 40 and ranks better (NQ hit@1 0.510 vs 0.485; docs/BENCHMARKS.md).
+            // Phone rerank budget: the selective int8 reranker on the top 24 fused passages costs less than the plain
+            // int8 one did on 40 and ranks better (docs/BENCHMARKS.md).
             s.retrieval.fuse_keep = 24;
         }
         Ok(Arc::new(Self { engine, cancel: Arc::new(AtomicBool::new(false)), data_dir }))
@@ -724,6 +752,22 @@ impl CommonplaceEngine {
 
     pub fn passage(&self, pack_id: String, passage_id: u32) -> R<PassageView> {
         let lib = self.engine.library();
+        if let Some(page) = wikidata_page(&lib, &pack_id, passage_id) {
+            let w = page?;
+            return Ok(PassageView {
+                pack_id,
+                pack_title: w.pack_title,
+                passage_id,
+                article_id: passage_id,
+                title: w.title,
+                section: String::new(),
+                text: w.text,
+                url_title: w.qid,
+                license: w.license,
+                attribution: w.attribution,
+                source_url: w.source_url,
+            });
+        }
         let p = lib.packs.iter().find(|p| p.manifest.pack_id == pack_id).ok_or_else(|| CpError::Failed { msg: format!("pack {pack_id} not installed") })?;
         let rec = p.passage(passage_id)?;
         let a = p.meta.article(rec.article_id)?.ok_or_else(|| CpError::Failed { msg: "article not found".into() })?;
@@ -745,6 +789,20 @@ impl CommonplaceEngine {
 
     pub fn article(&self, pack_id: String, article_id: u32) -> R<ArticleView> {
         let lib = self.engine.library();
+        if let Some(page) = wikidata_page(&lib, &pack_id, article_id) {
+            let w = page?;
+            return Ok(ArticleView {
+                pack_id,
+                pack_title: w.pack_title,
+                article_id,
+                title: w.title,
+                oneliner: String::new(),
+                paragraphs: vec![ArticleParagraph { passage_id: article_id, section: String::new(), text: w.text }],
+                attribution: w.attribution,
+                license: w.license,
+                source_url: w.source_url,
+            });
+        }
         let p = lib.packs.iter().find(|p| p.manifest.pack_id == pack_id).ok_or_else(|| CpError::Failed { msg: format!("pack {pack_id} not installed") })?;
         let a = p.meta.article(article_id)?.ok_or_else(|| CpError::Failed { msg: "article not found".into() })?;
         let ids: Vec<u32> = (a.first_passage..a.first_passage + a.n_passages).collect();

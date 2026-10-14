@@ -38,47 +38,47 @@
 {"text": "What are the main causes of the French Revolution, as bullet points?", "kind": "question"}
 {"text": "Can you give me a brief overview of the Cold War?", "kind": "question"}
 {"text": "Explain inflation in plain English", "kind": "question"}
-{"text": "tell me more", "kind": "question"}
-{"text": "Can you elaborate on that?", "kind": "question"}
-{"text": "go on", "kind": "question"}
-{"text": "what else?", "kind": "question"}
-{"text": "Expand on that please", "kind": "question"}
-{"text": "more please", "kind": "question"}
-{"text": "Why?", "kind": "question"}
-{"text": "how?", "kind": "question"}
-{"text": "And then what happened?", "kind": "question"}
-{"text": "What about Mars?", "kind": "question"}
-{"text": "And Saturn?", "kind": "question"}
+{"text": "tell me more", "kind": "expand"}
+{"text": "Can you elaborate on that?", "kind": "expand"}
+{"text": "go on", "kind": "expand"}
+{"text": "what else?", "kind": "expand"}
+{"text": "Expand on that please", "kind": "expand"}
+{"text": "more please", "kind": "expand"}
+{"text": "Why?", "kind": "followup"}
+{"text": "how?", "kind": "followup"}
+{"text": "And then what happened?", "kind": "followup"}
+{"text": "What about Mars?", "kind": "followup"}
+{"text": "And Saturn?", "kind": "followup"}
 {"text": "no, I meant the planet, not the god", "kind": "question"}
-{"text": "What did he do after that?", "kind": "question"}
-{"text": "Where was she born?", "kind": "question"}
-{"text": "How big is it?", "kind": "question"}
-{"text": "When was it built?", "kind": "question"}
-{"text": "Who else was involved?", "kind": "question"}
-{"text": "What happened next?", "kind": "question"}
-{"text": "Is it still used today?", "kind": "question"}
-{"text": "How many people live there?", "kind": "question"}
-{"text": "What did they eat?", "kind": "question"}
-{"text": "Did he win?", "kind": "question"}
-{"text": "And the second one?", "kind": "question"}
-{"text": "How does it work?", "kind": "question"}
-{"text": "Why did they do that?", "kind": "question"}
-{"text": "What was his most famous work?", "kind": "question"}
-{"text": "Is that true?", "kind": "question"}
-{"text": "Are there any exceptions?", "kind": "question"}
-{"text": "What are the side effects?", "kind": "question"}
-{"text": "How long does it last?", "kind": "question"}
-{"text": "Which one is older?", "kind": "question"}
-{"text": "Is it bigger than the Pacific?", "kind": "question"}
+{"text": "What did he do after that?", "kind": "followup"}
+{"text": "Where was she born?", "kind": "followup"}
+{"text": "How big is it?", "kind": "followup"}
+{"text": "When was it built?", "kind": "followup"}
+{"text": "Who else was involved?", "kind": "followup"}
+{"text": "What happened next?", "kind": "followup"}
+{"text": "Is it still used today?", "kind": "followup"}
+{"text": "How many people live there?", "kind": "followup"}
+{"text": "What did they eat?", "kind": "followup"}
+{"text": "Did he win?", "kind": "followup"}
+{"text": "And the second one?", "kind": "followup"}
+{"text": "How does it work?", "kind": "followup"}
+{"text": "Why did they do that?", "kind": "followup"}
+{"text": "What was his most famous work?", "kind": "followup"}
+{"text": "Is that true?", "kind": "followup"}
+{"text": "Are there any exceptions?", "kind": "followup"}
+{"text": "What are the side effects?", "kind": "followup"}
+{"text": "How long does it last?", "kind": "followup"}
+{"text": "Which one is older?", "kind": "followup"}
+{"text": "Is it bigger than the Pacific?", "kind": "followup"}
 {"text": "Compare Rome and Athens", "kind": "question"}
 {"text": "Which is taller, the Eiffel Tower or Big Ben?", "kind": "question"}
 {"text": "What is the difference between a virus and a bacterium?", "kind": "question"}
 {"text": "hi, who painted the Sistine Chapel ceiling?", "kind": "question"}
-{"text": "thanks, and who was his teacher?", "kind": "question"}
+{"text": "thanks, and who was his teacher?", "kind": "followup"}
 {"text": "ok, what is the tallest mountain in Africa?", "kind": "question"}
 {"text": "great, now how does a refrigerator work?", "kind": "question"}
 {"text": "hello! what causes the northern lights?", "kind": "question"}
-{"text": "Cool. What about the southern lights?", "kind": "question"}
+{"text": "Cool. What about the southern lights?", "kind": "followup"}
 {"text": "interesting, why did the dinosaurs die out?", "kind": "question"}
 {"text": "wow, how deep is the Mariana Trench?", "kind": "question"}
 {"text": "who was the first emperor of china", "kind": "question"}
@@ -311,3 +311,879 @@
 {"text": "thank u", "kind": "chat"}
 {"text": "thnks", "kind": "chat"}
 {"text": "helo", "kind": "chat"}
+{"text": "tell me more about it", "kind": "expand"}
+{"text": "continue", "kind": "expand"}
+{"text": "go deeper", "kind": "expand"}
+{"text": "elaborate on that", "kind": "expand"}
+{"text": "can you elaborate?", "kind": "expand"}
+{"text": "expand on this", "kind": "expand"}
+{"text": "more detail please", "kind": "expand"}
+{"text": "more info", "kind": "expand"}
+{"text": "I want to know more", "kind": "expand"}
+{"text": "go into more depth", "kind": "expand"}
+{"text": "please continue", "kind": "expand"}
+{"text": "more on that", "kind": "expand"}
+{"text": "anything else?", "kind": "expand"}
+{"text": "what else should I know?", "kind": "expand"}
+{"text": "what else is interesting about it?", "kind": "expand"}
+{"text": "is there more?", "kind": "expand"}
+{"text": "keep talking", "kind": "expand"}
+{"text": "carry on", "kind": "expand"}
+{"text": "explain in more detail", "kind": "expand"}
+{"text": "give me the details", "kind": "expand"}
+{"text": "give me a deeper explanation", "kind": "expand"}
+{"text": "go on, I'm listening", "kind": "expand"}
+{"text": "could you say more about that", "kind": "expand"}
+{"text": "tell me more please", "kind": "expand"}
+{"text": "can you go on", "kind": "expand"}
+{"text": "what other facts are there?", "kind": "expand"}
+{"text": "tell me something else about it", "kind": "expand"}
+{"text": "more facts please", "kind": "expand"}
+{"text": "can you add more detail", "kind": "expand"}
+{"text": "please elaborate", "kind": "expand"}
+{"text": "elaborate a little more", "kind": "expand"}
+{"text": "I'd love more detail", "kind": "expand"}
+{"text": "expand", "kind": "expand"}
+{"text": "more", "kind": "expand"}
+{"text": "go further", "kind": "expand"}
+{"text": "can you be more detailed", "kind": "expand"}
+{"text": "in more depth please", "kind": "expand"}
+{"text": "tell me the rest", "kind": "expand"}
+{"text": "what's the full story?", "kind": "expand"}
+{"text": "more background please", "kind": "expand"}
+{"text": "I'm curious, tell me more", "kind": "expand"}
+{"text": "keep explaining", "kind": "expand"}
+{"text": "can you continue?", "kind": "expand"}
+{"text": "continue the explanation", "kind": "expand"}
+{"text": "don't stop", "kind": "expand"}
+{"text": "that's not enough, more please", "kind": "expand"}
+{"text": "I need more information", "kind": "expand"}
+{"text": "what more can you say?", "kind": "expand"}
+{"text": "anything more to add?", "kind": "expand"}
+{"text": "deeper please", "kind": "expand"}
+{"text": "more depth", "kind": "expand"}
+{"text": "go on please", "kind": "expand"}
+{"text": "tell me all about it", "kind": "expand"}
+{"text": "and what else?", "kind": "expand"}
+{"text": "what else is there?", "kind": "expand"}
+{"text": "dive deeper", "kind": "expand"}
+{"text": "can we go deeper into that", "kind": "expand"}
+{"text": "expand your answer", "kind": "expand"}
+{"text": "give me a fuller explanation", "kind": "expand"}
+{"text": "detail please", "kind": "expand"}
+{"text": "continue on", "kind": "expand"}
+{"text": "ok, continue", "kind": "expand"}
+{"text": "interesting, tell me more", "kind": "expand"}
+{"text": "cool, go on", "kind": "expand"}
+{"text": "wow, tell me more", "kind": "expand"}
+{"text": "nice, what else?", "kind": "expand"}
+{"text": "and more?", "kind": "expand"}
+{"text": "more detail on that", "kind": "expand"}
+{"text": "go into detail", "kind": "expand"}
+{"text": "explain it in depth", "kind": "expand"}
+{"text": "keep it coming", "kind": "expand"}
+{"text": "what else do you know?", "kind": "expand"}
+{"text": "can you tell me more?", "kind": "expand"}
+{"text": "pls continue", "kind": "expand"}
+{"text": "tel me more", "kind": "expand"}
+{"text": "moar", "kind": "expand"}
+{"text": "more pls", "kind": "expand"}
+{"text": "can u elaborate", "kind": "expand"}
+{"text": "tl;dr", "kind": "reformat"}
+{"text": "tldr", "kind": "reformat"}
+{"text": "TL;DR please", "kind": "reformat"}
+{"text": "give me a tl;dr", "kind": "reformat"}
+{"text": "can you give me the tldr", "kind": "reformat"}
+{"text": "TLDR?", "kind": "reformat"}
+{"text": "eli5 please", "kind": "reformat"}
+{"text": "eli5 that", "kind": "reformat"}
+{"text": "explain like I'm five", "kind": "reformat"}
+{"text": "as bullet points", "kind": "reformat"}
+{"text": "in bullet points", "kind": "reformat"}
+{"text": "bulleted list please", "kind": "reformat"}
+{"text": "in one sentence", "kind": "reformat"}
+{"text": "one sentence summary", "kind": "reformat"}
+{"text": "summarize in one sentence", "kind": "reformat"}
+{"text": "make it a table", "kind": "reformat"}
+{"text": "shorter version", "kind": "reformat"}
+{"text": "explain it simply", "kind": "reformat"}
+{"text": "rewrite in plain language", "kind": "reformat"}
+{"text": "in simple terms", "kind": "reformat"}
+{"text": "short summary please", "kind": "reformat"}
+{"text": "condense to bullets", "kind": "reformat"}
+{"text": "list the key points", "kind": "reformat"}
+{"text": "key points only", "kind": "reformat"}
+{"text": "in a nutshell?", "kind": "reformat"}
+{"text": "explain like I'm a child", "kind": "reformat"}
+{"text": "can you put it in a list?", "kind": "reformat"}
+{"text": "bullet points", "kind": "reformat"}
+{"text": "one paragraph please", "kind": "reformat"}
+{"text": "can you simplify it for me", "kind": "reformat"}
+{"text": "tell me more about the Roman Empire", "kind": "question"}
+{"text": "tell me more about black holes", "kind": "question"}
+{"text": "what else is Paris known for?", "kind": "question"}
+{"text": "Can you elaborate on the causes of World War I?", "kind": "question"}
+{"text": "explain the French Revolution in more detail", "kind": "question"}
+{"text": "go deeper into quantum mechanics", "kind": "question"}
+{"text": "more about Einstein please", "kind": "question"}
+{"text": "What else did Shakespeare write?", "kind": "question"}
+{"text": "tell me about the history of Rome", "kind": "question"}
+{"text": "give me details about the Apollo 11 mission", "kind": "question"}
+{"text": "continue the story of the Trojan War", "kind": "question"}
+{"text": "what else do bees produce besides honey?", "kind": "question"}
+{"text": "explain in detail how a car engine works", "kind": "question"}
+{"text": "give me more facts about octopuses", "kind": "question"}
+{"text": "list the planets of the solar system", "kind": "question"}
+{"text": "summarize the history of the Roman Republic", "kind": "question"}
+{"text": "bullet points on the causes of the Great Depression", "kind": "question"}
+{"text": "in one sentence, what is gravity?", "kind": "question"}
+{"text": "Summarize the history of the Byzantine Empire", "kind": "question"}
+{"text": "Give me a summary of the Iliad", "kind": "question"}
+{"text": "Summarize World War I in a few sentences", "kind": "question"}
+{"text": "summarize the theory of evolution", "kind": "question"}
+{"text": "Sum up the causes of the Cold War", "kind": "question"}
+{"text": "Briefly explain photosynthesis", "kind": "question"}
+{"text": "a short summary of Hamlet", "kind": "question"}
+{"text": "Summarize the life of Gandhi", "kind": "question"}
+{"text": "Can you summarize the plot of Romeo and Juliet?", "kind": "question"}
+{"text": "list the causes of the American Civil War", "kind": "question"}
+{"text": "Explain the water cycle simply", "kind": "question"}
+{"text": "what are the key points of the Treaty of Versailles", "kind": "question"}
+{"text": "Is it dangerous?", "kind": "followup"}
+{"text": "Did it work?", "kind": "followup"}
+{"text": "Was he married?", "kind": "followup"}
+{"text": "Is she still alive?", "kind": "followup"}
+{"text": "Where is it?", "kind": "followup"}
+{"text": "Who built it?", "kind": "followup"}
+{"text": "How old is he?", "kind": "followup"}
+{"text": "Did they win the war?", "kind": "followup"}
+{"text": "When did it end?", "kind": "followup"}
+{"text": "Is it expensive?", "kind": "followup"}
+{"text": "Was it successful?", "kind": "followup"}
+{"text": "Are they related?", "kind": "followup"}
+{"text": "Does it hurt?", "kind": "followup"}
+{"text": "Can it fly?", "kind": "followup"}
+{"text": "Is it safe to eat?", "kind": "followup"}
+{"text": "Why did it fail?", "kind": "followup"}
+{"text": "Who won?", "kind": "followup"}
+{"text": "What year?", "kind": "followup"}
+{"text": "Where?", "kind": "followup"}
+{"text": "When?", "kind": "followup"}
+{"text": "How much does it cost?", "kind": "followup"}
+{"text": "is it true that it glows in the dark?", "kind": "followup"}
+{"text": "and how big is it?", "kind": "followup"}
+{"text": "ok, and when did he die?", "kind": "followup"}
+{"text": "cool, who designed it?", "kind": "followup"}
+{"text": "thanks, what about its population?", "kind": "followup"}
+{"text": "nice. how old is it?", "kind": "followup"}
+{"text": "awesome, and what does it eat?", "kind": "followup"}
+{"text": "thanks! where is it located?", "kind": "followup"}
+{"text": "got it. who discovered it?", "kind": "followup"}
+{"text": "ok thanks, why did it collapse?", "kind": "followup"}
+{"text": "haha, how fast can it run?", "kind": "followup"}
+{"text": "great answer. what about Saturn?", "kind": "followup"}
+{"text": "neat! is it still in use?", "kind": "followup"}
+{"text": "perfect, when was it founded?", "kind": "followup"}
+{"text": "I see, and how many people live there?", "kind": "followup"}
+{"text": "wow ok, how long did it last?", "kind": "followup"}
+{"text": "cool. how do rainbows form?", "kind": "question"}
+{"text": "thank you! who was Ada Lovelace?", "kind": "question"}
+{"text": "nice, what is the largest moon of Saturn?", "kind": "question"}
+{"text": "ok. why do we dream?", "kind": "question"}
+{"text": "Is it shorter than the Nile?", "kind": "followup"}
+{"text": "Is Everest much taller?", "kind": "followup"}
+{"text": "Is Mars smaller?", "kind": "followup"}
+{"text": "which one is shorter?", "kind": "followup"}
+{"text": "Is the Amazon longer?", "kind": "followup"}
+{"text": "Is Venus hotter?", "kind": "followup"}
+{"text": "Was it shorter than the First World War?", "kind": "followup"}
+{"text": "is Lisbon much smaller?", "kind": "followup"}
+{"text": "is it simpler than chess?", "kind": "followup"}
+{"text": "Are crocodiles longer?", "kind": "followup"}
+{"text": "Is Pluto lighter?", "kind": "followup"}
+{"text": "is Canada larger?", "kind": "followup"}
+{"text": "which is shorter, the Seine or the Rhine?", "kind": "question"}
+{"text": "is Ben Nevis shorter?", "kind": "followup"}
+{"text": "is it shorter than a marathon?", "kind": "followup"}
+{"text": "which river is longer?", "kind": "followup"}
+{"text": "which of them is smaller?", "kind": "followup"}
+{"text": "was the second war shorter?", "kind": "followup"}
+{"text": "is the Thames shorter than the Severn?", "kind": "question"}
+{"text": "is a mile shorter than a kilometre?", "kind": "question"}
+{"text": "which planet is smaller?", "kind": "followup"}
+{"text": "is the Moon smaller than Mercury?", "kind": "question"}
+{"text": "is K2 harder to climb?", "kind": "followup"}
+{"text": "which language is simpler to learn?", "kind": "question"}
+{"text": "is Spanish easier than French?", "kind": "question"}
+{"text": "is a gorilla shorter than a human?", "kind": "question"}
+{"text": "which one is longer, the Nile or the Amazon?", "kind": "question"}
+{"text": "which is older?", "kind": "followup"}
+{"text": "what is it made of?", "kind": "followup"}
+{"text": "who owns it now?", "kind": "followup"}
+{"text": "how much did it cost to build?", "kind": "followup"}
+{"text": "when did she win the prize?", "kind": "followup"}
+{"text": "where did they live?", "kind": "followup"}
+{"text": "why did he leave?", "kind": "followup"}
+{"text": "how deep is it?", "kind": "followup"}
+{"text": "how heavy is it?", "kind": "followup"}
+{"text": "what does it look like?", "kind": "followup"}
+{"text": "is it still active?", "kind": "followup"}
+{"text": "how many of them are left?", "kind": "followup"}
+{"text": "where did it come from?", "kind": "followup"}
+{"text": "who were his parents?", "kind": "followup"}
+{"text": "what did she study?", "kind": "followup"}
+{"text": "how did they travel?", "kind": "followup"}
+{"text": "why did the empire collapse?", "kind": "followup"}
+{"text": "when was the painting finished?", "kind": "followup"}
+{"text": "where was the treaty signed?", "kind": "followup"}
+{"text": "how long did the war last?", "kind": "followup"}
+{"text": "who led the expedition?", "kind": "followup"}
+{"text": "what language did the emperor speak?", "kind": "followup"}
+{"text": "how big was the army?", "kind": "followup"}
+{"text": "why did the bridge collapse?", "kind": "followup"}
+{"text": "when did the band split up?", "kind": "followup"}
+{"text": "who directed the film?", "kind": "followup"}
+{"text": "what happened to the ship?", "kind": "followup"}
+{"text": "where is the statue now?", "kind": "followup"}
+{"text": "how was the city founded?", "kind": "followup"}
+{"text": "what happened after the battle?", "kind": "followup"}
+{"text": "and the smallest?", "kind": "followup"}
+{"text": "and the oldest one?", "kind": "followup"}
+{"text": "and in Germany?", "kind": "followup"}
+{"text": "and in 1990?", "kind": "followup"}
+{"text": "what about Jupiter?", "kind": "followup"}
+{"text": "how about the Pacific?", "kind": "followup"}
+{"text": "what about his brother?", "kind": "followup"}
+{"text": "and his wife?", "kind": "followup"}
+{"text": "how about in winter?", "kind": "followup"}
+{"text": "what about the Romans?", "kind": "followup"}
+{"text": "and the second largest?", "kind": "followup"}
+{"text": "how many?", "kind": "followup"}
+{"text": "how far?", "kind": "followup"}
+{"text": "how long?", "kind": "followup"}
+{"text": "why not?", "kind": "followup"}
+{"text": "in which country?", "kind": "followup"}
+{"text": "since when?", "kind": "followup"}
+{"text": "by whom?", "kind": "followup"}
+{"text": "for how long?", "kind": "followup"}
+{"text": "how much?", "kind": "followup"}
+{"text": "which year exactly?", "kind": "followup"}
+{"text": "who else?", "kind": "followup"}
+{"text": "what else happened?", "kind": "followup"}
+{"text": "what else did he invent?", "kind": "followup"}
+{"text": "what else does it do?", "kind": "followup"}
+{"text": "does it have a moon?", "kind": "followup"}
+{"text": "can you visit it?", "kind": "followup"}
+{"text": "is it bigger than Texas?", "kind": "followup"}
+{"text": "is it older than the pyramids?", "kind": "followup"}
+{"text": "was it worth it?", "kind": "followup"}
+{"text": "does it still exist?", "kind": "followup"}
+{"text": "did it ever erupt?", "kind": "followup"}
+{"text": "were they successful?", "kind": "followup"}
+{"text": "has it been found?", "kind": "followup"}
+{"text": "could it happen again?", "kind": "followup"}
+{"text": "is he still alive?", "kind": "followup"}
+{"text": "are they dangerous to humans?", "kind": "followup"}
+{"text": "what is its capital?", "kind": "followup"}
+{"text": "what is his real name?", "kind": "followup"}
+{"text": "what are their main exports?", "kind": "followup"}
+{"text": "how did that happen?", "kind": "followup"}
+{"text": "why did that work?", "kind": "followup"}
+{"text": "what caused that?", "kind": "followup"}
+{"text": "is that the biggest one?", "kind": "followup"}
+{"text": "who started it?", "kind": "followup"}
+{"text": "how did it end?", "kind": "followup"}
+{"text": "how hot does it get?", "kind": "followup"}
+{"text": "what does he do now?", "kind": "followup"}
+{"text": "and how tall is that?", "kind": "followup"}
+{"text": "and what about the north?", "kind": "followup"}
+{"text": "so what happened then?", "kind": "followup"}
+{"text": "compared to Spain?", "kind": "followup"}
+{"text": "versus the Atlantic?", "kind": "followup"}
+{"text": "is the Indian Ocean deeper?", "kind": "followup"}
+{"text": "Is Italy bigger?", "kind": "followup"}
+{"text": "is Mercury closer?", "kind": "followup"}
+{"text": "how does that compare to the Moon?", "kind": "followup"}
+{"text": "is it more dangerous than a wolf?", "kind": "followup"}
+{"text": "which one came first?", "kind": "followup"}
+{"text": "which of the two is faster?", "kind": "followup"}
+{"text": "what is the difference between them?", "kind": "followup"}
+{"text": "what is a tsunami?", "kind": "question"}
+{"text": "how do glaciers form?", "kind": "question"}
+{"text": "who invented the bicycle?", "kind": "question"}
+{"text": "what is a democracy?", "kind": "question"}
+{"text": "how do clouds form?", "kind": "question"}
+{"text": "why do cats sleep so much?", "kind": "question"}
+{"text": "what is an atom?", "kind": "question"}
+{"text": "how do earthquakes start?", "kind": "question"}
+{"text": "who was the first person on the moon?", "kind": "question"}
+{"text": "what is the largest ocean?", "kind": "question"}
+{"text": "how do plants make food?", "kind": "question"}
+{"text": "why do we have seasons?", "kind": "question"}
+{"text": "how do batteries work?", "kind": "question"}
+{"text": "what is a supernova?", "kind": "question"}
+{"text": "who painted the starry night", "kind": "question"}
+{"text": "how do we see colours?", "kind": "question"}
+{"text": "what is the capital of canada", "kind": "question"}
+{"text": "why do onions make you cry?", "kind": "question"}
+{"text": "how does a rocket work?", "kind": "question"}
+{"text": "what is a pandemic?", "kind": "question"}
+{"text": "when was the wheel invented?", "kind": "question"}
+{"text": "how do fish breathe?", "kind": "question"}
+{"text": "what is gravity?", "kind": "question"}
+{"text": "why do we sleep?", "kind": "question"}
+{"text": "how are rainbows formed", "kind": "question"}
+{"text": "what is a galaxy?", "kind": "question"}
+{"text": "who discovered electricity?", "kind": "question"}
+{"text": "what do pandas eat", "kind": "question"}
+{"text": "how fast is light?", "kind": "question"}
+{"text": "how deep is the ocean?", "kind": "question"}
+{"text": "what is an earthquake?", "kind": "question"}
+{"text": "why is grass green?", "kind": "question"}
+{"text": "how big is the sun?", "kind": "question"}
+{"text": "when did the dinosaurs live?", "kind": "question"}
+{"text": "what is a virus?", "kind": "question"}
+{"text": "how does a microwave work?", "kind": "question"}
+{"text": "why do birds sing?", "kind": "question"}
+{"text": "how is chocolate made?", "kind": "question"}
+{"text": "what causes thunder?", "kind": "question"}
+{"text": "who built the pyramids?", "kind": "question"}
+{"text": "how many bones does a cat have?", "kind": "question"}
+{"text": "what is a hurricane?", "kind": "question"}
+{"text": "what is the smallest country?", "kind": "question"}
+{"text": "how do wind turbines work?", "kind": "question"}
+{"text": "who invented the radio?", "kind": "question"}
+{"text": "why does ice float?", "kind": "question"}
+{"text": "what is a mortgage?", "kind": "question"}
+{"text": "how do bats see in the dark?", "kind": "question"}
+{"text": "where do hurricanes form?", "kind": "question"}
+{"text": "how long do turtles live?", "kind": "question"}
+{"text": "why do we yawn?", "kind": "question"}
+{"text": "what is an eclipse?", "kind": "question"}
+{"text": "how do computers store data?", "kind": "question"}
+{"text": "what is unemployment?", "kind": "question"}
+{"text": "how do kidneys work?", "kind": "question"}
+{"text": "who wrote the odyssey", "kind": "question"}
+{"text": "what is the population of india?", "kind": "question"}
+{"text": "how tall is a giraffe?", "kind": "question"}
+{"text": "when did the iron age begin?", "kind": "question"}
+{"text": "what language do people speak in austria?", "kind": "question"}
+{"text": "where do they make champagne?", "kind": "question"}
+{"text": "why do we have fingerprints?", "kind": "question"}
+{"text": "how do you make bread?", "kind": "question"}
+{"text": "what is the tallest tree?", "kind": "question"}
+{"text": "who was the first king of england?", "kind": "question"}
+{"text": "how does the moon affect tides?", "kind": "question"}
+{"text": "what is the hottest planet?", "kind": "question"}
+{"text": "what is it like to live in space?", "kind": "question"}
+{"text": "how is it that birds can fly?", "kind": "question"}
+{"text": "why is it so salty?", "kind": "followup"}
+{"text": "why is the Dead Sea so salty?", "kind": "question"}
+{"text": "where in the body does that happen?", "kind": "followup"}
+{"text": "where in the body is insulin made?", "kind": "question"}
+{"text": "what happens if it stops working?", "kind": "followup"}
+{"text": "what happens if the heart stops working?", "kind": "question"}
+{"text": "why was it built underground?", "kind": "followup"}
+{"text": "why was the Paris metro built underground?", "kind": "question"}
+{"text": "how did they manage to build it without machines?", "kind": "followup"}
+{"text": "how did the Egyptians build the pyramids without machines?", "kind": "question"}
+{"text": "why did it take so long to finish?", "kind": "followup"}
+{"text": "why did Sagrada Familia take so long to finish?", "kind": "question"}
+{"text": "what made it so popular in the 1960s?", "kind": "followup"}
+{"text": "what made the Beatles so popular in the 1960s?", "kind": "question"}
+{"text": "how does it protect itself from predators?", "kind": "followup"}
+{"text": "how does a porcupine protect itself from predators?", "kind": "question"}
+{"text": "why did he move to Paris in the end?", "kind": "followup"}
+{"text": "why did Hemingway move to Paris?", "kind": "question"}
+{"text": "what does that have to do with climate change?", "kind": "followup"}
+{"text": "what does deforestation have to do with climate change?", "kind": "question"}
+{"text": "how is it different from what the Greeks believed?", "kind": "followup"}
+{"text": "how is Hinduism different from Greek religion?", "kind": "question"}
+{"text": "why does it change colour in the autumn?", "kind": "followup"}
+{"text": "why do maple leaves change colour in autumn?", "kind": "question"}
+{"text": "how much of it is covered by ice?", "kind": "followup"}
+{"text": "how much of Greenland is covered by ice?", "kind": "question"}
+{"text": "what did she do after she left the government?", "kind": "followup"}
+{"text": "what did Margaret Thatcher do after she left the government?", "kind": "question"}
+{"text": "why were they so afraid of it during the Middle Ages?", "kind": "followup"}
+{"text": "why were people afraid of comets during the Middle Ages?", "kind": "question"}
+{"text": "how many times has it erupted since 1900?", "kind": "followup"}
+{"text": "how many times has Etna erupted since 1900?", "kind": "question"}
+{"text": "what role did that play in the war?", "kind": "followup"}
+{"text": "what role did radar play in World War II?", "kind": "question"}
+{"text": "why did it stop being used?", "kind": "followup"}
+{"text": "why did the telegraph stop being used?", "kind": "question"}
+{"text": "where do they go in the winter?", "kind": "followup"}
+{"text": "where do swallows go in the winter?", "kind": "question"}
+{"text": "how did he become so rich?", "kind": "followup"}
+{"text": "how did Rockefeller become so rich?", "kind": "question"}
+{"text": "what was the reaction when it was first published?", "kind": "followup"}
+{"text": "what was the reaction when On the Origin of Species was first published?", "kind": "question"}
+{"text": "is that why it glows?", "kind": "followup"}
+{"text": "why does radium glow?", "kind": "question"}
+{"text": "how long can they survive without water?", "kind": "followup"}
+{"text": "how long can camels survive without water?", "kind": "question"}
+{"text": "why does it smell so bad?", "kind": "followup"}
+{"text": "why does sulfur smell so bad?", "kind": "question"}
+{"text": "what is the main ingredient in it?", "kind": "followup"}
+{"text": "what is the main ingredient in hummus?", "kind": "question"}
+{"text": "who paid for its construction?", "kind": "followup"}
+{"text": "who paid for the construction of the Suez Canal?", "kind": "question"}
+{"text": "how close did they come to winning?", "kind": "followup"}
+{"text": "how close did the Confederacy come to winning the Civil War?", "kind": "question"}
+{"text": "what were the consequences for the people living there?", "kind": "followup"}
+{"text": "what were the consequences of the Chernobyl disaster for local people?", "kind": "question"}
+{"text": "how has it changed over the last century?", "kind": "followup"}
+{"text": "how has the English language changed over the last century?", "kind": "question"}
+{"text": "why didn't they use it earlier?", "kind": "followup"}
+{"text": "why didn't the Romans use paper earlier?", "kind": "question"}
+{"text": "what did the critics say about it?", "kind": "followup"}
+{"text": "what did the critics say about Citizen Kane?", "kind": "question"}
+{"text": "how is that measured?", "kind": "followup"}
+{"text": "how is air pressure measured?", "kind": "question"}
+{"text": "what are the risks of doing that?", "kind": "followup"}
+{"text": "what are the risks of scuba diving?", "kind": "question"}
+{"text": "how did the locals react to them?", "kind": "followup"}
+{"text": "how did the Aztecs react to the Spanish?", "kind": "question"}
+{"text": "where does the energy for that come from?", "kind": "followup"}
+{"text": "where does the energy for a hurricane come from?", "kind": "question"}
+{"text": "why couldn't they stop it?", "kind": "followup"}
+{"text": "why couldn't firefighters stop the Great Chicago Fire?", "kind": "question"}
+{"text": "how did this affect the economy?", "kind": "followup"}
+{"text": "how did the Black Death affect the economy?", "kind": "question"}
+{"text": "what was his relationship with the king?", "kind": "followup"}
+{"text": "what was Thomas More's relationship with Henry VIII?", "kind": "question"}
+{"text": "how far away is it from us?", "kind": "followup"}
+{"text": "how far away is Alpha Centauri from us?", "kind": "question"}
+{"text": "what is the story behind the name?", "kind": "followup"}
+{"text": "what is the story behind the name Amazon?", "kind": "question"}
+{"text": "who lives there today?", "kind": "followup"}
+{"text": "who lives in Buckingham Palace today?", "kind": "question"}
+{"text": "how does the body get rid of it?", "kind": "followup"}
+{"text": "how does the body get rid of alcohol?", "kind": "question"}
+{"text": "what would happen if it disappeared?", "kind": "followup"}
+{"text": "what would happen if the Moon disappeared?", "kind": "question"}
+{"text": "how do doctors treat it?", "kind": "followup"}
+{"text": "how do doctors treat malaria?", "kind": "question"}
+{"text": "why is that considered his best work?", "kind": "followup"}
+{"text": "why is Guernica considered Picasso's best work?", "kind": "question"}
+{"text": "when did people first start using them?", "kind": "followup"}
+{"text": "when did people first start using coins?", "kind": "question"}
+{"text": "what is inside it?", "kind": "followup"}
+{"text": "what is inside a golf ball?", "kind": "question"}
+{"text": "how fast does it spin?", "kind": "followup"}
+{"text": "how fast does the Earth spin?", "kind": "question"}
+{"text": "Who is Beyoncé?", "kind": "question"}
+{"text": "Who is Elon Musk?", "kind": "question"}
+{"text": "Who was Winston Churchill?", "kind": "question"}
+{"text": "Who is the Dalai Lama?", "kind": "question"}
+{"text": "Who was Charles Darwin?", "kind": "question"}
+{"text": "Who is Lionel Messi?", "kind": "question"}
+{"text": "Who was Joan of Arc?", "kind": "question"}
+{"text": "Who is Angela Merkel?", "kind": "question"}
+{"text": "What is Bitcoin?", "kind": "question"}
+{"text": "What is NATO?", "kind": "question"}
+{"text": "What is the Eiffel Tower?", "kind": "question"}
+{"text": "What is Stonehenge?", "kind": "question"}
+{"text": "What is the Louvre?", "kind": "question"}
+{"text": "What is YouTube?", "kind": "question"}
+{"text": "What is the Sahara?", "kind": "question"}
+{"text": "what is a volcano", "kind": "question"}
+{"text": "what is a comet?", "kind": "question"}
+{"text": "what is a molecule", "kind": "question"}
+{"text": "what is an enzyme?", "kind": "question"}
+{"text": "what is a neutron star?", "kind": "question"}
+{"text": "what is a glacier?", "kind": "question"}
+{"text": "what is a monsoon?", "kind": "question"}
+{"text": "what is a sonnet?", "kind": "question"}
+{"text": "what is a haiku?", "kind": "question"}
+{"text": "what is an allergy?", "kind": "question"}
+{"text": "what do giraffes eat?", "kind": "question"}
+{"text": "what do penguins eat?", "kind": "question"}
+{"text": "what do sharks eat", "kind": "question"}
+{"text": "what do bees eat?", "kind": "question"}
+{"text": "what do owls eat?", "kind": "question"}
+{"text": "what do caterpillars eat", "kind": "question"}
+{"text": "what do elephants eat?", "kind": "question"}
+{"text": "how do airplanes land?", "kind": "question"}
+{"text": "how do trains work?", "kind": "question"}
+{"text": "how do vaccines get tested?", "kind": "question"}
+{"text": "how do plants grow?", "kind": "question"}
+{"text": "how do bridges stay up?", "kind": "question"}
+{"text": "how do submarines float?", "kind": "question"}
+{"text": "how does wifi work?", "kind": "question"}
+{"text": "how does gps work", "kind": "question"}
+{"text": "how does a camera work?", "kind": "question"}
+{"text": "how does a car engine work?", "kind": "question"}
+{"text": "how does the internet work?", "kind": "question"}
+{"text": "why do we dream?", "kind": "question"}
+{"text": "why do stars twinkle?", "kind": "question"}
+{"text": "why is the sea blue?", "kind": "question"}
+{"text": "why do leaves fall?", "kind": "question"}
+{"text": "why do dogs bark?", "kind": "question"}
+{"text": "why do we hiccup?", "kind": "question"}
+{"text": "why is the moon red sometimes?", "kind": "question"}
+{"text": "when did the first world war start?", "kind": "question"}
+{"text": "when was the eiffel tower built?", "kind": "question"}
+{"text": "when did the berlin wall fall?", "kind": "question"}
+{"text": "when did humans first use fire?", "kind": "question"}
+{"text": "when was penicillin discovered?", "kind": "question"}
+{"text": "where is mount everest?", "kind": "question"}
+{"text": "where do kangaroos live?", "kind": "question"}
+{"text": "where is the great barrier reef?", "kind": "question"}
+{"text": "where was napoleon born?", "kind": "question"}
+{"text": "who painted the sistine chapel?", "kind": "question"}
+{"text": "who invented the telephone?", "kind": "question"}
+{"text": "who discovered penicillin?", "kind": "question"}
+{"text": "who wrote romeo and juliet?", "kind": "question"}
+{"text": "who built the great wall of china?", "kind": "question"}
+{"text": "how tall is the empire state building?", "kind": "question"}
+{"text": "how long is the great wall of china?", "kind": "question"}
+{"text": "how old is the earth?", "kind": "question"}
+{"text": "how hot is the sun?", "kind": "question"}
+{"text": "how far is mars from earth?", "kind": "question"}
+{"text": "how many planets are there?", "kind": "question"}
+{"text": "how many people live in london?", "kind": "question"}
+{"text": "what is the capital of japan?", "kind": "question"}
+{"text": "what is the population of germany?", "kind": "question"}
+{"text": "what is the largest animal?", "kind": "question"}
+{"text": "what is the fastest car?", "kind": "question"}
+{"text": "which is the longest river in africa?", "kind": "question"}
+{"text": "which country has the most people?", "kind": "question"}
+{"text": "is the sun a star?", "kind": "question"}
+{"text": "is coffee bad for you?", "kind": "question"}
+{"text": "are dolphins mammals?", "kind": "question"}
+{"text": "can penguins fly?", "kind": "question"}
+{"text": "does the moon have gravity?", "kind": "question"}
+{"text": "thanks! who is Barack Obama?", "kind": "question"}
+{"text": "ok, what is a quasar?", "kind": "question"}
+{"text": "cool, how do owls hunt?", "kind": "question"}
+{"text": "great. why do volcanoes erupt?", "kind": "question"}
+{"text": "nice, and what is the tallest mountain in Europe?", "kind": "question"}
+{"text": "hmm, how does a compass work?", "kind": "question"}
+{"text": "alright, who invented the internet?", "kind": "question"}
+{"text": "sure, what causes rainbows?", "kind": "question"}
+{"text": "I see. what is the biggest desert in the world?", "kind": "question"}
+{"text": "interesting, when did the Titanic sink?", "kind": "question"}
+{"text": "what is the Mona Lisa", "kind": "question"}
+{"text": "tell me about the Great Pyramid of Giza", "kind": "question"}
+{"text": "tell me about octopuses", "kind": "question"}
+{"text": "explain how volcanoes form", "kind": "question"}
+{"text": "explain gravity", "kind": "question"}
+{"text": "describe the water cycle", "kind": "question"}
+{"text": "give me facts about Mars", "kind": "question"}
+{"text": "facts about the Roman Empire", "kind": "question"}
+{"text": "history of the bicycle", "kind": "question"}
+{"text": "the life of Mozart", "kind": "question"}
+{"text": "causes of the First World War", "kind": "question"}
+{"text": "symptoms of malaria", "kind": "question"}
+{"text": "uses of copper", "kind": "question"}
+{"text": "benefits of exercise", "kind": "question"}
+{"text": "how to tie a tie", "kind": "question"}
+{"text": "how to make pancakes", "kind": "question"}
+{"text": "best time to visit Japan", "kind": "question"}
+{"text": "I want to learn about black holes", "kind": "question"}
+{"text": "can you tell me about the Vikings?", "kind": "question"}
+{"text": "I'm curious about how bees communicate", "kind": "question"}
+{"text": "could you explain inflation?", "kind": "question"}
+{"text": "please explain photosynthesis", "kind": "question"}
+{"text": "what's the story of King Arthur?", "kind": "question"}
+{"text": "what's the deal with quantum physics?", "kind": "question"}
+{"text": "and the Golden Gate Bridge?", "kind": "followup"}
+{"text": "and the Empire State Building?", "kind": "followup"}
+{"text": "and Germany?", "kind": "followup"}
+{"text": "and the Danube?", "kind": "followup"}
+{"text": "and Tokyo?", "kind": "followup"}
+{"text": "and the Pacific Ocean?", "kind": "followup"}
+{"text": "and Mount Fuji?", "kind": "followup"}
+{"text": "and the Colosseum?", "kind": "followup"}
+{"text": "and Napoleon?", "kind": "followup"}
+{"text": "and the Sahara?", "kind": "followup"}
+{"text": "and Lake Baikal?", "kind": "followup"}
+{"text": "and the Rhine?", "kind": "followup"}
+{"text": "and the Moon?", "kind": "followup"}
+{"text": "and Mercury?", "kind": "followup"}
+{"text": "and the Statue of Liberty?", "kind": "followup"}
+{"text": "and the Eiffel Tower?", "kind": "followup"}
+{"text": "and the Atlantic?", "kind": "followup"}
+{"text": "and Brazil?", "kind": "followup"}
+{"text": "and Picasso?", "kind": "followup"}
+{"text": "and the Louvre?", "kind": "followup"}
+{"text": "what about the Nile?", "kind": "followup"}
+{"text": "what about Berlin?", "kind": "followup"}
+{"text": "what about the Great Wall?", "kind": "followup"}
+{"text": "what about Einstein?", "kind": "followup"}
+{"text": "how about Spain?", "kind": "followup"}
+{"text": "how about the Thames?", "kind": "followup"}
+{"text": "and what about Kilimanjaro?", "kind": "followup"}
+{"text": "and for Canada?", "kind": "followup"}
+{"text": "and in the Arctic?", "kind": "followup"}
+{"text": "same for Neptune?", "kind": "followup"}
+{"text": "how to boil an egg", "kind": "question"}
+{"text": "how to change a tyre", "kind": "question"}
+{"text": "how to learn French quickly", "kind": "question"}
+{"text": "how to plant tomatoes", "kind": "question"}
+{"text": "how to write a CV", "kind": "question"}
+{"text": "how to make coffee without a machine", "kind": "question"}
+{"text": "how to get rid of hiccups", "kind": "question"}
+{"text": "how to fold a paper plane", "kind": "question"}
+{"text": "which one is taller?", "kind": "followup"}
+{"text": "which one is heavier?", "kind": "followup"}
+{"text": "which one is longer?", "kind": "followup"}
+{"text": "which one is cheaper?", "kind": "followup"}
+{"text": "which one is smaller?", "kind": "followup"}
+{"text": "which is shorter?", "kind": "followup"}
+{"text": "which one is faster?", "kind": "followup"}
+{"text": "which one is closer to the sun?", "kind": "followup"}
+{"text": "which one is deeper?", "kind": "followup"}
+{"text": "which one is more populous?", "kind": "followup"}
+{"text": "where does that take place?", "kind": "followup"}
+{"text": "where does this happen in the plant?", "kind": "followup"}
+{"text": "at what stage does that occur?", "kind": "followup"}
+{"text": "which part of the brain does that?", "kind": "followup"}
+{"text": "where exactly does it occur?", "kind": "followup"}
+{"text": "in which organ does this happen?", "kind": "followup"}
+{"text": "how many died?", "kind": "followup"}
+{"text": "how many were rescued?", "kind": "followup"}
+{"text": "how many of them came back?", "kind": "followup"}
+{"text": "how many lived through it?", "kind": "followup"}
+{"text": "how many were killed?", "kind": "followup"}
+{"text": "how many were on board?", "kind": "followup"}
+{"text": "how many soldiers fought there?", "kind": "followup"}
+{"text": "how many people work there?", "kind": "followup"}
+{"text": "how many copies did it sell?", "kind": "followup"}
+{"text": "how many of those are still standing?", "kind": "followup"}
+{"text": "how old was he when he died?", "kind": "followup"}
+{"text": "when was he born?", "kind": "followup"}
+{"text": "where is she buried?", "kind": "followup"}
+{"text": "and its area?", "kind": "followup"}
+{"text": "what about its economy?", "kind": "followup"}
+{"text": "and their capital?", "kind": "followup"}
+{"text": "what about its climate?", "kind": "followup"}
+{"text": "and his successor?", "kind": "followup"}
+{"text": "why did that happen?", "kind": "followup"}
+{"text": "is that still true today?", "kind": "followup"}
+{"text": "who decided that?", "kind": "followup"}
+{"text": "how long did that take?", "kind": "followup"}
+{"text": "what came after that?", "kind": "followup"}
+{"text": "what happened before that?", "kind": "followup"}
+{"text": "how was that possible?", "kind": "followup"}
+{"text": "when did that change?", "kind": "followup"}
+{"text": "where did that start?", "kind": "followup"}
+{"text": "what is it used for?", "kind": "followup"}
+{"text": "who uses it?", "kind": "followup"}
+{"text": "how fast can it go?", "kind": "followup"}
+{"text": "how much does it weigh?", "kind": "followup"}
+{"text": "is it endangered?", "kind": "followup"}
+{"text": "does it still work?", "kind": "followup"}
+{"text": "what is it made from?", "kind": "followup"}
+{"text": "who named it?", "kind": "followup"}
+{"text": "can you see it from Earth?", "kind": "followup"}
+{"text": "what did they believe?", "kind": "followup"}
+{"text": "where did they come from?", "kind": "followup"}
+{"text": "why did they leave?", "kind": "followup"}
+{"text": "how long do they live?", "kind": "followup"}
+{"text": "what do they eat in winter?", "kind": "followup"}
+{"text": "are they related to wolves?", "kind": "followup"}
+{"text": "did they have children?", "kind": "followup"}
+{"text": "who led them?", "kind": "followup"}
+{"text": "how did they communicate?", "kind": "followup"}
+{"text": "what is the weather like there?", "kind": "followup"}
+{"text": "what language do people speak there?", "kind": "followup"}
+{"text": "how do I get there?", "kind": "followup"}
+{"text": "is it safe to travel there?", "kind": "followup"}
+{"text": "what can I see there?", "kind": "followup"}
+{"text": "who lived there first?", "kind": "followup"}
+{"text": "what grows there?", "kind": "followup"}
+{"text": "are those still used?", "kind": "followup"}
+{"text": "which of those is the oldest?", "kind": "followup"}
+{"text": "why were those built?", "kind": "followup"}
+{"text": "who made those?", "kind": "followup"}
+{"text": "why is this important?", "kind": "followup"}
+{"text": "how do these work?", "kind": "followup"}
+{"text": "are these dangerous?", "kind": "followup"}
+{"text": "what was his biggest achievement?", "kind": "followup"}
+{"text": "who were her children?", "kind": "followup"}
+{"text": "what are their main beliefs?", "kind": "followup"}
+{"text": "how come?", "kind": "followup"}
+{"text": "and then?", "kind": "followup"}
+{"text": "what next?", "kind": "followup"}
+{"text": "by how much?", "kind": "followup"}
+{"text": "which one?", "kind": "followup"}
+{"text": "where exactly?", "kind": "followup"}
+{"text": "until when?", "kind": "followup"}
+{"text": "how long ago?", "kind": "followup"}
+{"text": "at what age?", "kind": "followup"}
+{"text": "and the others?", "kind": "followup"}
+{"text": "what about the rest?", "kind": "followup"}
+{"text": "when did the war end?", "kind": "followup"}
+{"text": "who won the battle?", "kind": "followup"}
+{"text": "how tall is the tower?", "kind": "followup"}
+{"text": "when was the bridge finished?", "kind": "followup"}
+{"text": "who wrote the book?", "kind": "followup"}
+{"text": "what does the treaty say?", "kind": "followup"}
+{"text": "how old is the building?", "kind": "followup"}
+{"text": "what happened to the crew?", "kind": "followup"}
+{"text": "who designed the logo?", "kind": "followup"}
+{"text": "how big is the island?", "kind": "followup"}
+{"text": "why did the company fail?", "kind": "followup"}
+{"text": "who owns the team now?", "kind": "followup"}
+{"text": "what did the critics think of it?", "kind": "followup"}
+{"text": "is he still married?", "kind": "followup"}
+{"text": "how much did they pay for it?", "kind": "followup"}
+{"text": "why did people stop using it?", "kind": "followup"}
+{"text": "what made him famous?", "kind": "followup"}
+{"text": "where did she grow up?", "kind": "followup"}
+{"text": "what was her first job?", "kind": "followup"}
+{"text": "how did it get its name?", "kind": "followup"}
+{"text": "who was in charge at the time?", "kind": "followup"}
+{"text": "what did that cost?", "kind": "followup"}
+{"text": "how deep does it go?", "kind": "followup"}
+{"text": "how often does that happen?", "kind": "followup"}
+{"text": "does that still happen today?", "kind": "followup"}
+{"text": "where does digestion take place?", "kind": "question"}
+{"text": "which part of the brain controls balance?", "kind": "question"}
+{"text": "in which organ is bile made?", "kind": "question"}
+{"text": "how many people died in the Great Fire of London?", "kind": "question"}
+{"text": "how many soldiers fought at Waterloo?", "kind": "question"}
+{"text": "how many copies did Thriller sell?", "kind": "question"}
+{"text": "how many passengers were on the Hindenburg?", "kind": "question"}
+{"text": "how many people live in Lagos?", "kind": "question"}
+{"text": "when did Mozart die?", "kind": "question"}
+{"text": "where is Shakespeare buried?", "kind": "question"}
+{"text": "how old was Alexander the Great when he died?", "kind": "question"}
+{"text": "what is the population of Peru?", "kind": "question"}
+{"text": "what is the climate of Iceland like?", "kind": "question"}
+{"text": "why did the Hindenburg explode?", "kind": "question"}
+{"text": "is the ozone layer still shrinking?", "kind": "question"}
+{"text": "what is a drone used for?", "kind": "question"}
+{"text": "how much does a blue whale weigh?", "kind": "question"}
+{"text": "is the snow leopard endangered?", "kind": "question"}
+{"text": "what is glass made from?", "kind": "question"}
+{"text": "when was oxygen discovered?", "kind": "question"}
+{"text": "what did the Vikings believe?", "kind": "question"}
+{"text": "where did the Celts come from?", "kind": "question"}
+{"text": "how long do parrots live?", "kind": "question"}
+{"text": "what do bears eat in winter?", "kind": "question"}
+{"text": "are foxes related to wolves?", "kind": "question"}
+{"text": "what is the weather like in Iceland in March?", "kind": "question"}
+{"text": "what language do they speak in Belgium?", "kind": "question"}
+{"text": "is it safe to travel to Colombia?", "kind": "question"}
+{"text": "what can I see in Prague?", "kind": "question"}
+{"text": "why are bees important?", "kind": "question"}
+{"text": "who discovered vitamin C?", "kind": "question"}
+{"text": "are jellyfish dangerous?", "kind": "question"}
+{"text": "what was Gandhi's biggest achievement?", "kind": "question"}
+{"text": "who were Henry VIII's children?", "kind": "question"}
+{"text": "what is Japan's biggest city?", "kind": "question"}
+{"text": "what are the main beliefs of Sikhism?", "kind": "question"}
+{"text": "when did the Hundred Years' War end?", "kind": "question"}
+{"text": "who won the Battle of Hastings?", "kind": "question"}
+{"text": "how tall is the CN Tower?", "kind": "question"}
+{"text": "when was the Brooklyn Bridge finished?", "kind": "question"}
+{"text": "who wrote the book Dune?", "kind": "question"}
+{"text": "what does the Treaty of Rome say?", "kind": "question"}
+{"text": "how big is the island of Crete?", "kind": "question"}
+{"text": "why did Enron fail?", "kind": "question"}
+{"text": "who owns Manchester United now?", "kind": "question"}
+{"text": "how do they make paper money?", "kind": "question"}
+{"text": "why do they put fluoride in water?", "kind": "question"}
+{"text": "what do you call a baby kangaroo?", "kind": "question"}
+{"text": "can you eat raw eggs?", "kind": "question"}
+{"text": "how do they measure earthquakes?", "kind": "question"}
+{"text": "why do we have two kidneys?", "kind": "question"}
+{"text": "how do we know the age of the earth?", "kind": "question"}
+{"text": "what happens if you swallow gum?", "kind": "question"}
+{"text": "where does rain come from?", "kind": "question"}
+{"text": "how often does Halley's Comet appear?", "kind": "question"}
+{"text": "how deep does the Grand Canyon go?", "kind": "question"}
+{"text": "how did Pennsylvania get its name?", "kind": "question"}
+{"text": "who was in charge of the Manhattan Project?", "kind": "question"}
+{"text": "what made Elvis Presley famous?", "kind": "question"}
+{"text": "where did Marie Antoinette grow up?", "kind": "question"}
+{"text": "what was Einstein's first job?", "kind": "question"}
+{"text": "how much did the US pay for Alaska?", "kind": "question"}
+{"text": "why did people stop using typewriters?", "kind": "question"}
+{"text": "what did critics think of Moby-Dick?", "kind": "question"}
+{"text": "how many died in the Chernobyl disaster?", "kind": "question"}
+{"text": "how many astronauts walked on the moon?", "kind": "question"}
+{"text": "when did the Ottoman Empire end?", "kind": "question"}
+{"text": "what grows in the Sahara?", "kind": "question"}
+{"text": "who lived in Australia first?", "kind": "question"}
+{"text": "what is the tallest tower in Paris?", "kind": "question"}
+{"text": "what is the biggest city in Canada?", "kind": "question"}
+{"text": "what is a supervolcano?", "kind": "question"}
+{"text": "how do noise cancelling headphones work?", "kind": "question"}
+{"text": "why is Venus so hot?", "kind": "question"}
+{"text": "how many films did she direct?", "kind": "followup"}
+{"text": "how many albums did they release?", "kind": "followup"}
+{"text": "how many goals did he score?", "kind": "followup"}
+{"text": "how many children did she have?", "kind": "followup"}
+{"text": "how many languages did he speak?", "kind": "followup"}
+{"text": "how many awards did she win?", "kind": "followup"}
+{"text": "how many times was he married?", "kind": "followup"}
+{"text": "how many paintings did he make?", "kind": "followup"}
+{"text": "how many symphonies did he compose?", "kind": "followup"}
+{"text": "how many seasons did it run?", "kind": "followup"}
+{"text": "how many people did they kill?", "kind": "followup"}
+{"text": "how many titles did they win?", "kind": "followup"}
+{"text": "how many patents did he hold?", "kind": "followup"}
+{"text": "what was his first novel?", "kind": "followup"}
+{"text": "which of his songs is the most famous?", "kind": "followup"}
+{"text": "what instruments did she play?", "kind": "followup"}
+{"text": "when did he start writing?", "kind": "followup"}
+{"text": "how old was she when she started?", "kind": "followup"}
+{"text": "where did they record it?", "kind": "followup"}
+{"text": "what did he study at university?", "kind": "followup"}
+{"text": "what are her most famous films?", "kind": "followup"}
+{"text": "which of their albums sold best?", "kind": "followup"}
+{"text": "what was his last movie?", "kind": "followup"}
+{"text": "who were his main rivals?", "kind": "followup"}
+{"text": "did she ever win an Oscar?", "kind": "followup"}
+{"text": "what is his net worth?", "kind": "followup"}
+{"text": "where does he live now?", "kind": "followup"}
+{"text": "what genre does he write?", "kind": "followup"}
+{"text": "what was their biggest hit?", "kind": "followup"}
+{"text": "is he still alive today?", "kind": "followup"}
+{"text": "which books of hers became films?", "kind": "followup"}
+{"text": "what was her most famous discovery?", "kind": "followup"}
+{"text": "how did he become president?", "kind": "followup"}
+{"text": "who trained him?", "kind": "followup"}
+{"text": "how many books did Agatha Christie write?", "kind": "question"}
+{"text": "how many films did Alfred Hitchcock direct?", "kind": "question"}
+{"text": "how many goals did Pelé score?", "kind": "question"}
+{"text": "how many children did Queen Victoria have?", "kind": "question"}
+{"text": "how many languages did Tolkien speak?", "kind": "question"}
+{"text": "how many Oscars did Meryl Streep win?", "kind": "question"}
+{"text": "how many times was Elizabeth Taylor married?", "kind": "question"}
+{"text": "how many paintings did Van Gogh make?", "kind": "question"}
+{"text": "how many symphonies did Beethoven compose?", "kind": "question"}
+{"text": "how many seasons did Friends run?", "kind": "question"}
+{"text": "what was Dickens's first novel?", "kind": "question"}
+{"text": "which Beatles song is the most famous?", "kind": "question"}
+{"text": "what instruments did Prince play?", "kind": "question"}
+{"text": "what did Darwin study at university?", "kind": "question"}
+{"text": "what are Audrey Hepburn's most famous films?", "kind": "question"}
+{"text": "what was Heath Ledger's last movie?", "kind": "question"}
+{"text": "who were Napoleon's main rivals?", "kind": "question"}
+{"text": "did Hitchcock ever win an Oscar?", "kind": "question"}
+{"text": "what is the net worth of Bill Gates?", "kind": "question"}
+{"text": "where does the King of Norway live?", "kind": "question"}
+{"text": "what genre does Stephen Fry write?", "kind": "question"}
+{"text": "how many books are in the Bible?", "kind": "question"}
+{"text": "how many films are in the Star Wars saga?", "kind": "question"}
+{"text": "how many people speak Spanish?", "kind": "question"}
+{"text": "how many species of shark are there?", "kind": "question"}
+{"text": "how many hearts does an octopus have?", "kind": "question"}
+{"text": "what is the most famous painting in the world?", "kind": "question"}
+{"text": "who was the first female pilot?", "kind": "question"}
+{"text": "how do you say hello in Japanese?", "kind": "question"}
+{"text": "how do I say thanks in German?", "kind": "question"}
+{"text": "what is the French word for goodbye?", "kind": "question"}
+{"text": "how do you say good morning in Spanish?", "kind": "question"}
+{"text": "how do I greet someone in Korean?", "kind": "question"}
+{"text": "what does arigato mean?", "kind": "question"}
+{"text": "how do you say please in Italian?", "kind": "question"}
+{"text": "how do I say sorry in Mandarin?", "kind": "question"}
+{"text": "what is the polite way to say no in Japanese?", "kind": "question"}
+{"text": "how do you thank someone in Arabic?", "kind": "question"}

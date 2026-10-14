@@ -137,15 +137,18 @@ impl QueryEncoder {
     }
 }
 
-/// Softmax head over `QueryEncoder::encode`, trained by `pipeline/commonplace_pipeline/heads.py`, which
-/// writes the weights file. `turn()` sorts a chat message into a question, a reformat request or small
-/// talk; `intent()` sorts a standalone question into lookup, explain, compare or calc.
+/// Softmax head over `QueryEncoder::encode`, trained by `pipeline/commonplace_pipeline/heads.py`. `turn()` sorts a
+/// chat message into question, expand ("tell me more"), reformat or chat; `follow_up()` tells whether a question
+/// needs the last turn; `intent()` sorts a standalone question into lookup, explain, compare or calc.
 #[derive(serde::Deserialize)]
 pub struct Head {
     labels: Vec<String>,
-    /// Labels whose mistakes are costly: `classify` takes one only at `min_prob` or above.
+    /// Labels whose mistakes are costly: `classify` takes one only at its bar or above.
     strict: Vec<String>,
+    /// The bar of a strict label without its own entry in `min_probs`.
     min_prob: f32,
+    #[serde(default)]
+    min_probs: std::collections::HashMap<String, f32>,
     w: Vec<Vec<f32>>,
     b: Vec<f32>,
 }
@@ -154,6 +157,8 @@ static TURN_HEAD: std::sync::LazyLock<Head> =
     std::sync::LazyLock::new(|| serde_json::from_str(include_str!("turn_kind_head.json")).expect("turn_kind_head.json"));
 static INTENT_HEAD: std::sync::LazyLock<Head> =
     std::sync::LazyLock::new(|| serde_json::from_str(include_str!("intent_head.json")).expect("intent_head.json"));
+static FOLLOW_UP_HEAD: std::sync::LazyLock<Head> =
+    std::sync::LazyLock::new(|| serde_json::from_str(include_str!("follow_up_head.json")).expect("follow_up_head.json"));
 
 impl Head {
     pub fn turn() -> &'static Head {
@@ -162,6 +167,10 @@ impl Head {
 
     pub fn intent() -> &'static Head {
         &INTENT_HEAD
+    }
+
+    pub fn follow_up() -> &'static Head {
+        &FOLLOW_UP_HEAD
     }
 
     /// Labels with their probabilities, most likely first; empty when the embedding does not fit.
@@ -177,14 +186,20 @@ impl Head {
         out
     }
 
+    /// The probability of `label`; 0 when the embedding does not fit.
+    pub fn prob(&self, emb: &[f32], label: &str) -> f32 {
+        self.ranked(emb).into_iter().find(|(l, _)| *l == label).map_or(0.0, |x| x.1)
+    }
+
     /// The most likely label; the first label when the embedding does not fit.
     pub fn best(&self, emb: &[f32]) -> &str {
         self.ranked(emb).first().map_or(self.labels[0].as_str(), |x| x.0)
     }
 
-    /// The most likely label that is not strict or reaches `min_prob`.
+    /// The most likely label that is not strict or reaches its bar.
     pub fn classify(&self, emb: &[f32]) -> &str {
-        self.ranked(emb).into_iter().find(|(l, p)| !self.strict.iter().any(|s| s == l) || *p >= self.min_prob).map_or(self.labels[0].as_str(), |x| x.0)
+        let bar = |l: &str| self.min_probs.get(l).copied().unwrap_or(self.min_prob);
+        self.ranked(emb).into_iter().find(|(l, p)| !self.strict.iter().any(|s| s == l) || *p >= bar(l)).map_or(self.labels[0].as_str(), |x| x.0)
     }
 }
 
@@ -272,15 +287,20 @@ impl Reranker {
         Ok(Self { session: Mutex::new(session(&dir.join(model), threads)?), tok, head: RerankHead::load(dir)?, batch: 8 })
     }
 
-    /// Relevance logits for (query, doc) pairs, in input order.
+    /// Relevance logits for (query, doc) pairs, in input order. Each batch holds pairs of similar length,
+    /// so a short pair is not padded to the longest one.
     pub fn score(&self, query: &str, docs: &[String]) -> Result<Vec<f32>> {
-        let mut scores = Vec::with_capacity(docs.len());
-        for chunk in docs.chunks(self.batch) {
-            let pairs: Vec<(String, String)> = chunk.iter().map(|d| (query.to_string(), d.clone())).collect();
-            let encs = self.tok.encode_batch(pairs, true).map_err(|e| anyhow!("{e}"))?;
-            let (b, n) = (encs.len(), encs[0].get_ids().len());
-            let ids: Vec<i64> = encs.iter().flat_map(|e| e.get_ids().iter().map(|&x| x as i64)).collect();
-            let mask: Vec<i64> = encs.iter().flat_map(|e| e.get_attention_mask().iter().map(|&x| x as i64)).collect();
+        let pairs: Vec<(String, String)> = docs.iter().map(|d| (query.to_string(), d.clone())).collect();
+        let encs = self.tok.encode_batch(pairs, true).map_err(|e| anyhow!("{e}"))?;
+        // Padding is on the right, so the first `len` tokens of a padded pair are the pair itself.
+        let lens: Vec<usize> = encs.iter().map(|e| e.get_attention_mask().iter().filter(|&&m| m != 0).count()).collect();
+        let mut order: Vec<usize> = (0..docs.len()).collect();
+        order.sort_by_key(|&i| lens[i]);
+        let mut scores = vec![0f32; docs.len()];
+        for chunk in order.chunks(self.batch) {
+            let (b, n) = (chunk.len(), chunk.iter().map(|&i| lens[i]).max().unwrap_or(0));
+            let ids: Vec<i64> = chunk.iter().flat_map(|&i| encs[i].get_ids()[..n].iter().map(|&x| x as i64)).collect();
+            let mask: Vec<i64> = chunk.iter().flat_map(|&i| encs[i].get_attention_mask()[..n].iter().map(|&x| x as i64)).collect();
             let mut s = self.session.lock().unwrap();
             let out = s.run(ort::inputs![
                 "input_ids" => TensorRef::from_array_view(([b, n], &ids[..]))?,
@@ -289,9 +309,8 @@ impl Reranker {
             let (shape, hidden) = out["last_hidden_state"].try_extract_tensor::<f32>()?;
             let d = shape[2] as usize;
             ensure!(d == self.head.d, "hidden size {d} != head size {}", self.head.d);
-            for i in 0..b {
-                let cls = &hidden[i * n * d..i * n * d + d];
-                scores.push(self.head.score(cls));
+            for (j, &i) in chunk.iter().enumerate() {
+                scores[i] = self.head.score(&hidden[j * n * d..j * n * d + d]);
             }
         }
         Ok(scores)

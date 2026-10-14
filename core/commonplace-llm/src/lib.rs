@@ -9,7 +9,7 @@ use anyhow::{Context, Result, bail, ensure};
 use commonplace_core::llm::{GenParams, GenStats, LlmBackend};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::ptr;
 use std::sync::{Mutex, Once};
 use std::time::Instant;
@@ -72,7 +72,21 @@ struct ThinkStyle {
 struct Cached {
     tokens: usize,
     state: Vec<u8>,
+    /// `Inner::uses` at the last use: the least recent entry goes first when the cache is full.
+    used: u64,
+    /// Never evicted (`GenParams::keep_prefix`).
+    keep: bool,
 }
+
+/// The cache holds at most this many system prompts. The engine uses seven, so a full cache drops the least
+/// recently used one that is not kept.
+const CACHE_ENTRIES: usize = 6;
+
+/// Saved prompt states kept in `LoadOptions::state_dir`; the oldest go first.
+const STATE_FILES: usize = 4;
+
+/// Stands for the user message while the chat template is applied.
+const USER_SLOT: &str = "\u{1}user\u{1}";
 
 struct Inner {
     model: *mut sys::llama_model,
@@ -80,12 +94,16 @@ struct Inner {
     threadpool: *mut sys::ggml_threadpool,
     batch_pool: *mut sys::ggml_threadpool,
     cache: HashMap<String, Cached>,
+    uses: u64,
     /// How the chat template switches reasoning on and off; `None` for models without a thinking mode.
     think: Option<ThinkStyle>,
     /// `</think>` as one special token, when the vocabulary has it.
     think_end: Option<i32>,
     batch_threads: u32,
     n_batch: usize,
+    state_dir: Option<PathBuf>,
+    /// Model file name and size: a saved state only fits the weights that made it.
+    model_key: String,
 }
 
 // SAFETY: all access to the raw pointers goes through the Mutex in LlamaBackend.
@@ -125,6 +143,9 @@ pub struct LoadOptions {
     /// Read the weights into RAM (fast model). Memory-mapping plus weight repacking keeps the file
     /// mapped next to the repacked copy: 7.0 GB peak instead of 4.9 GB. The deep model streams (mmap).
     pub in_ram: bool,
+    /// Save kept system-prompt states (`GenParams::keep_prefix`) here, so a new process loads them instead of
+    /// prefilling the prompt again (seconds on a phone).
+    pub state_dir: Option<PathBuf>,
 }
 
 impl LlamaBackend {
@@ -174,6 +195,7 @@ impl LlamaBackend {
         desc.truncate(n.max(0) as usize);
         let desc = String::from_utf8_lossy(&desc).into_owned();
         let name = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+        let model_key = format!("{name} {}", std::fs::metadata(path).map(|m| m.len()).unwrap_or(0));
         // Reasoning models (LFM2.5-8B-A1B, Qwen3.x) skip thinking when handed an empty think block.
         // Ling 3.0 also needs "detailed thinking off" in the system turn; llama.cpp maps its template to Ling 2.0's.
         let tmpl = unsafe { sys::llama_model_chat_template(model, ptr::null()) };
@@ -185,7 +207,7 @@ impl LlamaBackend {
         } else {
             None
         };
-        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512 };
+        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key };
         inner.think_end = inner.tokenize("</think>", false).ok().filter(|t| t.len() == 1).map(|t| t[0]);
         if opts.in_ram {
             // One tiny decode warms the kernels.
@@ -206,10 +228,15 @@ impl Inner {
     }
 
     fn tokenize(&self, text: &str, add_special: bool) -> Result<Vec<i32>> {
+        self.tokenize_with(text, add_special, true)
+    }
+
+    /// `parse_special` false keeps control-token text ("</think>", "<|im_end|>") as plain text.
+    fn tokenize_with(&self, text: &str, add_special: bool, parse_special: bool) -> Result<Vec<i32>> {
         let n_max = text.len() as i32 + 16;
         let mut toks = vec![0i32; n_max as usize];
         let n = unsafe {
-            sys::llama_tokenize(self.vocab(), text.as_ptr() as *const _, text.len() as i32, toks.as_mut_ptr(), n_max, add_special, true)
+            sys::llama_tokenize(self.vocab(), text.as_ptr() as *const _, text.len() as i32, toks.as_mut_ptr(), n_max, add_special, parse_special)
         };
         ensure!(n >= 0, "tokenize failed");
         toks.truncate(n as usize);
@@ -249,6 +276,48 @@ impl Inner {
         }
         buf.truncate(n as usize);
         Ok(String::from_utf8_lossy(&buf).into_owned())
+    }
+
+    /// The saved state's file name. The hash may change with the Rust release; that only costs one prefill.
+    fn state_name(&self, system: &str) -> String {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        (&self.model_key, system).hash(&mut h);
+        format!("{:016x}.state", h.finish())
+    }
+
+    /// Loads a saved state into sequence 0. False (and the memory may hold partial state) unless the file
+    /// was made from exactly `toks`.
+    fn load_state(&self, file: &Path, toks: &[i32]) -> bool {
+        let Ok(c) = CString::new(file.to_string_lossy().as_bytes()) else { return false };
+        let mut got = vec![0i32; toks.len()];
+        let mut n = 0usize;
+        let size = unsafe { sys::llama_state_seq_load_file(self.ctx, c.as_ptr(), 0, got.as_mut_ptr(), got.len(), &mut n) };
+        size > 0 && got[..n.min(got.len())] == *toks
+    }
+
+    /// Writes sequence 0's state, then drops the oldest files beyond `STATE_FILES`. Failures only cost a later prefill.
+    fn save_state(&self, file: &Path, toks: &[i32]) {
+        let Some(dir) = file.parent() else { return };
+        let tmp = file.with_extension("tmp");
+        let Ok(c) = CString::new(tmp.to_string_lossy().as_bytes()) else { return };
+        // Written aside and renamed, so a process killed mid-write leaves no half file under the real name.
+        let ok = std::fs::create_dir_all(dir).is_ok() && unsafe { sys::llama_state_seq_save_file(self.ctx, c.as_ptr(), 0, toks.as_ptr(), toks.len()) } > 0;
+        if !ok || std::fs::rename(&tmp, file).is_err() {
+            let _ = std::fs::remove_file(&tmp);
+            return;
+        }
+        let mut saved: Vec<_> = std::fs::read_dir(dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|e| e.path().extension().is_some_and(|x| x == "state"))
+            .filter_map(|e| Some((e.metadata().ok()?.modified().ok()?, e.path())))
+            .collect();
+        saved.sort_by(|a, b| b.0.cmp(&a.0));
+        for (_, old) in saved.into_iter().skip(STATE_FILES) {
+            let _ = std::fs::remove_file(old);
+        }
     }
 
     /// Decode tokens starting at position `pos`, in n_batch chunks.
@@ -301,16 +370,23 @@ impl Inner {
         };
         let system = format!("{system}{sys_suffix}");
         let prefix = self.apply_template(&[("system", &system)], false)?;
-        let mut full = self.apply_template(&[("system", &system), ("user", user)], true)?;
-        full.push_str(open);
+        // The template wraps a placeholder that the user text replaces as plain text: a passage that contains
+        // "</think>" or a role tag must not become a control token.
+        let marked = self.apply_template(&[("system", &system), ("user", USER_SLOT)], true)?;
+        let (head, tail) = marked.split_once(USER_SLOT).context("the chat template dropped the user message")?;
+        let tail = format!("{tail}{open}");
+        let user_toks = self.tokenize_with(user, false, false)?;
         let mem = unsafe { sys::llama_get_memory(self.ctx) };
         unsafe { sys::llama_memory_clear(mem, true) };
 
         let t = Instant::now();
-        let suffix_toks = if let Some(rest) = full.strip_prefix(prefix.as_str()) {
-            let restored = match self.cache.get(system.as_str()) {
+        self.uses += 1;
+        let suffix_toks = if let Some(rest) = head.strip_prefix(prefix.as_str()) {
+            let restored = match self.cache.get_mut(system.as_str()) {
                 Some(c) => {
                     let ok = unsafe { sys::llama_state_seq_set_data(self.ctx, c.state.as_ptr(), c.state.len(), 0) } > 0;
+                    c.used = self.uses;
+                    c.keep |= p.keep_prefix;
                     if ok { Some(c.tokens) } else { None }
                 }
                 None => None,
@@ -320,22 +396,33 @@ impl Inner {
                 None => {
                     unsafe { sys::llama_memory_clear(mem, true) };
                     let ptoks = self.tokenize(&prefix, true)?;
-                    self.decode_tokens(&ptoks, 0)?;
+                    let file = self.state_dir.as_ref().filter(|_| p.keep_prefix).map(|d| d.join(self.state_name(&system)));
+                    if file.as_deref().is_some_and(|f| self.load_state(f, &ptoks)) {
+                        st.cached_tokens = ptoks.len() as u32;
+                    } else {
+                        unsafe { sys::llama_memory_clear(mem, true) };
+                        self.decode_tokens(&ptoks, 0)?;
+                        st.prompt_tokens += ptoks.len() as u32;
+                        if let Some(f) = &file {
+                            self.save_state(f, &ptoks);
+                        }
+                    }
                     let size = unsafe { sys::llama_state_seq_get_size(self.ctx, 0) };
                     let mut state = vec![0u8; size];
                     let got = unsafe { sys::llama_state_seq_get_data(self.ctx, state.as_mut_ptr(), size, 0) };
                     state.truncate(got);
-                    if self.cache.len() >= 6 {
-                        self.cache.clear();
+                    if self.cache.len() >= CACHE_ENTRIES
+                        && let Some(old) = self.cache.iter().filter(|(_, c)| !c.keep).min_by_key(|(_, c)| c.used).map(|(k, _)| k.clone())
+                    {
+                        self.cache.remove(&old);
                     }
-                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), state });
-                    st.prompt_tokens += ptoks.len() as u32;
+                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), state, used: self.uses, keep: p.keep_prefix });
                 }
             }
             st.prompt_tokens += st.cached_tokens;
-            self.tokenize(rest, false)?
+            [self.tokenize(rest, false)?, user_toks, self.tokenize(&tail, false)?].concat()
         } else {
-            self.tokenize(&full, true)?
+            [self.tokenize(head, true)?, user_toks, self.tokenize(&tail, false)?].concat()
         };
         let n_ctx = unsafe { sys::llama_n_ctx(self.ctx) } as usize;
         ensure!(st.prompt_tokens as usize + suffix_toks.len() + ((p.max_tokens + budget.unwrap_or(0)) as usize) < n_ctx, "prompt too long for n_ctx {n_ctx}");

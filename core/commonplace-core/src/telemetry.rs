@@ -39,6 +39,9 @@ pub struct QueryRecord {
     pub compute: Option<GenStats>,
     pub synthesis: Option<GenStats>,
     pub evidence_tokens: usize,
+    /// The evidence text the model read. Serve-eval prints it; telemetry files do not carry it.
+    #[serde(skip)]
+    pub evidence: String,
     pub n_sources: usize,
     pub unverified_sentences: usize,
     pub peak_rss_mb: f64,

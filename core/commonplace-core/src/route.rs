@@ -1,5 +1,5 @@
-//! Stage 0: normalize, detect follow-ups, link entities. No LLM. The engine adds the question's intent
-//! (`encoders::Head::intent`).
+//! Stage 0: normalize, link entities. No LLM. The engine adds the question's intent and whether it follows
+//! up the last turn (`encoders::Head`).
 
 use crate::library::Library;
 use crate::pack::{Pack, meta::Article, normalize_title};
@@ -18,6 +18,7 @@ pub struct Entity {
 pub struct Route {
     pub query: String,
     pub complex: bool,
+    /// The message needs the last turn to be understood ("why is it green?"); the engine sets it.
     pub needs_rewrite: bool,
     pub compare: bool,
     pub entities: Vec<Entity>,
@@ -25,11 +26,6 @@ pub struct Route {
 
 /// Comparison wording, removed from a comparison's attribute: it names no property to search for.
 const COMPARE_WORDS: &[&str] = &[" vs ", " vs. ", " versus ", "compare", "difference between", "differences between", "better than", "worse than", "similarities"];
-const FOLLOWUP_WORDS: &[&str] = &[
-    "it", "its", "they", "them", "their", "there", "he", "she", "his", "her", "this", "that", "these", "those", "one", "ones", "both", "either",
-    "neither", "former", "latter",
-];
-const FOLLOWUP_STARTS: &[&str] = &["what about", "how about", "and ", "also ", "what else", "why not", "tell me more"];
 /// Question-opening verbs: capitalized only because they start the sentence ("Compare the Nile…").
 const LEADING_VERBS: &[&str] = &["compare", "explain", "describe", "define", "list", "name", "give", "show", "find", "summarize", "summarise"];
 
@@ -40,14 +36,9 @@ pub fn normalize(q: &str) -> String {
 /// `rr` lets entity linking pick among same-name articles by the question's context. `topics` are the
 /// article titles the rewrite model named; when any of them exists, they are the entities.
 /// `scope` limits entity linking to those pack ids (empty: every pack).
-pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker>, topics: &[String], scope: &[String]) -> Route {
+pub fn route(lib: &Library, query: &str, rr: Option<&Reranker>, topics: &[String], scope: &[String]) -> Route {
     let query = normalize(query);
-    let lower = format!(" {} ", query.to_lowercase());
     let words: Vec<&str> = query.split_whitespace().collect();
-    let needs_rewrite = has_history
-        && (FOLLOWUP_STARTS.iter().any(|s| lower.trim_start().starts_with(s))
-            || words.iter().any(|w| FOLLOWUP_WORDS.contains(&w.to_lowercase().trim_matches(|c: char| !c.is_alphanumeric())))
-            || words.len() <= 3);
     let mut entities: Vec<Entity> = Vec::new();
     for t in topics {
         // A title the model named must exist as a title or a redirect; no guessing from its words.
@@ -64,7 +55,7 @@ pub fn route(lib: &Library, query: &str, has_history: bool, rr: Option<&Reranker
         entities = link_entities_with(lib, &query, rr, scope);
     }
     let complex = entities.len() >= 2 || words.len() > 14;
-    Route { query, complex, needs_rewrite, compare: false, entities }
+    Route { query, complex, needs_rewrite: false, compare: false, entities }
 }
 
 /// Longest-first n-gram lookup against article titles and redirects in every pack.
@@ -76,6 +67,15 @@ pub fn link_entities(lib: &Library, query: &str, scope: &[String]) -> Vec<Entity
 /// Margin (reranker logits) a less popular same-name article needs to replace the most popular one.
 const DISAMBIG_MARGIN: f32 = 1.0;
 
+/// Reranker score (logits) that a redirect from a lowercase phrase holding a name needs: "capital of Hungary" →
+/// Budapest scores 8.0 for its question, "live in Canada" → Billy Bragg discography 1.1.
+const REDIRECT_MIN_SCORE: f32 = 5.0;
+
+/// Weight of the log view ratio that a less viewed sense of the same name pays against the primary topic:
+/// "Mars (2024 film)" has a sixth of the planet's views and pays 1.8 logits, so "How hot is Mars?" stays
+/// with the planet. Longer titles ("Moon landing") pay nothing; they win on the question's context.
+const VIEWS_PRIOR: f32 = 1.0;
+
 /// Bonus (reranker logits) for a candidate whose Wikidata classes match those of the other things in the
 /// question, times `kind_match`.
 const KIND_BONUS: f32 = 2.0;
@@ -85,23 +85,35 @@ const KIND_BONUS: f32 = 2.0;
 /// reranker); a candidate that shares their Wikidata class ("planet") then gets a bonus.
 fn link_entities_with(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]) -> Vec<Entity> {
     if rr.is_none() || lib.wikidata.is_none() {
-        return link_pass(lib, query, rr, scope, &[]);
+        return link_pass(lib, query, rr, scope, &[], false);
     }
-    let first = link_pass(lib, query, None, scope, &[]);
-    let second = link_pass(lib, query, rr, scope, &first);
+    let first = link_pass(lib, query, None, scope, &[], false);
+    let second = link_pass(lib, query, rr, scope, &first, false);
     // A name the reranker changed ("Python" the language) may change what the others mean ("Ruby").
     let same = |a: &[Entity], b: &[Entity]| a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x.pack, x.article.id) == (y.pack, y.article.id));
-    if second.len() < 2 || same(&first, &second) { second } else { link_pass(lib, query, rr, scope, &second) }
+    if second.len() < 2 || same(&first, &second) { second } else { link_pass(lib, query, rr, scope, &second, false) }
 }
 
-fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String], context: &[Entity]) -> Vec<Entity> {
+/// The things a comparison names in lowercase ("Compare lions and tigers"): common nouns read as names, kept
+/// when they share a Wikidata class with another one, so "population" drops out of "the population of malta
+/// and cyprus".
+pub fn compared_things(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]) -> Vec<Entity> {
+    let found = link_pass(lib, query, rr, scope, &[], true);
+    let kinds: Vec<HashSet<String>> = found.iter().map(|e| instance_of(lib, scope, &e.article)).collect();
+    let paired = |i: usize| (0..kinds.len()).any(|j| j != i && kind_match(&kinds[i], &kinds[j]) > 0.0);
+    found.into_iter().enumerate().filter(|(i, _)| paired(*i)).map(|(_, e)| e).collect()
+}
+
+/// `common_nouns` reads lowercase words as names in any message, through any redirect ("baking soda" → Sodium
+/// bicarbonate), and keeps more than three of them; `compared_things` then filters them by class.
+fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String], context: &[Entity], common_nouns: bool) -> Vec<Entity> {
     let kinds: Vec<(String, HashSet<String>)> =
         context.iter().map(|e| (e.surface.to_lowercase(), instance_of(lib, scope, &e.article))).filter(|(_, k)| !k.is_empty()).collect();
     let toks: Vec<&str> = query
         .split(|c: char| c.is_whitespace() || matches!(c, '?' | '!' | ',' | ';' | ':' | '"'))
         .filter(|t| !t.is_empty())
         .collect();
-    let short = toks.len() <= 3;
+    let short = common_nouns || toks.len() <= 3;
     let mut used = vec![false; toks.len()];
     let mut found: Vec<Entity> = Vec::new();
     for n in (1..=5.min(toks.len())).rev() {
@@ -130,10 +142,21 @@ fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]
             };
             let by_title = || lookup(&|p| p.meta.lookup_title(&norm).ok().flatten());
             let best = if code { lookup(&|p| p.meta.lookup_code(&surface).ok().flatten()).or_else(by_title) } else { by_title() };
+            let lowercase = !surface.chars().any(char::is_uppercase);
+            // A span that starts lowercase reaches a title that shares one of its words ("population of Japan");
+            // other redirects only from a span holding a name, when the reranker ties them to the question
+            // ("capital of Hungary" → Budapest, not "live in Canada" → Billy Bragg discography or "version" → DR-DOS).
+            let named = span.iter().any(|w| w.chars().any(char::is_uppercase));
+            let about = |a: &Article| {
+                let doc = format!("{}: {}", a.title, a.oneliner.as_deref().unwrap_or(""));
+                rr.is_some_and(|rr| rr.score(query, &[doc]).is_ok_and(|s| s.first().is_some_and(|&s| s >= REDIRECT_MIN_SCORE)))
+            };
+            let best = best.filter(|(_, a)| {
+                common_nouns || first.chars().any(char::is_uppercase) || shares_word(&norm, &a.title) || (named && about(a))
+            });
             // Lowercase phrases ("light bulb", "northern lights") are common nouns: they never resolve to a
             // qualified title like "Light Bulb (Abbott Elementary)". A capitalized name with no article of
             // its own ("Mercury") may still mean one of its "(…)" variants.
-            let lowercase = !surface.chars().any(char::is_uppercase);
             let best = best.or_else(|| {
                 let variant = format!("{norm} (");
                 (!lowercase && !code)
@@ -165,7 +188,7 @@ fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]
         }
     }
     found.sort_by_key(|e| std::cmp::Reverse(e.article.popularity));
-    found.truncate(3);
+    found.truncate(if common_nouns { 6 } else { 3 });
     found
 }
 
@@ -179,8 +202,9 @@ pub fn attribute(route: &Route) -> String {
     for m in COMPARE_WORDS {
         rest = rest.replace(m, " ");
     }
+    // Fragments of one or two letters are what a removed name or an apostrophe leaves ("viruses" → "es", "what's" → "s").
     rest.split(|c: char| !c.is_alphanumeric())
-        .filter(|w| !w.is_empty() && !STOPWORDS.contains(w) && !matches!(*w, "or" | "vs" | "versus" | "which" | "both" | "between"))
+        .filter(|w| w.chars().count() > 2 && !STOPWORDS.contains(w) && !matches!(*w, "or" | "vs" | "versus" | "which" | "both" | "between"))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -220,6 +244,11 @@ fn instance_of(lib: &Library, scope: &[String], a: &Article) -> HashSet<String> 
     facts.iter().filter(|f| f.pid == "P31").flat_map(|f| f.value.split(", ")).map(str::to_lowercase).collect()
 }
 
+/// Whether two articles share a Wikidata class ("planet" for Mars and Venus); false when either is unknown.
+pub fn same_kind(lib: &Library, scope: &[String], a: &Article, b: &Article) -> bool {
+    kind_match(&instance_of(lib, scope, a), &instance_of(lib, scope, b)) > 0.0
+}
+
 /// How well two sets of classes match: 1 when they share a class ("u.s. state"), 0.5 when they share only
 /// a word ("programming language" in "JVM language" and "object-oriented programming language"), else 0.
 fn kind_match(a: &HashSet<String>, b: &HashSet<String>) -> f32 {
@@ -253,14 +282,15 @@ fn disambiguate(lib: &Library, rr: &Reranker, query: &str, m: &Mention, best: (u
             }
         }
     }
-    // Same name ("Bridge", "Bridge (music)") competes on views; longer titles ("Bridge to Terabithia",
-    // "Amazon River") are other things and win only on the question's context below.
+    // Same name ("Bridge", "Bridge (music)") competes on views; longer titles ("Amazon River") are other things
+    // and win only on the question's context below. A lowercase common noun names the thing itself: no
+    // qualified or longer title ("discovered" is not "Discovered attack").
     let same_name = |pi: u8, a: &Article| {
         let t = normalize_title(&a.title);
         (pi, a.id) == primary || t == m.norm || t.starts_with(&format!("{} (", m.norm))
     };
     let names_other = |a: &Article| normalize_title(&a.title).split(|c: char| !c.is_alphanumeric()).any(|w| m.others.iter().any(|o| o == w));
-    cands.retain(|(pi, a)| !(m.lowercase && qualified(a)) && ((*pi, a.id) == primary || !names_other(a)));
+    cands.retain(|(pi, a)| !(m.lowercase && (qualified(a) || !same_name(*pi, a))) && ((*pi, a.id) == primary || !names_other(a)));
     if cands.is_empty() {
         return None;
     }
@@ -272,10 +302,15 @@ fn disambiguate(lib: &Library, rr: &Reranker, query: &str, m: &Mention, best: (u
     }
     let texts: Vec<String> = cands.iter().map(|(_, a)| format!("{}: {}", a.title, a.oneliner.as_deref().unwrap_or(""))).collect();
     let Ok(scores) = rr.score(query, &texts) else { return Some(cands.swap_remove(0)) };
+    let views = |a: &Article| a.popularity.max(1) as f32;
     let scores: Vec<f32> = scores
         .iter()
         .zip(&cands)
-        .map(|(s, (_, a))| if m.kinds.is_empty() { *s } else { s + KIND_BONUS * kind_match(&instance_of(lib, scope, a), m.kinds) })
+        .map(|(s, (pi, a))| {
+            let kind = if m.kinds.is_empty() { 0.0 } else { KIND_BONUS * kind_match(&instance_of(lib, scope, a), m.kinds) };
+            let prior = if same_name(*pi, a) { VIEWS_PRIOR * (views(a) / views(&cands[0].1)).ln().min(0.0) } else { 0.0 };
+            s + kind + prior
+        })
         .collect();
     let top = (0..cands.len()).max_by(|&i, &j| scores[i].total_cmp(&scores[j])).unwrap_or(0);
     let i = if scores[top] >= scores[0] + DISAMBIG_MARGIN { top } else { 0 };
@@ -291,7 +326,21 @@ fn is_wikipedia(pack_id: &str) -> bool {
     pack_id.starts_with("enwiki") || pack_id == "simplewiki"
 }
 
-/// Title-cased like a name ("Golden Gate Bridge"): every word of 4+ letters starts uppercase.
+/// Title-cased like a name of two words or more ("Golden Gate Bridge"): every word of 4+ letters starts
+/// uppercase. A one-word title that a phrase reaches is a redirect ("river flows" → River).
 fn proper_name(title: &str) -> bool {
-    title.split(" (").next().unwrap_or(title).split_whitespace().filter(|w| w.chars().count() >= 4).all(|w| w.starts_with(|c: char| c.is_uppercase()))
+    let words: Vec<&str> = title.split(" (").next().unwrap_or(title).split_whitespace().collect();
+    words.len() > 1 && words.iter().filter(|w| w.chars().count() >= 4).all(|w| w.starts_with(|c: char| c.is_uppercase()))
+}
+
+/// Some word of `norm` other than a stopword starts like a word of the title (four letters, so "rivers"
+/// shares River).
+fn shares_word(norm: &str, title: &str) -> bool {
+    let t = normalize_title(title.split(" (").next().unwrap_or(title));
+    let words = |s: &str| s.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty()).map(str::to_string).collect::<Vec<_>>();
+    let title_words = words(&t);
+    words(norm).iter().filter(|w| !STOPWORDS.contains(w.as_str())).any(|w| {
+        let stem: String = w.chars().take(4).collect();
+        title_words.iter().any(|x| x.starts_with(&stem))
+    })
 }

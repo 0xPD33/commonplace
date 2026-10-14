@@ -85,8 +85,9 @@ impl SparseIndex {
 
     /// BM25 search. Returns (passage_id, score), best first.
     pub fn search(&self, query: &str, k: usize) -> Result<Vec<(u32, f32)>> {
-        let cleaned: String =
-            query.chars().map(|c| if c.is_alphanumeric() || c == '\'' || c == '-' { c } else { ' ' }).collect();
+        // Letters and digits only. The analyzer splits "jupiter's" and "covid-19" into parts, the parser makes a
+        // phrase query of them, and an index without positions drops that query.
+        let cleaned: String = query.chars().map(|c| if c.is_alphanumeric() { c } else { ' ' }).collect();
         let cleaned = cleaned.split_whitespace().filter(|w| !matches!(*w, "AND" | "OR" | "NOT")).collect::<Vec<_>>().join(" ");
         if cleaned.is_empty() {
             return Ok(Vec::new());

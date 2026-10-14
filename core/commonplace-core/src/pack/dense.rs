@@ -51,6 +51,17 @@ fn hamming(a: &[u8], b: &[u8]) -> u32 {
         .sum()
 }
 
+/// Eight independent sums let the compiler vectorize; a single running sum is one serial chain.
+fn dot(a: &[f32], b: &[f32]) -> f32 {
+    let mut acc = [0f32; 8];
+    for (x, y) in a.chunks_exact(8).zip(b.chunks_exact(8)) {
+        for i in 0..8 {
+            acc[i] += x[i] * y[i];
+        }
+    }
+    acc.iter().sum()
+}
+
 /// Float query · ±1 code, computed as 2·Σ(q over set bits) − Σq.
 fn asym_score(q: &[f32], q_sum: f32, code: &[u8]) -> f32 {
     let mut pos = 0.0f32;
@@ -84,6 +95,11 @@ impl DenseIndex {
         Ok(s)
     }
 
+    /// Lists that hold about `codes` codes on average (at least one).
+    pub fn lists_for(&self, codes: usize) -> usize {
+        ((codes as u64 * self.info.n_lists as u64).div_ceil(self.info.n_codes.max(1)) as usize).max(1)
+    }
+
     fn list_range(&self, l: usize) -> (usize, usize) {
         let at = |i: usize| u64::from_le_bytes(self.lists[i * 8..i * 8 + 8].try_into().unwrap()) as usize;
         (at(l), at(l + 1))
@@ -101,12 +117,17 @@ impl DenseIndex {
         let nl = self.info.n_lists as usize;
         let q = &query[..d];
         let cents = self.centroids_f16();
-        let mut buf = vec![0f32; d];
+        use rayon::prelude::*;
         let mut list_scores: Vec<(f32, usize)> = (0..nl)
-            .map(|l| {
-                cents[l * d..(l + 1) * d].convert_to_f32_slice(&mut buf);
-                (buf.iter().zip(q).map(|(a, b)| a * b).sum::<f32>(), l)
-            })
+            .into_par_iter()
+            .with_min_len(512)
+            .map_init(
+                || vec![0f32; d],
+                |buf, l| {
+                    cents[l * d..(l + 1) * d].convert_to_f32_slice(buf);
+                    (dot(buf, q), l)
+                },
+            )
             .collect();
         let nprobe = nprobe.min(nl);
         if nprobe < nl {
@@ -118,8 +139,6 @@ impl DenseIndex {
         let mut cands: Vec<(u32, u32)> = Vec::new(); // (hamming, code index)
         for &(_, l) in &list_scores[..nprobe] {
             let (a, b) = self.list_range(l);
-            #[cfg(unix)]
-            let _ = self.codes.advise_range(memmap2::Advice::Sequential, a * cb, (b - a) * cb);
             for i in a..b {
                 cands.push((hamming(&q_bits, &self.codes[i * cb..(i + 1) * cb]), i as u32));
             }

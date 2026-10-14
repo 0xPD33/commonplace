@@ -14,7 +14,7 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putString("backend", if (v == Backend.Tpu) "tpu" else "cpu").apply()
 
     var showTimings: Boolean
-        get() = sp.getBoolean("show_timings", true)
+        get() = sp.getBoolean("show_timings", false)
         set(v) = sp.edit().putBoolean("show_timings", v).apply()
 
     /** The everyday model when several are installed. */

@@ -504,10 +504,10 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
                     if (s.section.isNotBlank()) {
                         Text(s.section, style = MaterialTheme.typography.labelSmall, color = c.primary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
                     }
-                    val credit = listOf(s.packTitle, s.license).filter { it.isNotBlank() }.joinToString(" · ")
-                    Text(credit, style = MaterialTheme.typography.labelSmall, color = c.outline, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp).testTag("source_credit_line"))
+                    // The license is in the reader, one tap away; the card names only the pack.
+                    Text(s.packTitle, style = MaterialTheme.typography.labelSmall, color = c.outline, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp).testTag("source_credit_line"))
                     Spacer(Modifier.height(4.dp))
-                    Text(s.snippet, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(s.snippet, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

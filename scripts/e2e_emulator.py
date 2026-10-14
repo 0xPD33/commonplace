@@ -940,13 +940,13 @@ def main() -> int:
 
     @step("attribution")
     def _():
-        # A Wikipedia-style answer: the card, the source cards, the passage page and the article page all name
-        # the source and the license; the passage and article pages also show the page address as selectable text.
+        # A Wikipedia-style answer: the source cards name the pack; the passage and article pages name the source
+        # and the license and show the page address as selectable text.
         fresh_app(r, remove_docs=False)
         res = ask_card(r, "Who invented the telephone?", "attr")
         credit = [n.get("text") for n in ui.nodes() if n.get("resource-id", "").endswith("source_credit_line")]
-        if not credit or not all(" · " in c for c in credit):
-            raise RuntimeError(f"source cards lack the pack and license line: {credit!r}")
+        if not credit or not all(credit):
+            raise RuntimeError(f"source cards lack the pack line: {credit!r}")
         r.shot("attr-source-cards", " | ".join(credit[:3]))
         for _ in range(8):  # the answer streamed past the card: scroll back up to it
             if ui.find(tag="evidence_card") is not None:

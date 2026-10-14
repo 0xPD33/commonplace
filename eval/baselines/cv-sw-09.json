@@ -1,0 +1,45 @@
+{
+  "id": "cv-sw-09",
+  "query": "what is a black hole?",
+  "answer": "A black hole is a region of space where so much matter is packed into such a small space that gravity stops anything from escaping, even light [1]. Its edge is the event horizon, a point of no return rather than a solid surface. Anything that crosses it can't get back out, so the region inside looks black [1][2]. Most black holes we know of form when a very massive star runs out of fuel and collapses in a supernova. These \"stellar-mass\" black holes start at a few times the Sun's mass. The supermassive ones at the centres of galaxies are far bigger: Sagittarius A* at the centre of our Milky Way is about 4 million Suns [1]. Black holes give off no light, so astronomers find them by their effects. Examples are hot, X-ray-bright disks of gas swirling around them, stars orbiting something unseen, gravitational waves when two black holes merge, and the way they bend light from objects behind them [1].\n\nSources:\n[1] NASA Science, \"Black Holes\": https://science.nasa.gov/universe/black-holes/\n[2] NASA Scientific Visualization Studio, \"NASA Black Hole Visualization Takes Viewers Beyond the Brink\": https://svs.gsfc.nasa.gov/14576",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://science.nasa.gov/universe/black-holes/",
+      "title": "Black Holes - NASA Science"
+    },
+    {
+      "n": 2,
+      "url": "https://svs.gsfc.nasa.gov/14576",
+      "title": "NASA Black Hole Visualization Takes Viewers Beyond the Brink - NASA Scientific Visualization Studio"
+    }
+  ],
+  "wikipedia_articles": [
+    "Black hole",
+    "Event horizon",
+    "Stellar black hole",
+    "Supermassive black hole",
+    "Sagittarius A*",
+    "Supernova",
+    "Accretion disk",
+    "Gravitational wave",
+    "Gravitational lens"
+  ],
+  "urls": [
+    "https://science.nasa.gov/universe/black-holes/",
+    "https://svs.gsfc.nasa.gov/14576"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0674616,
+  "duration_ms": 26637,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:37+00:00"
+}

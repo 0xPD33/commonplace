@@ -2,6 +2,8 @@
 
 import hashlib
 import json
+import os
+import re
 import subprocess
 import tempfile
 from datetime import datetime, timezone
@@ -9,11 +11,13 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 EVAL = REPO / "eval"
-RUNS = EVAL / "runs"
+RUNS = Path(os.environ.get("EVAL_RUNS") or EVAL / "runs")
 BASELINES = EVAL / "baselines"
 BIN = REPO / "core/target/release/commonplace"
 LIBRARY = "data/library"
 DEFAULT_MODEL = "data/models/llm/Ling-3.0-tiny-Q4_0.gguf"
+# What the phone ships, as `commonplace` flags: fusion pool size and the quantized encoders.
+PHONE_CLI = ["--fuse-keep=24", "--leaf-model=onnx/model_quantized.onnx", "--ettin-model=onnx/model_sel8.onnx"]
 ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-planner", "no-doc2query", "no-llm"]
 CATEGORIES = [
     "factual", "explanation", "comparison", "multihop", "numeric",
@@ -75,6 +79,43 @@ def library_packs(library):
             "manifest_sha256": sha256(m),
         })
     return packs
+
+
+def library_model(library):
+    """The GGUF the engine loads from the library: its llm-fast pack, else llm-small."""
+    found = {}
+    for m in sorted((REPO / library / "packs").glob("*/manifest.json")):
+        d = json.loads(m.read_text())
+        if d.get("pack_type") == "model" and d.get("model"):
+            sha = next((f["sha256"] for f in d["files"] if f["path"] == d["model"]["file"]), None)
+            found[d["model"]["role"]] = {"path": str(m.parent / d["model"]["file"]), "sha256": sha}
+    return found.get("llm-fast") or found.get("llm-small")
+
+
+def split_evidence(rendered, sources):
+    """Split the evidence text of `Evidence::render` into one entry per source.
+
+    Headers are rebuilt from the sources in order, so passage text cannot confuse the split.
+    A Wikidata entity is a numbered source whose header adds ", as of <date>" after the pack id.
+    Lines after the last source (COMPUTED, or the older Wikidata block) go to `extra`.
+    """
+    starts, heads, pos = [], [], 0
+    for s in sources:
+        head = re.compile(re.escape(f"[{s['n']}] {s['title']}" + (f" — {s['section']}" if s.get("section") else ""))
+                          + re.escape(f" ({s['pack_id']}") + r"(?:, [^)\n]*)?\):\n")
+        m = head.search(rendered, pos)
+        if not m:
+            return None
+        starts.append(m.start())
+        heads.append(m.group())
+        pos = m.end()
+    tail = re.search(r"\n\n(?:Wikidata facts \(no number, never cite\):|COMPUTED: )", rendered[pos:])
+    end = pos + tail.start() if tail else len(rendered)
+    ends = [*starts[1:], end]
+    items = [{**{k: s[k] for k in ("n", "pack_id", "title", "section")},
+              "text": rendered[a + len(h):b].rstrip("\n")}
+             for s, h, a, b in zip(sources, heads, starts, ends)]
+    return {"sources": items, "extra": rendered[end:].strip()}
 
 
 def load_queries(path, subset=None):

@@ -1,0 +1,42 @@
+{
+  "id": "cv-sw-13",
+  "query": "when did the cold war end?",
+  "answer": "The Cold War is usually dated as ending on December 26, 1991, when the Soviet Union was formally dissolved [1][2]. Mikhail Gorbachev resigned as Soviet leader on December 25, and the USSR ceased to exist the next day. That followed the December 8 Belavezha Accords, in which Russia, Ukraine and Belarus declared that the Soviet Union no longer existed [2]. No peace treaty formally ended the Cold War, so some historians put the effective end earlier, with the 1989 revolutions in Eastern Europe and the fall of the Berlin Wall [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Cold_War",
+      "title": "Cold War - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Dissolution_of_the_Soviet_Union",
+      "title": "Dissolution of the Soviet Union - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Cold War",
+    "Dissolution of the Soviet Union",
+    "Belovezha Accords",
+    "Revolutions of 1989",
+    "Fall of the Berlin Wall",
+    "Mikhail Gorbachev"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Cold_War",
+    "https://en.wikipedia.org/wiki/Dissolution_of_the_Soviet_Union"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.067081,
+  "duration_ms": 22073,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:53+00:00"
+}

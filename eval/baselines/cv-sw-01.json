@@ -1,0 +1,48 @@
+{
+  "id": "cv-sw-01",
+  "query": "how do volcanoes erupt?",
+  "answer": "Volcanoes erupt when magma (melted rock from deep underground) rises to the surface. Deep in the Earth, rock gets hot enough to slowly melt. Because magma is lighter than the solid rock around it, it rises and collects in magma chambers. From there, some of it pushes up through vents and cracks and comes out as lava [1]. Gas is usually what drives the eruption. All magma has gases dissolved in it, and as the magma rises, the pressure drops and those gases come out of solution. It's a lot like opening a shaken soda bottle. Pressure building in the chamber can also force magma up through weak spots in the rock [2]. How runny the magma is decides what kind of eruption you get. Thin, runny magma lets the gas escape easily, so the lava flows out fairly gently, as in Hawaii. Thick, sticky magma traps the gas until the pressure blasts it apart into ash and rock fragments called tephra, as at Mount St. Helens [1][2].\n\nSources:\n[1] [How do volcanoes erupt? – USGS FAQ](https://www.usgs.gov/faqs/how-do-volcanoes-erupt?page=1)\n[2] [Nature of Volcanoes – USGS Publications](https://pubs.usgs.gov/gip/volc/nature.html)",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.usgs.gov/faqs/how-do-volcanoes-erupt?page=1",
+      "title": "How do volcanoes erupt? – USGS FAQ"
+    },
+    {
+      "n": 2,
+      "url": "https://pubs.usgs.gov/gip/volc/nature.html",
+      "title": "Nature of Volcanoes – USGS Publications"
+    }
+  ],
+  "wikipedia_articles": [
+    "Volcano",
+    "Magma",
+    "Magma chamber",
+    "Volcanic gas",
+    "Types of volcanic eruptions",
+    "Effusive eruption",
+    "Explosive eruption",
+    "Viscosity",
+    "Tephra",
+    "Lava",
+    "1980 eruption of Mount St. Helens",
+    "Kīlauea"
+  ],
+  "urls": [
+    "https://www.usgs.gov/faqs/how-do-volcanoes-erupt?page=1",
+    "https://pubs.usgs.gov/gip/volc/nature.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0822725,
+  "duration_ms": 24857,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:31:45+00:00"
+}

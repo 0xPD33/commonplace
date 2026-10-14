@@ -1,0 +1,69 @@
+{
+  "id": "cv-sw-07",
+  "query": "how is paper made?",
+  "answer": "Most paper today is made from wood. Logs are stripped of bark and cut into chips. The chips are then pulped to free the cellulose fibers from lignin, the natural glue that holds wood together [1][2]. There are two main ways to do this. Mechanical pulping grinds the wood and keeps roughly 90–95% of it, but the fibers end up short and the lignin stays in, so the paper is weaker and yellows over time. That makes it suited to newsprint. Chemical pulping, mostly the kraft process, cooks the chips in a hot alkaline solution that dissolves most of the lignin. It keeps only about half the wood but leaves longer, stronger fibers [2][3][4]. The pulp may then be bleached and beaten (\"refined\") to roughen the fibers so they bond better [5]. Next it's diluted into a very watery slurry and sprayed onto a fast-moving mesh screen, where the water drains away and the fibers mat together into a sheet. The sheet is pressed between rollers to squeeze out more water, dried over heated cylinders, and finished by smoothing, coating or cutting [6]. Recycled paper goes through much the same steps. The main difference is that it starts as old paper soaked back into pulp, with ink and other contaminants removed, instead of wood chips.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.wonderopolis.org/wonder/how-do-you-make-paper-from-a-tree",
+      "title": "How Do You Make Paper From a Tree? – Wonderopolis"
+    },
+    {
+      "n": 2,
+      "url": "https://www.straightdope.com/21343371/how-is-paper-made",
+      "title": "How is paper made? – The Straight Dope"
+    },
+    {
+      "n": 3,
+      "url": "https://technav.ieee.org/topic/paper-making/",
+      "title": "Paper making – IEEE Technology Navigator"
+    },
+    {
+      "n": 4,
+      "url": "https://discoveryuk.com/?p=20584002",
+      "title": "How Paper Is Made – Discovery UK"
+    },
+    {
+      "n": 5,
+      "url": "https://vault.com/industries/pulp-and-paper/structure",
+      "title": "Pulp and Paper – Vault"
+    },
+    {
+      "n": 6,
+      "url": "https://princeton.edu/~ota/disk1/1989/8931/893104.PDF",
+      "title": "Office of Technology Assessment (1989) – Pulp and paper manufacturing chapter, Princeton.edu"
+    }
+  ],
+  "wikipedia_articles": [
+    "Paper",
+    "Papermaking",
+    "Pulp (paper)",
+    "Kraft process",
+    "Mechanical pulping",
+    "Lignin",
+    "Paper machine",
+    "Bleaching of wood pulp",
+    "Paper recycling"
+  ],
+  "urls": [
+    "https://www.wonderopolis.org/wonder/how-do-you-make-paper-from-a-tree",
+    "https://www.straightdope.com/21343371/how-is-paper-made",
+    "https://technav.ieee.org/topic/paper-making/",
+    "https://discoveryuk.com/?p=20584002",
+    "https://vault.com/industries/pulp-and-paper/structure",
+    "https://princeton.edu/~ota/disk1/1989/8931/893104.PDF"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05701110000000001,
+  "duration_ms": 19113,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:10+00:00"
+}

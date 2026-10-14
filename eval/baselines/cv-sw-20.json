@@ -1,0 +1,43 @@
+{
+  "id": "cv-sw-20",
+  "query": "how do magnets work",
+  "answer": "Magnetism starts with moving electric charge. Every electron acts like a tiny magnet, mostly because of a quantum property called spin. In most materials the electrons point in random or opposing directions, so their tiny fields cancel out. In a permanent magnet they add up to a net field around the object [1][2]. In \"ferromagnetic\" metals like iron, nickel and cobalt, neighboring atoms tend to line up their electron spins. This creates small regions called magnetic domains, each of which acts like a tiny bar magnet [1]. In an ordinary piece of iron the domains point every which way, so overall it isn't magnetic. A nearby magnet makes the domains line up, and the ones pointing the right way grow, which is why iron gets pulled toward a magnet. If that alignment gets locked in, for example by heating and cooling the iron near another magnet, it becomes a permanent magnet [1].\n\nOpposite poles attract and like poles repel. Poles always come in north–south pairs, and no one has ever found a lone magnetic pole [1]. Heat breaks the alignment: above a material's Curie temperature it can't stay magnetized. For iron that's about 770 °C [1]. Electric current in a wire produces a magnetic field too, and that's how electromagnets work. They're usually wrapped around an iron core to make them stronger, and they switch off when the current stops [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://courses.lumenlearning.com/suny-physics/chapter/22-2-ferromagnets-and-electromagnets",
+      "title": "Ferromagnets and Electromagnets – College Physics (Lumen Learning / OpenStax)"
+    },
+    {
+      "n": 2,
+      "url": "https://real-world-physics-problems.com/how-magnets-work.html",
+      "title": "How Magnets Work – Real World Physics Problems"
+    }
+  ],
+  "wikipedia_articles": [
+    "Magnet",
+    "Magnetism",
+    "Ferromagnetism",
+    "Magnetic domain",
+    "Spin (physics)",
+    "Curie temperature",
+    "Electromagnet"
+  ],
+  "urls": [
+    "https://courses.lumenlearning.com/suny-physics/chapter/22-2-ferromagnets-and-electromagnets",
+    "https://real-world-physics-problems.com/how-magnets-work.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.06791649999999999,
+  "duration_ms": 28965,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:33:37+00:00"
+}

@@ -1,0 +1,42 @@
+{
+  "id": "cv-sw-17",
+  "query": "Who is Taylor Swift?",
+  "answer": "Taylor Swift is an American singer-songwriter, born December 13, 1989, in West Reading, Pennsylvania. She started out in country music after signing with Big Machine Records in 2005, moved to pop with 1989 in 2014, and later made indie-folk and soft-rock records. She's known for personal, autobiographical songwriting and for changing her style often. Her twelfth and latest studio album, The Life of a Showgirl, came out on October 3, 2025 [1].\n\nShe has won 14 Grammys, including a record four for Album of the Year. Her Eras Tour is the highest-grossing tour in history, earning about $2 billion, and it was the first to pass $1 billion [1]. After a dispute over the rights to her first six albums, she began re-recording them in 2020. In May 2025 she bought back the original recordings outright [1].\n\nIn her personal life, she started dating NFL player Travis Kelce in 2023, and they got engaged in August 2025 [1][2]. Rolling Stone reports they married on July 3, 2026, at Madison Square Garden in New York City, with Adam Sandler leading the ceremony [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Taylor_Swift",
+      "title": "Taylor Swift - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.rollingstone.com/music/music-news/taylor-swift-travis-kelce-wedding-ceremony-1235575513/",
+      "title": "Taylor Swift and Travis Kelce wedding ceremony - Rolling Stone"
+    }
+  ],
+  "wikipedia_articles": [
+    "Taylor Swift",
+    "The Eras Tour",
+    "The Life of a Showgirl",
+    "Taylor Swift masters dispute",
+    "Travis Kelce",
+    "List of awards and nominations received by Taylor Swift"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Taylor_Swift",
+    "https://www.rollingstone.com/music/music-news/taylor-swift-travis-kelce-wedding-ceremony-1235575513/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1038569,
+  "duration_ms": 29519,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:33:23+00:00"
+}

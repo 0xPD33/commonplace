@@ -1,0 +1,39 @@
+{
+  "id": "cv-sw-16",
+  "query": "How high is Mount Everest?",
+  "answer": "Mount Everest is 8,848.86 metres (about 29,032 feet) above sea level. Nepal and China announced this as the official height on 8 December 2020 [1][2]. The two countries had disagreed about the height for a long time. The new figure came from survey teams from both countries who reached the summit in 2019 and 2020 and measured it with GPS and trigonometry [1][2]. It is a little higher than earlier official figures. Those were 8,848 m from the 1954 Survey of India, which counted the snow on top, and 8,844.43 m from China in 2005, which measured to the rock beneath the snow [2]. Everest is the highest mountain above sea level. The Challenger Deep is about 10,935 m deep, so the ocean's deepest point is roughly 2 km farther below sea level than Everest's summit is above it.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.aljazeera.com/news/2020/12/8/mt-everest-nepal-china-announce-revised-height-at-8848-metres",
+      "title": "Mt Everest: Nepal, China announce revised height at 8,849 metres (Al Jazeera)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.washingtontimes.com/news/2020/dec/8/china-nepal-say-everest-a-bit-higher-than-past-mea/",
+      "title": "China, Nepal say Everest a bit higher than past measurements (Associated Press via Washington Times, Dec 8, 2020)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Mount Everest",
+    "Challenger Deep",
+    "Mariana Trench"
+  ],
+  "urls": [
+    "https://www.aljazeera.com/news/2020/12/8/mt-everest-nepal-china-announce-revised-height-at-8848-metres",
+    "https://www.washingtontimes.com/news/2020/dec/8/china-nepal-say-everest-a-bit-higher-than-past-mea/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.054600100000000006,
+  "duration_ms": 15429,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:33:06+00:00"
+}

@@ -11,14 +11,14 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from common import (ABLATIONS, BIN, DEFAULT_MODEL, LIBRARY, REPO, RUNS, append_jsonl, cli_flags,
-                    git_describe, library_packs, load_queries, now, read_jsonl, sha256,
-                    write_json)
+from common import (ABLATIONS, BIN, DEFAULT_MODEL, LIBRARY, PHONE_CLI, REPO, RUNS, append_jsonl,
+                    cli_flags, git_describe, library_model, library_packs, load_queries, now,
+                    read_jsonl, sha256, split_evidence, write_json)
 
 
 # With --live-history, these threads get their earlier turns answered by the system under test.
 # Reformat and small-talk threads keep the fixed turns: their baselines rewrite or answer that text.
-LIVE_CATEGORIES = {"followup", "expand", "compare_followup"}
+LIVE_CATEGORIES = {"followup", "expand", "compare_followup", "topic_switch"}
 
 
 def start(cmd, log):
@@ -30,7 +30,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--queries", default="eval/dev.jsonl")
     ap.add_argument("--subset", help="comma list of query ids and/or categories")
-    ap.add_argument("--model", default=DEFAULT_MODEL, help="GGUF path")
+    ap.add_argument("--model", help=f"GGUF path (default: {DEFAULT_MODEL}; with --phone, the library's model pack)")
+    ap.add_argument("--phone", action="store_true",
+                    help="the phone's settings: " + " ".join(PHONE_CLI) + " and the library's own model; "
+                    "pick the pack set with --library and the build with --bin; set ORT_DYLIB_PATH")
     ap.add_argument("--library", default=LIBRARY)
     ap.add_argument("--deep", action="store_true")
     ap.add_argument("--think", action="store_true", help="thinking mode (reasoning before the answer)")
@@ -54,20 +57,31 @@ def main():
     done = {r["id"] for r in read_jsonl(answers)}
 
     flags = [f for f in ABLATIONS if getattr(a, f.replace("-", "_"))]
+    cli = [*PHONE_CLI, *a.cli] if a.phone else a.cli
+    if a.phone and not os.environ.get("ORT_DYLIB_PATH"):
+        print("warning: ORT_DYLIB_PATH is not set; the quantized encoders need onnxruntime", file=sys.stderr)
+    own_model = bool(a.model or not a.phone)
+    model = {"path": a.model or DEFAULT_MODEL} if own_model else library_model(a.library)
+    if not model:
+        sys.exit(f"{a.library} has no model pack; pass --model")
     meta_path = out / "meta.json"
     if meta_path.exists():
         meta = json.loads(meta_path.read_text())
-        if meta["flags"] != flags or meta.get("cli", []) != a.cli or meta["model"]["path"] != a.model or meta["library"] != a.library or meta.get("live_history", False) != a.live_history:
+        if meta["flags"] != flags or meta.get("cli", []) != cli or meta["model"]["path"] != model["path"] or meta["library"] != a.library or meta.get("live_history", False) != a.live_history:
             sys.exit(f"{run_id} exists with other settings; pick a new --run-id")
     else:
         meta = {
             "run_id": run_id,
             "started": now(),
             "git": git_describe(),
+            "bin": str(Path(a.bin).resolve()),
             "binary_sha256": sha256(Path(a.bin)),
-            "model": {"path": a.model, "sha256": sha256(REPO / a.model)},
+            "model": {"path": model["path"], "sha256": model.get("sha256") or sha256(REPO / model["path"]),
+                      "from_library": not own_model},
             "flags": flags,
-            "cli": a.cli,
+            "cli": cli,
+            "phone": a.phone,
+            "ort_dylib_path": os.environ.get("ORT_DYLIB_PATH"),
             "deep": a.deep,
             "think": a.think,
             "live_history": a.live_history,
@@ -80,7 +94,8 @@ def main():
         }
     meta["query_ids"] = [q["id"] for q in queries]
 
-    cmd = [a.bin, "--library", a.library, "--model", a.model, *cli_flags(flags), *a.cli, "serve-eval"]
+    cmd = [a.bin, "--library", a.library, *(["--model", model["path"]] if own_model else []),
+           *cli_flags(flags), *cli, "serve-eval"]
     todo = [q for q in queries if q["id"] not in done]
     print(f"{run_id}: {len(todo)} to answer, {len(done)} already done", file=sys.stderr)
     with open(out / "stderr.log", "a") as log:
@@ -107,6 +122,9 @@ def main():
                 history = live
             t0 = time.monotonic()
             resp = ask(q["query"], history)
+            evidence = resp.pop("evidence", None)
+            if evidence is not None:
+                resp["evidence"] = split_evidence(evidence, resp.get("sources", [])) or {"raw": evidence}
             row = {"id": q["id"], "category": q.get("category"), "query": q["query"],
                    "history": history, **resp,
                    "wall_ms": round((time.monotonic() - t0) * 1000, 1)}

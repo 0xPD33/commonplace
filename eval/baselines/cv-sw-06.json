@@ -1,0 +1,56 @@
+{
+  "id": "cv-sw-06",
+  "query": "how do birds migrate?",
+  "answer": "Birds migrate by combining an inborn timing and direction program with several navigation senses. Changing day length is the main trigger. It sets off hormonal changes, and caged birds still get restless at migration time even without outside cues. Before leaving, birds put on fat for fuel. Bar-tailed godwits build fat up to about 55% of their body weight, then fly roughly 11,000 km nonstop from Alaska to New Zealand [1].\n\nHow they travel depends on the bird. Many songbirds fly at night. Large soaring birds like storks and eagles ride rising warm air during the day and avoid crossing open sea, so they funnel through narrow crossings like Gibraltar. Geese flying in a V save energy. Many birds also follow routes along coastlines or mountains and stop at key spots to refuel [1].\n\nTo find their way, birds use a sun compass that adjusts for the time of day [1][2]. They also use a star compass: in planetarium experiments, indigo buntings changed direction when the artificial sky was rotated [2]. On top of that, they can sense Earth's magnetic field, and even young birds on their first trip use it to head the right way [1]. In a study of radio-tagged birds, they reset their magnetic compass each evening against the setting sun [3]. They generally rely on the sun and stars and fall back on the magnetic field when it's cloudy [4]. Older birds also use landmarks, smell and learned mental maps, which is why experienced birds correct for wind drift better than first-timers [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Bird_migration",
+      "title": "Bird migration – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://abcbirds.org/news/bhow-do-birds-navigate-migration/",
+      "title": "How Do Birds Navigate During Migration? – American Bird Conservancy"
+    },
+    {
+      "n": 3,
+      "url": "https://www.princeton.edu/news/2004/04/28/study-shows-how-migrating-birds-navigate",
+      "title": "Study shows how migrating birds navigate – Princeton University"
+    },
+    {
+      "n": 4,
+      "url": "https://news.cals.wisc.edu/2012/10/30/how-birds-find-their-way/",
+      "title": "How birds find their way – UW-Madison CALS News"
+    }
+  ],
+  "wikipedia_articles": [
+    "Bird migration",
+    "Zugunruhe",
+    "Magnetoreception",
+    "Bar-tailed godwit",
+    "Flyway",
+    "V formation",
+    "Indigo bunting",
+    "Thermal"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Bird_migration",
+    "https://abcbirds.org/news/bhow-do-birds-navigate-migration/",
+    "https://www.princeton.edu/news/2004/04/28/study-shows-how-migrating-birds-navigate",
+    "https://news.cals.wisc.edu/2012/10/30/how-birds-find-their-way/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0775961,
+  "duration_ms": 28605,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:14+00:00"
+}

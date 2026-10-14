@@ -1,0 +1,37 @@
+{
+  "id": "cv-sw-18",
+  "query": "thanks! how do helicopters fly?",
+  "answer": "Helicopters fly on the same principle as airplanes, but the wings spin. Each main rotor blade is a narrow wing, and spinning the rotor pushes air over the blades to make lift. That way the helicopter doesn't need forward speed to stay up, so it can hover [1].\n\nThe pilot has three main controls:\n\n- **Collective:** This changes the angle of all the blades at once. More angle gives more lift so the helicopter climbs, and less angle lets it descend. More angle also adds drag, so the engine has to supply more power to keep the rotor at the same speed [1].\n- **Cyclic:** This stick tilts the spinning rotor disc. Some of the rotor's thrust then points sideways and pulls the helicopter forward, backward or to the side [1].\n- **Pedals:** Spinning the big rotor one way tries to twist the body the other way. Most helicopters fight this with a small tail rotor that pushes the tail sideways, and the pedals change its thrust to point the nose. Some designs, like the twin-rotor Chinook, use two rotors spinning in opposite directions so the twisting forces cancel [1].\n\nMoving one control affects the others. Tilting the rotor to fly forward takes away some of the upward lift, so the pilot has to add collective and adjust the pedals at the same time. Coordinating all three is a big part of why helicopters are hard to learn to fly [1].\n\nSources:\n[1] Pilot Institute, \"How Do Helicopters Fly\" – https://pilotinstitute.com/how-do-helicopters-fly/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://pilotinstitute.com/how-do-helicopters-fly/",
+      "title": "How Do Helicopters Fly - Pilot Institute"
+    }
+  ],
+  "wikipedia_articles": [
+    "Helicopter",
+    "Helicopter rotor",
+    "Helicopter flight controls",
+    "Tail rotor",
+    "Lift (force)",
+    "Tandem rotors",
+    "Boeing CH-47 Chinook"
+  ],
+  "urls": [
+    "https://pilotinstitute.com/how-do-helicopters-fly/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0762376,
+  "duration_ms": 29162,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:33:26+00:00"
+}

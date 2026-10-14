@@ -1,0 +1,46 @@
+{
+  "id": "cv-sw-11",
+  "query": "what is a recession?",
+  "answer": "A recession is a broad, sustained slowdown in the economy. Output, jobs, incomes and spending all fall. In the US, the official referee is the National Bureau of Economic Research (NBER). It defines a recession as \"a significant decline in economic activity that is spread across the economy and lasts more than a few months\" [1]. It judges this on three things: depth (how big the drop is), diffusion (how widely it spreads) and duration (how long it lasts). It looks at measures like employment, real income, consumer spending and industrial production, not just GDP [1]. You'll often hear the rule of thumb that two quarters in a row of falling GDP means a recession. That's a handy shortcut, but it isn't the official test, and it can miss real downturns or flag mild ones [2][3]. The NBER also only declares a recession after the fact, often months after it has begun [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nber.org/research/business-cycle-dating",
+      "title": "Business Cycle Dating – National Bureau of Economic Research"
+    },
+    {
+      "n": 2,
+      "url": "https://www.econlib.org/library/Enc1/Recessions.html",
+      "title": "Recessions – The Concise Encyclopedia of Economics (Econlib)"
+    },
+    {
+      "n": 3,
+      "url": "https://economics.bmo.com/en/publications/detail/85a8239a-88d2-4b68-9c2d-376ef8dc60f0/",
+      "title": "BMO Economics – What is a recession?"
+    }
+  ],
+  "wikipedia_articles": [
+    "Recession",
+    "National Bureau of Economic Research",
+    "Business cycle",
+    "Gross domestic product"
+  ],
+  "urls": [
+    "https://www.nber.org/research/business-cycle-dating",
+    "https://www.econlib.org/library/Enc1/Recessions.html",
+    "https://economics.bmo.com/en/publications/detail/85a8239a-88d2-4b68-9c2d-376ef8dc60f0/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05723099999999999,
+  "duration_ms": 22074,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:37+00:00"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "cv-sw-12",
+  "query": "how do the lungs work?",
+  "answer": "Your lungs move air in and out, and they swap oxygen for carbon dioxide in your blood. When you breathe in, the diaphragm (a dome-shaped muscle under the lungs) tightens and moves down, and the muscles between your ribs lift the rib cage. This gives the chest more room, so the lungs expand and pull air in through your nose or mouth, down the windpipe and bronchial tubes, and into tiny air sacs called alveoli [1]. Each alveolus is wrapped in tiny blood vessels called capillaries, and their walls are very thin. Oxygen passes from the air into the blood, where red blood cells pick it up, and carbon dioxide, a waste gas from your cells, passes the other way so you can breathe it out [1][2]. There are a huge number of these little sacs, which gives a large surface area for this exchange [3]. Breathing out is mostly passive: the diaphragm and rib muscles relax, the chest gets smaller, and air is pushed out. During exercise or with some lung diseases, you may need to use extra muscles to push air out [1].\n\nThis ties into the heart from your last question. The right side of the heart pumps used, low-oxygen blood to the lungs through the pulmonary artery. The pulmonary veins then carry fresh, oxygen-rich blood back to the left side of the heart, which pumps it out to the rest of the body [1].\n\nSources:\n[1] NHLBI, \"How the Lungs Work – What Breathing Does for the Body\": https://www.nhlbi.nih.gov/health/lungs/breathing-benefits\n[2] Lung Health Foundation / Lung.ca, \"How breathing works\": https://www.lung.ca/breathing\n[3] Better Health Channel (Victoria), \"Respiratory system\": https://betterhealth.vic.gov.au/health/conditionsandtreatments/respiratory-system",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nhlbi.nih.gov/health/lungs/breathing-benefits",
+      "title": "How the Lungs Work – What Breathing Does for the Body (NHLBI)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.lung.ca/breathing",
+      "title": "How breathing works (Lung.ca)"
+    },
+    {
+      "n": 3,
+      "url": "https://betterhealth.vic.gov.au/health/conditionsandtreatments/respiratory-system",
+      "title": "Respiratory system (Better Health Channel)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Lung",
+    "Breathing",
+    "Gas exchange",
+    "Pulmonary alveolus",
+    "Thoracic diaphragm",
+    "Respiratory system",
+    "Pulmonary circulation"
+  ],
+  "urls": [
+    "https://www.nhlbi.nih.gov/health/lungs/breathing-benefits",
+    "https://www.lung.ca/breathing",
+    "https://betterhealth.vic.gov.au/health/conditionsandtreatments/respiratory-system"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0660424,
+  "duration_ms": 25015,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.296 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-10T21:32:56+00:00"
+}

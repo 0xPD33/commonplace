@@ -5,18 +5,19 @@ The acceptance device is a Pixel 10 on GrapheneOS. The desktop and emulator rows
 
 Build: working tree before the first commit (`CP_BUILD=dev`), llama.cpp `b11240`.
 
-## Current numbers (2026-10-02)
+## Current numbers (2026-10-13)
 
-Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), Ling-3.0-tiny Q4_0, the 2026 `enwiki-core`, `wikidata-facts` and the breadth packs. The reranker is `model_nb8.onnx` on the top 24 passages. The question rewrite is off (the default). Details are in the sections below.
+Pixel 10 (Tensor G5, GrapheneOS on Android 17, 11.5 GB MemTotal), the 0.2.0 debug build (working tree on `c552cf4`), Ling-3.0-tiny Q4_0, the Starter set and the breadth packs. The reranker is the distilled Ettin-17m `model_sel8.onnx` on the top 24 passages. The question rewrite is off (the default). Details are in "Pixel 10: the 0.2.0 build" below.
 
 | Measure | Value |
 |---|---|
-| Card (search, rerank, instant answer) | Median 0.91 s |
-| Rerank of 24 passages | Median 424 ms |
-| First answer word | About 7 s (median 7.0 s with the rewrite on, 7.6 s with it off) |
-| Ling decode in the app | About 18 tok/s on a cool phone. 8-11 tok/s after the phone passes about 37 °C. |
-| `llama-bench` Ling, 6 big cores | Prefill 131.6 tok/s (pp512), decode 25.5 tok/s (tg64) |
-| Peak RSS with Ling | 5.1 GB. The memory limit is 6 GiB with the app on screen and 3 GiB when it is hidden. |
+| Card (search, rerank, instant answer) | Median 0.50 s (0.91 s on 2026-10-02) |
+| Rerank of 24 passages | Median 297 ms (424 ms on 2026-10-02) |
+| First answer word | Median 7.2 s |
+| Ling decode in the app | 16-17 tok/s on the first questions. 8-9 tok/s after the phone passes about 37 °C. |
+| Model start after the app was closed | 16.3-16.6 s with the saved warm-up state, 23.9-26.0 s without it |
+| `llama-bench` Ling, 6 big cores | Prefill 131.6 tok/s (pp512), decode 25.5 tok/s (tg64) (2026-10-02) |
+| Peak RSS with Ling | 5.3 GB (5.1 GB on 2026-10-02). The memory limit is 6 GiB with the app on screen and 3 GiB when it is hidden. |
 | Voice input | +0.58 GB PSS while the mic is on |
 
 Desktop, 63 seed questions, Claude as the judge: score ratio 0.529 against Claude with web search (`v18-release`, [EVAL.md](EVAL.md)). Multi-turn threads, measured on 2026-09-30: 0.616 on the 60 tuning threads and 0.614 on the 30 locked test threads (`cv2-dev-base`, `cv2-test-base`).
@@ -295,9 +296,149 @@ A user document must not push Wikipedia passages out of the results for general 
 
 A document passage reached the top 5 for 4 of 600 questions. No question lost or gained a hit@5. Indexing the document took 4.4 s on the desktop CPU.
 
+## Desktop: fixes to retrieval, Wikidata and warm-up (2026-10-10)
+
+Desktop CLI, Ryzen 9 9950X3D. Several agents shared the machine (load average 15 to 125), so every time below is a median of interleaved A/B runs and carries noise. None of these times is a Pixel measurement.
+
+**Card time.** Retrieval only, phone settings (`--fuse-keep 24`, int8 leaf-mt, nb8 Ettin), 158 queries, two runs of each build. "Before" already has the BM25 and warm-up fixes.
+
+| Stage (median ms) | Before | After | Change |
+|---|---|---|---|
+| Dense search | 27.4 / 27.6 | 6.6 / 7.2 | Packs search in parallel, and each pack scans at most about 48,000 codes (`probe_codes`) |
+| Fuse (passage load) | 18.7 / 26.1 | 2.6 / 1.5 | Frames decompress in parallel with one zstd decompressor per thread |
+| Rerank, 24 passages | 181 / 165 | 141 / 134 | Pairs sorted by token length before the batches of 8 |
+| Card | 247 / 263 | 193 / 186 | |
+
+The comparison path reuses the first rerank scores: path 1,869 → 826 ms, comparison rerank 1,170 → 500 ms (3 queries, approximate). The `probe_codes` limit cuts Stack Exchange from 48 to 23 probed lists. On 400 NQ questions it lost one hit ("who said I'll gladly pay you Tuesday"). A Wikiquote penalty of 0.5 in the rerank cuts Wikiquote's share of the NQ top 5 from 4.9% to 2.5%.
+
+**BM25 query split.** The keyword query now keeps only letters and digits. Before, the analyzer split "Jupiter's" and "COVID-19" into phrase queries, and the index has no positions, so tantivy dropped them. On the 273 held-out NQ questions with `'` or `-`, the BM25 pool recall rose from 0.495 to 0.623 and the fused hit@10 from 0.670 to 0.703. The reranked hit@k did not change beyond noise.
+
+**Warm-up.** Warm-up prefills the rewrite prompt only when the rewrite is on, and the prompt cache never evicts the answer prompt. With the rewrite off, model start fell from 5.5 s to 4.0 s (3 runs each). On the calculation path, the answer prefill fell from 9.6 s to 7.6 s.
+
+**Wikidata facts.** The core picks facts by the cosine between the question and property vectors, not by word lists. In an offline check of 77 questions, the asked property reached the evidence for 43 of 47 answerable questions (word lists: 35 of 47). Comparisons picked the right property 14 of 14 times (word lists: 13 of 14). The evidence keeps up to 3 asked-about facts per entity, plus 3 numbers that every compared entity has. Over 24 seeds, Wikidata tokens in the evidence fell from 1,946 to 1,018 (−48%). Each entity is now a numbered source, and answers that cite Wikidata rose from 0 to 7 of 24.
+
+## Desktop: judged evals with the phone settings (2026-10-10)
+
+`run.py --phone` on the desktop: `--fuse-keep=24`, the int8 leaf-mt, the stock nb8 Ettin and the Ling pack of the library. The library is the Starter set. "Before" is `master`, "after" is the merged build of that evening (`cp-m3`). The run directories are not in the repository.
+
+| Set | Score ratio before → after | Pairwise after vs before (W / T / L) | Sign test p |
+|---|---|---|---|
+| 63 seeds | 0.48 → 0.50 | 27 / 10 / 26 | 1.0 |
+| 60 conversation threads | 0.59 → 0.61 | 22 / 21 / 17 | 0.52 |
+| 22 topic-switch threads | 0.59 → 0.70 | 17 / 1 / 4 | 0.007 |
+
+- Evidence labels on the seeds (full / partial / none, from `evidence.py`): 22 / 32 / 9 → 25 / 30 / 8. Of the 62 lost seeds before, 22 had full evidence (the model failed) and 40 had thin evidence (retrieval failed).
+- Travel, how-to, explanation and multi-hop losses are mostly retrieval failures. Factual and numeric losses are mostly model failures.
+- Conversation recall@10 rose from 0.811 to 0.904, and recall among the sources the model saw from 0.716 to 0.819.
+- Comparison seeds rose from 0.42 to 0.55. Travel fell from 0.39 to 0.33 and out-of-corpus from 0.62 to 0.52 (9 and 4 questions).
+
+**Pack set.** On 27 seeds (9 travel, 7 how-to, 11 explanation), the phone's full pack set beat the Starter set pairwise 17 / 2 / 6 (p = 0.035, 25 pairs). Full evidence rose from 4 to 15 of 27. Travel and how-to gained (ratio 0.33 → 0.43 and 0.43 → 0.49). Explanation fell from 0.58 to 0.44, because Stack Exchange threads crowd the 24 rerank slots.
+
+**Model ceiling.** Claude Sonnet, given exactly the evidence that Ling saw on the 25 seeds with full evidence, scored 0.777 against Ling's 0.639. Across all 63 seeds that gap is worth about +0.05.
+
+## Desktop: answer prompt and saved warm-up state (2026-10-10 to 2026-10-12)
+
+The answer system prompt now holds two worked examples (Pompeii, and the Rhine against the Volga with COMPUTED lines). The question also comes before and after the sources. Deep mode leaves the examples out. Pairwise against the merged build of 2026-10-10, phone settings, Starter set, Claude Sonnet as the judge:
+
+| Change | Set | W / T / L | Sign test p | Mean gain (10-point scale) |
+|---|---|---|---|---|
+| Examples and question first | 63 seeds | 33 / 11 / 19 | 0.070 | +0.70 [+0.13, +1.26] |
+| Examples and question first | 57 conversation threads | 23 / 21 / 13 | 0.13 | +0.61 |
+| Question first only | 63 seeds | 32 / 12 / 19 | 0.092 | +0.26 [−0.33, +0.87] |
+| Examples only | 63 seeds | 27 / 16 / 20 | 0.38 | +0.20 [−0.33, +0.74] |
+| Greedy decoding (no new content) | 63 seeds | 25 / 19 / 19 | 0.45 | −0.04 |
+
+Both sets together give p = 0.014 for the kept change. The greedy row shows the noise floor: a change with no new content still changes many answers. A DRY sampler corrupted repeated strings ("1783" became "1781"), so I dropped it.
+
+The examples add 679 tokens to the cached answer prompt, which now has 1,096 tokens. At about 125 tok/s of Pixel prefill, that is about 8.8 s at each cold start (an estimate, not a measurement). The saved warm-up state removes this cost after the first start:
+
+- The state file for the answer prompt is 26 MB.
+- Desktop engine start fell from 9.5–12.2 s to 4.2–7.4 s (load average 16).
+- The second run loaded the file and gave the same answer word for word.
+- Not measured on the Pixel: the load time of the file and the RAM of the larger cached state.
+
+## Desktop: conversation turns and Wikidata hops (2026-10-10 to 2026-10-11)
+
+**Follow-ups and topic switches.** A follow-up head replaces the follow-up word lists, and the turn-kind head gets an `expand` label. Evidence-level run on 122 threads (92 tuning, 30 locked test), phone settings, recall of the expected sources in the evidence:
+
+| Category | `master` | After |
+|---|---|---|
+| All (96 searched turns) | 0.764 | 0.866 |
+| Follow-up | 0.698 | 0.673 |
+| Compare follow-up | 0.614 | 0.886 |
+| Expand | 0.882 | 0.941 |
+| Topic switch | 0.886 | 1.000 |
+| Topic leaks into a new question | 17 of 22 | 0 of 22 |
+| Locked test only (23 turns) | 0.645 | 0.732 |
+
+**Per-label bars (2026-10-11).** Each costly label of the turn-kind head now has its own probability bar. Small talk routes 12 of 12, reformat requests 16 of 22, and no topic switch leaks (0 of 22). All 63 seeds still route as questions, with the fp32 and the int8 encoder.
+
+**"Tell me more."** An expand turn puts the passages that the last turn showed after all fresh passages. On 12 expand threads, the overlap with the last turn fell from 25 of 52 passages to 0 of 52. Evidence labels moved from 6 full / 6 partial to 8 / 4. Pairwise: 7 / 2 / 3 (p = 0.34, not significant).
+
+**Wikidata second hop.** When no entity has the asked property, the hop follows up to 8 item-valued facts to a related entity and reads the property there. The reranker must score the chain at 10.5 or more. In a check on 155 turns, the three right chains scored 11.0 to 11.6, and the best wrong chain scored 10.0. Two multi-hop seeds went from partial to full evidence: 1964 Summer Olympics → Japan → Mount Fuji, and Angkor Wat → Cambodia → riel. The hop adds 6 to 23 ms at the median on the desktop. It runs after the card and before the first word. Not measured on the Pixel.
+
+**Tried and dropped:**
+- Neighbor passages for explanation questions: no evidence label improved, and one how-to question went from partial to none. The neighbor step stays for deep mode only.
+- Pack mix in the rerank pool (per-pack caps, penalties, rank-normalized BM25 and other variants): the best variant was neutral (pairwise 16 / 32 / 15, p = 1.00), and NQ hit@10 fell from 0.736 to 0.733.
+
+## Desktop: reranker distillation and selective int8 (2026-10-11 to 2026-10-13)
+
+**Test set.** 161 questions: the seed questions and the first turns of the conversation threads. Each question has the 24-passage pool that the phone reranks. Claude Sonnet graded every passage 0, 1 or 2 (about $4). The "explain" subset has the 46 why and how questions. NQ is the 2,610 held-out NQ-open questions.
+
+**Teacher check (2026-10-11).** Against the Claude grades, the stock 17m scores nDCG@8 0.801, Ettin-400m 0.885 and Ettin-1b 0.884. The explanation crowding by Stack Exchange is not a reranker bias: the 17m puts Stack Exchange in its top 8 at 14.1%, and Stack Exchange holds 13.7% of the relevant passages. For "Why is the sky blue and not green?", the Wikipedia answer (*Rayleigh scattering*) sits at fusion rank 57 to 97, outside the 24-passage pool.
+
+**Selective int8 (2026-10-12).** `model_sel8.onnx` is dynamic int8 except layer 0's MLP output MatMul. For the stock 17m, it scored nDCG@8 0.8044 (explain 0.7271) against 0.8025 (0.7257) for `model_nb8.onnx`. NQ hit@1/3/10 was 0.490 / 0.649 / 0.738 against 0.495 / 0.648 / 0.737. So sel8 keeps the quality of nb8, with 0.5 points less NQ hit@1.
+
+**Distillation (2026-10-13).** The student is the stock 17m distilled from Ettin-400m on 23,012 pools (see [MODELS](MODELS.md)). These rows come from the distillation harness, so they do not compare digit for digit with the rows above:
+
+| Model and file | nDCG@8 all | nDCG@8 explain | NQ hit@1 | NQ hit@3 | NQ hit@10 |
+|---|---|---|---|---|---|
+| Stock 17m | 0.801 | 0.724 | 0.495 | 0.648 | 0.737 |
+| Distilled 17m, `model.onnx` (fp32) | 0.808 | 0.727 | 0.515 | 0.654 | 0.738 |
+| **Distilled 17m, `model_sel8.onnx` (the phone file now)** | **0.813** | **0.734** | **0.510** | **0.653** | **0.737** |
+| Ettin-400m (teacher) | 0.885 | 0.829 | — | — | — |
+
+- The paired gain of the distilled sel8 file over the stock model is +1.2 points of nDCG@8, with a 95% interval of +0.1 to +2.3 points. 76 questions improved and 55 got worse.
+- The student closes about 15% of the gap to the teacher. A second setting (temperature 2, learning rate 5e-5) was no better.
+- The first sel8 export of the student quantized the layer-0 MatMul by mistake (0.793 nDCG@8, NQ hit@1 0.497), because the exported graph names it `/m/layers.0/...`. `rerank.py sel8` now matches the name by suffix.
+- Per-query Spearman correlation of sel8 against fp32: mean 0.992, minimum 0.973.
+
+**Speed.** On the desktop CPU, sel8 reranks a 24-passage pool in a median 131 ms against 180 ms for nb8. From the per-passage timing of 2026-10-10, the Pixel estimate is about 0.35 s against about 0.465 s. That is an estimate, not a Pixel measurement of the new file. The APK gets 38.7 MB smaller.
+
+**Cascade (not used).** A second stage with Ettin-68m on the top 4 to 8 passages adds +1.0 to +2.4 points of NQ hit@3. Its Pixel cost, estimated from per-passage timing, is +0.25 to +0.6 s per question, and it adds 200 to 370 MB of RAM. That is a small gain for a clear slowdown, so the app has no second stage.
+
+## Pixel 10: the 0.2.0 build (2026-10-13)
+
+The 0.2.0 debug build (working tree on `c552cf4`, `CP_BUILD=dev`), installed over 0.1.0 with the app data kept. Ling-3.0-tiny Q4_0, the Starter set and the breadth packs, the rewrite off. The phone was on USB power. The script waited until the skin temperature was 36.4 °C or less before each run.
+
+**Saved warm-up state.** The first start after the install took 27.1 s, with the encoder copy out of the APK. It wrote one 27.8 MB state file. Time from the app launch to "Ready", three pairs:
+
+| Start | Time to "Ready" |
+|---|---|
+| Without the state file | 26.0 s, 23.9 s, 23.9 s |
+| With the state file | 16.6 s, 16.6 s, 16.3 s |
+
+The file saves 7.3 to 9.4 s per start. The rest is the load of the 4.9 GB model into RAM.
+
+**In-app benchmark (Diagnostics → Run benchmark), two runs of the 5 questions.** Each question restored 1,096 cached prompt tokens and prefilled 490 to 712 new ones.
+
+| Measure | Run 1 | Run 2 |
+|---|---|---|
+| Card p50 (app) | 407 ms | 533 ms |
+| First word p50 (app) | 7.0 s | 7.4 s |
+| Decode p50 (app) | 13.4 tok/s | 11.3 tok/s |
+| Rerank of 24 passages | 270-362 ms | 263-605 ms |
+| Decode, questions 1-2 / question 5 | 16.6 / 8.4 tok/s | 16.4-17.0 / 8.1 tok/s |
+| Thermal headroom, first / last question | 0.71 / 0.86 | 0.73 / 0.87 |
+| Peak RSS (VmHWM) | 5,315 MB | 5,294 MB |
+
+Over all 10 questions: card median 0.50 s (395-733 ms), first word median 7.2 s (5.9-13.4 s). The comparison question reranks 48 passages (335-351 ms). The hot last question is the slowest: prefill and decode both slow down, and the thermal rule drops one decode thread. Acceptance limits: card ≤ 1.5 s and first word ≤ 10 s at p50. Both pass.
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.
 - LiteRT-LM Gemma 4 E2B on the Tensor G5 NPU under GrapheneOS (blocked, see above), and its quality on LiteRT CPU.
 - Query encode and 40-pair rerank latency in isolation.
-- The in-app benchmark (Diagnostics → Run benchmark) with the phone plugged in and awake, and the E2E script with `--push enwiki-core lfm25-8b-a1b`.
+- The in-app benchmark (Diagnostics → Run benchmark) with the phone plugged in and awake, and the E2E script with `--push enwiki-core ling3-tiny`.
+- The time of the Wikidata second hop.
+- Prefill with `n_ubatch` 1024 against 512, and decode with fewer threads on a hot phone.

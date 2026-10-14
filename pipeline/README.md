@@ -98,10 +98,38 @@ python -m commonplace_pipeline.rerank score --pools pool.jsonl --model <teacher>
 python -m commonplace_pipeline.rerank train --pools pool.jsonl --teacher teacher.jsonl \
   --dev-pools nq-dev-pool.jsonl --dev-answers nq-dev.jsonl --out data/models/<student>
 python -m commonplace_pipeline.rerank export --model data/models/<student>           # onnx/ + int8 variants + parity check
+python -m commonplace_pipeline.rerank sel8 --src data/models/<student>/onnx/model.onnx --dst data/models/<student>/onnx/model_sel8.onnx
 python -m commonplace_pipeline.rerank hitk --pools nq-dev-pool.jsonl --answers nq-dev.jsonl --scores teacher.jsonl
 ```
 
 `hitk` counts a query as a hit at k when a normalized answer string occurs in one of the top k passages (the DPR measure). `train` picks the checkpoint by hit@1 on the first 1,000 NQ-open validation queries, so report results with `--offset 1000`.
+
+`sel8` writes the phone's file: dynamic int8 per channel, except layer 0's MLP output MatMul, which stays fp32. It finds that node by the name suffix `/layers.0/mlp/Wo/MatMul` and stops if it does not find exactly one. `nb8` writes the 8-bit weight-only file. Check a new file against its fp32 source on the labeled pools and NQ before you ship it.
+
+The app's reranker, `0xPD33/ettin-reranker-17m-commonplace`, came from this step with `cross-encoder/ettin-reranker-400m-v1` as the teacher, on 23,012 pools: NQ-open train questions, Stack Exchange titles and 8,902 questions that a local Gemma model wrote from pack passages. Its run used a variant of `train` that also picks the checkpoint on 368 held-out generated questions; that variant is not in this repository. The model card on Hugging Face has the settings. To test a reranker change without new judge costs, score it against the 161 pools that Claude Sonnet graded (nDCG@8, see docs/BENCHMARKS.md).
+
+## Classifier heads and property vectors
+
+`heads` trains a softmax layer on the leaf-mt question embedding, with the desktop (fp32) and the phone (int8) encoder, and writes `core/commonplace-core/src/<name>_head.json`. The core compiles the file in. The examples are in `configs/<name>-examples.jsonl`. `--eval` only reports; examples that repeat an eval question are dropped.
+
+```sh
+uv run --project pipeline python -m commonplace_pipeline.heads turn-kind --near 1 --l2 1e-4 --merge followup=question --allow reformat=1 \
+  --eval eval/conversation.jsonl --map followup=question,compare_followup=question,topic_switch=question,expand=expand,reformat=reformat,chat=chat
+uv run --project pipeline python -m commonplace_pipeline.heads follow-up --examples turn-kind --near 1 --l2 1e-4 \
+  --merge expand=followup --only question,followup --strict none \
+  --eval eval/conversation.jsonl --map followup=followup,compare_followup=followup,expand=followup,topic_switch=question
+uv run --project pipeline python -m commonplace_pipeline.heads intent --strict calc \
+  --eval eval/queries.jsonl --map factual=lookup,explanation=explain,comparison=compare,numeric=calc
+```
+
+- The turn-kind head sorts a chat message into question, expand ("tell me more"), reformat or chat. The follow-up head tells whether a question needs the last turn. Both learn from `configs/turn-kind-examples.jsonl`. The intent head sorts a question into lookup, explain, compare or calc.
+- `--strict` names the labels whose mistakes are costly. Cross-validation sets a bar for each strict label (`min_probs`), so that no held-out example of another label reaches it. `--allow label=k` leaves out the k highest mistakes for that label.
+
+`prop_vectors` writes `core/commonplace-core/src/wikidata_props.json`: one vector per property of `configs/wikidata-props.tsv`, plus population density. Each vector is the mean leaf-mt embedding of the property's label, its Wikidata label and its English aliases. The core picks the Wikidata facts that a question asks about by the cosine to these vectors. Run it again after you change the property list or the query encoder:
+
+```sh
+uv run --project pipeline python -m commonplace_pipeline.prop_vectors   # needs data/raw/wikidata and data/work/wikidata
+```
 
 ## Wikipedia, monthly (public XML dumps, no account)
 

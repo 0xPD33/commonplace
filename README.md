@@ -113,12 +113,12 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 | Requirement | How Commonplace meets it |
 |---|---|
 | Runs on Android and GrapheneOS hardware | I run it on a Pixel 10 with GrapheneOS (Android 17). The minimum is Android 12 on a 64-bit ARM CPU. |
-| Works in a maximum of 12 GB of RAM | The peak memory of the app with the main model is 5.1 GB on the Pixel 10 ([BENCHMARKS](docs/BENCHMARKS.md)). |
+| Works in a maximum of 12 GB of RAM | The peak memory of the app with the main model is 5.3 GB on the Pixel 10 ([BENCHMARKS](docs/BENCHMARKS.md)). |
 | Uses no more than 50 GB in total | The Starter set uses 11.3 GB. All packs together use 35.8 GB, plus the app. The app refuses an import that takes the total above 50 GB. |
 | Works offline, with no network requests during use | The APK has no `INTERNET` permission, so Android blocks all network access. The release script stops if the permission appears. You download the packs once with the browser. |
 | No Google Play Services | The app uses no Google Play Services library: the APK contains no `com.google.android.gms` classes. |
 | Explanation, comparison, synthesis and reasoning | A comparison runs one search for each item and computes ratios from Wikidata in code. Follow-up questions use the earlier turns. A thinking mode lets the model reason before it answers. |
-| Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.91 s (median). The first word of the written answer comes after about 7 s. The model then writes about 18 tokens per second. |
+| Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.50 s (median). The first word of the written answer comes after about 7 s. The model then writes 16 to 17 tokens per second on a cool phone. |
 | Public GitHub repository with code, assets and instructions | This repository holds all code. The packs are on [Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs), and [docs/PACKS.md](docs/PACKS.md) shows how to build them again. |
 | Documents the models, datasets and indexes | [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md) and [PACKS](docs/PACKS.md). |
 | More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). See the limits below. |
@@ -130,8 +130,9 @@ Limits of this measurement:
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
 - The baseline wins almost every single question (61 losses, 2 ties). Commonplace gets half the points, not half the wins.
 - Multi-step (0.49), how-to (0.49) and numeric questions (0.47) are below 0.50.
-- The quality numbers come from the desktop build with the same model and all packs, including the full Wikipedia. I did not measure the Starter set alone.
-- The phone uses an 8-bit copy of the reranker. In my tests it stays within 1 point of hit@1 of the full model.
+- The score ratio of 0.53 comes from the desktop build of 2026-10-05 with the same model and all packs, including the full Wikipedia. With the phone's settings and only the Starter set, the same harness gave 0.48 before the fixes of 2026-10-10 and 0.50 after them (desktop runs, [BENCHMARKS](docs/BENCHMARKS.md#desktop-judged-evals-with-the-phone-settings-2026-10-10)).
+- Later changes, such as the new answer prompt and the distilled reranker, have pairwise measurements against the earlier build, but no new score ratio.
+- The phone uses a selective int8 copy of the reranker. On NQ it stays within 1 point of hit@1 of the full model (0.510 against 0.515).
 
 ### Quality by type of question
 
@@ -193,7 +194,7 @@ flowchart TB
 
 ### From a question to a cited answer
 
-The answer card appears after the rerank, before the model writes a word. The intent head and the turn-kind head are small classifiers on the embedding of the question. The turn-kind head needs the language model. Without the model, every message counts as a question.
+The answer card appears after the rerank, before the model writes a word. The turn-kind head, the follow-up head and the intent head are small classifiers on the embedding of the question. A reformat or small-talk reply needs the language model. Without the model, such a message goes through search like a question.
 
 ```mermaid
 flowchart TD
@@ -201,6 +202,8 @@ flowchart TD
   TK -->|"reformat or small talk"| GEN
   TK -->|"question"| REW["Question rewrite, off by default"]
   TK -->|"question"| ENT["Entity linking"]
+  TK -->|"question or tell me more"| FU["Follow-up head: keep the last topic?"]
+  FU -.-> ENT
   REW -.-> ENT
   TK -->|"question"| INT["Intent head: lookup, explain, compare, calc"]
   ENT --> BM25["BM25 per pack, tantivy"]
@@ -220,6 +223,8 @@ flowchart TD
   RR -.->|"deep or unresolved follow-up"| PLAN["Planner subqueries"]
   PLAN -.-> RRF
   RR --> EV["Evidence selection, 600 tokens"]
+  RR --> HOP["Wikidata second hop"]
+  HOP -.-> EV
   PLAN -.-> EV
   EV --> COMP["Optional compute: ratios, units, calc"]
   INT -.->|"calc"| COMP
@@ -233,11 +238,11 @@ flowchart TD
 
 ### Design choices
 
-1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. The Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop.
+1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. An Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop. I distilled it from Ettin-400m on 23,012 of the app's own search pools ([0xPD33/ettin-reranker-17m-commonplace](https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)).
 2. **An answer card before the answer.** The best passage, Wikidata facts and the source list appear before the model writes a word. The app highlights the sentence that matches. For a simple lookup, an extractive reader adds a short snippet.
-3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. It reads short evidence, not whole articles. The app keeps the state of the system prompt in memory, so each question pays only for its own evidence.
+3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. It reads short evidence, not whole articles. The system prompt holds the rules and two worked answers. The app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
 4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist, and a list of sources that the model writes at the end of an answer. It underlines sentences with numbers that are not in the evidence. Code does unit conversions and Wikidata ratios. For a calculation, the model writes an expression and code calculates the result.
-5. **Comparisons and follow-ups.** A comparison runs one search for each item. When a name has several articles ("Mars"), the other names in the question and their Wikidata classes decide which one it means. A follow-up uses the earlier turns. A request such as "make it shorter" rewrites the last answer and does not search again.
+5. **Comparisons and follow-ups.** A comparison runs one search for each item. When a name has several articles ("Mars"), the other names in the question and their Wikidata classes decide which one it means. Each Wikidata entity is a numbered source, so the answer cites its numbers. When a question asks about a related thing ("the highest point of the country that hosted the 1964 Olympics"), Wikidata follows one link to it. A trained head decides if a message continues the last turn. Such a message searches with the last topic, and a new topic does not take the old one. "Tell me more" searches the last question again and prefers passages that the last answer did not show. A request such as "make it shorter" rewrites the last answer and does not search again.
 6. **Thinking mode.** The brain button next to the question box lets Ling reason before it answers. The default budget is 256 tokens. Settings has a slider for the budget.
 7. **Your own documents.** "My documents" turns a PDF, text or Markdown file into a small pack on the phone. Citations show the page. "Ask this document" limits a conversation to one document. PDF import needs Android 15, or Android 12 to 14 with the newest system updates.
 
@@ -247,12 +252,13 @@ The app also has a History screen and a reader for passages and articles. Each s
 
 | Measure | Value |
 |---|---|
-| Answer card (search, rerank, best passage) | 0.91 s median |
-| First word of the written answer | About 7 s |
-| Writing speed | About 18 tokens/s on a cool phone, 8 to 11 tokens/s after the phone passes about 37 °C |
-| Peak memory with the main model | 5.1 GB |
+| Answer card (search, rerank, best passage) | 0.50 s median |
+| First word of the written answer | 7.2 s median |
+| Writing speed | 16 to 17 tokens/s on a cool phone, about 8 tokens/s after the phone passes about 37 °C |
+| Model start after the app was closed | About 16.5 s (about 25 s without the saved warm-up state) |
+| Peak memory with the main model | 5.3 GB |
 
-[docs/BENCHMARKS.md](docs/BENCHMARKS.md) has all measurements with their dates and builds.
+The table comes from the 0.2.0 build of 2026-10-13. [docs/BENCHMARKS.md](docs/BENCHMARKS.md) has all measurements with their dates and builds.
 
 Known limits:
 
@@ -272,7 +278,7 @@ cd core && cargo build --release -p commonplace-cli -p packbuild && cd ..
 core/target/release/commonplace --model data/models/llm/Ling-3.0-tiny-Q4_0.gguf ask "Why is the sky blue?"
 ```
 
-The command line reads packs from `data/library/packs/`. To install a pack or a bundle there, run `tar -xf <file>.tar -C data/library/packs`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
+The command line reads packs from `data/library/packs/`. To install a pack or a bundle there, run `tar -xf <file>.tar -C data/library/packs`. To keep the warm-up state between runs, as the app does, add `--llm-state data/llm-state`. [docs/PACKS.md](docs/PACKS.md) shows how to build packs.
 
 ## Repository
 

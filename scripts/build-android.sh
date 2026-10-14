@@ -33,7 +33,7 @@ rm -rf "$E" && mkdir -p "$E/leaf-mt/onnx" "$E/ettin-17m/onnx"
 cp $M/leaf-mt/tokenizer.json "$E/leaf-mt/"
 cp $M/leaf-mt/onnx/model_quantized.onnx $M/leaf-mt/onnx/model_quantized.onnx_data "$E/leaf-mt/onnx/"
 cp $M/ettin-17m/tokenizer.json "$E/ettin-17m/"
-if [[ " ${ABIS[*]} " == *" arm64-v8a "* ]]; then cp $M/ettin-17m/onnx/model_nb8.onnx "$E/ettin-17m/onnx/"; fi
+if [[ " ${ABIS[*]} " == *" arm64-v8a "* ]]; then cp $M/ettin-17m/onnx/model_sel8.onnx "$E/ettin-17m/onnx/"; fi
 if [[ " ${ABIS[*]} " == *" x86_64 "* ]]; then cp $M/ettin-17m/onnx/model_quint8_avx2.onnx "$E/ettin-17m/onnx/"; fi
 for d in 2_Dense 3_LayerNorm 4_Dense; do mkdir -p "$E/ettin-17m/$d" && cp $M/ettin-17m/$d/model.safetensors "$E/ettin-17m/$d/"; done
 # Extractive reader for the featured snippet (the int8 file runs on arm64 and x86_64).

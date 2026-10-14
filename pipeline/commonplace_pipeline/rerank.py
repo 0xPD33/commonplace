@@ -6,7 +6,7 @@ Pools come from `commonplace pool` (one JSON line per query: the fused hits with
   hitk    answer-hit@k (DPR style: a normalized answer string occurs in the passage) for fusion order,
           the pool's own rerank scores, and any score files
   train   listwise distillation (KL between teacher and student softmax over each pool)
-  export  onnx/model.onnx (transformer only, as the Rust core expects) + int8 variants + head weights
+  export  onnx/model.onnx (transformer only, as the Rust core expects) + the sel8, nb8 and avx2 variants
 
 The student is the Rust reranker layout: ModernBERT → CLS → Dense 256 (GELU, no bias) → LayerNorm → Dense 1.
 """
@@ -249,6 +249,18 @@ def nb8(src: Path, dst: Path) -> None:
     q.model.save_model_to_file(str(dst))
 
 
+def sel8(src: Path, dst: Path) -> None:
+    """Dynamic int8 copy of an fp32 ONNX graph, except layer 0's MLP output projection, which stays fp32: its input
+    has the activation outliers that cost per-tensor int8 about 6 points of hit@1 (the phone's reranker)."""
+    import onnx
+    from onnxruntime.quantization import QuantType, quantize_dynamic
+
+    # `export` wraps the model, so a node is named "/m/layers.0/..."; the stock file has no "/m" prefix.
+    keep = [n.name for n in onnx.load(src).graph.node if n.name.endswith("/layers.0/mlp/Wo/MatMul")]
+    assert len(keep) == 1, keep
+    quantize_dynamic(src, dst, weight_type=QuantType.QInt8, per_channel=True, nodes_to_exclude=keep)
+
+
 def cmd_export(a) -> None:
     import torch
     import onnx
@@ -274,9 +286,10 @@ def cmd_export(a) -> None:
                       output_names=["last_hidden_state"], dynamic_axes={"input_ids": {0: "b", 1: "n"}, "attention_mask": {0: "b", 1: "n"},
                                                                          "last_hidden_state": {0: "b", 1: "n"}},
                       opset_version=17, dynamo=False)
-    # The app still loads the per-tensor dynamic int8 files, but they cost ~6 points of NQ hit@1 (ModernBERT's
-    # activation outliers). model_nb8 quantizes weights only (8-bit blocks of 32) and matches fp32 (Spearman 0.9999).
-    quantize_dynamic(onnx_dir / "model.onnx", onnx_dir / "model_qint8_arm64.onnx", weight_type=QuantType.QInt8, per_channel=True)
+    # The phone loads model_sel8; plain dynamic int8 costs ~6 points of NQ hit@1 (ModernBERT's activation outliers).
+    # model_nb8 quantizes weights only (8-bit blocks of 32) and matches fp32; the desktop eval's phone-like option.
+    # model_quint8_avx2 is the x86_64 (emulator) file.
+    sel8(onnx_dir / "model.onnx", onnx_dir / "model_sel8.onnx")
     quantize_dynamic(onnx_dir / "model.onnx", onnx_dir / "model_quint8_avx2.onnx", weight_type=QuantType.QUInt8)
     nb8(onnx_dir / "model.onnx", onnx_dir / "model_nb8.onnx")
 
@@ -288,7 +301,7 @@ def cmd_export(a) -> None:
     enc = tok(["why is the sky blue"] * 2, ["Rayleigh scattering makes the sky blue.", "Sky blue is a colour."], return_tensors="np", padding=True)
     with torch.inference_mode():
         ref = m(input_ids=torch.tensor(enc["input_ids"]), attention_mask=torch.tensor(enc["attention_mask"])).last_hidden_state[:, 0].numpy()
-    for f in ["model.onnx", "model_nb8.onnx", "model_qint8_arm64.onnx", "model_quint8_avx2.onnx"]:
+    for f in ["model.onnx", "model_sel8.onnx", "model_nb8.onnx", "model_quint8_avx2.onnx"]:
         s = ort.InferenceSession(str(onnx_dir / f), providers=["CPUExecutionProvider"])
         got = s.run(None, {"input_ids": enc["input_ids"].astype(np.int64), "attention_mask": enc["attention_mask"].astype(np.int64)})[0][:, 0]
         print(f"{f}: max |Δ CLS| {np.abs(got - ref).max():.4f}")
@@ -329,9 +342,14 @@ def main() -> None:
     n = sub.add_parser("nb8", help="write the 8-bit weight-only copy of an fp32 ONNX reranker (the phone's file)")
     n.add_argument("--src", required=True)
     n.add_argument("--dst", required=True)
+    q = sub.add_parser("sel8", help="write the selective int8 copy of an fp32 ONNX reranker (the phone's file)")
+    q.add_argument("--src", required=True)
+    q.add_argument("--dst", required=True)
     a = ap.parse_args()
     if a.cmd == "nb8":
         return nb8(Path(a.src), Path(a.dst))
+    if a.cmd == "sel8":
+        return sel8(Path(a.src), Path(a.dst))
     {"score": cmd_score, "hitk": cmd_hitk, "train": cmd_train, "export": cmd_export}[a.cmd](a)
 
 

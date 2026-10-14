@@ -16,7 +16,7 @@ fetch() { # repo rev path dest
 }
 
 LEAF=MongoDB/mdbr-leaf-mt;               LEAF_REV=1ed41b22ce166d66c24f88ebfc340e1f03adb20f
-ETTIN=cross-encoder/ettin-reranker-17m-v1; ETTIN_REV=9e4aa35321a6dd1a43ca313f500c4b4f7cfb5cc6
+ETTIN=0xPD33/ettin-reranker-17m-commonplace; ETTIN_REV=ebc0d6c8afdce3af49e12c6fd0b7cc6a6c398769
 ETTIN32=cross-encoder/ettin-reranker-32m-v1; ETTIN32_REV=b33e5ceb5110773ea9cf5e00c9bedc83a8c2afdd
 MXBAI=mixedbread-ai/mxbai-embed-large-v1; MXBAI_REV=b33106f585b9ce46904ad7443a3b52b7a63e231c
 LFM_S=LiquidAI/LFM2.5-1.2B-Instruct-GGUF; LFM_S_REV=8ed288026e23958ad9dfa92d53ed773a8eee7125
@@ -32,12 +32,11 @@ encoders() {
   for f in onnx/model.onnx onnx/model.onnx_data onnx/model_quantized.onnx onnx/model_quantized.onnx_data tokenizer.json; do
     fetch $LEAF $LEAF_REV $f leaf-mt/$f
   done
-  for f in onnx/model.onnx onnx/model_qint8_arm64.onnx onnx/model_quint8_avx2.onnx tokenizer.json config.json modules.json 1_Pooling/config.json 2_Dense/config.json 2_Dense/model.safetensors 3_LayerNorm/config.json 3_LayerNorm/model.safetensors 4_Dense/config.json 4_Dense/model.safetensors; do
+  # Ettin-17m distilled from Ettin-400m on our own pools. The phone loads model_sel8.onnx: int8 except layer 0's MLP
+  # output; plain int8 loses ~6 points of NQ hit@1 (docs/BENCHMARKS.md). model_nb8 is the desktop eval's phone-like option.
+  for f in onnx/model.onnx onnx/model_sel8.onnx onnx/model_nb8.onnx onnx/model_quint8_avx2.onnx tokenizer.json config.json modules.json 1_Pooling/config.json 2_Dense/config.json 2_Dense/model.safetensors 3_LayerNorm/config.json 3_LayerNorm/model.safetensors 4_Dense/config.json 4_Dense/model.safetensors; do
     fetch $ETTIN $ETTIN_REV $f ettin-17m/$f
   done
-  # The phone loads an 8-bit weight-only copy: the int8 file above loses ~6 points of NQ hit@1 (docs/BENCHMARKS.md).
-  [ -s "$OUT/ettin-17m/onnx/model_nb8.onnx" ] || uv run --project pipeline --extra gpu python -m commonplace_pipeline.rerank nb8 \
-    --src "$OUT/ettin-17m/onnx/model.onnx" --dst "$OUT/ettin-17m/onnx/model_nb8.onnx"
 }
 reranker32() {
   for f in onnx/model.onnx onnx/model_qint8_arm64.onnx onnx/model_quint8_avx2.onnx tokenizer.json config.json modules.json 2_Dense/config.json 2_Dense/model.safetensors 3_LayerNorm/config.json 3_LayerNorm/model.safetensors 4_Dense/config.json 4_Dense/model.safetensors; do

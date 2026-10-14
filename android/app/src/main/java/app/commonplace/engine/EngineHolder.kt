@@ -70,7 +70,7 @@ class EngineHolder(private val app: Application) {
                         dataDir = app.filesDir.absolutePath,
                         encodersDir = encoders.absolutePath,
                         leafModel = "onnx/model_quantized.onnx",
-                        ettinModel = if (arm) "onnx/model_nb8.onnx" else "onnx/model_quint8_avx2.onnx",
+                        ettinModel = if (arm) "onnx/model_sel8.onnx" else "onnx/model_quint8_avx2.onnx",
                         encoderThreads = 4u,
                         llmThreads = prefs.threads.toUInt(),
                         pinBigCores = arm,

@@ -23,9 +23,10 @@ LiteRT-LM publishes the notices of its own dependencies in THIRD_PARTY_NOTICE.tx
 --------------------
 mdbr-leaf-mt  Apache-2.0
     Query embedder by MongoDB (https://huggingface.co/MongoDB/mdbr-leaf-mt)
-ettin-reranker-17m-v1  Apache-2.0
-    Reranker by the cross-encoder organization, fine-tuned from jhu-clsp/ettin-encoder-17m
-    (https://huggingface.co/cross-encoder/ettin-reranker-17m-v1)
+ettin-reranker-17m-commonplace  Apache-2.0
+    Reranker distilled for this app from cross-encoder/ettin-reranker-17m-v1 (by the cross-encoder
+    organization, fine-tuned from jhu-clsp/ettin-encoder-17m) and cross-encoder/ettin-reranker-400m-v1
+    (https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)
 deberta-v3-xsmall-squad2  Apache-2.0
     Answer reader by nlpconnect, ONNX export by tomasmcm
     (https://huggingface.co/nlpconnect/deberta-v3-xsmall-squad2)

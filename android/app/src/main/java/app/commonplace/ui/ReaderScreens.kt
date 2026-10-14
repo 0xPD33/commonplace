@@ -115,14 +115,19 @@ private fun PassageBody(pad: PaddingValues, p: PassageView, highlight: String, o
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 12.dp).navigationBarsPadding()
             .testTag("passage_view"),
     ) {
-        Breadcrumb(listOf(p.packTitle, p.title, p.section))
+        // The title and section follow in full, so the crumb names only the pack.
+        Breadcrumb(listOf(p.packTitle))
         Spacer(Modifier.height(14.dp))
         Text(p.title, style = MaterialTheme.typography.headlineMedium)
         if (p.section.isNotBlank()) {
             Text(p.section, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.height(18.dp))
-        Text(highlighted(p.text, mark, ex.highlight, ex.onHighlight), style = ReadingStyle)
+        // One Text per paragraph: Compose has no paragraph spacing inside a single Text.
+        p.text.split('\n').filter { it.isNotBlank() }.forEachIndexed { i, para ->
+            if (i > 0) Spacer(Modifier.height(14.dp))
+            Text(highlighted(para, mark, ex.highlight, ex.onHighlight), style = ReadingStyle)
+        }
         Spacer(Modifier.height(28.dp))
         Button(onClick = onArticle, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("open_article")) {
             Icon(Icons.AutoMirrored.Outlined.Article, null)
@@ -167,14 +172,15 @@ private fun SourceCredit(packTitle: String, attribution: String, license: String
 }
 
 /**
- * The sentence of `text` that shares the most words with `hint` (the answer sentence that cited it).
+ * The sentence or line of `text` that shares the most words with `hint` (the answer sentence that cited it).
+ * A line counts alone: a Wikidata source is one fact per line.
  * Returns "" when nothing overlaps enough to be worth highlighting.
  */
 fun bestMatch(text: String, hint: String): String {
     if (hint.isBlank()) return ""
     val want = hint.lowercase().split(Regex("\\W+")).filter { it.length > 3 }.toSet()
     if (want.isEmpty()) return ""
-    val sentences = text.split(Regex("(?<=[.!?])\\s+(?=[A-Z0-9\"(])")).filter { it.isNotBlank() }
+    val sentences = text.split(Regex("(?<=[.!?])\\s+(?=[A-Z0-9\"(])|\n")).filter { it.isNotBlank() }
     val best = sentences.maxByOrNull { s -> s.lowercase().split(Regex("\\W+")).count { it in want } } ?: return ""
     val hits = best.lowercase().split(Regex("\\W+")).count { it in want }
     return if (hits >= 2 || hits == want.size) best else ""

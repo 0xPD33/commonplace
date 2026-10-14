@@ -33,6 +33,11 @@ class Turn(val query: String, val deep: Boolean, val think: Boolean = false) {
     val id = System.nanoTime()
     var thought by mutableStateOf("")
     var thoughtDone by mutableStateOf(false)
+    /** When the first reasoning token came, and how long the reasoning took (ms), for "Thought for 14 s". */
+    var thinkStart = 0L
+    var thinkMs by mutableStateOf<Long?>(null)
+    /** Opened from history: it skips the entrance motion of a new answer. */
+    var restored = false
     var stage by mutableStateOf(AskStage.SEARCHING)
     var stageDetail by mutableStateOf("")
     var card by mutableStateOf<AnswerCard?>(null)
@@ -71,6 +76,7 @@ class Turn(val query: String, val deep: Boolean, val think: Boolean = false) {
             stage = AskStage.DONE
             done = true
             answering = false
+            restored = true
         }
     }
 }
@@ -227,6 +233,8 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     turn.timing = result.timing
                     turn.done = true
                     turn.answering = false
+                    // Only a question reads evidence; thinking adds its own reasoning time before the first word.
+                    result.timing?.takeIf { !think && result.kind == TurnKind.QUESTION }?.let { t -> t.ttftMs?.let { holder.prefs.noteRead(it - t.cardMs) } }
                     persist()
                 }
             } catch (t: Throwable) {
@@ -238,6 +246,9 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
+
+    /** Ask the same question again, this time with reasoning first, as a new turn under the fast answer. */
+    fun thinkThrough(turn: Turn) = ask(turn.query, think = true)
 
     /** Re-ask a question with the big model (deep mode). */
     fun thinkHarder(turn: Turn) = ask(turn.query, deep = true)
@@ -296,6 +307,9 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         override fun onSources(sources: List<SourceItem>) = main.post { turn.sources = sources }.let { }
 
         override fun onThinking(text: String, done: Boolean) = main.post {
+            val now = System.currentTimeMillis()
+            if (turn.thinkStart == 0L) turn.thinkStart = now
+            if (done && turn.thinkMs == null) turn.thinkMs = now - turn.thinkStart
             turn.thought = text
             turn.thoughtDone = done
         }.let { }

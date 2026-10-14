@@ -201,7 +201,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             LabeledSlider("Answer length (tokens)", answer.toFloat(), 150f..800f, 12, "$answer") { answer = (it / 50).toInt() * 50 }
             LabeledSlider("Thinking budget (tokens)", thinkBudget.toFloat(), 128f..1536f, 10, "$thinkBudget") { thinkBudget = (it / 128).toInt() * 128 }
             Text(
-                "When thinking is on (the brain button next to the question box), the model reasons for at most this many tokens before it answers. A warm phone writes about 15 tokens a second.",
+                "When Think is on (the button next to the question box), the model reasons for at most this many tokens before it answers. A warm phone writes about 15 tokens a second.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

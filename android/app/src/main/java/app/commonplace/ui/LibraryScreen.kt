@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -350,14 +351,19 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (vm.problems.isNotEmpty() && !vm.import.running) {
                 item { ErrorNote("Not installed:\n" + vm.problems.joinToString("\n") { "• $it" }) }
             }
-            if (bundles.isNotEmpty() || available.isNotEmpty()) {
-                item { SectionLabel("Get more", Modifier.padding(top = 12.dp)) }
-                items(bundles, key = { "bundle-" + it.first.packId }) { (b, n) -> AvailableRow(b, onClick = { detail = b }, installed = n) }
-                if (bundles.isNotEmpty() && available.isNotEmpty()) {
-                    item { Text("Individual packs", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            val getMore: LazyListScope.() -> Unit = {
+                if (bundles.isNotEmpty() || available.isNotEmpty()) {
+                    item { SectionLabel("Get more", Modifier.padding(top = 12.dp)) }
+                    items(bundles, key = { "bundle-" + it.first.packId }) { (b, n) -> AvailableRow(b, onClick = { detail = b }, installed = n) }
+                    if (bundles.isNotEmpty() && available.isNotEmpty()) {
+                        item { Text("Individual packs", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
+                    items(available, key = { "available-" + it.packId }) { p -> AvailableRow(p, onClick = { detail = p }) }
                 }
-                items(available, key = { "available-" + it.packId }) { p -> AvailableRow(p, onClick = { detail = p }) }
             }
+            // A new user needs the catalog first; someone with packs wants to see what they have.
+            val firstRun = l?.packs.isNullOrEmpty()
+            if (firstRun) getMore()
             item { SectionLabel("Knowledge", Modifier.padding(top = 12.dp)) }
             val knowledge = l?.packs?.filter { !it.userDocument }.orEmpty()
             val documents = l?.packs?.filter { it.userDocument }.orEmpty()
@@ -445,6 +451,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                     onNotice = { onNotice(m.packId) },
                 )
             }
+            if (!firstRun) getMore()
             l?.skipped?.takeIf { it.isNotEmpty() }?.let { sk ->
                 item { SectionLabel("Not loaded", Modifier.padding(top = 12.dp)) }
                 items(sk) { s -> InfoNote("${s.packId}: ${s.reason}") }

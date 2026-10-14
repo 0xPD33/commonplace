@@ -48,6 +48,15 @@ class Prefs(context: Context) {
         get() = sp.getInt("think_budget", 256)
         set(v) = sp.edit().putInt("think_budget", v).apply()
 
+    /** How long the model reads the evidence before its first word, smoothed over recent answers; it paces the reading rule. */
+    var readMs: Int
+        get() = sp.getInt("read_ms", 6500)
+        set(v) = sp.edit().putInt("read_ms", v).apply()
+
+    fun noteRead(ms: Double) {
+        readMs = (0.7 * readMs + 0.3 * ms.coerceIn(1000.0, 30000.0)).toInt()
+    }
+
     /** Let the model rewrite each question (typos, follow-ups) before searching. */
     var rewrite: Boolean
         get() = sp.getBoolean("rewrite", false)

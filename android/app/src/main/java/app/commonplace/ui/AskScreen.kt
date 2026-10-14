@@ -8,6 +8,10 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -15,8 +19,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,9 +32,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -66,7 +70,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -78,6 +81,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -88,9 +92,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -103,18 +114,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.commonplace.CommonplaceApp
+import app.commonplace.engine.Backend
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.loadCatalog
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
 
 private val EXAMPLES = listOf(
-    "Why is the sky blue?",
+    "How does a refrigerator work?",
     "Compare the Nile and the Amazon",
-    "How do vaccines train the immune system?",
-    "What caused the fall of the Western Roman Empire?",
+    "How do vaccines work?",
+    "When did the Berlin Wall fall and why?",
     "Population density of Malta",
     "26 miles in km",
 )
@@ -138,6 +151,8 @@ fun AskScreen(
     var menu by remember { mutableStateOf(false) }
     val scroll = TopAppBarDefaults.pinnedScrollBehavior()
     val inputFocus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val canThinkHarder = library?.models?.any { it.kind == ModelKind.DEEP } == true
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) vm.toggleVoice() else vm.micDenied()
@@ -163,7 +178,7 @@ fun AskScreen(
                 title = {
                     Column {
                         Text("Commonplace", style = MaterialTheme.typography.titleLarge, fontStyle = FontStyle.Italic)
-                        ModelStatusLine(model, installed = library?.models?.any { it.kind != ModelKind.VOICE } == true)
+                        ModelStatusLine(model, installed = library?.models?.any { it.kind != ModelKind.VOICE } == true, known = library != null)
                     }
                 },
                 actions = {
@@ -190,7 +205,11 @@ fun AskScreen(
                     value = vm.input,
                     onValue = { vm.input = it },
                     busy = vm.busy,
-                    onSend = { vm.ask() },
+                    onSend = {
+                        keyboard?.hide()
+                        focusManager.clearFocus()
+                        vm.ask()
+                    },
                     onStop = vm::stop,
                     thinking = vm.thinking,
                     onToggleThink = vm::toggleThinking,
@@ -205,11 +224,7 @@ fun AskScreen(
         },
     ) { pad ->
         when (val s = engineState) {
-            EngineState.Starting -> Centered(pad) {
-                CircularProgressIndicator()
-                Spacer(Modifier.height(16.dp))
-                Text("Opening your library…", style = MaterialTheme.typography.bodyLarge)
-            }
+            EngineState.Starting -> Opening(pad)
             is EngineState.Failed -> Centered(pad) {
                 ErrorNote("The engine could not start: ${s.message}")
             }
@@ -232,15 +247,25 @@ fun AskScreen(
 }
 
 @Composable
-private fun ModelStatusLine(model: ModelState, installed: Boolean) {
-    val (text, color) = when (model) {
+private fun ModelStatusLine(model: ModelState, installed: Boolean, known: Boolean) {
+    val (text, color) = when {
+        // Until the library is open, the app cannot tell whether a model is installed.
+        !known -> "" to MaterialTheme.colorScheme.onSurfaceVariant
+        else -> modelStatus(model, installed)
+    }
+    Text(text, style = MaterialTheme.typography.labelSmall, color = color, modifier = Modifier.testTag("model_status"))
+}
+
+@Composable
+private fun modelStatus(model: ModelState, installed: Boolean): Pair<String, Color> {
+    return when (model) {
         // Android unloads the model in the background; the next question loads it again.
         ModelState.None -> (if (installed) "Model loads on your next question" else "Search only · no model installed") to MaterialTheme.colorScheme.onSurfaceVariant
         is ModelState.Loading -> "Loading model…" to MaterialTheme.colorScheme.secondary
-        is ModelState.Loaded -> "${if (model.kind == ModelKind.DEEP) "Deep model" else "Ready"} · ${model.backend.name.uppercase()}" to MaterialTheme.colorScheme.primary
+        is ModelState.Loaded -> (if (model.kind == ModelKind.DEEP) "Deep model" else "Ready") +
+            (if (model.backend == Backend.Cpu) "" else " · ${model.backend.name.uppercase()}") to MaterialTheme.colorScheme.primary
         is ModelState.Failed -> "Model failed to load" to MaterialTheme.colorScheme.error
     }
-    Text(text, style = MaterialTheme.typography.labelSmall, color = color, modifier = Modifier.testTag("model_status"))
 }
 
 @Composable
@@ -252,26 +277,18 @@ private fun Centered(pad: PaddingValues, content: @Composable () -> Unit) {
     ) { content() }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, onAsk: (String) -> Unit, onOffline: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp).testTag("welcome"),
     ) {
-        Spacer(Modifier.height(24.dp))
-        Text("What would you\nlike to know?", style = MaterialTheme.typography.displaySmall)
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Answers come from the library on this phone, with sources you can open and check.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        WelcomeHead()
         Spacer(Modifier.height(16.dp))
-        OfflineBadge(onOffline)
+        OfflineBadge(onOffline, Modifier.riseIn("welcome_badge", delayMs = 140))
         Spacer(Modifier.height(20.dp))
         val passages = lib.packs.sumOf { it.passages.toLong() }.toULong()
         val names = lib.packs.joinToString(", ") { it.title }
-        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth()) {
+        Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().riseIn("welcome_library", delayMs = 210)) {
             Column(Modifier.padding(16.dp)) {
                 SectionLabel("Your library")
                 Spacer(Modifier.height(6.dp))
@@ -283,26 +300,67 @@ private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, 
                 )
             }
         }
-        Spacer(Modifier.height(24.dp))
-        SectionLabel("Try asking")
-        Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("examples")) {
-            for (q in EXAMPLES) SuggestionChip(onClick = { onAsk(q) }, label = { Text(q) })
-        }
         if (recent.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
-            SectionLabel("Recent")
-            Spacer(Modifier.height(4.dp))
-            for (q in recent.take(5)) {
-                ClickableRow(onClick = { onAsk(q) }) {
-                    Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.History, null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Column(Modifier.riseIn("welcome_recent", delayMs = 280)) {
+                SectionLabel("Recent")
+                Spacer(Modifier.height(4.dp))
+                QuestionRows(recent.take(5), Icons.Outlined.History, onAsk)
             }
+        }
+        Spacer(Modifier.height(24.dp))
+        Column(Modifier.riseIn("welcome_examples", delayMs = 350)) {
+            SectionLabel("Try asking")
+            Spacer(Modifier.height(4.dp))
+            // Recent shows 5 questions and there are 6 examples, so at least one example is always left.
+            QuestionRows(EXAMPLES - recent.take(5).toSet(), null, onAsk, Modifier.testTag("examples"))
+        }
+    }
+}
+
+/** Questions as rows with rules between them, like the entries of an index. */
+@Composable
+private fun QuestionRows(questions: List<String>, icon: ImageVector?, onAsk: (String) -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        for (q in questions) {
+            ClickableRow(onClick = { onAsk(q) }) {
+                Row(Modifier.padding(vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (icon != null) {
+                        Icon(icon, null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        }
+    }
+}
+
+/** The heading of the welcome page. It also shows while the library opens, so it rises in only once. */
+@Composable
+private fun WelcomeHead() {
+    Spacer(Modifier.height(24.dp))
+    Text("What would you\nlike to know?", style = MaterialTheme.typography.displaySmall, modifier = Modifier.riseIn("welcome_title"))
+    Spacer(Modifier.height(12.dp))
+    Text(
+        "Answers come from the library on this phone, with sources you can open and check.",
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.riseIn("welcome_lede", delayMs = 70),
+    )
+}
+
+/** The first seconds of a cold start: the welcome heading at once, and a note while the packs open. */
+@Composable
+private fun Opening(pad: PaddingValues) {
+    Column(Modifier.fillMaxSize().padding(pad).padding(horizontal = 24.dp, vertical = 16.dp).testTag("opening")) {
+        WelcomeHead()
+        Spacer(Modifier.height(28.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.riseIn("opening_note", delayMs = 140)) {
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(10.dp))
+            Text("Opening your library…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -404,6 +462,22 @@ private fun Conversation(
             if (vm.turns.isNotEmpty() && follow && !list.isScrollInProgress) list.scrollToItem(vm.turns.size - 1, Int.MAX_VALUE / 2)
         }
     }
+    val haptic = LocalHapticFeedback.current
+    val last = vm.turns.lastOrNull()
+    var wasAnswering by remember { mutableStateOf(false) }
+    LaunchedEffect(last?.id, last?.answering) {
+        if (last == null) return@LaunchedEffect
+        val finished = wasAnswering && !last.answering
+        wasAnswering = last.answering
+        if (!finished || last.stopped) return@LaunchedEffect
+        haptic.performHapticFeedback(if (last.error != null) HapticFeedbackType.Reject else HapticFeedbackType.Confirm)
+        // The copy, share and follow-up row appears after the last token; wait for it to grow in, then show it.
+        delay(450)
+        val info = list.layoutInfo
+        val end = info.visibleItemsInfo.lastOrNull()?.takeIf { it.index == vm.turns.lastIndex } ?: return@LaunchedEffect
+        val hidden = end.offset + end.size - (info.viewportEndOffset - info.afterContentPadding)
+        if (follow && hidden > 0) list.animateScrollBy(hidden.toFloat())
+    }
     Box(Modifier.fillMaxSize().padding(pad)) {
         LazyColumn(
             state = list,
@@ -418,6 +492,7 @@ private fun Conversation(
                     TurnView(
                         t, showTimings, canThinkHarder, onOpen,
                         onThinkHarder = { vm.thinkHarder(t) },
+                        onThinkThrough = if (latest) ({ vm.thinkThrough(t) }) else null,
                         onRetry = if (latest) ({ vm.retry(t) }) else null,
                         // A reformat rewrites the latest answer, so only the latest answer offers one.
                         onAsk = if (latest) ({ q -> vm.ask(q) }) else null,
@@ -430,7 +505,7 @@ private fun Conversation(
             visible = list.canScrollForward && !follow,
             enter = fadeIn() + scaleIn(),
             exit = fadeOut() + scaleOut(),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 16.dp),
         ) {
             SmallFloatingActionButton(
                 onClick = {
@@ -460,8 +535,27 @@ private fun AskBar(
     scope: AskScope?,
     onClearScope: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
+    // A short note after each switch of Think says what it changes, then goes away.
+    var hint by remember { mutableStateOf("") }
+    var hintCount by remember { mutableIntStateOf(0) }
+    var showHint by remember { mutableStateOf(false) }
+    LaunchedEffect(hintCount) {
+        if (hintCount == 0) return@LaunchedEffect
+        showHint = true
+        delay(3500)
+        showHint = false
+    }
     Surface(color = MaterialTheme.colorScheme.surface) { Column {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        AnimatedVisibility(visible = showHint, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Text(
+                hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp).testTag("think_hint"),
+            )
+        }
         if (scope != null) {
             InputChip(
                 selected = true,
@@ -475,14 +569,6 @@ private fun AskBar(
             Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Thinking mode: slower, the model reasons before it answers.
-            IconToggleButton(checked = thinking, onCheckedChange = { onToggleThink() }, modifier = Modifier.testTag("think_toggle")) {
-                Icon(
-                    Icons.Outlined.Psychology,
-                    if (thinking) "Thinking on" else "Thinking off",
-                    tint = if (thinking) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                )
-            }
             // A draft set from outside (a chip, the voice transcript) puts the cursor after it.
             var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
             if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
@@ -492,7 +578,37 @@ private fun AskBar(
                     field = it
                     onValue(it.text)
                 },
-                placeholder = { Text(if (listening) "Listening…" else voiceError?.let { "Voice input failed: $it" } ?: "Ask your library…") },
+                placeholder = {
+                    Text(
+                        when {
+                            listening -> "Listening…"
+                            voiceError != null -> "Voice input failed: $voiceError"
+                            else -> "Ask a question…"
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                // Think and the mic live inside the box, so the bar has one height: the field's and the send button's.
+                leadingIcon = {
+                    ThinkToggle(thinking) {
+                        haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
+                        hint = if (it) "Think is on: the model reasons before it answers. Slower, often better for why and how questions." else "Think is off: quick answers."
+                        hintCount++
+                        onToggleThink()
+                    }
+                },
+                trailingIcon = if (onMic != null && !busy) {
+                    {
+                        IconToggleButton(checked = listening, onCheckedChange = { onMic() }, modifier = Modifier.testTag("mic_toggle")) {
+                            Icon(
+                                if (listening) Icons.Outlined.MicOff else Icons.Outlined.Mic,
+                                if (listening) "Stop listening" else "Speak your question",
+                                tint = if (listening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                } else null,
                 readOnly = listening, // the transcript rewrites the field until the user taps stop
                 modifier = Modifier.weight(1f).focusRequester(focus).testTag("ask_input"),
                 shape = RoundedCornerShape(28.dp),
@@ -507,25 +623,35 @@ private fun AskBar(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
             )
-            if (onMic != null && !busy) {
-                IconToggleButton(checked = listening, onCheckedChange = { onMic() }, modifier = Modifier.testTag("mic_toggle")) {
-                    Icon(
-                        if (listening) Icons.Outlined.MicOff else Icons.Outlined.Mic,
-                        if (listening) "Stop listening" else "Speak your question",
-                        tint = if (listening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
             Spacer(Modifier.width(8.dp))
+            // 60 dp: the one-line field, a 28 sp line plus 16 dp above and below.
             if (busy) {
-                FilledIconButton(onClick = onStop, modifier = Modifier.size(52.dp).testTag("ask_stop")) { Icon(Icons.Outlined.Stop, "Stop") }
+                FilledIconButton(onClick = onStop, modifier = Modifier.size(60.dp).testTag("ask_stop")) { Icon(Icons.Outlined.Stop, "Stop") }
             } else {
-                FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening, modifier = Modifier.size(52.dp).testTag("ask_send")) {
+                FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening, modifier = Modifier.size(60.dp).testTag("ask_send")) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Ask")
                 }
             }
         }
     } }
+}
+
+/** The Think switch in the question box: a filled disc while on. On, the model reasons before each answer. */
+@Composable
+private fun ThinkToggle(on: Boolean, onToggle: (Boolean) -> Unit) {
+    val c = MaterialTheme.colorScheme
+    val bg by animateColorAsState(if (on) c.primaryContainer else Color.Transparent, tween(220), label = "think_bg")
+    val fg by animateColorAsState(if (on) c.onPrimaryContainer else c.onSurfaceVariant, tween(220), label = "think_fg")
+    Surface(
+        checked = on,
+        onCheckedChange = onToggle,
+        shape = CircleShape,
+        color = bg,
+        contentColor = fg,
+        modifier = Modifier.padding(start = 8.dp).size(40.dp).semantics { stateDescription = if (on) "On" else "Off" }.testTag("think_toggle"),
+    ) {
+        Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Psychology, "Think first") }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

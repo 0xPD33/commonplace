@@ -2,11 +2,18 @@ package app.commonplace.ui
 
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.expandVertically
@@ -26,11 +33,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -39,6 +48,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -55,6 +65,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -63,22 +76,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.commonplace.CommonplaceApp
 import uniffi.commonplace_ffi.AnswerCard
 import uniffi.commonplace_ffi.AnswerSegment
 import uniffi.commonplace_ffi.AskStage
 import uniffi.commonplace_ffi.SourceItem
 import uniffi.commonplace_ffi.TurnKind
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 /** A source the user wants to read: the passage plus the sentence to highlight. */
 data class OpenSource(val source: SourceItem, val highlight: String)
@@ -90,6 +110,7 @@ fun TurnView(
     canThinkHarder: Boolean,
     onOpen: (OpenSource) -> Unit,
     onThinkHarder: () -> Unit,
+    onThinkThrough: (() -> Unit)?,
     onRetry: (() -> Unit)?,
     onAsk: ((String) -> Unit)?,
     onDraft: ((String) -> Unit)?,
@@ -97,8 +118,8 @@ fun TurnView(
 ) {
     Column(modifier.fillMaxWidth().animateContentSize().testTag("turn")) {
         Row(verticalAlignment = Alignment.Top) {
-            if (turn.deep) {
-                Icon(Icons.Outlined.Psychology, "Deep mode", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 6.dp, end = 8.dp).size(22.dp))
+            if (turn.deep || turn.think) {
+                Icon(Icons.Outlined.Psychology, if (turn.deep) "Deep mode" else "Asked with Think", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 6.dp, end = 8.dp).size(22.dp))
             }
             Text(turn.query, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("turn_query"))
         }
@@ -126,10 +147,17 @@ fun TurnView(
                 ThoughtBlock(turn)
                 Spacer(Modifier.height(14.dp))
             }
-            if (turn.segments.isEmpty() && turn.answering) {
-                WritingPlaceholder()
-            } else {
-                AnswerText(turn, onOpen)
+            // The rule runs while the model reads; it fills up and fades as the first word arrives.
+            val reading = turn.segments.isEmpty() && turn.answering && turn.thought.isEmpty()
+            AnimatedVisibility(
+                visible = reading,
+                enter = fadeIn(tween(200)),
+                exit = fadeOut(tween(260, delayMillis = 160)) + shrinkVertically(tween(260, delayMillis = 160)),
+            ) {
+                ReadingRule(finishing = transition.targetState == EnterExitState.PostExit)
+            }
+            if (turn.segments.isNotEmpty() || !turn.answering) {
+                AnswerText(turn, onOpen, Modifier.riseIn("answer-${turn.id}", rise = 8.dp, enabled = !turn.restored))
             }
             if (turn.segments.any { it is AnswerSegment.Unverified }) {
                 Spacer(Modifier.height(10.dp))
@@ -141,39 +169,75 @@ fun TurnView(
         if (sources.isNotEmpty() && (turn.done || turn.sources.isNotEmpty())) {
             Spacer(Modifier.height(18.dp))
             SectionLabel("Sources", Modifier.padding(bottom = 8.dp))
-            SourcesRow(sources, numbered = turn.sources.isNotEmpty(), onOpen = onOpen)
+            SourcesRow(sources, numbered = turn.sources.isNotEmpty(), onOpen = onOpen, key = turn.id, animate = !turn.restored)
         }
 
         if (turn.done && turn.error == null && !turn.searchOnly && turn.kind != TurnKind.CHAT) {
             Spacer(Modifier.height(8.dp))
-            AnswerActions(turn, canThinkHarder && turn.kind == TurnKind.QUESTION, onThinkHarder, onRetry)
-            if (onAsk != null && !turn.stopped) FollowUpChips(turn, onAsk, onDraft)
+            Column(Modifier.riseIn("actions-${turn.id}", delayMs = 120, rise = 10.dp, enabled = !turn.restored)) {
+                AnswerActions(
+                    turn,
+                    canThinkHarder && turn.kind == TurnKind.QUESTION,
+                    onThinkHarder,
+                    onThinkThrough.takeIf { !turn.think && !turn.deep && !turn.stopped && turn.kind == TurnKind.QUESTION },
+                    onRetry,
+                )
+                if (onAsk != null && !turn.stopped) FollowUpChips(turn, onAsk, onDraft)
+            }
         }
     }
 }
 
+/** What the stage line shows: work in progress, stopped, or done. */
+private enum class StageMark { Working, Stopped, Done, None }
+
 @Composable
 private fun StageLine(turn: Turn, showTimings: Boolean) {
     val c = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTag("stage_line")) {
-        if (turn.answering) {
-            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-            Spacer(Modifier.width(8.dp))
-            Text(stageText(turn), style = MaterialTheme.typography.labelLarge, color = c.primary)
-        } else if (turn.stopped) {
-            Icon(Icons.Outlined.StopCircle, null, tint = c.outline, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("Stopped", style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
-        } else if (turn.error == null && turn.kind != TurnKind.CHAT) {
-            Icon(Icons.Outlined.CheckCircle, null, tint = LocalExtra.current.good, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
+    val (mark, text) = when {
+        turn.answering -> StageMark.Working to stageText(turn)
+        turn.stopped -> StageMark.Stopped to "Stopped"
+        turn.error == null && turn.kind != TurnKind.CHAT -> {
             val n = turn.sources.size.takeIf { it > 0 } ?: turn.card?.sources?.size ?: 0
             val t = turn.timing
-            val text = buildString {
+            StageMark.Done to buildString {
                 append(if (turn.searchOnly) "Found $n passages" else "Answered from $n sources")
+                turn.thinkMs?.let { append(" · thought for ${it / 1000} s") }
                 if (t != null) append(" · ${seconds(t.totalMs)}")
             }
-            Text(text, style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
+        }
+        else -> StageMark.None to ""
+    }
+    val reduce = rememberReduceMotion()
+    AnimatedContent(
+        targetState = mark to text,
+        transitionSpec = {
+            if (reduce) fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+            else (fadeIn(tween(220, delayMillis = 60)) + slideInVertically(tween(260)) { it / 2 }) togetherWith
+                (fadeOut(tween(120)) + slideOutVertically(tween(180)) { -it / 2 })
+        },
+        label = "stage",
+        modifier = Modifier.testTag("stage_line"),
+    ) { (m, label) ->
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            when (m) {
+                StageMark.Working -> {
+                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text(label, style = MaterialTheme.typography.labelLarge, color = c.primary)
+                }
+                StageMark.Stopped -> {
+                    Icon(Icons.Outlined.StopCircle, null, tint = c.outline, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(label, style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
+                }
+                StageMark.Done -> {
+                    Icon(Icons.Outlined.CheckCircle, null, tint = LocalExtra.current.good, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(label, style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
+                }
+                StageMark.None -> {}
+            }
         }
     }
     val t = turn.timing
@@ -198,10 +262,20 @@ private fun stageText(turn: Turn): String = if (turn.loadingModel) {
     AskStage.PLANNING -> "Breaking the question down…"
     AskStage.READING -> "Reading ${turn.stageDetail} sources…"
     AskStage.COMPUTING -> "Working out the numbers…"
-    AskStage.THINKING -> "Thinking it through…"
+    // Thinking starts once the model has read the sources.
+    AskStage.THINKING -> if (turn.thought.isEmpty()) readingText(turn) else "Thinking it through…"
     // Reformat and small-talk turns read no evidence; their card is empty.
-    AskStage.WRITING -> if (turn.segments.isEmpty() && turn.card?.top != null) "Reading the evidence…" else "Writing…"
+    AskStage.WRITING -> when {
+        turn.segments.isNotEmpty() || turn.card?.top == null -> "Writing…"
+        turn.thought.isNotEmpty() -> if (turn.thoughtDone) "Writing…" else "Thinking it through…"
+        else -> readingText(turn)
+    }
     AskStage.DONE -> "Finishing…"
+}
+
+private fun readingText(turn: Turn): String {
+    val n = turn.sources.size.takeIf { it > 0 } ?: turn.card?.sources?.size ?: 0
+    return if (n > 1) "Reading $n sources…" else "Reading the source…"
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -328,7 +402,8 @@ private fun CompareTable(card: AnswerCard, names: List<String>) {
                     val f = card.facts.firstOrNull { it.entity == n && it.label == l }
                     Text(
                         f?.let { it.value + (it.`when`?.let { w -> " ($w)" } ?: "") } ?: "—",
-                        style = MaterialTheme.typography.bodyMedium,
+                        // Narrow columns: hyphenate a long name instead of breaking it at the edge.
+                        style = MaterialTheme.typography.bodyMedium.copy(hyphens = Hyphens.Auto, lineBreak = LineBreak.Paragraph),
                         fontWeight = FontWeight.Medium,
                         modifier = cell.weight(0.7f / names.size),
                     )
@@ -348,7 +423,7 @@ private fun CompareTable(card: AnswerCard, names: List<String>) {
 }
 
 @Composable
-private fun AnswerText(turn: Turn, onOpen: (OpenSource) -> Unit) {
+private fun AnswerText(turn: Turn, onOpen: (OpenSource) -> Unit, modifier: Modifier = Modifier) {
     val c = MaterialTheme.colorScheme
     val colors = AnswerColors(cite = c.primary, unverified = LocalExtra.current.unverified, codeBackground = c.surfaceContainerHigh)
     val open by rememberUpdatedState(onOpen)
@@ -357,7 +432,7 @@ private fun AnswerText(turn: Turn, onOpen: (OpenSource) -> Unit) {
     }
     val body = MaterialTheme.typography.bodyLarge
     SelectionContainer {
-        Column(Modifier.fillMaxWidth().testTag("answer_text")) {
+        Column(modifier.fillMaxWidth().testTag("answer_text")) {
             blocks.forEachIndexed { i, b ->
                 if (i > 0) Spacer(Modifier.height(if (b.gapBefore) 14.dp else if (b.kind == AnswerBlock.Kind.Item) 4.dp else 8.dp))
                 when (b.kind) {
@@ -373,18 +448,25 @@ private fun AnswerText(turn: Turn, onOpen: (OpenSource) -> Unit) {
     }
 }
 
+/**
+ * A rule that draws across the page while the model reads the evidence. It is paced by how long reading took on
+ * this phone before (`Prefs.readMs`): it reaches 90% at that time, then creeps on until the first word replaces it.
+ */
 @Composable
-private fun WritingPlaceholder() {
-    val t = rememberInfiniteTransition(label = "shimmer")
-    val a by t.animateFloat(0.25f, 0.6f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "alpha")
-    Column(Modifier.fillMaxWidth().testTag("writing_placeholder")) {
-        for (w in listOf(1f, 0.92f, 0.7f)) {
-            Box(
-                Modifier.fillMaxWidth(w).height(14.dp).clip(RoundedCornerShape(7.dp)).alpha(a)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-            )
-            Spacer(Modifier.height(10.dp))
+private fun ReadingRule(finishing: Boolean) {
+    val expected = (LocalContext.current.applicationContext as CommonplaceApp).engine.prefs.readMs
+    val p = remember { Animatable(0f) }
+    LaunchedEffect(finishing) {
+        if (finishing) {
+            p.animateTo(1f, tween(160))
+        } else {
+            p.animateTo(0.9f, tween(expected, easing = LinearOutSlowInEasing))
+            p.animateTo(0.97f, tween(expected * 2, easing = LinearEasing))
         }
+    }
+    val c = MaterialTheme.colorScheme
+    Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(2.dp).background(c.outlineVariant).testTag("reading_rule")) {
+        Box(Modifier.fillMaxWidth(p.value).height(2.dp).background(c.primary))
     }
 }
 
@@ -402,7 +484,7 @@ private fun UnverifiedLegend() {
 }
 
 @Composable
-fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource) -> Unit) {
+fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource) -> Unit, key: Any = Unit, animate: Boolean = false) {
     val c = MaterialTheme.colorScheme
     LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(end = 16.dp), modifier = Modifier.testTag("sources_row")) {
         itemsIndexed(sources) { i, s ->
@@ -411,7 +493,7 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
                 shape = MaterialTheme.shapes.medium,
                 color = c.surfaceContainerLowest,
                 border = hairline(),
-                modifier = Modifier.width(232.dp).height(148.dp),
+                modifier = Modifier.width(232.dp).height(148.dp).riseIn("source-$key-$i", delayMs = minOf(i, 4) * 70, rise = 12.dp, enabled = animate),
             ) {
                 Column(Modifier.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -433,7 +515,7 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
 }
 
 @Composable
-private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: () -> Unit, onRetry: (() -> Unit)?) {
+private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: () -> Unit, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -452,7 +534,13 @@ private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: ()
             IconButton(onClick = onRetry, modifier = Modifier.testTag("retry")) { Icon(Icons.Outlined.Refresh, "Retry", Modifier.size(22.dp), tint = tint) }
         }
         Spacer(Modifier.weight(1f))
-        if (canThinkHarder && !turn.deep) {
+        if (onThinkThrough != null) {
+            OutlinedButton(onClick = onThinkThrough, modifier = Modifier.offset(x = 12.dp).testTag("think_through")) {
+                Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Think it through")
+            }
+        } else if (canThinkHarder && !turn.deep) {
             OutlinedButton(onClick = onThinkHarder, modifier = Modifier.offset(x = 12.dp).testTag("think_harder")) {
                 Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
@@ -529,27 +617,72 @@ fun ErrorNote(text: String) {
     }
 }
 
-/** The model's reasoning in thinking mode: open while it streams, then folded to one line. */
+/**
+ * The model's reasoning in thinking mode. While it runs: a seconds count and a window on its newest lines.
+ * After: one line, "Thought for 14 s", that opens the full reasoning.
+ */
 @Composable
 private fun ThoughtBlock(turn: Turn) {
     var open by remember { mutableStateOf(false) }
     val c = MaterialTheme.colorScheme
+    val live = !turn.thoughtDone
+    val elapsed by produceState(0L, live) {
+        while (live) {
+            value = (System.currentTimeMillis() - turn.thinkStart).coerceAtLeast(0L)
+            delay(250)
+        }
+    }
+    val secs = (turn.thinkMs ?: elapsed) / 1000
+    val turnDown by animateFloatAsState(if (open) 180f else 0f, tween(220), label = "chevron")
     Column(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerLow)
-            .clickable(enabled = turn.thoughtDone) { open = !open }.padding(12.dp).testTag("thought"),
+            .clickable(enabled = !live) { open = !open }.padding(12.dp).animateContentSize().testTag("thought"),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.Psychology, null, tint = c.secondary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
             Text(
-                if (turn.thoughtDone) (if (open) "Reasoning" else "Reasoning · tap to show") else "Thinking…",
-                style = MaterialTheme.typography.labelLarge,
+                if (live) "Thinking · $secs s" else "Thought for $secs s",
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"),
                 color = c.secondary,
+                modifier = Modifier.weight(1f),
             )
+            if (!live) {
+                Icon(
+                    Icons.Outlined.KeyboardArrowDown,
+                    if (open) "Hide the reasoning" else "Show the reasoning",
+                    tint = c.secondary,
+                    modifier = Modifier.size(20.dp).rotate(turnDown),
+                )
+            }
         }
-        if (open || !turn.thoughtDone) {
+        val thoughtStyle = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic)
+        val text = remember(turn.thought) { plainThought(turn.thought) }
+        if (live) {
             Spacer(Modifier.height(6.dp))
-            Text(turn.thought, style = MaterialTheme.typography.bodySmall, color = c.onSurfaceVariant)
+            ThoughtWindow(text, thoughtStyle)
+        } else if (open) {
+            Spacer(Modifier.height(6.dp))
+            Text(text, style = thoughtStyle, color = c.onSurfaceVariant)
+        }
+    }
+}
+
+/** The reasoning without its Markdown marks: bold stars go, "* " list items get a bullet. */
+private fun plainThought(s: String): String =
+    s.replace("**", "").lines().joinToString("\n") { l -> l.replaceFirst(Regex("^(\\s*)[*-] "), "$1• ") }
+
+/** The newest lines of the reasoning, pinned to the bottom; older lines fade out under the top edge. */
+@Composable
+private fun ThoughtWindow(text: String, style: TextStyle) {
+    val c = MaterialTheme.colorScheme
+    val scroll = rememberScrollState()
+    LaunchedEffect(Unit) { snapshotFlow { scroll.maxValue }.collect { scroll.scrollTo(it) } }
+    Box(Modifier.fillMaxWidth().heightIn(max = 92.dp)) {
+        Text(text, style = style, color = c.onSurfaceVariant, modifier = Modifier.verticalScroll(scroll, enabled = false))
+        if (scroll.maxValue > 0) {
+            val bg = c.surfaceContainerLow
+            Box(Modifier.fillMaxWidth().height(28.dp).background(Brush.verticalGradient(listOf(bg, bg.copy(alpha = 0f)))))
         }
     }
 }

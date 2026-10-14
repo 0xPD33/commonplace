@@ -18,6 +18,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import app.commonplace.ui.rememberReduceMotion
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -59,7 +66,18 @@ class MainActivity : ComponentActivity() {
                         view.keepScreenOn = answering
                         onDispose { view.keepScreenOn = false }
                     }
-                    NavHost(nav, startDestination = "ask") {
+                    // A new page slides in a short way from the right; Back reverses it. Fades only when animations are off.
+                    val reduce = rememberReduceMotion()
+                    val ease = FastOutSlowInEasing
+                    NavHost(
+                        nav,
+                        startDestination = "ask",
+                        // The old page fades out before the new one fades in, so the two never show on top of each other.
+                        enterTransition = { if (reduce) fadeIn(tween(0)) else slideInHorizontally(tween(300, easing = ease)) { it / 5 } + fadeIn(tween(210, delayMillis = 90)) },
+                        exitTransition = { if (reduce) fadeOut(tween(0)) else slideOutHorizontally(tween(300, easing = ease)) { -it / 12 } + fadeOut(tween(90)) },
+                        popEnterTransition = { if (reduce) fadeIn(tween(0)) else slideInHorizontally(tween(300, easing = ease)) { -it / 12 } + fadeIn(tween(210, delayMillis = 90)) },
+                        popExitTransition = { if (reduce) fadeOut(tween(0)) else slideOutHorizontally(tween(300, easing = ease)) { it / 5 } + fadeOut(tween(90)) },
+                    ) {
                         composable("ask") {
                             AskScreen(
                                 onOpen = { o ->

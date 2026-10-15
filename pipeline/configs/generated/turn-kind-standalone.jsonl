@@ -1,0 +1,587 @@
+{"text": "what does a router do", "kind": "question", "src": "claude-gen"}
+{"text": "symptoms of anemia", "kind": "question", "src": "claude-gen"}
+{"text": "how does compound interest work?", "kind": "question", "src": "claude-gen"}
+{"text": "What is a mortgage?", "kind": "question", "src": "claude-gen"}
+{"text": "what is an algorithm", "kind": "question", "src": "claude-gen"}
+{"text": "How do vacines work", "kind": "question", "src": "claude-gen"}
+{"text": "define photosynthesis", "kind": "question", "src": "claude-gen"}
+{"text": "what is a black hole", "kind": "question", "src": "claude-gen"}
+{"text": "what is cloud computing", "kind": "question", "src": "claude-gen"}
+{"text": "how dos wifi work", "kind": "question", "src": "claude-gen"}
+{"text": "why do we dream?", "kind": "question", "src": "claude-gen"}
+{"text": "What is a credit score", "kind": "question", "src": "claude-gen"}
+{"text": "what is blockchain", "kind": "question", "src": "claude-gen"}
+{"text": "how does a refridgerator work", "kind": "question", "src": "claude-gen"}
+{"text": "what are antibiotics", "kind": "question", "src": "claude-gen"}
+{"text": "why do onions make you cry", "kind": "question", "src": "claude-gen"}
+{"text": "what is dark matter", "kind": "question", "src": "claude-gen"}
+{"text": "how do birds migrate?", "kind": "question", "src": "claude-gen"}
+{"text": "causes of high blood pressure", "kind": "question", "src": "claude-gen"}
+{"text": "what is a recesion", "kind": "question", "src": "claude-gen"}
+{"text": "How does GPS work?", "kind": "question", "src": "claude-gen"}
+{"text": "what is an index fund", "kind": "question", "src": "claude-gen"}
+{"text": "why is exercise good for you", "kind": "question", "src": "claude-gen"}
+{"text": "what is gluten", "kind": "question", "src": "claude-gen"}
+{"text": "how do solar panels work", "kind": "question", "src": "claude-gen"}
+{"text": "what is a stock", "kind": "question", "src": "claude-gen"}
+{"text": "what is a prime number", "kind": "question", "src": "claude-gen"}
+{"text": "How do bees communicate", "kind": "question", "src": "claude-gen"}
+{"text": "what is a hash function", "kind": "question", "src": "claude-gen"}
+{"text": "what is a glacier", "kind": "question", "src": "claude-gen"}
+{"text": "what is ADHD", "kind": "question", "src": "claude-gen"}
+{"text": "how do noise cancelling earbuds work", "kind": "question", "src": "claude-gen"}
+{"text": "what is a tariff", "kind": "question", "src": "claude-gen"}
+{"text": "why do leaves change color", "kind": "question", "src": "claude-gen"}
+{"text": "what does cholesterol do", "kind": "question", "src": "claude-gen"}
+{"text": "how do hurricanes form", "kind": "question", "src": "claude-gen"}
+{"text": "what is a vpn", "kind": "question", "src": "claude-gen"}
+{"text": "what is a carbon footprint", "kind": "question", "src": "claude-gen"}
+{"text": "Why do we sleep?", "kind": "question", "src": "claude-gen"}
+{"text": "what is a hedge fund", "kind": "question", "src": "claude-gen"}
+{"text": "how do airbags wrk", "kind": "question", "src": "claude-gen"}
+{"text": "what is machine learning", "kind": "question", "src": "claude-gen"}
+{"text": "what is an enzyme", "kind": "question", "src": "claude-gen"}
+{"text": "what is a mutual fund", "kind": "question", "src": "claude-gen"}
+{"text": "why do dogs wag thier tails", "kind": "question", "src": "claude-gen"}
+{"text": "what is lactose intolerance", "kind": "question", "src": "claude-gen"}
+{"text": "how does a battery work", "kind": "question", "src": "claude-gen"}
+{"text": "what is a sonic boom", "kind": "question", "src": "claude-gen"}
+{"text": "how does caffeine affect the body", "kind": "question", "src": "claude-gen"}
+{"text": "What is a coral reef", "kind": "question", "src": "claude-gen"}
+{"text": "what is global warming", "kind": "question", "src": "claude-gen"}
+{"text": "how are earthquakes measured", "kind": "question", "src": "claude-gen"}
+{"text": "what is a firewall", "kind": "question", "src": "claude-gen"}
+{"text": "What is intermittent fasting?", "kind": "question", "src": "claude-gen"}
+{"text": "what is turbulence on a flight", "kind": "question", "src": "claude-gen"}
+{"text": "what is a capital gain", "kind": "question", "src": "claude-gen"}
+{"text": "why do babies cry", "kind": "question", "src": "claude-gen"}
+{"text": "what is mindfulness", "kind": "question", "src": "claude-gen"}
+{"text": "how does a thermostat work", "kind": "question", "src": "claude-gen"}
+{"text": "what is a tsunami", "kind": "question", "src": "claude-gen"}
+{"text": "what is an ecosystem", "kind": "question", "src": "claude-gen"}
+{"text": "symptoms of vitamin d deficiency", "kind": "question", "src": "claude-gen"}
+{"text": "What is a debit card?", "kind": "question", "src": "claude-gen"}
+{"text": "how does a vending machine work", "kind": "question", "src": "claude-gen"}
+{"text": "what is bluetooth", "kind": "question", "src": "claude-gen"}
+{"text": "what is a podcast", "kind": "question", "src": "claude-gen"}
+{"text": "what is an allergy", "kind": "question", "src": "claude-gen"}
+{"text": "how does a zipper work", "kind": "question", "src": "claude-gen"}
+{"text": "what is a blood type", "kind": "question", "src": "claude-gen"}
+{"text": "What is cryptocurrency", "kind": "question", "src": "claude-gen"}
+{"text": "what is a placebo", "kind": "question", "src": "claude-gen"}
+{"text": "how do spiders make webs", "kind": "question", "src": "claude-gen"}
+{"text": "what is 20 percent of 85?", "kind": "question", "src": "claude-gen"}
+{"text": "convert 10 km to miles", "kind": "question", "src": "claude-gen"}
+{"text": "inches in a yard", "kind": "question", "src": "claude-gen"}
+{"text": "15% tip on 64 dollars", "kind": "question", "src": "claude-gen"}
+{"text": "what is 12 times 13", "kind": "question", "src": "claude-gen"}
+{"text": "convert 5 kg to pounds", "kind": "question", "src": "claude-gen"}
+{"text": "what is 7 to the power of 3", "kind": "question", "src": "claude-gen"}
+{"text": "250 meters in feet", "kind": "question", "src": "claude-gen"}
+{"text": "what is 3/8 as a decimal", "kind": "question", "src": "claude-gen"}
+{"text": "what's 45 divided by 9", "kind": "question", "src": "claude-gen"}
+{"text": "Convert 100 miles to kilometers", "kind": "question", "src": "claude-gen"}
+{"text": "number of hours in a year", "kind": "question", "src": "claude-gen"}
+{"text": "18 percent of 250", "kind": "question", "src": "claude-gen"}
+{"text": "how many teaspoons in a tablespoon", "kind": "question", "src": "claude-gen"}
+{"text": "kilometer in yards", "kind": "question", "src": "claude-gen"}
+{"text": "what is 0.75 as a fraction", "kind": "question", "src": "claude-gen"}
+{"text": "1000 square feet in square meters", "kind": "question", "src": "claude-gen"}
+{"text": "3 years is how many months", "kind": "question", "src": "claude-gen"}
+{"text": "what is 2 to the 10th power", "kind": "question", "src": "claude-gen"}
+{"text": "How many cm is 6 feet", "kind": "question", "src": "claude-gen"}
+{"text": "convert 60 mph to km/h", "kind": "question", "src": "claude-gen"}
+{"text": "gallon to pints", "kind": "question", "src": "claude-gen"}
+{"text": "what is 9 squared", "kind": "question", "src": "claude-gen"}
+{"text": "Convert 8 pounds to ounces", "kind": "question", "src": "claude-gen"}
+{"text": "whats 33% of 120", "kind": "question", "src": "claude-gen"}
+{"text": "5% of 2000", "kind": "question", "src": "claude-gen"}
+{"text": "what is 100 minus 37", "kind": "question", "src": "claude-gen"}
+{"text": "square mile to acres", "kind": "question", "src": "claude-gen"}
+{"text": "what is the cube root of 27", "kind": "question", "src": "claude-gen"}
+{"text": "5 miles in meters", "kind": "question", "src": "claude-gen"}
+{"text": "megabyte to bytes", "kind": "question", "src": "claude-gen"}
+{"text": "what is 15 plus 28 times 2", "kind": "question", "src": "claude-gen"}
+{"text": "ns in a second", "kind": "question", "src": "claude-gen"}
+{"text": "convert 3 hours to seconds", "kind": "question", "src": "claude-gen"}
+{"text": "How many quarts make a gallon", "kind": "question", "src": "claude-gen"}
+{"text": "what's 6 factorial", "kind": "question", "src": "claude-gen"}
+{"text": "an acre is how many square feet", "kind": "question", "src": "claude-gen"}
+{"text": "What is 1/3 plus 1/4?", "kind": "question", "src": "claude-gen"}
+{"text": "what is 144 divided by 12", "kind": "question", "src": "claude-gen"}
+{"text": "gigabyte to kilobytes", "kind": "question", "src": "claude-gen"}
+{"text": "Which planet is the hottest and why is it so hot?", "kind": "question", "src": "claude-gen"}
+{"text": "Who founded the Red Cross and where was he born?", "kind": "question", "src": "claude-gen"}
+{"text": "Who painted the Mona Lisa and how long did it take him?", "kind": "question", "src": "claude-gen"}
+{"text": "who was Cleopatra and how did she die", "kind": "question", "src": "claude-gen"}
+{"text": "Which animal is the fastest on land and how fast can it run?", "kind": "question", "src": "claude-gen"}
+{"text": "Who is Serena Williams and how many titles has she won?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the largest desert and where is it located?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Christopher Columbus and what ships did he sail on?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Isaac Newton and what did he write about motion?", "kind": "question", "src": "claude-gen"}
+{"text": "who was Queen Victoria and how long did she reign", "kind": "question", "src": "claude-gen"}
+{"text": "Who wrote Hamlet and where was he born?", "kind": "question", "src": "claude-gen"}
+{"text": "Who invented the first airplane and where did they fly it?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Nelson Mandela and how long was he in prison?", "kind": "question", "src": "claude-gen"}
+{"text": "What is insulin and what does it do?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the Sahara and how big is it?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Leonardo da Vinci and what did he invent?", "kind": "question", "src": "claude-gen"}
+{"text": "which bird lays the biggest egg and how big is it", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Frida Kahlo and where did she live?", "kind": "question", "src": "claude-gen"}
+{"text": "What is a comet and what is it made of?", "kind": "question", "src": "claude-gen"}
+{"text": "Who is Malala Yousafzai and why did she win a Nobel prize?", "kind": "question", "src": "claude-gen"}
+{"text": "Which ocean is the deepest and how deep is it?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the Amazon river and how long is it?", "kind": "question", "src": "claude-gen"}
+{"text": "who wrote Don Quixote and when did he live", "kind": "question", "src": "claude-gen"}
+{"text": "What is a sonnet and how many lines does it have?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Mozart and how old was he when he died?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Amelia Earhart and where did she disappear?", "kind": "question", "src": "claude-gen"}
+{"text": "What are antibodies and how do they work?", "kind": "question", "src": "claude-gen"}
+{"text": "Who founded Amazon and how did he start it?", "kind": "question", "src": "claude-gen"}
+{"text": "Which element is the lightest and what is it used for?", "kind": "question", "src": "claude-gen"}
+{"text": "who was Galileo and why was he put on trial", "kind": "question", "src": "claude-gen"}
+{"text": "What is an eclipse and when does it happen?", "kind": "question", "src": "claude-gen"}
+{"text": "Who wrote Little Women and what inspired her?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Gandhi and what role did he play in India's independence?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the Taj Mahal and who built it?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Rosalind Franklin and what did she discover?", "kind": "question", "src": "claude-gen"}
+{"text": "what is Stonehenge and who built it", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Alexander the Great and how far did his army travel?", "kind": "question", "src": "claude-gen"}
+{"text": "What is a pulsar and how fast does it spin?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Ada Lovelace and what did she write about computers?", "kind": "question", "src": "claude-gen"}
+{"text": "Which mountain range is the longest and where does it run?", "kind": "question", "src": "claude-gen"}
+{"text": "Who was Beethoven and when did he go deaf?", "kind": "question", "src": "claude-gen"}
+{"text": "Who is the fastest man ever recorded and how fast did he run?", "kind": "question", "src": "claude-gen"}
+{"text": "who was Harriet Tubman and how many people did she help escape", "kind": "question", "src": "claude-gen"}
+{"text": "compare frogs and toads", "kind": "question", "src": "claude-gen"}
+{"text": "Which is heavier, gold or lead?", "kind": "question", "src": "claude-gen"}
+{"text": "alligator vs crocodile", "kind": "question", "src": "claude-gen"}
+{"text": "how is weather different from climate", "kind": "question", "src": "claude-gen"}
+{"text": "butter or margarine which is healthier", "kind": "question", "src": "claude-gen"}
+{"text": "Which is older, the guitar or the piano?", "kind": "question", "src": "claude-gen"}
+{"text": "whats the difference between baking soda and baking powder", "kind": "question", "src": "claude-gen"}
+{"text": "compare solar and wind power", "kind": "question", "src": "claude-gen"}
+{"text": "stocks versus bonds", "kind": "question", "src": "claude-gen"}
+{"text": "How smart are dolphins compared to chimpanzees?", "kind": "question", "src": "claude-gen"}
+{"text": "hurricane or tornado wich is stronger", "kind": "question", "src": "claude-gen"}
+{"text": "Is a cheetah faster than a greyhound?", "kind": "question", "src": "claude-gen"}
+{"text": "how do crows differ from ravens", "kind": "question", "src": "claude-gen"}
+{"text": "electric cars compared to gasoline cars", "kind": "question", "src": "claude-gen"}
+{"text": "Does brown rice have more fiber than white rice?", "kind": "question", "src": "claude-gen"}
+{"text": "Roth IRA vs traditional IRA", "kind": "question", "src": "claude-gen"}
+{"text": "difference between affect and effect", "kind": "question", "src": "claude-gen"}
+{"text": "Is Alaska bigger than Texas?", "kind": "question", "src": "claude-gen"}
+{"text": "honey or sugar, which is healthier?", "kind": "question", "src": "claude-gen"}
+{"text": "pros and cons of cats and dogs as pets", "kind": "question", "src": "claude-gen"}
+{"text": "should I rent or buy a house", "kind": "question", "src": "claude-gen"}
+{"text": "mitosis and meiosis, how are they different", "kind": "question", "src": "claude-gen"}
+{"text": "Which is taller, a giraffe or an elephant", "kind": "question", "src": "claude-gen"}
+{"text": "LED bulbs against incandescent bulbs, which use less power", "kind": "question", "src": "claude-gen"}
+{"text": "what sets a lake apart from a pond", "kind": "question", "src": "claude-gen"}
+{"text": "peanuts and almonds, which has more protein", "kind": "question", "src": "claude-gen"}
+{"text": "compare Spanish and Portuguese", "kind": "question", "src": "claude-gen"}
+{"text": "gas stoves and electric stoves, what are the pros and cons", "kind": "question", "src": "claude-gen"}
+{"text": "what makes sleet different from hail", "kind": "question", "src": "claude-gen"}
+{"text": "Do ants or bees live longer?", "kind": "question", "src": "claude-gen"}
+{"text": "length of the Nile against the length of the Amazon", "kind": "question", "src": "claude-gen"}
+{"text": "how are frogs and salamanders alike", "kind": "question", "src": "claude-gen"}
+{"text": "size of a viola relative to a violin", "kind": "question", "src": "claude-gen"}
+{"text": "credit card and debit card, what's the main distinction", "kind": "question", "src": "claude-gen"}
+{"text": "rugby and american football, how are the rules different", "kind": "question", "src": "claude-gen"}
+{"text": "walking or running for weight loss", "kind": "question", "src": "claude-gen"}
+{"text": "Does the Dead Sea contain more salt than the Atlantic Ocean?", "kind": "question", "src": "claude-gen"}
+{"text": "How much deeper is the Pacific than the Atlantic?", "kind": "question", "src": "claude-gen"}
+{"text": "oats or quinoa for breakfast", "kind": "question", "src": "claude-gen"}
+{"text": "Does a kilogram of feathers weigh more than a kilogram of steel?", "kind": "question", "src": "claude-gen"}
+{"text": "how does the price of silver stack up against platinum", "kind": "question", "src": "claude-gen"}
+{"text": "SSD against HDD for a laptop", "kind": "question", "src": "claude-gen"}
+{"text": "Greek coffee, Turkish coffee, are they the same thing", "kind": "question", "src": "claude-gen"}
+{"text": "how does a meridian differ from a parallel", "kind": "question", "src": "claude-gen"}
+{"text": "what do comets have that asteroids do not", "kind": "question", "src": "claude-gen"}
+{"text": "lions and tigers, who would win in a fight", "kind": "question", "src": "claude-gen"}
+{"text": "equity versus debt financing", "kind": "question", "src": "claude-gen"}
+{"text": "Is a dolphin a fish or a mammal?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the function of the liver?", "kind": "question", "src": "claude-gen"}
+{"text": "Why is the ocean salty?", "kind": "question", "src": "claude-gen"}
+{"text": "How does the immune system fight infection?", "kind": "question", "src": "claude-gen"}
+{"text": "what does the heart do", "kind": "question", "src": "claude-gen"}
+{"text": "why is the ozone layer important", "kind": "question", "src": "claude-gen"}
+{"text": "what is the purpose of the appendix", "kind": "question", "src": "claude-gen"}
+{"text": "how do the lungs work", "kind": "question", "src": "claude-gen"}
+{"text": "What causes the seasons?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the role of the kidneys", "kind": "question", "src": "claude-gen"}
+{"text": "Why is the grass green?", "kind": "question", "src": "claude-gen"}
+{"text": "what does the federal reserve do", "kind": "question", "src": "claude-gen"}
+{"text": "what does the pancreas do", "kind": "question", "src": "claude-gen"}
+{"text": "How does the water cycle work", "kind": "question", "src": "claude-gen"}
+{"text": "why does the wind blow", "kind": "question", "src": "claude-gen"}
+{"text": "what is the structure of the cell", "kind": "question", "src": "claude-gen"}
+{"text": "What is the largest organ in the body?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the purpose of the Magna Carta?", "kind": "question", "src": "claude-gen"}
+{"text": "how does the brain store memories", "kind": "question", "src": "claude-gen"}
+{"text": "How does the eye focus on near objects?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the use of the spleen", "kind": "question", "src": "claude-gen"}
+{"text": "what's the role of the mitochondria", "kind": "question", "src": "claude-gen"}
+{"text": "How does the digestve system break down food?", "kind": "question", "src": "claude-gen"}
+{"text": "why is the human body mostly water", "kind": "question", "src": "claude-gen"}
+{"text": "what does the thyroid gland do", "kind": "question", "src": "claude-gen"}
+{"text": "how does the nervous system send signals", "kind": "question", "src": "claude-gen"}
+{"text": "What is the speed of sound?", "kind": "question", "src": "claude-gen"}
+{"text": "what are the layers of the earth", "kind": "question", "src": "claude-gen"}
+{"text": "what is the tallest tree in the world", "kind": "question", "src": "claude-gen"}
+{"text": "what is the longest river in Africa", "kind": "question", "src": "claude-gen"}
+{"text": "what causes the northern lights", "kind": "question", "src": "claude-gen"}
+{"text": "how does the heart pump blood", "kind": "question", "src": "claude-gen"}
+{"text": "what is the chemical formula for water", "kind": "question", "src": "claude-gen"}
+{"text": "how does the skin protct the body", "kind": "question", "src": "claude-gen"}
+{"text": "what is the main function of red blood cells", "kind": "question", "src": "claude-gen"}
+{"text": "why is the rainforest important", "kind": "question", "src": "claude-gen"}
+{"text": "what is the life cycle of a butterfly", "kind": "question", "src": "claude-gen"}
+{"text": "what is the function of the cerebellum", "kind": "question", "src": "claude-gen"}
+{"text": "what is the cause of the common cold", "kind": "question", "src": "claude-gen"}
+{"text": "how does the internet work", "kind": "question", "src": "claude-gen"}
+{"text": "what are the symptoms of the measles", "kind": "question", "src": "claude-gen"}
+{"text": "why is the polar ice melting", "kind": "question", "src": "claude-gen"}
+{"text": "what is the history of the bicycle", "kind": "question", "src": "claude-gen"}
+{"text": "How do the bones heal after a break", "kind": "question", "src": "claude-gen"}
+{"text": "what does the central bank do", "kind": "question", "src": "claude-gen"}
+{"text": "how does the human ear detect sound", "kind": "question", "src": "claude-gen"}
+{"text": "what is the theory of evolution", "kind": "question", "src": "claude-gen"}
+{"text": "what is the role of the gut microbiome", "kind": "question", "src": "claude-gen"}
+{"text": "what does the gallbladder do", "kind": "question", "src": "claude-gen"}
+{"text": "Quick question, how long do elephants live?", "kind": "question", "src": "claude-gen"}
+{"text": "Next, how do glaciers form?", "kind": "question", "src": "claude-gen"}
+{"text": "Anyway, what is the best way to learn guitar?", "kind": "question", "src": "claude-gen"}
+{"text": "Besides, how many bones does an adult have?", "kind": "question", "src": "claude-gen"}
+{"text": "Alright, how do you boil an egg?", "kind": "question", "src": "claude-gen"}
+{"text": "Oh and what is the national animal of Scotland", "kind": "question", "src": "claude-gen"}
+{"text": "Wait, how does a rainbow form?", "kind": "question", "src": "claude-gen"}
+{"text": "One more thing, how are diamonds made?", "kind": "question", "src": "claude-gen"}
+{"text": "Another question: how do penguins stay warm?", "kind": "question", "src": "claude-gen"}
+{"text": "btw how long does a cat live", "kind": "question", "src": "claude-gen"}
+{"text": "Actually, what is the population of Iceland?", "kind": "question", "src": "claude-gen"}
+{"text": "Hmm, what is the meaning of the word serendipity?", "kind": "question", "src": "claude-gen"}
+{"text": "Next, what are the symptoms of a concussion?", "kind": "question", "src": "claude-gen"}
+{"text": "Anyway how do I remove rust from a bike chain", "kind": "question", "src": "claude-gen"}
+{"text": "Besides that, what are the rules of chess?", "kind": "question", "src": "claude-gen"}
+{"text": "Alright so what does a vitamin C deficiency cause?", "kind": "question", "src": "claude-gen"}
+{"text": "Oh and what is a supernova", "kind": "question", "src": "claude-gen"}
+{"text": "Wait what is a quasar", "kind": "question", "src": "claude-gen"}
+{"text": "One more, what is the largest lake in Africa?", "kind": "question", "src": "claude-gen"}
+{"text": "Another one: what is a good beginner houseplant?", "kind": "question", "src": "claude-gen"}
+{"text": "Hmm and how do dolphins sleep?", "kind": "question", "src": "claude-gen"}
+{"text": "Actually how many players are on a soccer team?", "kind": "question", "src": "claude-gen"}
+{"text": "What else did he invent?", "kind": "followup", "src": "claude-gen"}
+{"text": "how old is she", "kind": "followup", "src": "claude-gen"}
+{"text": "What did they eat?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why did he leave?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it dangerous?", "kind": "followup", "src": "claude-gen"}
+{"text": "who was her husband", "kind": "followup", "src": "claude-gen"}
+{"text": "Where do they live?", "kind": "followup", "src": "claude-gen"}
+{"text": "how tall is he", "kind": "followup", "src": "claude-gen"}
+{"text": "What did she say?", "kind": "followup", "src": "claude-gen"}
+{"text": "How fast can it go?", "kind": "followup", "src": "claude-gen"}
+{"text": "Did he win?", "kind": "followup", "src": "claude-gen"}
+{"text": "Are they endangered?", "kind": "followup", "src": "claude-gen"}
+{"text": "what is it made of", "kind": "followup", "src": "claude-gen"}
+{"text": "who discovered it", "kind": "followup", "src": "claude-gen"}
+{"text": "how many of them are left", "kind": "followup", "src": "claude-gen"}
+{"text": "what does it eat", "kind": "followup", "src": "claude-gen"}
+{"text": "How does it work?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why did she do it?", "kind": "followup", "src": "claude-gen"}
+{"text": "what was his real name", "kind": "followup", "src": "claude-gen"}
+{"text": "Who were her parents?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can it be cured?", "kind": "followup", "src": "claude-gen"}
+{"text": "how much does it weigh", "kind": "followup", "src": "claude-gen"}
+{"text": "where did he go next", "kind": "followup", "src": "claude-gen"}
+{"text": "What do they look like?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is she still alive?", "kind": "followup", "src": "claude-gen"}
+{"text": "what did he study", "kind": "followup", "src": "claude-gen"}
+{"text": "who taught her", "kind": "followup", "src": "claude-gen"}
+{"text": "Does it hurt?", "kind": "followup", "src": "claude-gen"}
+{"text": "How do you make it?", "kind": "followup", "src": "claude-gen"}
+{"text": "How much does that cost?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is this safe for children?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why did that happen?", "kind": "followup", "src": "claude-gen"}
+{"text": "What does that mean?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that true?", "kind": "followup", "src": "claude-gen"}
+{"text": "Who said that?", "kind": "followup", "src": "claude-gen"}
+{"text": "How did they figure that out?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that normal?", "kind": "followup", "src": "claude-gen"}
+{"text": "what does this word mean", "kind": "followup", "src": "claude-gen"}
+{"text": "Where did you get that?", "kind": "followup", "src": "claude-gen"}
+{"text": "How long does that take?", "kind": "followup", "src": "claude-gen"}
+{"text": "Does that work for adults too?", "kind": "followup", "src": "claude-gen"}
+{"text": "What are the side effects of this?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can I do that at home?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that expensive?", "kind": "followup", "src": "claude-gen"}
+{"text": "What causes that?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why is that important?", "kind": "followup", "src": "claude-gen"}
+{"text": "How common is that?", "kind": "followup", "src": "claude-gen"}
+{"text": "Was that legal?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is this still the case today?", "kind": "followup", "src": "claude-gen"}
+{"text": "Who benefits from this?", "kind": "followup", "src": "claude-gen"}
+{"text": "How did that start?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can you give an example of that?", "kind": "followup", "src": "claude-gen"}
+{"text": "what's the source for that", "kind": "followup", "src": "claude-gen"}
+{"text": "And what does that look like in practice?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that the same everywhere?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why would anyone do that?", "kind": "followup", "src": "claude-gen"}
+{"text": "Should I be worried about this?", "kind": "followup", "src": "claude-gen"}
+{"text": "And in Spain?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about the second one?", "kind": "followup", "src": "claude-gen"}
+{"text": "And before that?", "kind": "followup", "src": "claude-gen"}
+{"text": "And for dogs?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about in winter?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the other one?", "kind": "followup", "src": "claude-gen"}
+{"text": "how about the third?", "kind": "followup", "src": "claude-gen"}
+{"text": "And after that?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about for kids?", "kind": "followup", "src": "claude-gen"}
+{"text": "And in the 1990s?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about the last one?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the cheaper option?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which one is better?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about Italy?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the year before?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which one is bigger?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about vegetarians?", "kind": "followup", "src": "claude-gen"}
+{"text": "And for beginners?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about the first one?", "kind": "followup", "src": "claude-gen"}
+{"text": "And when it rains?", "kind": "followup", "src": "claude-gen"}
+{"text": "And women?", "kind": "followup", "src": "claude-gen"}
+{"text": "How about the other way around?", "kind": "followup", "src": "claude-gen"}
+{"text": "And at night?", "kind": "followup", "src": "claude-gen"}
+{"text": "what about 1950", "kind": "followup", "src": "claude-gen"}
+{"text": "The same for cats?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the one after that?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which of them is cheapest?", "kind": "followup", "src": "claude-gen"}
+{"text": "And in India?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about older adults?", "kind": "followup", "src": "claude-gen"}
+{"text": "And how about in the summer?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which came first?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the opposite?", "kind": "followup", "src": "claude-gen"}
+{"text": "And what about the rest?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it bigger than Texas?", "kind": "followup", "src": "claude-gen"}
+{"text": "Compare it with gold", "kind": "followup", "src": "claude-gen"}
+{"text": "How does that compare to cars?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it faster than a horse?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which is better, this or the old one?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is he taller than his brother?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it older than the pyramids?", "kind": "followup", "src": "claude-gen"}
+{"text": "How does it compare to last year?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that more than what Spain has?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it heavier than a car?", "kind": "followup", "src": "claude-gen"}
+{"text": "compare that to the other one", "kind": "followup", "src": "claude-gen"}
+{"text": "Is she older than him?", "kind": "followup", "src": "claude-gen"}
+{"text": "How is it different from the first one?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it cheaper than flying?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it hotter than the sun?", "kind": "followup", "src": "claude-gen"}
+{"text": "Does it have more than the other?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it as big as a football field?", "kind": "followup", "src": "claude-gen"}
+{"text": "How do they compare to humans?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is this better than what we discussed before?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it longer than the Nile?", "kind": "followup", "src": "claude-gen"}
+{"text": "Compare them", "kind": "followup", "src": "claude-gen"}
+{"text": "How does it stack up against the competition?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is that higher than average?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it healthier than the first one?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why?", "kind": "followup", "src": "claude-gen"}
+{"text": "How so?", "kind": "followup", "src": "claude-gen"}
+{"text": "Since when?", "kind": "followup", "src": "claude-gen"}
+{"text": "Who else?", "kind": "followup", "src": "claude-gen"}
+{"text": "Really?", "kind": "followup", "src": "claude-gen"}
+{"text": "Give me an example", "kind": "followup", "src": "claude-gen"}
+{"text": "Where exactly?", "kind": "followup", "src": "claude-gen"}
+{"text": "When exactly?", "kind": "followup", "src": "claude-gen"}
+{"text": "In what way?", "kind": "followup", "src": "claude-gen"}
+{"text": "For how long?", "kind": "followup", "src": "claude-gen"}
+{"text": "By whom?", "kind": "followup", "src": "claude-gen"}
+{"text": "How many?", "kind": "followup", "src": "claude-gen"}
+{"text": "Any others?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why not?", "kind": "followup", "src": "claude-gen"}
+{"text": "Translate that to Spanish", "kind": "followup", "src": "claude-gen"}
+{"text": "Source?", "kind": "followup", "src": "claude-gen"}
+{"text": "And then what happened?", "kind": "followup", "src": "claude-gen"}
+{"text": "What happened next?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why did they do that?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can you list them?", "kind": "followup", "src": "claude-gen"}
+{"text": "How come?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which ones?", "kind": "followup", "src": "claude-gen"}
+{"text": "Who told you that?", "kind": "followup", "src": "claude-gen"}
+{"text": "what was the reason", "kind": "followup", "src": "claude-gen"}
+{"text": "Is there a cheaper way?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can you repeat the last part?", "kind": "followup", "src": "claude-gen"}
+{"text": "Same for 35 degrees?", "kind": "followup", "src": "claude-gen"}
+{"text": "and for 3 people", "kind": "followup", "src": "claude-gen"}
+{"text": "What about 2 kilos?", "kind": "followup", "src": "claude-gen"}
+{"text": "How about in 1990?", "kind": "followup", "src": "claude-gen"}
+{"text": "same question for 7 percent", "kind": "followup", "src": "claude-gen"}
+{"text": "and with 4 eggs?", "kind": "followup", "src": "claude-gen"}
+{"text": "Same thing but for 12 months", "kind": "followup", "src": "claude-gen"}
+{"text": "and in 1850?", "kind": "followup", "src": "claude-gen"}
+{"text": "what about for a 70 kg person", "kind": "followup", "src": "claude-gen"}
+{"text": "same for 3 miles?", "kind": "followup", "src": "claude-gen"}
+{"text": "And at 30 mph?", "kind": "followup", "src": "claude-gen"}
+{"text": "what if it was 10 years", "kind": "followup", "src": "claude-gen"}
+{"text": "How about 2 hours?", "kind": "followup", "src": "claude-gen"}
+{"text": "same but for 8 players", "kind": "followup", "src": "claude-gen"}
+{"text": "And for a child of 5?", "kind": "followup", "src": "claude-gen"}
+{"text": "what about 20 gallons", "kind": "followup", "src": "claude-gen"}
+{"text": "same for the year 2005", "kind": "followup", "src": "claude-gen"}
+{"text": "and 6 inches?", "kind": "followup", "src": "claude-gen"}
+{"text": "How about at 5000 feet?", "kind": "followup", "src": "claude-gen"}
+{"text": "Same for 250 volts?", "kind": "followup", "src": "claude-gen"}
+{"text": "what about in 1600", "kind": "followup", "src": "claude-gen"}
+{"text": "and for 2 weeks", "kind": "followup", "src": "claude-gen"}
+{"text": "How about 18 months old", "kind": "followup", "src": "claude-gen"}
+{"text": "same with 50 dollars?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about 100 watts", "kind": "followup", "src": "claude-gen"}
+{"text": "and at 90 degrees", "kind": "followup", "src": "claude-gen"}
+{"text": "Same for 4 kids?", "kind": "followup", "src": "claude-gen"}
+{"text": "how about 3 tablespoons", "kind": "followup", "src": "claude-gen"}
+{"text": "How heavy is it in pounds?", "kind": "followup", "src": "claude-gen"}
+{"text": "What is that in dollars?", "kind": "followup", "src": "claude-gen"}
+{"text": "how deep is it in meters", "kind": "followup", "src": "claude-gen"}
+{"text": "how fast is it in km/h", "kind": "followup", "src": "claude-gen"}
+{"text": "What is that in kilograms?", "kind": "followup", "src": "claude-gen"}
+{"text": "how many calories is that", "kind": "followup", "src": "claude-gen"}
+{"text": "How wide is it in centimeters?", "kind": "followup", "src": "claude-gen"}
+{"text": "how old is it in years", "kind": "followup", "src": "claude-gen"}
+{"text": "how big is it in square miles", "kind": "followup", "src": "claude-gen"}
+{"text": "how much does it weigh in kilos", "kind": "followup", "src": "claude-gen"}
+{"text": "how many minutes is that", "kind": "followup", "src": "claude-gen"}
+{"text": "what's that in pounds sterling", "kind": "followup", "src": "claude-gen"}
+{"text": "How long does it take in hours?", "kind": "followup", "src": "claude-gen"}
+{"text": "how much is that per year", "kind": "followup", "src": "claude-gen"}
+{"text": "how many pints is that", "kind": "followup", "src": "claude-gen"}
+{"text": "how much is that in cents", "kind": "followup", "src": "claude-gen"}
+{"text": "How much is it in rupees?", "kind": "followup", "src": "claude-gen"}
+{"text": "how big is it in acres", "kind": "followup", "src": "claude-gen"}
+{"text": "How heavy is that in tons?", "kind": "followup", "src": "claude-gen"}
+{"text": "its top speed in mph?", "kind": "followup", "src": "claude-gen"}
+{"text": "How much is that per month?", "kind": "followup", "src": "claude-gen"}
+{"text": "How is it different from Rust?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it older than Athens?", "kind": "followup", "src": "claude-gen"}
+{"text": "Was he taller than Napoleon?", "kind": "followup", "src": "claude-gen"}
+{"text": "Does it beat the Model T on speed?", "kind": "followup", "src": "claude-gen"}
+{"text": "is it bigger than Texas", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it healthier than butter?", "kind": "followup", "src": "claude-gen"}
+{"text": "was she older than Mozart?", "kind": "followup", "src": "claude-gen"}
+{"text": "how does it compare to Linux", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it faster than a cheetah?", "kind": "followup", "src": "claude-gen"}
+{"text": "does it taste like cinnamon", "kind": "followup", "src": "claude-gen"}
+{"text": "Is he better than Messi?", "kind": "followup", "src": "claude-gen"}
+{"text": "is it colder than Antarctica", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it sweeter than honey?", "kind": "followup", "src": "claude-gen"}
+{"text": "Was she richer than Rockefeller?", "kind": "followup", "src": "claude-gen"}
+{"text": "how does it stack up against the iPhone", "kind": "followup", "src": "claude-gen"}
+{"text": "is it more dangerous than a wasp", "kind": "followup", "src": "claude-gen"}
+{"text": "Did he win more titles than Federer?", "kind": "followup", "src": "claude-gen"}
+{"text": "is it heavier than a piano", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it cheaper than Airbnb?", "kind": "followup", "src": "claude-gen"}
+{"text": "was it bigger than Rome", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it louder than a jet engine?", "kind": "followup", "src": "claude-gen"}
+{"text": "how is it different from an alligator", "kind": "followup", "src": "claude-gen"}
+{"text": "Is she younger than Obama?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it related to the wolf?", "kind": "followup", "src": "claude-gen"}
+{"text": "does it live longer than a tortoise", "kind": "followup", "src": "claude-gen"}
+{"text": "is it harder than steel", "kind": "followup", "src": "claude-gen"}
+{"text": "Was he earlier than Plato?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it more expensive than gold?", "kind": "followup", "src": "claude-gen"}
+{"text": "does it taste better than tofu", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it safer than flying?", "kind": "followup", "src": "claude-gen"}
+{"text": "why is it so salty?", "kind": "followup", "src": "claude-gen"}
+{"text": "What happens if it stops spinning?", "kind": "followup", "src": "claude-gen"}
+{"text": "Where do they lay eggs?", "kind": "followup", "src": "claude-gen"}
+{"text": "How did that change farming?", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it safe for dogs?", "kind": "followup", "src": "claude-gen"}
+{"text": "why do they migrate", "kind": "followup", "src": "claude-gen"}
+{"text": "what causes it to rust", "kind": "followup", "src": "claude-gen"}
+{"text": "How does it kill bacteria?", "kind": "followup", "src": "claude-gen"}
+{"text": "when did they go extinct", "kind": "followup", "src": "claude-gen"}
+{"text": "Is it bad for your teeth?", "kind": "followup", "src": "claude-gen"}
+{"text": "what did he eat for breakfast", "kind": "followup", "src": "claude-gen"}
+{"text": "Why did she leave the band?", "kind": "followup", "src": "claude-gen"}
+{"text": "how do they sleep", "kind": "followup", "src": "claude-gen"}
+{"text": "does it cause cancer", "kind": "followup", "src": "claude-gen"}
+{"text": "Can it survive in winter?", "kind": "followup", "src": "claude-gen"}
+{"text": "What did that do to prices?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why does it smell so bad?", "kind": "followup", "src": "claude-gen"}
+{"text": "How do they communicate underwater", "kind": "followup", "src": "claude-gen"}
+{"text": "What does it do to your blood pressure?", "kind": "followup", "src": "claude-gen"}
+{"text": "why was it banned", "kind": "followup", "src": "claude-gen"}
+{"text": "Where does it get its energy?", "kind": "followup", "src": "claude-gen"}
+{"text": "do they bite", "kind": "followup", "src": "claude-gen"}
+{"text": "how long did she reign", "kind": "followup", "src": "claude-gen"}
+{"text": "What did it cost to build?", "kind": "followup", "src": "claude-gen"}
+{"text": "Can you freeze it?", "kind": "followup", "src": "claude-gen"}
+{"text": "how does it keep warm", "kind": "followup", "src": "claude-gen"}
+{"text": "why did he resign", "kind": "followup", "src": "claude-gen"}
+{"text": "Are they poisonous?", "kind": "followup", "src": "claude-gen"}
+{"text": "what made it collapse", "kind": "followup", "src": "claude-gen"}
+{"text": "And the third one?", "kind": "followup", "src": "claude-gen"}
+{"text": "What about its neighbor?", "kind": "followup", "src": "claude-gen"}
+{"text": "Who replaced him?", "kind": "followup", "src": "claude-gen"}
+{"text": "Did that work?", "kind": "followup", "src": "claude-gen"}
+{"text": "Which one came first?", "kind": "followup", "src": "claude-gen"}
+{"text": "How many of those are left?", "kind": "followup", "src": "claude-gen"}
+{"text": "and the one on the left?", "kind": "followup", "src": "claude-gen"}
+{"text": "what happened next", "kind": "followup", "src": "claude-gen"}
+{"text": "Who won the second one?", "kind": "followup", "src": "claude-gen"}
+{"text": "Why though?", "kind": "followup", "src": "claude-gen"}
+{"text": "what about the one before it", "kind": "followup", "src": "claude-gen"}
+{"text": "what's the reverse of that", "kind": "followup", "src": "claude-gen"}
+{"text": "is that still true", "kind": "followup", "src": "claude-gen"}
+{"text": "so who was right", "kind": "followup", "src": "claude-gen"}
+{"text": "what did she say next", "kind": "followup", "src": "claude-gen"}
+{"text": "Is there a cheaper one?", "kind": "followup", "src": "claude-gen"}
+{"text": "what came right after it", "kind": "followup", "src": "claude-gen"}
+{"text": "what was the point of that", "kind": "followup", "src": "claude-gen"}
+{"text": "who else was there", "kind": "followup", "src": "claude-gen"}
+{"text": "And what about the first?", "kind": "followup", "src": "claude-gen"}
+{"text": "Where is the other one?", "kind": "followup", "src": "claude-gen"}
+{"text": "Did they ever meet?", "kind": "followup", "src": "claude-gen"}
+{"text": "What was his name again", "kind": "followup", "src": "claude-gen"}
+{"text": "is there a bigger version", "kind": "followup", "src": "claude-gen"}
+{"text": "what's the difference between them", "kind": "followup", "src": "claude-gen"}
+{"text": "and the winner?", "kind": "followup", "src": "claude-gen"}
+{"text": "How many were there?", "kind": "followup", "src": "claude-gen"}
+{"text": "And the runner-up?", "kind": "followup", "src": "claude-gen"}
+{"text": "does that apply to cats too", "kind": "followup", "src": "claude-gen"}
+{"text": "Was that the biggest one?", "kind": "followup", "src": "claude-gen"}
+{"text": "who was next", "kind": "followup", "src": "claude-gen"}
+{"text": "what about the sequel", "kind": "followup", "src": "claude-gen"}
+{"text": "Is the second one better?", "kind": "followup", "src": "claude-gen"}
+{"text": "How did that come about?", "kind": "followup", "src": "claude-gen"}
+{"text": "what is 12 percent of 300", "kind": "question", "src": "claude-gen"}
+{"text": "how many calories in a banana", "kind": "question", "src": "claude-gen"}
+{"text": "how far is the moon in km", "kind": "question", "src": "claude-gen"}
+{"text": "how many days are in 3 weeks", "kind": "question", "src": "claude-gen"}
+{"text": "What is the boiling point of water at sea level in kelvin?", "kind": "question", "src": "claude-gen"}
+{"text": "how many grams of protein in an egg", "kind": "question", "src": "claude-gen"}
+{"text": "what is a 15 percent tip on 60 dollars", "kind": "question", "src": "claude-gen"}
+{"text": "how long is a marathon in miles", "kind": "question", "src": "claude-gen"}
+{"text": "How many teaspoons are in a tablespoon?", "kind": "question", "src": "claude-gen"}
+{"text": "how many bones are in the human body", "kind": "question", "src": "claude-gen"}
+{"text": "how many years did the Hundred Years War last", "kind": "question", "src": "claude-gen"}
+{"text": "how much is 50 euros in dollars", "kind": "question", "src": "claude-gen"}
+{"text": "How tall is the Eiffel Tower in meters?", "kind": "question", "src": "claude-gen"}
+{"text": "what is 7 times 8", "kind": "question", "src": "claude-gen"}
+{"text": "how many players are on a soccer team", "kind": "question", "src": "claude-gen"}
+{"text": "how many kilometers is 26 miles", "kind": "question", "src": "claude-gen"}
+{"text": "how many hours of sleep does a newborn need", "kind": "question", "src": "claude-gen"}
+{"text": "How many sides does a hexagon have?", "kind": "question", "src": "claude-gen"}
+{"text": "how many ml in a shot of espresso", "kind": "question", "src": "claude-gen"}
+{"text": "how many carbs in 100 grams of rice", "kind": "question", "src": "claude-gen"}
+{"text": "what is 3 cubed", "kind": "question", "src": "claude-gen"}
+{"text": "How many pounds are in a ton?", "kind": "question", "src": "claude-gen"}
+{"text": "how long is a football field in yards", "kind": "question", "src": "claude-gen"}
+{"text": "how many stripes are on the US flag", "kind": "question", "src": "claude-gen"}
+{"text": "what is the freezing point of water in kelvin", "kind": "question", "src": "claude-gen"}
+{"text": "How many hearts does an octopus have?", "kind": "question", "src": "claude-gen"}
+{"text": "how much sugar is in a can of cola in grams", "kind": "question", "src": "claude-gen"}
+{"text": "what is 25 percent of 64", "kind": "question", "src": "claude-gen"}
+{"text": "how many inches are in a yard", "kind": "question", "src": "claude-gen"}
+{"text": "how deep is the Mariana Trench in meters", "kind": "question", "src": "claude-gen"}
+{"text": "How many weeks are in a year?", "kind": "question", "src": "claude-gen"}
+{"text": "how many legs does a spider have", "kind": "question", "src": "claude-gen"}

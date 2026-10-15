@@ -175,6 +175,10 @@ const HOP_BRIDGES: usize = 8;
 /// the three right chains scored 11.0 to 11.6, the best wrong one 10.0 ("2016 United States presidential
 /// election — country: United States. United States — head of government: Donald Trump").
 const HOP_RELEVANCE: f32 = 10.5;
+/// Reranker margin (logits) by which the answer before the last must read closer to a follow-up to be its topic.
+/// On 39 held-out and phone follow-ups whose topic was in only one of the two turns, it picked the older turn
+/// for 7 of 10 that needed it and wrongly for 2 of 29 that did not. At 1.0 "Compare it with Canada" (1.09) left Australia.
+const REFERENT_MARGIN: f32 = 1.5;
 /// Asked-about facts per entity in the evidence.
 const FACTS_PER_ENTITY: usize = 3;
 /// Numbers every compared entity has, in the evidence of a comparison.
@@ -425,6 +429,22 @@ impl Engine {
             score: h.score(),
             license: pack.license.clone(),
             source_url: crate::pack::source_url(&pack.pack_id, &h.article.title, h.article.url_title.as_deref().unwrap_or_default()).unwrap_or_default(),
+        }
+    }
+
+    /// The history turn a follow-up refers to: the last one, unless the one before reads clearly closer to the
+    /// message ("Was he also a singer?" two turns after Louis Armstrong, with a sum in between). The reranker reads
+    /// the message against the first sentence of each answer. An expand request always means the last turn.
+    fn referent(&self, history: &[Turn], message: &str, expand: bool) -> usize {
+        let last = history.len().saturating_sub(1);
+        let Some(rr) = self.rr.as_ref().filter(|_| !expand && history.len() >= 2) else { return last };
+        let first = |t: &Turn| {
+            let plain = citations::plain_text(&citations::check(&t.answer, 0, &HashSet::new()));
+            crate::text::sentences(&plain).into_iter().next().unwrap_or_default().to_string()
+        };
+        match rr.score(message, &[first(&history[last - 1]), first(&history[last])]) {
+            Ok(s) if s[0] > s[1] + REFERENT_MARGIN => last - 1,
+            _ => last,
         }
     }
 
@@ -737,12 +757,17 @@ impl Engine {
         let about_one = |p: &Turn| route::route(&lib, &p.query, self.rr.as_ref(), &[], &req.packs).entities.len() == 1;
         route.needs_rewrite = prev.is_some_and(|p| expand || follow >= 0.5 || (own == 0 && follow >= FOLLOW_UP_LOW && about_one(p)));
         let inherit = expand || (own == 0 && route.needs_rewrite) || (prev.is_some() && own == 1 && (route.needs_rewrite || compares));
-        if (inherit || route.needs_rewrite) && let Some(prev) = prev {
+        let mut focus: Option<String> = None;
+        let mut referent = req.history.len().saturating_sub(1);
+        if (inherit || route.needs_rewrite) && prev.is_some() {
+            let at = self.referent(&req.history, &raw_query, expand);
+            referent = at;
+            let prev = &req.history[at];
             // The topic is what the last question names. A last question that named nothing and followed up
             // itself ("What did she discover?" after "Who was Marie Curie?") passes on the one before.
             let mut prev_entities = vec![];
             let mut topic = prev;
-            for t in req.history.iter().rev().take(2) {
+            for t in req.history[..=at].iter().rev().take(2) {
                 topic = t;
                 prev_entities = route::route(&lib, &t.query, self.rr.as_ref(), &[], &req.packs).entities;
                 let follows = |enc: &QueryEncoder| -> Result<bool> { Ok(Head::follow_up().classify(&enc.encode(&t.query)?) == "followup") };
@@ -750,7 +775,7 @@ impl Engine {
                     break;
                 }
             }
-            let from_answer = prev_entities.is_empty();
+            let mut from_answer = prev_entities.is_empty();
             if from_answer {
                 // "Who invented the telephone?" has no name in it, but the first sentence of its answer does.
                 let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
@@ -778,6 +803,21 @@ impl Engine {
                 }
                 _ => None,
             };
+            // The first sentence of the referred answer usually states its subject ("The longest river in Europe is
+            // the Volga."), where its question's names can be a list or another sense. It needs an answer from this
+            // engine (with sources); a comparison keeps the names it compared, and a message that names the referred
+            // question's thing ("Tell me more about Everest") keeps that name.
+            let renamed = route.entities.iter().any(|e| prev_entities.iter().any(|p| (p.pack, p.article.id) == (e.pack, e.article.id)));
+            let said = if expand || swap.is_some() || route.compare || compares || renamed || (!from_answer && prev_entities.len() >= 2) || prev.sources.is_empty() {
+                None
+            } else {
+                let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
+                let first = crate::text::sentences(&plain).into_iter().next().unwrap_or_default().trim().to_string();
+                let mut ents = route::link_entities(&lib, &first, &req.packs);
+                ents.sort_by_key(|e| first.find(&e.surface));
+                ents.truncate(2);
+                (!ents.is_empty()).then_some((first, ents))
+            };
             if expand {
                 route.query = format!("{} {}", names.join(" "), prev.query).trim_start().to_string();
                 route.entities.clear();
@@ -785,6 +825,12 @@ impl Engine {
                 route.compare = false;
             } else if let Some(q) = &swap {
                 route.query = q.clone();
+            } else if let Some((first, ents)) = said {
+                // The search reads the whole sentence; the evidence and the answer read the earlier question and this one.
+                focus = Some(format!("{} {}", prev.query.trim(), route.query));
+                route.query = format!("{first} {}", route.query);
+                prev_entities = ents;
+                from_answer = true;
             } else if !names.is_empty() {
                 route.query = format!("{} {}", names.join(" "), route.query);
             } else {
@@ -993,6 +1039,12 @@ impl Engine {
                 kept <= 3 || h.rerank.is_none_or(|r| r >= best - gap)
             });
         }
+        // A follow-up searched with an earlier answer's sentence: the evidence windows and the answer read the
+        // earlier question and this one instead, so that sentence does not pull them back to the old answer.
+        let question = match &focus {
+            Some(f) if question == route.query => f.clone(),
+            _ => question,
+        };
         let mut ev: Evidence = evidence::assemble(&lib, &hits, &question, budget, wd);
         if !s.use_cards {
             for src in &mut ev.sources {
@@ -1074,8 +1126,8 @@ impl Engine {
         let system = prompts::synthesis_system(&lib.snapshot_date(), !req.deep);
         // Keep the user's own words in front of the model; a rewrite from a small planner can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
-        // The last exchange, so a follow-up builds on it. Its citations point at another turn's sources.
-        let earlier = req.history.last().map(|t| {
+        // The exchange the follow-up refers to, so it builds on it. Its citations point at another turn's sources.
+        let earlier = req.history.get(referent).map(|t| {
             let plain = citations::plain_text(&citations::check(&t.answer, 0, &HashSet::new()));
             (t.query.as_str(), trunc(&crate::text::sentences(&plain).into_iter().take(2).collect::<Vec<_>>().join(" "), 300))
         });

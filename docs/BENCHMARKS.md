@@ -445,6 +445,51 @@ Over all 10 questions: card median 0.50 s (395-733 ms), first word median 7.2 s 
 - Recall@10 0.351, recall@40 0.472, and 0.269 among the sources the model saw (any-pack gold, so not comparable with the Wikipedia-only recall of `v18-release`).
 - Desktop latency: card p50 140 ms, first word p50 2.5 s.
 
+## Pixel 10: long sessions (2026-10-15)
+
+The 0.2.0 debug build (`be6d684`), the Starter set, the rewrite off, on USB power. Three conversations of 25 new questions each (follow-ups, topic switches, typos, false premises, units, recent facts), typed through the app's UI with no pause between questions. Claude Sonnet with web search graded every answer.
+
+- Stability: 75 of 75 answered, no crash or restart. PSS rose from 5.33 to 5.50 GB.
+- Quality did not fall later in a session, but it is uneven: 27 correct, 29 partly right, 16 wrong or unhelpful, 3 honest "the library does not say". 18 answers (24%) state a wrong fact as certain. The largest cause was follow-ups that searched the wrong topic (see the next section); others were the model's arithmetic, wrong numbers in list articles and questions that need a date.
+- Speed falls as the phone heats up (thermal status 1 from the fifth question on):
+
+| Questions | First word, median | Decode | Tap to full answer, median |
+|---|---|---|---|
+| 1-10 | 13 s | 8.7 tok/s | 34 s |
+| 31-40 | 19 s | 5.2 tok/s | 57 s |
+| 61-75 | 28-30 s | 4.8 tok/s | 63-65 s |
+
+Prefill fell from 60 to 25 tok/s over the run. Two planner calls took 37 s and 69 s on the hot phone and returned copies of the question.
+
+## Desktop: follow-up topics in long sessions (2026-10-15)
+
+A follow-up searches with the topic it refers to. Before, that topic came from the names linked in the last question ("Chernobyl (miniseries)", "List of rivers of Europe", "Solar System"), and a question two turns back fell through to the turn before it. Now:
+
+- The topic is the first sentence of the referred answer, which usually states its subject ("The longest river in Europe is the Volga."). The search reads that sentence; the evidence windows and the answer prompt read the earlier question and the new one.
+- The referred turn is the last one, unless the reranker reads the answer before it as clearly closer to the message (margin 1.5 logits). This catches "Was he also a singer?" two turns after Louis Armstrong. A message that names the referred question's thing ("Tell me more about Everest") keeps that name, and a comparison keeps the names it compared.
+- The follow-up head is retrained with 305 standalone questions of the kinds it took for follow-ups (short questions about common things, units and sums, questions with their own pronoun, comparisons that name both things) and 282 more follow-ups (`pipeline/configs/generated/turn-kind-standalone.jsonl`). Examples near a test question were dropped. False follow-ups on all labeled turns fell from 10 to 3, missed follow-ups rose from 11 to 12 (phone encoder, bar 0.5).
+
+Search-level replay (no LLM, phone settings, Starter set, each turn with the history that the unchanged build produced). "Held-out" is 8 conversations of 15 turns that a separate agent wrote for this test; no fix was tuned on them.
+
+| Set | Follow-ups that find the gold article (top 8), before → after | Standalone questions that get an old topic, before → after |
+|---|---|---|
+| Pixel sessions (75 turns, the phone's own history) | 10/18 → 14/18 | 9/51 → 3/51 |
+| Held-out sessions (120 turns) | 34/51 → 43/51 (recall@8 0.539 → 0.755) | 3/49 → 2/49 |
+| Conversation sets (88 searched turns) | 48/49 → 48/49 | 0/22 → 0/22 |
+
+Answers (desktop, each build with its own history, blind pairwise, Claude Sonnet as the judge): after vs before 52 / 39 / 95 (p = 0.21). Follow-ups alone tie (22 / 22 / 26): the model already names the right subject in most follow-ups from the last exchange in its prompt (57 of 69 before, 58 after). The change fixes the confidently wrong follow-ups of the phone run: "Which countries does it flow through?" (Danube → Volga), "What else did he write?" (no works → Animal Farm), "Who runs the car company named after him?" (Edison → Elon Musk), "How tall is it in feet?" (Lakhta Center → Burj Khalifa). Still wrong: "Compare cobras and pythons" after Python and Java.
+
+Cost: one reranker call with two short texts per follow-up; desktop card median of follow-ups 99 → 109 ms, standalone questions unchanged.
+
+On the Pixel (the same 3 × 25 questions as in the long-session test above, Claude Sonnet with web search grading each answer, first run → this build):
+
+| | Correct | Partly | Wrong | Unhelpful | Honest gap | Confidently wrong | Wrong topic |
+|---|---|---|---|---|---|---|---|
+| 0.2.0 (`be6d684`) | 27 | 29 | 11 | 5 | 3 | 18 | 3 |
+| This build | 37 | 24 | 11 | 2 | 1 | 17 | 1 |
+
+The remaining confidently wrong answers are facts and numbers, not topics: Reagan for the president when the Berlin Wall fell, Trump for 2016, the Roman Empire "dissolved" in 395, Nigeria and Brazil, Ganymede's mass. No crash in 75 questions. The median first word was 28.5 s against 21.9 s with the same prompt sizes (672 vs 673 new tokens): the phone was hotter in its third long run of the day (prefill 24 vs 33 tok/s).
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.

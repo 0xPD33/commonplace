@@ -77,7 +77,7 @@ pub fn sentence_window(text: &str, qterms: &HashSet<String>, max_tokens: usize) 
     if approx_tokens(text) <= max_tokens {
         return text.to_string();
     }
-    let sents = sentences(text);
+    let sents: Vec<&str> = sentences(text).into_iter().flat_map(|s| split_long(s, max_tokens / 2)).collect();
     let scored: Vec<(usize, f32)> = sents
         .iter()
         .enumerate()
@@ -116,6 +116,22 @@ pub fn sentence_window(text: &str, qterms: &HashSet<String>, max_tokens: usize) 
         out.push_str(sents[i]);
         last = Some(i);
     }
+    out
+}
+
+/// A "sentence" longer than `limit` tokens, such as a table flattened to text, cut at spaces into pieces that fit.
+fn split_long(s: &str, limit: usize) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut rest = s;
+    while approx_tokens(rest) > limit {
+        let cut = rest.match_indices(' ').map(|(i, _)| i).take_while(|&i| approx_tokens(&rest[..i]) <= limit).last().unwrap_or(0);
+        if cut == 0 {
+            break;
+        }
+        out.push(rest[..cut].trim());
+        rest = rest[cut..].trim_start();
+    }
+    out.push(rest);
     out
 }
 

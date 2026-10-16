@@ -91,9 +91,11 @@ pub fn sentences(text: &str) -> Vec<&str> {
     out
 }
 
-/// Rough token estimate (≈4 characters per token for English).
+/// Rough token estimate: about 4 bytes per token for English, and one token per digit, as Ling splits numbers.
+/// Bytes ÷ 4 counted a table of exchange rates as 601 tokens; the model read about 1,400.
 pub fn approx_tokens(s: &str) -> usize {
-    s.len().div_ceil(4)
+    let digits = s.bytes().filter(u8::is_ascii_digit).count();
+    (s.len() - digits).div_ceil(4) + digits
 }
 
 /// Numbers written with digits, normalized: commas removed, trailing ".0" kept as written.

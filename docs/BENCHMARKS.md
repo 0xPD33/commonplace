@@ -509,6 +509,29 @@ Builds: the code of `25ee4c0` to `6b5afa8`. The planner numbers come from the st
 - New prompt tokens: median 586 → 410 (195 fewer). At the 23–30 tok/s prefill of a hot Pixel, that is 6.5–8.5 s less to the first word (estimate from the measured rates; not yet measured on the Pixel). Answers were 15 tokens shorter on average.
 - Blind pairwise, Claude Opus judge: 600 wins 30, ties 13, loses 20 (sign test p = 0.20); mean score 6.71 against 6.55, difference +0.17 [−0.40, +0.71]. Large swings went both ways: 600 was better by 3 points or more on 6 questions, 400 on 5.
 
+## Pixel 10: the build after 0.2.1 (2026-10-16)
+
+The debug build of `2bba986`, the Starter set, the rewrite off, on USB power. Session s2 of the long-session test (25 questions), then 4 questions about Louis Armstrong, typed through the app's UI. In the earlier runs s2 was the second session, so the phone started hotter; part of the gain below is heat.
+
+| | 0.2.0 (`be6d684`) | 0.2.1 | `2bba986` |
+|---|---|---|---|
+| Crashes | 0 | 0 | 0 |
+| First word, median | 21 s | 29 s | 18 s |
+| Tap to full answer, median | 55 s | 67 s | 41 s |
+| New prompt tokens at headroom > 0.85, median | 689 | 644 | 551 |
+| PSS at the end | 5.41 GB | 5.50 GB | 5.45 GB |
+
+- "Explain it for a ten year old" took 41 s from tap to answer; with the planner it took 109–122 s. "What are the symptoms of dehydration?" had its first word after 18 s; the planner made it 102 s in the first run.
+- "How many cups are in a liter?" now answers 4.23 US cups (before: 2.11). "Was he also a singer?" answers that Louis Armstrong was a singer.
+- "What is the exchange rate of the yen to the euro?" took 39 s to the first word (71 s and 82 s in the earlier runs): see the next section.
+
+## Desktop: token estimate for numbers (2026-10-16)
+
+The evidence budget counted bytes ÷ 4 as tokens. Ling reads each digit as a token, so a table of exchange rates counted as 601 tokens took about 1,470 new prompt tokens, and the table was one "sentence" that the evidence code kept whole. Over 127 desktop answers, "other bytes ÷ 4 + 1 per digit" fits the real prompt sizes with a largest error of 204 tokens, against 812 for bytes ÷ 4. Now the estimate counts digits that way, and a sentence longer than half a passage's window is cut at spaces into pieces.
+
+- The yen question: 1,470 → 560 new prompt tokens, 4 sources instead of 1, and the answer gives €1 = ¥150.70 (2024) instead of reading yen per US dollar as yen per euro.
+- The 63 seeds: new prompt tokens median 586 → 571, largest 1,404 → 773. Blind pairwise against the build before: 24 wins, 16 ties, 23 losses (p = 1.00).
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.

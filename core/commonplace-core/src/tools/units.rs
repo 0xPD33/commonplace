@@ -35,7 +35,7 @@ const UNITS: &[(&[&str], Dim, f64, &str)] = &[
     (&["l", "liter", "liters", "litre", "litres"], Dim::Volume, 1.0, "L"),
     (&["gal", "gallon", "gallons", "us gallon", "us gallons"], Dim::Volume, 3.785411784, "US gal"),
     (&["imperial gallon", "imperial gallons"], Dim::Volume, 4.54609, "imp gal"),
-    (&["cup", "cups"], Dim::Volume, 0.2365882365, "cups"),
+    (&["cup", "cups", "us cup", "us cups"], Dim::Volume, 0.2365882365, "US cups"),
     (&["fl oz", "fluid ounce", "fluid ounces"], Dim::Volume, 0.0295735295625, "fl oz"),
     (&["tbsp", "tablespoon", "tablespoons"], Dim::Volume, 0.01478676478125, "tbsp"),
     (&["tsp", "teaspoon", "teaspoons"], Dim::Volume, 0.00492892159375, "tsp"),
@@ -56,6 +56,11 @@ const UNITS: &[(&[&str], Dim, f64, &str)] = &[
 
 static PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?i)(-?\d[\d,]*(?:\.\d+)?)\s*([a-z°/ 2]+?)\s+(?:in|to|into|as)\s+([a-z°/ 2]+?)\s*\??$").unwrap()
+});
+
+/// "How many cups are in a liter?": the target unit comes first, and "a" stands for 1.
+static HOW_MANY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\bhow many\s+([a-z°/ 2]+?)\s+(?:(?:are|is)\s+)?(?:there\s+)?(?:in|per|is|are|make|make up|equal|equals)\s+(an?|one|-?\d[\d,]*(?:\.\d+)?)\s*([a-z°/ 2]+?)\s*$").unwrap()
 });
 
 fn find(name: &str) -> Option<&'static (&'static [&'static str], Dim, f64, &'static str)> {
@@ -91,11 +96,15 @@ fn round_sig(x: f64) -> String {
 
 /// If the query asks for a unit conversion, return a display line such as `10 mi = 16.09 km`.
 pub fn convert_query(query: &str) -> Option<String> {
-    let q = query.trim().trim_start_matches(|c: char| !c.is_ascii_digit() && c != '-');
-    let q = q.trim_end_matches(['?', '.', '!']);
-    let caps = PATTERN.captures(q)?;
-    let v: f64 = caps[1].replace(',', "").parse().ok()?;
-    let (from, to) = (find(&caps[2])?, find(&caps[3])?);
+    let whole = query.trim().trim_end_matches(['?', '.', '!']);
+    let (v, from, to) = if let Some(caps) = HOW_MANY.captures(whole) {
+        let v: f64 = if caps[2].chars().any(|c| c.is_ascii_digit()) { caps[2].replace(',', "").parse().ok()? } else { 1.0 };
+        (v, find(&caps[3])?, find(&caps[1])?)
+    } else {
+        let q = whole.trim_start_matches(|c: char| !c.is_ascii_digit() && c != '-');
+        let caps = PATTERN.captures(q)?;
+        (caps[1].replace(',', "").parse().ok()?, find(&caps[2])?, find(&caps[3])?)
+    };
     if from.1 != to.1 {
         return None;
     }

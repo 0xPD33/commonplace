@@ -31,10 +31,6 @@ pub struct RetrievalSettings {
     /// Weight of the retrieval (fusion) rank in the final score: the first fused hit gets `rerank_blend`,
     /// the last gets 0. 0 lets the reranker alone decide.
     pub rerank_blend: f32,
-    /// Deep answers: after the rerank, the top `expand_articles` articles each add up to `expand_passages`
-    /// passages next to their best hit, reranked in one more small batch. 0 turns this off.
-    pub expand_articles: usize,
-    pub expand_passages: usize,
     pub use_sparse: bool,
     pub use_dense: bool,
     pub use_rerank: bool,
@@ -57,8 +53,6 @@ impl Default for RetrievalSettings {
             rerank_keep: 8,
             keyword_only_keep: 5,
             rerank_blend: 0.0,
-            expand_articles: 1,
-            expand_passages: 4,
             use_sparse: true,
             use_dense: true,
             use_rerank: true,
@@ -87,15 +81,6 @@ impl Hit {
             format!("{} — {}: {}", self.article.title, self.passage.section_path, self.passage.text)
         }
     }
-
-    /// The rerank text with the article's one-line summary before the passage.
-    fn bridged_text(&self) -> String {
-        match self.article.oneliner.as_deref().filter(|o| !self.passage.text.starts_with(o)) {
-            Some(o) if self.passage.section_path.is_empty() => format!("{}: {o} {}", self.article.title, self.passage.text),
-            Some(o) => format!("{} — {}: {o} {}", self.article.title, self.passage.section_path, self.passage.text),
-            None => self.rerank_text(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
@@ -105,7 +90,6 @@ pub struct RetrievalStats {
     pub dense_ms: f64,
     pub fuse_ms: f64,
     pub rerank_ms: f64,
-    pub expand_ms: f64,
     pub n_sparse: usize,
     pub n_dense: usize,
     pub n_fused: usize,
@@ -279,47 +263,6 @@ impl Retriever<'_> {
         st.rerank_top = hits.iter().take(5).map(Hit::score).collect();
         st.rerank_ms = ms(t);
         Ok(hits)
-    }
-
-    /// Passages beside the best hit of each of the top `expand_articles` articles, reranked and merged into
-    /// `ranked`. The answer can sit next to the passage that matched ("Early life" after a biography's lead), and
-    /// neighbors share the hit's zstd frame, so loading them is cheap.
-    pub fn expand(&self, query: &str, mut ranked: Vec<Hit>, st: &mut RetrievalStats) -> Result<Vec<Hit>> {
-        let t = Instant::now();
-        let Some(rr) = self.rr.filter(|_| self.s.use_rerank) else { return Ok(ranked) };
-        let mut tops: Vec<&Hit> = Vec::new();
-        for h in &ranked {
-            if tops.len() < self.s.expand_articles && !tops.iter().any(|t| (t.pack, t.article.id) == (h.pack, h.article.id)) {
-                tops.push(h);
-            }
-        }
-        let mut ids: Vec<((u8, u32), f32)> = Vec::new();
-        let mut hit_score: HashMap<(u8, u32), f32> = HashMap::new();
-        for h in tops {
-            let (lo, hi) = (h.article.first_passage, h.article.first_passage + h.article.n_passages);
-            let w = 2 * self.s.expand_passages as u32;
-            let mut near: Vec<u32> =
-                (h.pid.saturating_sub(w).max(lo)..(h.pid + w + 1).min(hi)).filter(|&p| !ranked.iter().any(|r| (r.pack, r.pid) == (h.pack, p))).collect();
-            near.sort_by_key(|p| p.abs_diff(h.pid));
-            for p in near.into_iter().take(self.s.expand_passages) {
-                ids.push(((h.pack, p), h.fused));
-                hit_score.insert((h.pack, p), h.score());
-            }
-        }
-        if !ids.is_empty() {
-            let mut extra = self.load(&ids)?;
-            // A neighbor often names neither the question's words nor its subject ("he took a first in physics
-            // from Oxford"), so it is scored after the article's one-line summary, and ranks below its hit.
-            let docs: Vec<String> = extra.iter().map(Hit::bridged_text).collect();
-            for (h, s) in extra.iter_mut().zip(rr.score(query, &docs)?) {
-                let below_hit = hit_score[&(h.pack, h.pid)] - 1e-3;
-                h.rerank = Some((s - list_penalty(&h.article.title) - self.pack_penalty(h.pack)).min(below_hit));
-            }
-            ranked.extend(extra);
-            ranked.sort_unstable_by(|a, b| b.score().total_cmp(&a.score()));
-        }
-        st.expand_ms = ms(t);
-        Ok(ranked)
     }
 
     /// The fused pool, reranked: every scored hit, best first.

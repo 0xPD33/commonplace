@@ -124,7 +124,7 @@ enum Cmd {
         pack_id: String,
         #[arg(long)]
         title: String,
-        #[arg(long, value_parser = ["llm-fast", "llm-small", "llm-deep", "stt"])]
+        #[arg(long, value_parser = ["llm-fast", "llm-small", "stt"])]
         role: String,
         #[arg(long)]
         hf_repo: String,
@@ -591,10 +591,9 @@ fn build_model(
         name
     };
     let role = match role {
-        "llm-fast" => ModelRole::LlmFast,
         "llm-small" => ModelRole::LlmSmall,
         "stt" => ModelRole::Stt,
-        _ => ModelRole::LlmDeep,
+        _ => ModelRole::LlmFast,
     };
     let _ = std::fs::remove_file(out.join("manifest.json"));
     let (files, size) = import::file_entries(out)?;

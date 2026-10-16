@@ -219,12 +219,9 @@ flowchart TD
     F["Wikidata facts"]
     R["Reader snippet, DeBERTa, optional"]
   end
-  RR -.->|"deep or unresolved follow-up"| PLAN["Planner subqueries"]
-  PLAN -.-> RRF
   RR --> EV["Evidence selection, 600 tokens"]
   RR --> HOP["Wikidata second hop"]
   HOP -.-> EV
-  PLAN -.-> EV
   EV --> COMP["Optional compute: ratios, units, calc"]
   INT -.->|"calc"| COMP
   COMP --> GEN["Ling-3.0-tiny streams answer"]

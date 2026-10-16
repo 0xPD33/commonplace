@@ -48,7 +48,6 @@ pub struct EngineOptions {
 pub enum ModelKind {
     Fast,
     Small,
-    Deep,
     /// Voice input. `load_model` finds no such model.
     Voice,
 }
@@ -58,7 +57,6 @@ impl From<ModelKind> for ModelRole {
         match k {
             ModelKind::Fast => ModelRole::LlmFast,
             ModelKind::Small => ModelRole::LlmSmall,
-            ModelKind::Deep => ModelRole::LlmDeep,
             ModelKind::Voice => ModelRole::Stt,
         }
     }
@@ -68,7 +66,6 @@ fn kind(r: &ModelRole) -> ModelKind {
     match r {
         ModelRole::LlmFast => ModelKind::Fast,
         ModelRole::LlmSmall => ModelKind::Small,
-        ModelRole::LlmDeep => ModelKind::Deep,
         ModelRole::Stt => ModelKind::Voice,
     }
 }
@@ -149,7 +146,6 @@ pub enum TurnKind {
 pub struct AskInput {
     pub query: String,
     pub history: Vec<TurnRecord>,
-    pub deep: bool,
     /// Thinking mode: the model reasons first (slower, capped by `Settings::think_budget`).
     pub think: bool,
     pub thermal_headroom: Option<f32>,
@@ -160,7 +156,6 @@ pub struct AskInput {
 #[derive(uniffi::Enum, Clone, Copy)]
 pub enum AskStage {
     Searching,
-    Planning,
     Reading,
     Computing,
     Thinking,
@@ -232,7 +227,6 @@ pub struct Timing {
     pub gen_tokens: u32,
     pub evidence_tokens: u32,
     pub peak_rss_mb: f64,
-    pub planner_used: bool,
     pub stages: Vec<StageTime>,
 }
 
@@ -257,7 +251,6 @@ pub struct QuerySummary {
     pub ts_ms: u64,
     pub query: String,
     pub model: String,
-    pub deep: bool,
     pub timing: Timing,
     pub thermal_headroom: Option<f32>,
     pub threads: Option<u32>,
@@ -319,7 +312,6 @@ pub struct Settings {
     pub think_budget: u32,
     /// Rewrite each message into a standalone, typo-free search query first (one short model call).
     pub rewrite: bool,
-    pub use_planner: bool,
     pub use_rerank: bool,
     pub use_dense: bool,
     pub nprobe: u32,
@@ -512,7 +504,6 @@ fn timing(r: &QueryRecord) -> Timing {
         gen_tokens: s.map(|s| s.gen_tokens).unwrap_or(0),
         evidence_tokens: r.evidence_tokens as u32,
         peak_rss_mb: r.peak_rss_mb,
-        planner_used: r.planner_used,
         stages: r.stages.iter().map(|(n, ms)| StageTime { name: n.clone(), ms: *ms }).collect(),
     }
 }
@@ -528,7 +519,6 @@ impl EventSink for ListenerSink {
             Event::Stage { stage, detail } => self.l.on_stage(
                 match stage {
                     Stage::Searching => AskStage::Searching,
-                    Stage::Planning => AskStage::Planning,
                     Stage::Reading => AskStage::Reading,
                     Stage::Computing => AskStage::Computing,
                     Stage::Thinking => AskStage::Thinking,
@@ -612,9 +602,8 @@ impl CommonplaceEngine {
         let loader: LlmLoader = Box::new(move |mp, threads| {
             let file = mp.file().ok_or_else(|| anyhow::anyhow!("model pack has no file"))?;
             let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
-            let deep = mp.role() == Some(&ModelRole::LlmDeep);
             let batch_threads = (cpus.len() as u32).max(threads);
-            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: !deep, state_dir: Some(state_dir.clone()) })?;
+            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: true, state_dir: Some(state_dir.clone()) })?;
             Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
         });
         let engine = Engine::new(cfg, Some(loader))?;
@@ -726,7 +715,6 @@ impl CommonplaceEngine {
                 .into_iter()
                 .map(|t| engine::Turn { query: t.query, answer: t.answer, sources: t.sources.iter().map(source_ref).collect() })
                 .collect(),
-            deep: input.deep,
             think: input.think,
             packs: input.packs,
         };
@@ -928,7 +916,6 @@ impl CommonplaceEngine {
                 ts_ms: r.ts_ms,
                 query: r.query.clone(),
                 model: r.model_id.clone().unwrap_or_default(),
-                deep: r.deep,
                 timing: timing(r),
                 thermal_headroom: r.thermal_headroom,
                 threads: r.threads,
@@ -949,7 +936,6 @@ impl CommonplaceEngine {
             max_answer_tokens: s.max_answer_tokens,
             think_budget: s.think_budget,
             rewrite: s.rewrite,
-            use_planner: s.use_planner,
             use_rerank: s.retrieval.use_rerank,
             use_dense: s.retrieval.use_dense,
             nprobe: s.retrieval.nprobe as u32,
@@ -964,7 +950,6 @@ impl CommonplaceEngine {
         s.max_answer_tokens = n.max_answer_tokens.clamp(64, 1024);
         s.think_budget = n.think_budget.clamp(64, 2048);
         s.rewrite = n.rewrite;
-        s.use_planner = n.use_planner;
         s.retrieval.use_rerank = n.use_rerank;
         s.retrieval.use_dense = n.use_dense;
         s.retrieval.nprobe = n.nprobe.clamp(1, 512) as usize;

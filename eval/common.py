@@ -18,7 +18,7 @@ LIBRARY = "data/library"
 DEFAULT_MODEL = "data/models/llm/Ling-3.0-tiny-Q4_0.gguf"
 # What the phone ships, as `commonplace` flags: fusion pool size and the quantized encoders.
 PHONE_CLI = ["--fuse-keep=24", "--leaf-model=onnx/model_quantized.onnx", "--ettin-model=onnx/model_sel8.onnx"]
-ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-planner", "no-doc2query", "no-llm"]
+ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-doc2query", "no-llm"]
 CATEGORIES = [
     "factual", "explanation", "comparison", "multihop", "numeric",
     "travel", "howto", "out_of_corpus", "long_tail",

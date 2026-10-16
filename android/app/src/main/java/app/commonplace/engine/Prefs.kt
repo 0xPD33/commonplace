@@ -62,10 +62,6 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("rewrite", false)
         set(v) = sp.edit().putBoolean("rewrite", v).apply()
 
-    var usePlanner: Boolean
-        get() = sp.getBoolean("planner", true)
-        set(v) = sp.edit().putBoolean("planner", v).apply()
-
     var recent: List<String>
         get() = sp.getString("recent", "")!!.split('\n').filter { it.isNotBlank() }
         set(v) = sp.edit().putString("recent", v.take(12).joinToString("\n")).apply()
@@ -83,7 +79,6 @@ class Prefs(context: Context) {
                 maxAnswerTokens = answerTokens.toUInt(),
                 thinkBudget = thinkBudget.toUInt(),
                 rewrite = rewrite,
-                usePlanner = usePlanner,
             ),
         )
     }

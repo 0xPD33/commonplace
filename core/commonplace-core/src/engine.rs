@@ -1,4 +1,4 @@
-//! The orchestrator: Plan → Retrieve → Compute → Synthesize, with streaming events.
+//! The orchestrator: Route → Retrieve → Compute → Synthesize, with streaming events.
 
 use crate::citations::{self, Segment};
 use crate::encoders::{Head, QueryEncoder, Reader, Reranker};
@@ -38,14 +38,11 @@ pub struct EngineConfig {
 pub struct Settings {
     pub retrieval: RetrievalSettings,
     pub evidence_tokens: usize,
-    pub deep_evidence_tokens: usize,
     /// Leave out passages whose rerank score is more than this below the best one (keeps at least 3).
     pub evidence_score_gap: Option<f32>,
     pub max_answer_tokens: u32,
-    pub deep_max_answer_tokens: u32,
     /// Let the model rewrite each message into a standalone, typo-free search query first.
     pub rewrite: bool,
-    pub use_planner: bool,
     pub use_compute: bool,
     pub use_cards: bool,
     pub llm_threads: u32,
@@ -58,11 +55,8 @@ impl Default for Settings {
         Self {
             retrieval: RetrievalSettings::default(),
             evidence_tokens: 600,
-            deep_evidence_tokens: 2500,
             evidence_score_gap: None,
             max_answer_tokens: 400,
-            deep_max_answer_tokens: 700,
-            use_planner: true,
             // Off: on the Pixel it doubles the card time (2.0 vs 1.0 s) and did not raise the seeds score (docs/BENCHMARKS.md).
             rewrite: false,
             use_compute: true,
@@ -104,7 +98,6 @@ struct Rewrite {
 pub struct AskRequest {
     pub query: String,
     pub history: Vec<Turn>,
-    pub deep: bool,
     /// Let the model reason before it answers (slower; capped by `Settings::think_budget`).
     pub think: bool,
     /// Pack ids this question searches (retrieval, entity linking, Wikidata). Empty: every enabled pack.
@@ -114,7 +107,6 @@ pub struct AskRequest {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum Stage {
     Searching,
-    Planning,
     Reading,
     Computing,
     Thinking,
@@ -235,18 +227,6 @@ pub struct AskOutcome {
     pub sources: Vec<SourceRef>,
     pub segments: Vec<Segment>,
     pub record: QueryRecord,
-}
-
-#[derive(Debug, Clone, Default, Deserialize)]
-struct Plan {
-    #[serde(default)]
-    standalone_query: String,
-    #[serde(default)]
-    intent: String,
-    #[serde(default)]
-    subqueries: Vec<String>,
-    #[serde(default)]
-    needs_numbers: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -399,7 +379,7 @@ impl Engine {
             let _ = llm.generate(prompts::REWRITE_SYSTEM, "Message: hello", &one, &mut |_| false);
         }
         let answer = GenParams { keep_prefix: true, ..one };
-        let _ = llm.generate(&prompts::synthesis_system(snapshot_date, true), "Question: hello", &answer, &mut |_| false);
+        let _ = llm.generate(&prompts::synthesis_system(snapshot_date), "Question: hello", &answer, &mut |_| false);
     }
 
     pub fn unload_model(&self) {
@@ -655,7 +635,6 @@ impl Engine {
         let mut rec = QueryRecord {
             ts_ms: telemetry::now_ms(),
             query: req.query.clone(),
-            deep: req.deep,
             think: req.think,
             build: telemetry::BUILD.to_string(),
             thermal_headroom: *self.thermal.lock().unwrap(),
@@ -932,15 +911,6 @@ impl Engine {
             }
         }
 
-        // A deep answer has room for context beyond the best passages; a short one would lose a source to it.
-        let ranked = if req.deep {
-            let ranked = retriever.expand(&route.query, ranked, &mut rec.retrieval)?;
-            hits = pick(&ranked);
-            ranked
-        } else {
-            ranked
-        };
-
         let Some((_, llm)) = llm.filter(|_| !sink.cancelled()) else {
             let sources = hits.iter().enumerate().map(|(i, h)| Self::source_ref(&lib, h, i as u32 + 1)).collect();
             return Ok(finish(rec, vec![], sources, card));
@@ -951,57 +921,20 @@ impl Engine {
             rec.threads = Some(n);
         }
 
-        // Stage 2: subqueries. A planner call costs ~19 s on the Pixel CPU (and often returns no subqueries),
-        // so it runs only in deep mode and for follow-ups that entity carry-over could not resolve.
-        // Comparisons get one template search per entity instead.
-        let mut question = route.query.clone();
-        let mut plan = Plan::default();
-        let wants_plan = req.deep || (route.needs_rewrite && route.entities.is_empty());
-        if !(s.use_planner && wants_plan) && route.compare && route.entities.len() >= 2 {
+        // Stage 2: a comparison gets one more search per compared thing.
+        let mut subqueries: Vec<String> = Vec::new();
+        if route.compare && route.entities.len() >= 2 {
             let attr = route::attribute(&route);
             // The user's words, not the linked title: a wrong link ("Nile (band)") must not steer the search.
-            plan.subqueries = route.entities.iter().map(|e| format!("{} {attr}", e.surface).trim().to_string()).collect();
-            rec.subqueries = plan.subqueries.clone();
+            subqueries = route.entities.iter().map(|e| format!("{} {attr}", e.surface).trim().to_string()).collect();
+            rec.subqueries = subqueries.clone();
         }
-        if s.use_planner && wants_plan {
-            stage(&mut rec, Stage::Planning, String::new());
-            let turns: String = req.history.iter().rev().take(2).rev().map(|t| format!("Q: {} A: {} ", t.query, trunc(&t.answer, 200))).collect();
-            let titles: String = hits
-                .iter()
-                .map(|h| format!("{} ({})", h.article.title, h.article.oneliner.as_deref().map(|o| trunc(o, 100)).unwrap_or_default()))
-                .collect::<Vec<_>>()
-                .join("; ");
-            let mut out = String::new();
-            let st = llm.generate(
-                prompts::PLANNER_SYSTEM,
-                &prompts::planner_user(&turns, &raw_query, &titles),
-                &GenParams::json(160, prompts::PLANNER_GRAMMAR),
-                &mut |t| {
-                    out.push_str(t);
-                    !sink.cancelled()
-                },
-            )?;
-            rec.planner = Some(st);
-            rec.planner_used = true;
-            if let Some(p) = parse_json::<Plan>(&out) {
-                plan = p;
-            }
-            if !plan.standalone_query.trim().is_empty() {
-                question = plan.standalone_query.trim().to_string();
-            }
-            plan.subqueries.retain(|q| !q.trim().is_empty());
-            plan.subqueries.truncate(3);
-            rec.subqueries = plan.subqueries.clone();
-        }
-        if !plan.subqueries.is_empty() || question != route.query {
-            // The first search's pool keeps its rerank scores while the question is the same.
+        if !subqueries.is_empty() {
+            // The first search's pool keeps its rerank scores.
             let mut pool: Vec<Hit> = if route.needs_rewrite { Vec::new() } else { ranked.clone() };
-            if question != route.query {
-                pool.iter_mut().for_each(|h| h.rerank = None);
-            }
-            let mut queries = plan.subqueries.clone();
-            if route.needs_rewrite || queries.is_empty() {
-                queries.push(question.clone());
+            let mut queries = subqueries;
+            if route.needs_rewrite {
+                queries.push(route.query.clone());
             }
             for q in &queries {
                 let ents = route::link_entities(&lib, q, &req.packs);
@@ -1014,7 +947,7 @@ impl Engine {
             }
             pool.sort_by(|a, b| b.fused.total_cmp(&a.fused));
             pool.truncate(s.retrieval.fuse_keep * 2);
-            let mut reranked = retriever.rerank(&question, pool, 24, &mut rec.retrieval)?;
+            let mut reranked = retriever.rerank(&route.query, pool, 24, &mut rec.retrieval)?;
             let must: Vec<(u8, u32)> = if route.compare { route.entities.iter().map(|e| (e.pack, e.article.id)).collect() } else { vec![] };
             if route.compare {
                 // A compared thing that no passage in the pool covers still gets its article's lead.
@@ -1024,14 +957,14 @@ impl Engine {
                     }
                 }
             }
-            hits = select_diverse(&reranked, if req.deep { 16 } else { 10 }, 3, &must);
+            hits = select_diverse(&reranked, 10, 3, &must);
         }
         if sink.cancelled() {
             return Ok(finish(rec, vec![], vec![], card));
         }
 
         // Stage 3: evidence.
-        let budget = if req.deep { s.deep_evidence_tokens } else { s.evidence_tokens };
+        let budget = s.evidence_tokens;
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {
@@ -1041,10 +974,7 @@ impl Engine {
         }
         // A follow-up searched with an earlier answer's sentence: the evidence windows and the answer read the
         // earlier question and this one instead, so that sentence does not pull them back to the old answer.
-        let question = match &focus {
-            Some(f) if question == route.query => f.clone(),
-            _ => question,
-        };
+        let question = focus.unwrap_or_else(|| route.query.clone());
         let mut ev: Evidence = evidence::assemble(&lib, &hits, &question, budget, wd);
         if !s.use_cards {
             for src in &mut ev.sources {
@@ -1064,7 +994,7 @@ impl Engine {
 
         // Stage 3b: compute. Wikidata values first (no LLM); the LLM compute call re-reads the whole evidence
         // (10–13 s on the Pixel), so it runs only for an explicit calculation that Wikidata cannot answer.
-        let wants_numbers = plan.needs_numbers || plan.intent == "calc" || intent == "calc";
+        let wants_numbers = intent == "calc";
         // Only a question that asks for a number gets one computed: "Compare Mars and Venus" would get the ratio of
         // whichever number matches best, and the answer would lead with it.
         let asks_number = |e: &QueryEncoder| -> Result<bool> {
@@ -1081,7 +1011,7 @@ impl Engine {
         for c in calcs {
             ev.add_computed(c);
         }
-        if s.use_compute && (calc_sure || plan.needs_numbers || plan.intent == "calc") && !deterministic && !ev.numbers.is_empty() {
+        if s.use_compute && calc_sure && !deterministic && !ev.numbers.is_empty() {
             stage(&mut rec, Stage::Computing, String::new());
             let mut out = String::new();
             let st = llm.generate(
@@ -1123,8 +1053,8 @@ impl Engine {
         rec.evidence = rendered.clone();
         rec.evidence_tokens = crate::text::approx_tokens(&rendered);
         ev.numbers.extend(crate::text::numbers(&lib.snapshot_date()));
-        let system = prompts::synthesis_system(&lib.snapshot_date(), !req.deep);
-        // Keep the user's own words in front of the model; a rewrite from a small planner can drift.
+        let system = prompts::synthesis_system(&lib.snapshot_date());
+        // Keep the user's own words in front of the model; a rewritten question can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
         // The exchange the follow-up refers to, so it builds on it. Its citations point at another turn's sources.
         let earlier = req.history.get(referent).map(|t| {
@@ -1133,8 +1063,7 @@ impl Engine {
         });
         let user = prompts::synthesis_user(&rendered, &asked, earlier.as_ref().map(|(q, a)| (*q, a.as_str())));
         let n = ev.count();
-        let max = if req.deep { s.deep_max_answer_tokens } else { s.max_answer_tokens };
-        let mut params = GenParams::synthesis(max);
+        let mut params = GenParams::synthesis(s.max_answer_tokens);
         params.think_budget = req.think.then_some(s.think_budget);
         params.keep_prefix = true;
         let mut raw = String::new();

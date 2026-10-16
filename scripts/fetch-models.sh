@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Download pinned model files into data/models. Dev-time only: the app never uses the network.
-# Usage: scripts/fetch-models.sh [all|encoders|reranker-32m|fastlane|llm-small|llm-fast|llm-lfm|llm-gemma|llm-maple|llm-deep|mxbai|stt]  (all skips the 16 GB deep model)
+# Usage: scripts/fetch-models.sh [all|encoders|reranker-32m|fastlane|llm-small|llm-fast|llm-lfm|llm-gemma|llm-maple|mxbai|stt]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT=data/models
@@ -21,7 +21,6 @@ ETTIN32=cross-encoder/ettin-reranker-32m-v1; ETTIN32_REV=b33e5ceb5110773ea9cf5e0
 MXBAI=mixedbread-ai/mxbai-embed-large-v1; MXBAI_REV=b33106f585b9ce46904ad7443a3b52b7a63e231c
 LFM_S=LiquidAI/LFM2.5-1.2B-Instruct-GGUF; LFM_S_REV=8ed288026e23958ad9dfa92d53ed773a8eee7125
 LFM_F=LiquidAI/LFM2.5-8B-A1B-GGUF;        LFM_F_REV=49c14831707011e64d70b2ebd8462ba08d608434
-QWEN=bartowski/Qwen_Qwen3.6-35B-A3B-GGUF;  QWEN_REV=5c2410d71524f4f72b023ce8daf7a80528226d5f
 LING=bartowski/Ling-3.0-tiny-GGUF;         LING_REV=ea072726af0d2e8ba325b2f90fc0efa762105a91
 GEMMA=litert-community/gemma-4-E2B-it-litert-lm; GEMMA_REV=b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1
 MAPLE=deepgrove/maple-preview-GGUF;       MAPLE_REV=f5466f918e0c50cdb9d4d47a6f35813509a42a30
@@ -49,7 +48,6 @@ mxbai() {
 llm_fast()  { fetch $LING $LING_REV Ling-3.0-tiny-Q4_0.gguf llm/Ling-3.0-tiny-Q4_0.gguf; }
 llm_small() { fetch $LFM_S $LFM_S_REV LFM2.5-1.2B-Instruct-Q4_0.gguf llm/LFM2.5-1.2B-Instruct-Q4_0.gguf; }
 llm_lfm()   { fetch $LFM_F $LFM_F_REV LFM2.5-8B-A1B-Q4_0.gguf llm/LFM2.5-8B-A1B-Q4_0.gguf; }
-llm_deep()  { fetch $QWEN $QWEN_REV Qwen_Qwen3.6-35B-A3B-IQ3_XXS.gguf llm/Qwen_Qwen3.6-35B-A3B-IQ3_XXS.gguf; }
 llm_gemma() { # LiteRT-LM: generic CPU/GPU build and the Tensor G5 NPU build (blocked, see docs/BENCHMARKS.md)
   fetch $GEMMA $GEMMA_REV gemma-4-E2B-it.litertlm llm/gemma-4-E2B-it.litertlm
   fetch $GEMMA $GEMMA_REV gemma-4-E2B-it_Google_Tensor_G5.litertlm llm/gemma-4-E2B-it_Google_Tensor_G5.litertlm
@@ -76,7 +74,6 @@ for target in "${@:-all}"; do
     reranker-32m) reranker32 ;;
     llm-small) llm_small ;;
     llm-fast) llm_fast ;;
-    llm-deep) llm_deep ;;
     llm-lfm) llm_lfm ;;
     llm-gemma) llm_gemma ;;
     llm-maple) llm_maple ;;

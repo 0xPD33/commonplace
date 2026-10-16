@@ -21,14 +21,13 @@ import uniffi.commonplace_ffi.AnswerSegment
 import uniffi.commonplace_ffi.AskInput
 import uniffi.commonplace_ffi.AskListener
 import uniffi.commonplace_ffi.AskStage
-import uniffi.commonplace_ffi.ModelKind
 import uniffi.commonplace_ffi.SourceItem
 import uniffi.commonplace_ffi.Timing
 import uniffi.commonplace_ffi.TurnKind
 import uniffi.commonplace_ffi.TurnRecord
 
 /** One question and its answer as it streams in. All fields are Compose state. */
-class Turn(val query: String, val deep: Boolean, val think: Boolean = false) {
+class Turn(val query: String, val think: Boolean = false) {
     /** Stable list key: a retry repeats the query at the same index. */
     val id = System.nanoTime()
     var thought by mutableStateOf("")
@@ -65,10 +64,10 @@ class Turn(val query: String, val deep: Boolean, val think: Boolean = false) {
     /** Citation numbers resolve against [sources] once evidence is numbered, else the card list. */
     fun source(n: UInt): SourceItem? = sources.firstOrNull { it.n == n } ?: card?.sources?.getOrNull(n.toInt() - 1)
 
-    fun saved() = SavedTurn(query, deep, think, kind, card, sources, segments)
+    fun saved() = SavedTurn(query, think, kind, card, sources, segments)
 
     companion object {
-        fun restore(t: SavedTurn) = Turn(t.query, t.deep, t.think).apply {
+        fun restore(t: SavedTurn) = Turn(t.query, t.think).apply {
             kind = t.kind
             card = t.card
             sources = t.sources
@@ -184,7 +183,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     val busy: Boolean
         get() = turns.lastOrNull()?.answering == true
 
-    fun ask(text: String = input, deep: Boolean = false, think: Boolean = thinking && !deep) {
+    fun ask(text: String = input, think: Boolean = thinking) {
         val query = text.trim()
         if (query.isEmpty() || busy) return
         val engine = holder.engineOrNull ?: return
@@ -194,22 +193,20 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
             voiceSession++
             voice.stop()
         }
-        // A chip, Retry or Think harder must not wipe a draft the user is typing.
+        // A chip, Retry or Think it through must not wipe a draft the user is typing.
         if (query == input.trim()) input = ""
         holder.prefs.remember(query)
         // Small talk carries nothing a later turn needs.
         val history = turns.filter { it.done && it.error == null && it.kind != TurnKind.CHAT }.takeLast(2).map { TurnRecord(it.query, it.answerText, it.sources) }
-        val turn = Turn(query, deep, think)
+        val turn = Turn(query, think)
         val packs = listOfNotNull(scope?.packId)
         turns += turn
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val wanted = if (deep) ModelKind.DEEP else null
-                val loaded = holder.model.value as? ModelState.Loaded
-                if (loaded == null || (deep && loaded.kind != ModelKind.DEEP) || (!deep && loaded.kind == ModelKind.DEEP)) {
+                if (holder.model.value !is ModelState.Loaded) {
                     main.post { turn.loadingModel = true }
                 }
-                holder.ensureModel(wanted)
+                holder.ensureModel(null)
                 val model = holder.model.value
                 main.post {
                     turn.loadingModel = false
@@ -224,7 +221,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     return@launch
                 }
-                val result = engine.ask(AskInput(query, history, deep, think, holder.thermalHeadroom(), packs), Listener(turn))
+                val result = engine.ask(AskInput(query, history, think, holder.thermalHeadroom(), packs), Listener(turn))
                 main.post {
                     turn.kind = result.kind
                     turn.card = result.card
@@ -250,14 +247,11 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     /** Ask the same question again, this time with reasoning first, as a new turn under the fast answer. */
     fun thinkThrough(turn: Turn) = ask(turn.query, think = true)
 
-    /** Re-ask a question with the big model (deep mode). */
-    fun thinkHarder(turn: Turn) = ask(turn.query, deep = true)
-
     /** Replace the last answer with a fresh one to the same question. */
     fun retry(turn: Turn) {
         if (busy || turns.lastOrNull() !== turn) return
         turns.removeAt(turns.lastIndex)
-        ask(turn.query, turn.deep, turn.think)
+        ask(turn.query, turn.think)
     }
 
     fun stop() {

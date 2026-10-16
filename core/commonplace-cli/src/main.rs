@@ -56,8 +56,6 @@ struct Opts {
     no_rerank: bool,
     #[arg(long, global = true)]
     no_cards: bool,
-    #[arg(long, global = true)]
-    no_planner: bool,
     /// Let the model rewrite the message into a standalone, typo-free search query first (off by default).
     #[arg(long, global = true)]
     rewrite: bool,
@@ -106,8 +104,6 @@ enum Cmd {
         query: String,
         #[arg(long)]
         json: bool,
-        #[arg(long)]
-        deep: bool,
         /// Let the model reason first (capped by --think-budget).
         #[arg(long)]
         think: bool,
@@ -129,7 +125,7 @@ enum Cmd {
     },
     /// Run a list of queries (one per line or JSONL with "query") and print a timing table.
     Bench { queries: PathBuf },
-    /// Read JSON requests on stdin ({"query", "history"?, "deep"?}); write one JSON result per line.
+    /// Read JSON requests on stdin ({"query", "history"?, "think"?, "packs"?}); write one JSON result per line.
     ServeEval,
     /// Read JSONL {"id", "query"} on stdin; write each query's fused pool (reranker input text, fusion
     /// order, reranker score) as one JSON line. Reranker training data.
@@ -196,7 +192,6 @@ fn engine(o: &Opts) -> Result<Engine> {
         s.retrieval.use_sparse = !o.no_sparse;
         s.retrieval.use_rerank = !o.no_rerank;
         s.use_cards = !o.no_cards;
-        s.use_planner = !o.no_planner;
         s.rewrite = o.rewrite && !o.no_rewrite;
         let r = &mut s.retrieval;
         r.fuse_keep = o.fuse_keep.unwrap_or(r.fuse_keep);
@@ -325,8 +320,6 @@ struct EvalReq {
     #[serde(default)]
     history: Vec<Turn>,
     #[serde(default)]
-    deep: bool,
-    #[serde(default)]
     think: bool,
     #[serde(default)]
     packs: Vec<String>,
@@ -432,13 +425,10 @@ fn main() -> Result<()> {
                 r.encode_ms, r.sparse_ms, r.dense_ms, r.fuse_ms, r.rerank_ms, out.record.card_ms
             );
         }
-        Cmd::Ask { query, json, deep, think, packs } => {
-            let e = engine(&Opts { no_llm: o.no_llm || *deep, ..o.clone() })?;
-            if *deep && !o.no_llm {
-                e.load_model(ModelRole::LlmDeep)?;
-            }
+        Cmd::Ask { query, json, think, packs } => {
+            let e = engine(o)?;
             let sink = TermSink { printed: 0.into(), quiet: *json };
-            let out = e.ask(&AskRequest { query: query.clone(), history: vec![], deep: *deep, think: *think, packs: packs.clone() }, &sink)?;
+            let out = e.ask(&AskRequest { query: query.clone(), history: vec![], think: *think, packs: packs.clone() }, &sink)?;
             if *json {
                 println!("{}", outcome_json(&out));
             } else {
@@ -455,7 +445,7 @@ fn main() -> Result<()> {
                 }
                 let req: EvalReq = serde_json::from_str(&line)?;
                 let sink = TermSink { printed: 0.into(), quiet: true };
-                let v = match e.ask(&AskRequest { query: req.query, history: req.history, deep: req.deep, think: req.think, packs: req.packs }, &sink) {
+                let v = match e.ask(&AskRequest { query: req.query, history: req.history, think: req.think, packs: req.packs }, &sink) {
                     Ok(out) => outcome_json(&out),
                     Err(err) => serde_json::json!({ "error": format!("{err:#}") }),
                 };

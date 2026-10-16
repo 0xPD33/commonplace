@@ -42,7 +42,6 @@ pub struct FileEntry {
 pub enum ModelRole {
     LlmFast,
     LlmSmall,
-    LlmDeep,
     /// Speech to text (Moonshine). The Kotlin app loads it; no LLM loader does.
     Stt,
 }

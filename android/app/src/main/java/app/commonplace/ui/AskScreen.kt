@@ -153,7 +153,6 @@ fun AskScreen(
     val inputFocus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val canThinkHarder = library?.models?.any { it.kind == ModelKind.DEEP } == true
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) vm.toggleVoice() else vm.micDenied()
     }
@@ -235,7 +234,7 @@ fun AskScreen(
                 } else if (vm.turns.isEmpty()) {
                     Welcome(pad, lib, holder.prefs.recent, onAsk = { vm.ask(it) }, onOffline = { showOffline = true })
                 } else {
-                    Conversation(pad, vm, holder.prefs.showTimings, canThinkHarder, onOpen, onDraft = { d ->
+                    Conversation(pad, vm, holder.prefs.showTimings, onOpen, onDraft = { d ->
                         vm.input = d
                         inputFocus.requestFocus()
                     })
@@ -262,7 +261,7 @@ private fun modelStatus(model: ModelState, installed: Boolean): Pair<String, Col
         // Android unloads the model in the background; the next question loads it again.
         ModelState.None -> (if (installed) "Model loads on your next question" else "Search only · no model installed") to MaterialTheme.colorScheme.onSurfaceVariant
         is ModelState.Loading -> "Loading model…" to MaterialTheme.colorScheme.secondary
-        is ModelState.Loaded -> (if (model.kind == ModelKind.DEEP) "Deep model" else "Ready") +
+        is ModelState.Loaded -> "Ready" +
             (if (model.backend == Backend.Cpu) "" else " · ${model.backend.name.uppercase()}") to MaterialTheme.colorScheme.primary
         is ModelState.Failed -> "Model failed to load" to MaterialTheme.colorScheme.error
     }
@@ -440,7 +439,6 @@ private fun Conversation(
     pad: PaddingValues,
     vm: AskViewModel,
     showTimings: Boolean,
-    canThinkHarder: Boolean,
     onOpen: (OpenSource) -> Unit,
     onDraft: (String) -> Unit,
 ) {
@@ -490,8 +488,7 @@ private fun Conversation(
                     if (i > 0) Ornament(Modifier.padding(bottom = 28.dp))
                     val latest = i == vm.turns.lastIndex && !vm.busy
                     TurnView(
-                        t, showTimings, canThinkHarder, onOpen,
-                        onThinkHarder = { vm.thinkHarder(t) },
+                        t, showTimings, onOpen,
                         onThinkThrough = if (latest) ({ vm.thinkThrough(t) }) else null,
                         onRetry = if (latest) ({ vm.retry(t) }) else null,
                         // A reformat rewrites the latest answer, so only the latest answer offers one.

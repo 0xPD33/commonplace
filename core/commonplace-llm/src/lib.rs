@@ -141,7 +141,7 @@ pub struct LoadOptions {
     /// Pin threads to these CPUs (empty: OS default).
     pub cpus: Vec<usize>,
     /// Read the weights into RAM (fast model). Memory-mapping plus weight repacking keeps the file
-    /// mapped next to the repacked copy: 7.0 GB peak instead of 4.9 GB. The deep model streams (mmap).
+    /// mapped next to the repacked copy: 7.0 GB peak instead of 4.9 GB.
     pub in_ram: bool,
     /// Save kept system-prompt states (`GenParams::keep_prefix`) here, so a new process loads them instead of
     /// prefilling the prompt again (seconds on a phone).

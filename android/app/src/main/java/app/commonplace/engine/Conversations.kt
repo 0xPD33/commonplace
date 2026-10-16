@@ -14,7 +14,6 @@ import java.io.File
 /** One finished turn as saved: enough to show it again and to use it as history for a follow-up. */
 data class SavedTurn(
     val query: String,
-    val deep: Boolean,
     val think: Boolean,
     val kind: TurnKind,
     val card: AnswerCard?,
@@ -76,7 +75,7 @@ private fun text(s: AnswerSegment): String = when (s) {
 }
 
 private fun turn(t: SavedTurn) = JSONObject()
-    .put("query", t.query).put("deep", t.deep).put("think", t.think).put("kind", t.kind.name)
+    .put("query", t.query).put("think", t.think).put("kind", t.kind.name)
     .put("card", t.card?.let(::card) ?: JSONObject.NULL)
     .put("sources", JSONArray(t.sources.map(::source)))
     .put("segments", JSONArray(t.segments.map { s ->
@@ -89,7 +88,6 @@ private fun turn(t: SavedTurn) = JSONObject()
 
 private fun turn(o: JSONObject) = SavedTurn(
     o.getString("query"),
-    o.getBoolean("deep"),
     o.getBoolean("think"),
     TurnKind.valueOf(o.getString("kind")),
     o.optJSONObject("card")?.let(::card),

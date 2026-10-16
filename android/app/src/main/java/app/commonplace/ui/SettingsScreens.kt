@@ -92,7 +92,6 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
     var evidence by remember { mutableIntStateOf(prefs.evidenceTokens) }
     var answer by remember { mutableIntStateOf(prefs.answerTokens) }
     var thinkBudget by remember { mutableIntStateOf(prefs.thinkBudget) }
-    var planner by remember { mutableStateOf(prefs.usePlanner) }
     var rewrite by remember { mutableStateOf(prefs.rewrite) }
     var timings by remember { mutableStateOf(prefs.showTimings) }
     var nightMode by remember { mutableIntStateOf(prefs.nightMode) }
@@ -102,7 +101,6 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
         prefs.evidenceTokens = evidence
         prefs.answerTokens = answer
         prefs.thinkBudget = thinkBudget
-        prefs.usePlanner = planner
         prefs.rewrite = rewrite
         prefs.showTimings = timings
         holder.applyPrefs()
@@ -145,7 +143,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
-            val choices = lib?.models?.filter { it.kind != ModelKind.DEEP && it.kind != ModelKind.VOICE && !it.filePath.endsWith(".litertlm") } ?: emptyList()
+            val choices = lib?.models?.filter { it.kind != ModelKind.VOICE && !it.filePath.endsWith(".litertlm") } ?: emptyList()
             if (choices.size > 1) {
                 Spacer(Modifier.height(8.dp))
                 for (m in choices) {
@@ -197,7 +195,6 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             SectionLabel("Answers")
             SwitchRow("Show timings under answers", timings) { timings = it }
             SwitchRow("Understand the question first (fixes typos and follow-ups, a few seconds)", rewrite) { rewrite = it }
-            SwitchRow("Plan complex questions", planner) { planner = it }
             LabeledSlider("Answer length (tokens)", answer.toFloat(), 150f..800f, 12, "$answer") { answer = (it / 50).toInt() * 50 }
             LabeledSlider("Thinking budget (tokens)", thinkBudget.toFloat(), 128f..1536f, 10, "$thinkBudget") { thinkBudget = (it / 128).toInt() * 128 }
             Text(
@@ -326,7 +323,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
                             for ((i, q) in BENCH.withIndex()) {
                                 if (!isActive) return@launch
                                 bench = "Running ${i + 1} of ${BENCH.size}: $q"
-                                runCatching { e.ask(AskInput(q, emptyList(), false, false, holder.thermalHeadroom(), emptyList()), SilentListener) }
+                                runCatching { e.ask(AskInput(q, emptyList(), false, holder.thermalHeadroom(), emptyList()), SilentListener) }
                             }
                             val rs = e.recentQueries().take(BENCH.size)
                             fun p50(xs: List<Double>) = xs.sorted().getOrNull(xs.size / 2) ?: 0.0

@@ -1,8 +1,7 @@
 //! Prompt texts. The synthesis system prompt is the cached prefix.
 
-/// `examples`: append two worked answers. Deep mode leaves them out: with its evidence and answer budgets
-/// they can overflow a 4,096-token context.
-pub fn synthesis_system(snapshot_date: &str, examples: bool) -> String {
+/// The rules, then two worked answers.
+pub fn synthesis_system(snapshot_date: &str) -> String {
     let rules = format!(
         "You are Commonplace, an offline research assistant running entirely on this phone.
 Answer the user's question using ONLY the numbered sources and the COMPUTED lines provided.
@@ -27,7 +26,7 @@ Rules:
   sources give, in about 100 to 200 words. Plain prose; short lists only when
   listing 3+ parallel items."
     );
-    if examples { format!("{rules}\n\n{SYNTHESIS_EXAMPLES}") } else { rules }
+    format!("{rules}\n\n{SYNTHESIS_EXAMPLES}")
 }
 
 /// Two worked answers: an explanation, then a comparison with COMPUTED lines. They copy the layout of
@@ -115,28 +114,6 @@ You: Great. Ask me anything else.";
 pub fn reformat_user(question: &str, answer: &str, request: &str) -> String {
     format!("Question: {question}\n\nYour previous answer:\n{answer}\n\nRequest: {request}")
 }
-
-pub const PLANNER_SYSTEM: &str = "You turn research questions into search queries. Output JSON only.";
-
-pub fn planner_user(last_turns: &str, query: &str, titles: &str) -> String {
-    format!(
-        "Rewrite the user's question as a standalone search query and break it into at most 3 simple
-search queries that together cover everything needed to answer it. Use the conversation only to
-resolve references like \"it\" or \"there\". Output JSON only.
-
-Conversation (may be empty): {last_turns}
-Question: {query}
-Top search results: {titles}"
-    )
-}
-
-pub const PLANNER_GRAMMAR: &str = r#"root ::= "{" ws "\"standalone_query\":" ws str "," ws "\"intent\":" ws intent "," ws "\"subqueries\":" ws list "," ws "\"entities\":" ws list "," ws "\"needs_numbers\":" ws bool ws "}"
-intent ::= "\"lookup\"" | "\"explain\"" | "\"compare\"" | "\"howto\"" | "\"calc\"" | "\"travel\"" | "\"other\""
-list ::= "[" ws ( str ( "," ws str ){0,2} )? ws "]"
-str ::= "\"" ( [^"\\\x7F\x00-\x1F] | "\\" ["\\/bfnrt] ){1,160} "\""
-bool ::= "true" | "false"
-ws ::= [ \t\n]{0,2}
-"#;
 
 pub const COMPUTE_SYSTEM: &str = "You write arithmetic expressions over numbers found in the sources. Output JSON only.";
 

@@ -16,13 +16,11 @@ pub struct QueryRecord {
     pub search_query: String,
     /// Article titles the rewrite model named as the question's topics.
     pub topics: Vec<String>,
-    pub deep: bool,
     /// Thinking mode was on (reasoning tokens are in `synthesis.think_tokens`).
     pub think: bool,
     pub complex: bool,
     /// The intent head's best guess for the searched question: lookup, explain, compare or calc.
     pub intent: String,
-    pub planner_used: bool,
     pub subqueries: Vec<String>,
     /// (stage, ms since the query started)
     pub stages: Vec<(String, f64)>,
@@ -35,7 +33,6 @@ pub struct QueryRecord {
     pub retrieval: RetrievalStats,
     /// The query-rewrite call (thinking-free, one line).
     pub rewrite: Option<GenStats>,
-    pub planner: Option<GenStats>,
     pub compute: Option<GenStats>,
     pub synthesis: Option<GenStats>,
     pub evidence_tokens: usize,

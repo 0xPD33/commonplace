@@ -442,7 +442,6 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                     subtitle = when (m.kind) {
                         ModelKind.FAST -> "Fast model · default"
                         ModelKind.SMALL -> "Small model · for 8 GB phones"
-                        ModelKind.DEEP -> "Deep model"
                         ModelKind.VOICE -> "Voice input · speak your question"
                     } + if (loaded) " · loaded" else "",
                     detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}",

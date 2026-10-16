@@ -145,7 +145,7 @@ def render(meta, rows, overall, groups, by_cat, smoke):
     flags = " ".join(f"--{f}" for f in meta["flags"]) or "(none)"
     subset = f" --subset {meta['subset']}" if meta.get("subset") else ""
     phone = meta.get("phone")
-    run_flags = ("".join(f" --{f}" for f in meta["flags"]) + (" --deep" if meta.get("deep") else "")
+    run_flags = ("".join(f" --{f}" for f in meta["flags"])
                  + (" --live-history" if meta.get("live_history") else "") + (" --phone" if phone else ""))
     cli_args = "".join(f" --cli={c}" for c in meta.get("cli", []) if not (phone and c in PHONE_CLI))
     model_arg = "" if meta["model"].get("from_library") else f" --model {meta['model']['path']}"
@@ -192,7 +192,7 @@ def render(meta, rows, overall, groups, by_cat, smoke):
 - Git: `{meta['git']}`, binary sha256 `{meta['binary_sha256'][:16]}…`
 - Model: `{meta['model']['path']}`, sha256 `{meta['model']['sha256'][:16]}…`
 - Binary: `{meta.get('bin', '?')}`
-- Flags: {flags}; extra CLI flags: {cli_text}; deep mode: {meta.get('deep', False)}; phone preset: {bool(phone)}
+- Flags: {flags}; extra CLI flags: {cli_text}; phone preset: {bool(phone)}
 - Queries: `{meta['queries']}`{f" (subset `{meta['subset']}`)" if meta.get('subset') else ''}, {overall['n']} answered
 - Host: {meta['host']['node']} ({meta['host']['machine']}, {meta['host']['cpus']} CPUs)
 - Baseline: {baseline_info([r['id'] for r in rows])}

@@ -42,7 +42,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -107,9 +106,7 @@ data class OpenSource(val source: SourceItem, val highlight: String)
 fun TurnView(
     turn: Turn,
     showTimings: Boolean,
-    canThinkHarder: Boolean,
     onOpen: (OpenSource) -> Unit,
-    onThinkHarder: () -> Unit,
     onThinkThrough: (() -> Unit)?,
     onRetry: (() -> Unit)?,
     onAsk: ((String) -> Unit)?,
@@ -118,8 +115,8 @@ fun TurnView(
 ) {
     Column(modifier.fillMaxWidth().animateContentSize().testTag("turn")) {
         Row(verticalAlignment = Alignment.Top) {
-            if (turn.deep || turn.think) {
-                Icon(Icons.Outlined.Psychology, if (turn.deep) "Deep mode" else "Asked with Think", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 6.dp, end = 8.dp).size(22.dp))
+            if (turn.think) {
+                Icon(Icons.Outlined.Psychology, "Asked with Think", tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 6.dp, end = 8.dp).size(22.dp))
             }
             Text(turn.query, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.testTag("turn_query"))
         }
@@ -177,9 +174,7 @@ fun TurnView(
             Column(Modifier.riseIn("actions-${turn.id}", delayMs = 120, rise = 10.dp, enabled = !turn.restored)) {
                 AnswerActions(
                     turn,
-                    canThinkHarder && turn.kind == TurnKind.QUESTION,
-                    onThinkHarder,
-                    onThinkThrough.takeIf { !turn.think && !turn.deep && !turn.stopped && turn.kind == TurnKind.QUESTION },
+                    onThinkThrough.takeIf { !turn.think && !turn.stopped && turn.kind == TurnKind.QUESTION },
                     onRetry,
                 )
                 if (onAsk != null && !turn.stopped) FollowUpChips(turn, onAsk, onDraft)
@@ -249,17 +244,15 @@ private fun StageLine(turn: Turn, showTimings: Boolean) {
             // A stop after a token or two leaves a meaningless rate.
             if (!turn.stopped) t.decodeTps?.let { add(String.format(Locale.ROOT, "%.1f tok/s", it)) }
             if (t.cachedTokens > 0u) add("prefix cached")
-            if (t.plannerUsed) add("planned")
         }
         Text(parts.joinToString(" · "), style = MaterialTheme.typography.labelSmall, color = c.outline, modifier = Modifier.testTag("timings"))
     }
 }
 
 private fun stageText(turn: Turn): String = if (turn.loadingModel) {
-    if (turn.deep) "Loading the deep model… this takes a minute" else "Loading the model…"
+    "Loading the model…"
 } else when (turn.stage) {
     AskStage.SEARCHING -> "Searching your library…"
-    AskStage.PLANNING -> "Breaking the question down…"
     AskStage.READING -> "Reading ${turn.stageDetail} sources…"
     AskStage.COMPUTING -> "Working out the numbers…"
     // Thinking starts once the model has read the sources.
@@ -515,7 +508,7 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
 }
 
 @Composable
-private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: () -> Unit, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?) {
+private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -539,12 +532,6 @@ private fun AnswerActions(turn: Turn, canThinkHarder: Boolean, onThinkHarder: ()
                 Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Think it through")
-            }
-        } else if (canThinkHarder && !turn.deep) {
-            OutlinedButton(onClick = onThinkHarder, modifier = Modifier.offset(x = 12.dp).testTag("think_harder")) {
-                Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Ask the deep model · 1–2 min")
             }
         }
     }

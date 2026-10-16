@@ -92,10 +92,7 @@ class EngineHolder(private val app: Application) {
         _library.value = e.library()
     }
 
-    /**
-     * Make sure the wanted model is loaded. `kind == null` means the default (fast, else small).
-     * Deep mode swaps the fast model out because both do not fit in RAM together.
-     */
+    /** Make sure the wanted model is loaded. `kind == null` means the default (fast, else small). */
     suspend fun ensureModel(kind: ModelKind?) = withContext(Dispatchers.IO) {
         modelLock.withLock {
             val e = engineOrNull ?: return@withLock
@@ -103,7 +100,7 @@ class EngineHolder(private val app: Application) {
             _library.value = lib
             val gguf = lib.models.filter { !it.filePath.endsWith(".litertlm") }.map { it.kind }
             val litePack = lib.models.firstOrNull { it.filePath.endsWith(".litertlm") }
-            val useTpu = prefs.backend == Backend.Tpu && kind != ModelKind.DEEP && litePack != null
+            val useTpu = prefs.backend == Backend.Tpu && litePack != null
             // `null` means the everyday model: the user's choice, else fast, else small.
             val want = kind ?: listOf(prefs.modelKind, ModelKind.FAST, ModelKind.SMALL).firstOrNull { it in gguf }
             val current = _model.value

@@ -35,7 +35,6 @@ def main():
                     help="the phone's settings: " + " ".join(PHONE_CLI) + " and the library's own model; "
                     "pick the pack set with --library and the build with --bin; set ORT_DYLIB_PATH")
     ap.add_argument("--library", default=LIBRARY)
-    ap.add_argument("--deep", action="store_true")
     ap.add_argument("--think", action="store_true", help="thinking mode (reasoning before the answer)")
     ap.add_argument("--bin", default=str(BIN), help="commonplace binary (default: the release build)")
     ap.add_argument("--live-history", action="store_true",
@@ -82,7 +81,6 @@ def main():
             "cli": cli,
             "phone": a.phone,
             "ort_dylib_path": os.environ.get("ORT_DYLIB_PATH"),
-            "deep": a.deep,
             "think": a.think,
             "live_history": a.live_history,
             "queries": a.queries,
@@ -103,7 +101,7 @@ def main():
 
         def ask(query, history):
             nonlocal proc
-            proc.stdin.write(json.dumps({"query": query, "history": history, "deep": a.deep, "think": a.think}) + "\n")
+            proc.stdin.write(json.dumps({"query": query, "history": history, "think": a.think}) + "\n")
             proc.stdin.flush()
             line = proc.stdout.readline()
             if line:

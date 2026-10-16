@@ -76,8 +76,8 @@ nix develop -c python3 eval/pairwise.py --a <run-id> --b <other-run-id>
   text}`, with the exact text it saw, and `extra` for the Wikidata and COMPUTED lines. A binary
   built before this change leaves `evidence` out. Compare `evidence` with the gold articles to tell a
   retrieval failure from a generator failure.
-- `run.py` takes `--model <gguf>`, `--library <dir>` (default `data/library`), `--deep`, `--think`,
-  the ablation flags (`--no-dense`, `--no-sparse`, `--no-rerank`, `--no-cards`, `--no-planner`,
+- `run.py` takes `--model <gguf>`, `--library <dir>` (default `data/library`), `--think`,
+  the ablation flags (`--no-dense`, `--no-sparse`, `--no-rerank`, `--no-cards`,
   `--no-doc2query`, `--no-llm`) and `--subset` (query ids or categories, comma-separated).
   `--cli=<flag>` passes a flag to `commonplace`, for example `--cli=--rewrite`. The question
   rewrite step is off by default. `run.py`, `baseline.py` and `judge.py` resume where they stopped.

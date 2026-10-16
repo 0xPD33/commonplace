@@ -179,6 +179,11 @@ const SHARED_NUMBERS: usize = 3;
 /// ("which was bigger, the or the ?" 0.189, "compare and" 0.120). Set on 26 comparisons; on 22 others it let
 /// through 12 of 12 that ask for a number and 1 of 10 that do not.
 const NUMBER_ASKED: f32 = 0.16;
+/// Thermal headroom above which the phone counts as hot. In a 75-question Pixel session it stayed at 0.89–0.90
+/// from the tenth question on, and prefill fell from 75 to 23 tok/s.
+const HOT_HEADROOM: f32 = 0.85;
+/// The evidence budget of a hot phone: the evidence is most of the new prompt, and prefill sets the first word.
+const HOT_EVIDENCE_TOKENS: usize = 400;
 
 /// Featured snippet: a short answer span, the sentence around it, and where it came from.
 #[derive(Debug, Clone, Serialize)]
@@ -917,8 +922,9 @@ impl Engine {
             let sources = hits.iter().enumerate().map(|(i, h)| Self::source_ref(&lib, h, i as u32 + 1)).collect();
             return Ok(finish(rec, vec![], sources, card));
         };
-        if let Some(h) = rec.thermal_headroom {
-            let n = if h > 0.85 { s.llm_threads.saturating_sub(1).max(2) } else { s.llm_threads };
+        let hot = rec.thermal_headroom.is_some_and(|h| h > HOT_HEADROOM);
+        if rec.thermal_headroom.is_some() {
+            let n = if hot { s.llm_threads.saturating_sub(1).max(2) } else { s.llm_threads };
             llm.set_threads(n);
             rec.threads = Some(n);
         }
@@ -966,7 +972,7 @@ impl Engine {
         }
 
         // Stage 3: evidence.
-        let budget = s.evidence_tokens;
+        let budget = if hot { s.evidence_tokens.min(HOT_EVIDENCE_TOKENS) } else { s.evidence_tokens };
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {

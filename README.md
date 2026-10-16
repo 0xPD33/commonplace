@@ -219,7 +219,7 @@ flowchart TD
     F["Wikidata facts"]
     R["Reader snippet, DeBERTa, optional"]
   end
-  RR --> EV["Evidence selection, 600 tokens"]
+  RR --> EV["Evidence selection, 600 tokens, 400 on a hot phone"]
   RR --> HOP["Wikidata second hop"]
   HOP -.-> EV
   EV --> COMP["Optional compute: ratios, units, calc"]

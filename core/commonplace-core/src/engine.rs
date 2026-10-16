@@ -795,7 +795,9 @@ impl Engine {
                 let mut ents = route::link_entities(&lib, &first, &req.packs);
                 ents.sort_by_key(|e| first.find(&e.surface));
                 ents.truncate(2);
-                (!ents.is_empty()).then_some((first, ents))
+                // When the earlier question named nothing either, an unlinked sentence ("Armstrong played the
+                // trumpet.") still names the subject in its words.
+                (!ents.is_empty() || (from_answer && !first.is_empty())).then_some((first, ents))
             };
             if expand {
                 route.query = format!("{} {}", names.join(" "), prev.query).trim_start().to_string();
@@ -807,7 +809,7 @@ impl Engine {
             } else if let Some((first, ents)) = said {
                 // The search reads the whole sentence; the evidence and the answer read the earlier question and this one.
                 focus = Some(format!("{} {}", prev.query.trim(), route.query));
-                route.query = format!("{first} {}", route.query);
+                route.query = if ents.is_empty() { format!("{} {first} {}", prev.query.trim(), route.query) } else { format!("{first} {}", route.query) };
                 prev_entities = ents;
                 from_answer = true;
             } else if !names.is_empty() {

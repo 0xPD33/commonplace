@@ -490,6 +490,25 @@ On the Pixel (the same 3 × 25 questions as in the long-session test above, Clau
 
 The remaining confidently wrong answers are facts and numbers, not topics: Reagan for the president when the Berlin Wall fell, Trump for 2016, the Roman Empire "dissolved" in 395, Nigeria and Brazil, Ganymede's mass. No crash in 75 questions. The median first word was 28.5 s against 21.9 s with the same prompt sizes (672 vs 673 new tokens): the phone was hotter in its third long run of the day (prefill 24 vs 33 tok/s).
 
+## Desktop: fixes after 0.2.1 (2026-10-15)
+
+Builds: the code of `25ee4c0` to `6b5afa8`. The planner numbers come from the step before its removal, when it ran only in deep mode.
+
+**No planner.** Before, a planner call ran for a follow-up that named nothing linkable, and in deep mode. Now the app has neither: deep mode needed a model pack that does not fit in phone RAM. The test used the Pixel sessions (75 turns) and the held-out sessions (120 turns), with phone settings, the Starter set and the LLM, and each build kept its own history.
+
+- The planner ran on 9 of 195 turns before (1 of 75 Pixel turns, 8 of 120 held-out turns) and on 0 after.
+- Those 9 turns took 102 s in total before and 38 s after, on the desktop GPU. On the Pixel, one planner call alone took 35 to 66 s.
+- Answers on those 9 turns: 2 better without the planner ("How about a foot?": 30 cm → 30.48 cm; "Then how many grams?": 453.59265 → 453.59237 g), 7 about the same. "Was he also a singer?" two turns after Louis Armstrong was wrong in both builds: the answer before it says only "Armstrong", which links to no article (fixed below).
+
+**A follow-up whose topic sentence links nothing.** When the referred question named nothing and the first sentence of its answer links no article either ("Armstrong played the trumpet and cornet."), the search now reads the earlier question, that sentence and the message. Before, it read only the earlier question and the message. On the live history of "Was he also a singer?", the top source went from Elton John to Louis Armstrong. In the replay of 267 turns (Pixel, held-out and conversation sets) 5 searches changed. "Explain it for a ten year old" after a red wine stain answer now finds club soda instead of child development. The hit and leak counts did not change.
+
+**Unit questions without a number.** "How many cups are in a liter?" got no computed line, because the converter needed a number in the question; on the Pixel the model then answered 2.11 cups (that is pints). Questions of the form "how many <unit> in a <unit>" now get one: "1 L = 4.227 US cups", "1 mi = 5280 ft", "1 US gal = 3.785 L". Questions such as "How many people live in a city?" or "How many days are in a year?" get none.
+
+**Less evidence on a hot phone.** At a thermal headroom above 0.85 (the same mark that already drops a decode thread), the evidence budget is 400 tokens instead of 600. The 63 seed questions with phone settings and the Starter set, 600 against 400:
+
+- New prompt tokens: median 586 → 410 (195 fewer). At the 23–30 tok/s prefill of a hot Pixel, that is 6.5–8.5 s less to the first word (estimate from the measured rates; not yet measured on the Pixel). Answers were 15 tokens shorter on average.
+- Blind pairwise, Claude Opus judge: 600 wins 30, ties 13, loses 20 (sign test p = 0.20); mean score 6.71 against 6.55, difference +0.17 [−0.40, +0.71]. Large swings went both ways: 600 was better by 3 points or more on 6 questions, 400 on 5.
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.

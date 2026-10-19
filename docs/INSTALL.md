@@ -5,22 +5,25 @@
 ### What you need
 
 - An Android phone with a 64-bit ARM CPU and Android 12 or later. Google Play Services are not necessary. I test on a Pixel 10 with GrapheneOS.
-- 12 GB of RAM for the main model, which uses about 5 GB while it runs. On a phone with 8 GB, install the small model (see [More packs](#more-packs)). The app uses it by default when the phone has less than 10 GB of RAM.
-- About 23 GB of free storage for the first import: the downloaded file and the installed packs. After the import, the app uses 11.3 GB.
-- A Wi-Fi connection. The Starter set is one file of 11.3 GB.
+- 8 GB of RAM. There are two starter sets:
+  - **Starter set for 12 GB phones** (11.3 GB) has the fast model, Ling-3.0-tiny, which uses about 5.5 GB while it runs.
+  - **Starter set for 8 GB phones** (8.1 GB) has the small model, MiniCPM5-2B, which uses about 2.6 GB.
+  The app shows the set for your phone first and marks it **For this phone**. It counts a phone with less than 10 GB of RAM as an 8 GB phone.
+- Free storage of about twice the starter set for the first import: the downloaded file and the installed packs. After the import, the app uses 11.3 GB or 8.1 GB.
+- A Wi-Fi connection. Each starter set is one file.
 
 The app has no `INTERNET` permission. You download the packs with the phone's browser from the Hugging Face dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs). Then the app imports them from the **Downloads** folder.
 
 ### Steps
 
 1. On the phone, open the [latest release](https://github.com/0xPD33/commonplace/releases/latest) and download `commonplace-<version>.apk`. Open the file and install the app. Android asks you to allow installs from your browser.
-2. Open Commonplace. The **Get started** card names the Starter set and its size. Tap **Open Library**.
-3. Under **Get more**, tap **Starter set**, then tap **Download**. The browser saves `commonplace-starter.tar` in **Downloads**. The Starter set holds three packs:
+2. Open Commonplace. The **Get started** card names the starter set for your phone and its size. Tap **Open Library**.
+3. Under **Get more**, tap the starter set marked **For this phone**, then tap **Download**. The browser saves `commonplace-starter.tar` (12 GB phones) or `commonplace-starter-small.tar` (8 GB phones) in **Downloads**. Each starter set holds three packs:
    - `enwiki-core`: English Wikipedia (dump of 2026-09-01). It holds the opening passages of the 2 million most-viewed articles and the full text of the 200,000 most-viewed articles.
-   - `ling3-tiny`: Ling-3.0-tiny, the model that writes the answers.
+   - `ling3-tiny` or `minicpm5-2b`: the model that writes the answers.
    - `wikidata-facts`: numbers and dates from Wikidata, such as population, area and dates of birth.
 4. Wait until the download is complete. Then go back to Commonplace and tap **Install from Downloads** in the Library.
-5. Tap `commonplace-starter.tar`. To install several files in one step, long-press one file, tap the others, then tap **Select**.
+5. Tap the starter file. To install several files in one step, long-press one file, tap the others, then tap **Select**.
    - The app checks every byte with SHA-256 while it copies the file. It ignores files that are not packs.
    - The progress card names each pack while the app installs it.
    - If the file is incomplete or damaged, the app names the file and installs nothing from the damaged part.
@@ -35,12 +38,13 @@ You get each of these files in the same way: tap it under **Get more**, download
 
 | File | Size | Contents |
 |---|---|---|
-| Starter set (`commonplace-starter.tar`) | 11.3 GB | `enwiki-core`, `ling3-tiny` and `wikidata-facts` |
+| Starter set for 12 GB phones (`commonplace-starter.tar`) | 11.3 GB | `enwiki-core`, `ling3-tiny` and `wikidata-facts` |
+| Starter set for 8 GB phones (`commonplace-starter-small.tar`) | 8.1 GB | `enwiki-core`, `minicpm5-2b` and `wikidata-facts` |
 | Reference shelf (`commonplace-breadth.tar`) | 2.0 GB | 13 packs: open textbooks, Wikibooks, Wikiquote, Wikivoyage, Wiktionary, Wikiversity, DevDocs, ArchWiki, WikEM, OpenStax, MedlinePlus, CDC travel health and the CIA World Factbook |
 | `enwiki.tar` | 19.2 GB | All 6.8 million English Wikipedia articles. It replaces `enwiki-core`, and the app then skips `enwiki-core`. |
 | `arxiv-abs.tar` | 3.3 GB | 3.2 million arXiv abstracts |
 | `stackexchange.tar` | 2.5 GB | 1.2 million question threads from 51 Stack Exchange sites |
-| `minicpm5-2b.tar` | 1.4 GB | MiniCPM5-2B, a small model for phones with 8 GB of RAM. The app uses it by default on those phones. On other phones, select it in Settings. |
+| `minicpm5-2b.tar` | 1.4 GB | MiniCPM5-2B, the small model, for a phone with the 12 GB starter set. Select it in Settings. |
 | `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
 
 All files together use 36.5 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
@@ -113,7 +117,7 @@ Add `--think` to `ask` for thinking mode and `--rewrite` to turn on the question
 scripts/emulator.sh start                        # headless AOSP x86_64 emulator (no Play Services)
 scripts/build-android.sh debug x86_64
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-LIBRARY=data/library-dev scripts/dev-push.sh simplewiki lfm25-1.2b   # copy packs over adb (debug builds)
+LIBRARY=data/library-dev scripts/dev-push.sh simplewiki minicpm5-2b   # copy packs over adb (debug builds)
 python3 scripts/e2e_emulator.py                  # drives the app and writes artifacts/e2e/<stamp>/index.html
 python3 scripts/e2e_emulator.py --import-dir data/dist/simplewiki   # also tests the file-picker import
 ```

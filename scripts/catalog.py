@@ -8,7 +8,7 @@ import argparse, hashlib, json
 from pathlib import Path
 
 RECOMMENDED = {"enwiki-core", "ling3-tiny", "wikidata-facts"}
-RECOMMENDED_BUNDLES = {"starter"}
+RECOMMENDED_BUNDLES = {"starter", "starter-small"}
 DESCRIPTIONS = {
     "enwiki-core": "The 2 million most useful English Wikipedia articles.",
     "enwiki": "All of English Wikipedia. Replaces the starter pack.",

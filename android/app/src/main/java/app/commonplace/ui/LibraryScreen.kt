@@ -76,11 +76,13 @@ import app.commonplace.engine.Catalog
 import app.commonplace.engine.CatalogPack
 import app.commonplace.engine.DocumentText
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.Prefs
 import app.commonplace.engine.SelectedFile
 import app.commonplace.engine.availableBundles
 import app.commonplace.engine.availablePacks
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.planImport
+import app.commonplace.engine.suitsPhone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -317,7 +319,11 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
         lib?.let { l -> l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata }) }.orEmpty().toSet()
     }
     val available = remember(catalog, installedIds) { if (lib == null) emptyList() else availablePacks(catalog, installedIds) }
-    val bundles = remember(catalog, installedIds) { if (lib == null) emptyList() else availableBundles(catalog, installedIds) }
+    val lowRam = remember { Prefs(ctx).lowRam }
+    // The starter bundle for this phone comes first and carries the badge.
+    val bundles = remember(catalog, installedIds) {
+        if (lib == null) emptyList() else availableBundles(catalog, installedIds).sortedByDescending { (b, _) -> b.recommended && suitsPhone(b, lowRam) }
+    }
 
     Scaffold(
         topBar = {
@@ -354,7 +360,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             val getMore: LazyListScope.() -> Unit = {
                 if (bundles.isNotEmpty() || available.isNotEmpty()) {
                     item { SectionLabel("Get more", Modifier.padding(top = 12.dp)) }
-                    items(bundles, key = { "bundle-" + it.first.packId }) { (b, n) -> AvailableRow(b, onClick = { detail = b }, installed = n) }
+                    items(bundles, key = { "bundle-" + it.first.packId }) { (b, n) -> AvailableRow(b, onClick = { detail = b }, installed = n, badge = b.recommended && suitsPhone(b, lowRam)) }
                     if (bundles.isNotEmpty() && available.isNotEmpty()) {
                         item { Text("Individual packs", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }

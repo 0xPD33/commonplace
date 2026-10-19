@@ -51,15 +51,15 @@ class PickDocument : ActivityResultContracts.OpenDocument() {
 
 /** A pack, or a bundle. `installed` counts the packs of a bundle that are already on the phone. */
 @Composable
-fun AvailableRow(p: CatalogPack, onClick: () -> Unit, installed: Int = 0) {
+fun AvailableRow(p: CatalogPack, onClick: () -> Unit, installed: Int = 0, badge: Boolean = p.recommended) {
     Surface(onClick = onClick, shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("available_row")) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(p.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-                if (p.recommended) {
+                if (badge) {
                     Spacer(Modifier.width(8.dp))
                     Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
-                        Text("Starter", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                        Text(if (p.members.isEmpty()) "Starter" else "For this phone", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
                     }
                 }
             }

@@ -118,8 +118,8 @@ import app.commonplace.engine.Backend
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.Prefs
-import app.commonplace.engine.SMALL_MODEL_PACK
 import app.commonplace.engine.loadCatalog
+import app.commonplace.engine.suitsPhone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import uniffi.commonplace_ffi.LibraryInfo
@@ -393,8 +393,8 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
         val starters = remember {
             loadCatalog(ctx).let { c ->
                 val set = c.bundles.filter { it.recommended }.ifEmpty { c.packs.filter { it.recommended } }
-                // The starter answer model does not fit a low-RAM phone.
-                if (lowRam && set.none { SMALL_MODEL_PACK in it.members || it.packId == SMALL_MODEL_PACK }) set + c.packs.filter { it.packId == SMALL_MODEL_PACK } else set
+                // One starter bundle per phone class: the fast model does not fit a low-RAM phone.
+                set.filter { it.members.isEmpty() || suitsPhone(it, lowRam) }.ifEmpty { set }
             }
         }
         val oneFile = starters.size == 1
@@ -421,7 +421,7 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                     if (lowRam) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "This phone has less than 10 GB of memory, so it answers with the small model. The fast model needs a 12 GB phone.",
+                            "This phone has less than 10 GB of memory, so it gets the starter set with the small model. The fast model needs a 12 GB phone.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

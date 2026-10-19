@@ -92,15 +92,15 @@ flowchart LR
 You need:
 
 - An Android phone with a 64-bit ARM CPU and Android 12 or later. Google Play Services are not necessary.
-- 12 GB of RAM for the main model. On a phone with 8 GB, install the small model (see [docs/INSTALL.md](docs/INSTALL.md#more-packs)). The app uses it by default when the phone has less than 10 GB of RAM.
-- About 23 GB of free storage for the first import. After the import, the app uses 11.3 GB.
-- A Wi-Fi connection for one download of 11.3 GB.
+- 8 GB of RAM. A phone with 12 GB gets the starter set with the fast model (Ling-3.0-tiny, 11.3 GB). A phone with 8 GB gets the starter set with the small model (MiniCPM5-2B, 8.1 GB). The app marks the set for your phone.
+- Free storage of about twice the starter set for the first import. After the import, the app uses 11.3 GB or 8.1 GB.
+- A Wi-Fi connection for one download of 11.3 GB or 8.1 GB.
 
 Steps:
 
 1. On the phone, open the [latest release](https://github.com/0xPD33/commonplace/releases/latest) and download `commonplace-<version>.apk`. Open the file and install the app.
-2. Open Commonplace and tap **Open Library**. Under **Get more**, tap **Starter set**, then tap **Download**. The browser saves `commonplace-starter.tar` (11.3 GB) in **Downloads**.
-3. When the download is complete, tap **Install from Downloads** in the Library. Tap `commonplace-starter.tar`. The app checks every byte with SHA-256 while it copies the file.
+2. Open Commonplace and tap **Open Library**. Under **Get more**, tap the starter set marked **For this phone**, then tap **Download**. The browser saves `commonplace-starter.tar` (11.3 GB, for 12 GB phones) or `commonplace-starter-small.tar` (8.1 GB, for 8 GB phones) in **Downloads**.
+3. When the download is complete, tap **Install from Downloads** in the Library. Tap the starter file. The app checks every byte with SHA-256 while it copies the file.
 4. When the app asks, tap **Delete** to remove the downloaded file.
 5. Go back and ask a question. The first question is slower, because the app loads the model into memory.
 
@@ -114,7 +114,7 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 |---|---|
 | Runs on Android and GrapheneOS hardware | I run it on a Pixel 10 with GrapheneOS (Android 17). The minimum is Android 12 on a 64-bit ARM CPU. |
 | Works in a maximum of 12 GB of RAM | The peak memory of the app with the main model is 5.3 GB on the Pixel 10 ([BENCHMARKS](docs/BENCHMARKS.md)). |
-| Uses no more than 50 GB in total | The Starter set uses 11.3 GB. All packs together use 36.5 GB, plus the app. The app refuses an import that takes the total above 50 GB. |
+| Uses no more than 50 GB in total | The starter set uses 11.3 GB (8.1 GB for 8 GB phones). All packs together use 36.5 GB, plus the app. The app refuses an import that takes the total above 50 GB. |
 | Works offline, with no network requests during use | The APK has no `INTERNET` permission, so Android blocks all network access. The release script stops if the permission appears. You download the packs once with the browser. |
 | No Google Play Services | The app uses no Google Play Services library: the APK contains no `com.google.android.gms` classes. |
 | Explanation, comparison, synthesis and reasoning | A comparison runs one search for each item and computes ratios from Wikidata in code. Follow-up questions use the earlier turns. A thinking mode lets the model reason before it answers. |
@@ -144,7 +144,7 @@ Each bar is the score ratio for one type of question. 1.0 means as good as Claud
 
 ### What fits on the phone
 
-The Starter set needs 11.3 GB. Every pack together needs 36.5 GB, which leaves room under the 50 GB limit.
+The starter set for 12 GB phones needs 11.3 GB, and the set for 8 GB phones needs 8.1 GB. Every pack together needs 36.5 GB, which leaves room under the 50 GB limit.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-storage-dark.svg">
@@ -236,8 +236,8 @@ flowchart TD
 
 1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. An Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop. I distilled it from Ettin-400m on 23,012 of the app's own search pools ([0xPD33/ettin-reranker-17m-commonplace](https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)).
 2. **An answer card before the answer.** The best passage, Wikidata facts and the source list appear before the model writes a word. The app highlights the sentence that matches. For a simple lookup, an extractive reader adds a short snippet.
-3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. It reads short evidence, not whole articles. The system prompt holds the rules and two worked answers. The app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
-4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist, and a list of sources that the model writes at the end of an answer. It underlines sentences with numbers that are not in the evidence. Code does unit conversions and Wikidata ratios. For a calculation, the model writes an expression and code calculates the result.
+3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. Phones with 8 GB of RAM use MiniCPM5-2B (2.5B parameters, Apache-2.0). It reads short evidence, not whole articles. The system prompt holds the rules and two worked answers. The app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
+4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist, and a list of sources that the model writes at the end of an answer. It underlines sentences with numbers that are not in the evidence. Code does unit conversions, percentages and Wikidata ratios. A question that asks only for a conversion or a percentage gets the result from code, with no model call. For another calculation, the model writes an expression and code calculates the result.
 5. **Comparisons and follow-ups.** A comparison runs one search for each item. When a name has several articles ("Mars"), the other names in the question and their Wikidata classes decide which one it means. Each Wikidata entity is a numbered source, so the answer cites its numbers. When a question asks about a related thing ("the highest point of the country that hosted the 1964 Olympics"), Wikidata follows one link to it. A trained head decides if a message continues an earlier turn. Such a message searches with the first sentence of the answer it refers to, which usually names the subject; the reranker picks that answer from the last two turns. A new topic does not take the old one. "Tell me more" searches the last question again and prefers passages that the last answer did not show. A request such as "make it shorter" rewrites the last answer and does not search again.
 6. **Thinking mode.** The brain button next to the question box lets Ling reason before it answers. The default budget is 256 tokens. Settings has a slider for the budget.
 7. **Your own documents.** "My documents" turns a PDF, text or Markdown file into a small pack on the phone. Citations show the page. "Ask this document" limits a conversation to one document. PDF import needs Android 15, or Android 12 to 14 with the newest system updates.
@@ -292,7 +292,7 @@ The command line reads packs from `data/library/packs/`. To install a pack or a 
 
 The code is under Apache-2.0 ([LICENSE](LICENSE)).
 
-The packs and models keep the licenses of their sources. For example, Wikipedia is CC BY-SA 4.0 and GFDL, Wikidata is CC0, and Ling-3.0-tiny is MIT. LFM2.5 uses the LFM Open License v1.0, which allows commercial use only below US$10M of annual revenue.
+The packs and models keep the licenses of their sources. For example, Wikipedia is CC BY-SA 4.0 and GFDL, Wikidata is CC0, Ling-3.0-tiny is MIT, and MiniCPM5-2B is Apache-2.0.
 
 - Each pack contains a `NOTICE.txt` with its credit, license and full license texts. The sources of these files are in [pipeline/notices](pipeline/notices).
 - [docs/DATASETS.md](docs/DATASETS.md) lists the license of each pack. [docs/MODELS.md](docs/MODELS.md) lists the license of each model.

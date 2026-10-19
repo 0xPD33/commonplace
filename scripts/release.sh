@@ -3,7 +3,7 @@
 #   KEYSTORE=path.jks KEY_ALIAS=commonplace scripts/release.sh app <version>
 #     Signed arm64 APK. Fails if the APK has the INTERNET permission.
 #     (apksigner asks for the keystore password; set KS_PASS=... to pass it non-interactively)
-#   HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]   e.g. packs-2026-09 enwiki-core ling3-tiny wikidata-facts
+#   HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]   e.g. packs-2026-09 enwiki-core ling3-tiny minicpm5-2b wikidata-facts
 #     Verify the packs (default: the starter set) and write each one as a single file <pack_id>.tar.
 #     Also write the bundles (see BUNDLES below) whose packs are all in the list as commonplace-<bundle_id>.tar.
 #     A pack inside such a bundle gets no single file.
@@ -25,7 +25,8 @@ OUT=${OUT:-dist/$NAME}
 [[ $MODE == upload ]] || mkdir -p "$OUT"
 # Bundles: one .tar file that holds several packs, so a user downloads one file. Edit this list to change them.
 # One line per bundle: id|title|description|pack ids in tar order. BUNDLES=... in the environment replaces the list.
-BUNDLES=${BUNDLES:-'starter|Starter set|Wikipedia (2M articles), the answer model and Wikidata facts.|enwiki-core ling3-tiny wikidata-facts
+BUNDLES=${BUNDLES:-'starter|Starter set for 12 GB phones|Wikipedia (2M articles), the fast answer model (Ling 3.0 tiny) and Wikidata facts. For phones with 12 GB of memory or more.|enwiki-core ling3-tiny wikidata-facts
+starter-small|Starter set for 8 GB phones|Wikipedia (2M articles), the small answer model (MiniCPM5 2B) and Wikidata facts. For phones with less than 12 GB of memory.|enwiki-core minicpm5-2b wikidata-facts
 breadth|Reference shelf|Textbooks, Wikibooks, Wikiquote, Wikivoyage, Wiktionary, Wikiversity, programming documentation, ArchWiki, medical and travel health pages, and the World Factbook.|textbooks-en wikibooks-en wikiquote-en wikivoyage-en wiktionary-en wikiversity-en devdocs-en archwiki-en wikem-en openstax medlineplus cdc-travel factbook'}
 need_repo() {
   [[ ${HF_REPO:-} =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || { echo "set HF_REPO to the Hugging Face dataset repo, <namespace>/<name>" >&2; exit 1; }
@@ -53,11 +54,12 @@ app)
 packs)
   need_repo
   PACKS=("$@")
-  [[ ${#PACKS[@]} -gt 0 ]] || PACKS=(enwiki-core ling3-tiny wikidata-facts)
+  [[ ${#PACKS[@]} -gt 0 ]] || PACKS=(enwiki-core ling3-tiny minicpm5-2b wikidata-facts)
   : "${LIBRARY:=data/library/packs}"
   : "${CATALOG_ASSET:=android/app/src/main/assets/catalog.json}"
   PB=${PB:-core/target/release/packbuild}
-  # A pack inside a bundle that gets built ships only in that bundle.
+  # A pack inside a bundle that gets built ships only in that bundle, except the small model: a phone with the
+  # 12 GB starter set can add it alone.
   BUNDLED=" "
   while IFS='|' read -r id _ _ members; do
     [[ -n $id ]] || continue
@@ -66,7 +68,7 @@ packs)
   done <<<"$BUNDLES"
   for p in "${PACKS[@]}"; do
     "$PB" verify --pack "$LIBRARY/$p"
-    [[ $BUNDLED == *" $p "* ]] || "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
+    [[ $BUNDLED == *" $p "* && $p != minicpm5-2b ]] || "$PB" split --single --pack "$LIBRARY/$p" --out "$OUT"
   done
   BUNDLE_ARGS=()
   while IFS='|' read -r id title desc members; do

@@ -179,10 +179,13 @@ const SHARED_NUMBERS: usize = 3;
 /// ("which was bigger, the or the ?" 0.189, "compare and" 0.120). Set on 26 comparisons; on 22 others it let
 /// through 12 of 12 that ask for a number and 1 of 10 that do not.
 const NUMBER_ASKED: f32 = 0.16;
-/// Thermal headroom above which the phone counts as hot. In a 75-question Pixel session it stayed at 0.89–0.90
+/// Thermal headroom above which the model uses one thread less. In a 75-question Pixel session it stayed at 0.89–0.90
 /// from the tenth question on, and prefill fell from 75 to 23 tok/s.
 const HOT_HEADROOM: f32 = 0.85;
-/// The evidence budget of a hot phone: the evidence is most of the new prompt, and prefill sets the first word.
+/// Thermal headroom above which the evidence shrinks. On the Pixel 10, prefill already fell to 47–61 tok/s at
+/// 0.76 (92 tok/s cool).
+const WARM_HEADROOM: f32 = 0.70;
+/// The evidence budget of a warm phone: the evidence is most of the new prompt, and prefill sets the first word.
 const HOT_EVIDENCE_TOKENS: usize = 400;
 
 /// Featured snippet: a short answer span, the sentence around it, and where it came from.
@@ -673,7 +676,8 @@ impl Engine {
             None => "question",
         };
         let kind = match label {
-            "reformat" if !req.history.is_empty() => TurnKind::Reformat,
+            // "How do I reverse a list in Python?" reads like "as a list", but a reformat request names no thing.
+            "reformat" if !req.history.is_empty() && route::link_entities(&lib, &req.query, &req.packs).is_empty() => TurnKind::Reformat,
             "chat" => TurnKind::Chat,
             _ => TurnKind::Question,
         };
@@ -738,8 +742,10 @@ impl Engine {
         }
         let own = route.entities.len();
         let follow = emb.as_deref().map_or(0.0, |e| Head::follow_up().prob(e, "followup"));
-        let about_one = |p: &Turn| route::route(&lib, &p.query, self.rr.as_ref(), &[], &req.packs).entities.len() == 1;
-        route.needs_rewrite = prev.is_some_and(|p| expand || follow >= 0.5 || (own == 0 && follow >= FOLLOW_UP_LOW && about_one(p)));
+        // A last question that named nothing ("And in the world?") is about the thing the one before named.
+        let named = |t: &Turn| route::route(&lib, &t.query, self.rr.as_ref(), &[], &req.packs).entities.len();
+        let about_one = || req.history.iter().rev().take(2).map(named).find(|&n| n > 0) == Some(1);
+        route.needs_rewrite = prev.is_some() && (expand || follow >= 0.5 || (own == 0 && follow >= FOLLOW_UP_LOW && about_one()));
         let inherit = expand || (own == 0 && route.needs_rewrite) || (prev.is_some() && own == 1 && (route.needs_rewrite || compares));
         let mut focus: Option<String> = None;
         let mut referent = req.history.len().saturating_sub(1);
@@ -787,12 +793,14 @@ impl Engine {
                 }
                 _ => None,
             };
+            // "And in the world?" asks the last question again; its search must not name the old answer's subject.
+            let reask = if expand || swap.is_some() || route.compare || compares { None } else { route::reask(&topic.query, &route.query) };
             // The first sentence of the referred answer usually states its subject ("The longest river in Europe is
             // the Volga."), where its question's names can be a list or another sense. It needs an answer from this
             // engine (with sources); a comparison keeps the names it compared, and a message that names the referred
             // question's thing ("Tell me more about Everest") keeps that name.
             let renamed = route.entities.iter().any(|e| prev_entities.iter().any(|p| (p.pack, p.article.id) == (e.pack, e.article.id)));
-            let said = if expand || swap.is_some() || route.compare || compares || renamed || (!from_answer && prev_entities.len() >= 2) || prev.sources.is_empty() {
+            let said = if expand || swap.is_some() || reask.is_some() || route.compare || compares || renamed || (!from_answer && prev_entities.len() >= 2) || prev.sources.is_empty() {
                 None
             } else {
                 let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
@@ -811,6 +819,9 @@ impl Engine {
                 route.compare = false;
             } else if let Some(q) = &swap {
                 route.query = q.clone();
+            } else if let Some(q) = &reask {
+                route.entities = route::route(&lib, q, self.rr.as_ref(), &[], &req.packs).entities;
+                route.query = q.clone();
             } else if let Some((first, ents)) = said {
                 // The search reads the whole sentence; the evidence and the answer read the earlier question and this one.
                 focus = Some(format!("{} {}", prev.query.trim(), route.query));
@@ -824,7 +835,7 @@ impl Engine {
             }
             // Names read from an answer steer the search, but take no slot among compared things: "What is a
             // crocodile?" answered "…in Africa, Asia…" compares no continent.
-            if inherit && swap.is_none() && !(from_answer && (route.compare || compares)) {
+            if inherit && swap.is_none() && reask.is_none() && !(from_answer && (route.compare || compares)) {
                 route.entities.extend(prev_entities);
                 route.entities.truncate(3);
             }
@@ -847,7 +858,9 @@ impl Engine {
         let mut hits = pick(&ranked);
         let scores = emb.as_deref().map(prop_scores).unwrap_or_default();
         let (card_facts, mut wd) = Self::wikidata_facts(&lib, &route, hits.first(), &scores, route.compare || intent == "calc", 6, &req.packs);
-        let unit_line = units::convert_query(&route.query);
+        let line = units::convert_query(&route.query).or_else(|| calc::percent_query(&route.query));
+        let bare = line.as_ref().is_some_and(|(_, b)| *b) && route.query == raw_query;
+        let unit_line = line.map(|(l, _)| l);
         let card = {
             let top = card_passage(&hits, &route.entities).map(|h| {
                 let facts = if s.use_cards { lib.packs[h.pack as usize].facts(h.pid).unwrap_or_default() } else { vec![] };
@@ -872,6 +885,13 @@ impl Engine {
         };
         rec.card_ms = card.card_ms;
         sink.event(Event::Card(card.clone()));
+        // A bare calculation ("15% of 240", "How many cups are in a liter?") is its own answer: a model can
+        // only get it wrong, and small models ignore a COMPUTED line.
+        if let Some(text) = unit_line.as_ref().filter(|_| bare).map(|l| format!("{l}.")) {
+            let segments = citations::check(&text, 0, &crate::text::numbers(&text).into_iter().collect());
+            sink.event(Event::Answer { segments: segments.clone(), raw: text, done: true });
+            return Ok(finish(rec, segments, vec![], card));
+        }
 
         // Stage 2b: featured snippet, the reader's answer span in the top passages.
         // Only simple lookups: why/how and multi-part questions have no single span. The written answer
@@ -972,7 +992,8 @@ impl Engine {
         }
 
         // Stage 3: evidence.
-        let budget = if hot { s.evidence_tokens.min(HOT_EVIDENCE_TOKENS) } else { s.evidence_tokens };
+        let warm = rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
+        let budget = if warm { s.evidence_tokens.min(HOT_EVIDENCE_TOKENS) } else { s.evidence_tokens };
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {
@@ -1015,10 +1036,11 @@ impl Engine {
             }
             _ => vec![],
         };
-        let deterministic = !calcs.is_empty();
         for c in calcs {
             ev.add_computed(c);
         }
+        // A unit or percent line also answers the calculation: no model-written expression is needed.
+        let deterministic = !ev.computed.is_empty();
         if s.use_compute && calc_sure && !deterministic && !ev.numbers.is_empty() {
             stage(&mut rec, Stage::Computing, String::new());
             let mut out = String::new();

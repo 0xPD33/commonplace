@@ -94,20 +94,21 @@ fn round_sig(x: f64) -> String {
     if s.contains('.') { s.trim_end_matches('0').trim_end_matches('.').to_string() } else { s }
 }
 
-/// If the query asks for a unit conversion, return a display line such as `10 mi = 16.09 km`.
-pub fn convert_query(query: &str) -> Option<String> {
+/// If the query asks for a unit conversion, return a display line such as `10 mi = 16.09 km`, and whether
+/// the query asks only that.
+pub fn convert_query(query: &str) -> Option<(String, bool)> {
     let whole = query.trim().trim_end_matches(['?', '.', '!']);
-    let (v, from, to) = if let Some(caps) = HOW_MANY.captures(whole) {
+    let (v, from, to, start) = if let Some(caps) = HOW_MANY.captures(whole) {
         let v: f64 = if caps[2].chars().any(|c| c.is_ascii_digit()) { caps[2].replace(',', "").parse().ok()? } else { 1.0 };
-        (v, find(&caps[3])?, find(&caps[1])?)
+        (v, find(&caps[3])?, find(&caps[1])?, caps.get(0)?.start())
     } else {
         let q = whole.trim_start_matches(|c: char| !c.is_ascii_digit() && c != '-');
         let caps = PATTERN.captures(q)?;
-        (caps[1].replace(',', "").parse().ok()?, find(&caps[2])?, find(&caps[3])?)
+        (caps[1].replace(',', "").parse().ok()?, find(&caps[2])?, find(&caps[3])?, whole.len() - q.len() + caps.get(0)?.start())
     };
     if from.1 != to.1 {
         return None;
     }
     let out = if from.1 == Dim::Temp { from_kelvin(to_kelvin(v, from.3), to.3) } else { v * from.2 / to.2 };
-    Some(format!("{} {} = {} {}", round_sig(v), from.3, round_sig(out), to.3))
+    Some((format!("{} {} = {} {}", round_sig(v), from.3, round_sig(out), to.3), super::bare(&whole[..start])))
 }

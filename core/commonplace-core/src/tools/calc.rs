@@ -1,6 +1,9 @@
-//! Arithmetic evaluator for model-written expressions: + - * / and parentheses over decimals.
+//! Arithmetic: an evaluator for model-written expressions, and percentages that the question states.
 
+use super::wikidata::format_num;
 use anyhow::{Result, bail};
+use regex::Regex;
+use std::sync::LazyLock;
 
 pub fn eval(expr: &str) -> Result<f64> {
     let toks: Vec<char> = expr.chars().filter(|c| !c.is_whitespace()).collect();
@@ -93,4 +96,17 @@ impl Parser<'_> {
             None => bail!("unexpected end of expression"),
         }
     }
+}
+
+static PERCENT: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)(-?\d[\d,]*(?:\.\d+)?)\s*(?:%|percent|per cent)\s+of\s+(-?\d[\d,]*(?:\.\d+)?)\s*$").unwrap());
+
+/// "What is 15 percent of 240?": the line `15% of 240 = 36`, and whether the question asks only that.
+pub fn percent_query(query: &str) -> Option<(String, bool)> {
+    let whole = query.trim().trim_end_matches(['?', '.', '!']);
+    let caps = PERCENT.captures(whole)?;
+    let num = |i: usize| caps[i].replace(',', "").parse::<f64>().ok();
+    let (p, x) = (num(1)?, num(2)?);
+    let line = format!("{}% of {} = {}", format_num(p), format_num(x), format_num((p * x).round() / 100.0));
+    Some((line, super::bare(&whole[..caps.get(0)?.start()])))
 }

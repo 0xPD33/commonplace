@@ -130,6 +130,12 @@ fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]
             if n == 1 && !short && !first.chars().next().is_some_and(char::is_uppercase) {
                 continue;
             }
+            // A phrase with a pronoun is part of the user's sentence ("what should I know before I go"), not the
+            // film "Before I Go", unless the user writes it like a title.
+            let pronoun = |w: &&str| matches!(w.trim_matches(|c: char| !c.is_alphanumeric()).to_lowercase().as_str(), "i" | "me" | "my" | "you" | "your" | "we" | "our");
+            if n > 1 && span.iter().any(pronoun) && !proper_name(&span.join(" ")) {
+                continue;
+            }
             if n == 1 && i == 0 && LEADING_VERBS.contains(&first.to_lowercase().as_str()) {
                 continue;
             }
@@ -190,6 +196,22 @@ fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]
     found.sort_by_key(|e| std::cmp::Reverse(e.article.popularity));
     found.truncate(if common_nouns { 6 } else { 3 });
     found
+}
+
+/// A follow-up that asks the last question again for another place or time ("And in the world?" after "What is
+/// the tallest building in Europe?"): the last question with its final phrase of that preposition replaced.
+pub fn reask(last: &str, message: &str) -> Option<String> {
+    let msg = message.trim().trim_end_matches(['?', '.', '!']);
+    let rest = ["and ", "what about ", "how about ", "or "]
+        .iter()
+        .find_map(|p| msg.get(..p.len()).filter(|h| h.eq_ignore_ascii_case(p)).map(|_| msg[p.len()..].trim()))?;
+    let prep = rest.split_whitespace().next()?;
+    if !matches!(prep, "in" | "on" | "at" | "for" | "of" | "from" | "during") {
+        return None;
+    }
+    let last = last.trim().trim_end_matches(['?', '.', '!']);
+    let at = last.rfind(&format!(" {prep} "))?;
+    Some(format!("{} {rest}?", &last[..at]))
 }
 
 /// What a comparison is about: the question minus entity names, comparison words and stopwords.

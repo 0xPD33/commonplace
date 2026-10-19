@@ -1,6 +1,6 @@
 # Models
 
-Every model that Commonplace uses, with its pinned revision and file hash. The model packs ship their license text and credit as `NOTICE.txt` (`pipeline/notices/`), because MIT and the LFM Open License require the text to travel with the weights. The licenses of the models differ from the license of the code.
+Every model that Commonplace uses, with its pinned revision and file hash. The model packs ship their license text and credit as `NOTICE.txt` (`pipeline/notices/`), because MIT and Apache-2.0 require the text to travel with the weights. The licenses of the models differ from the license of the code.
 `scripts/fetch-models.sh` downloads these exact revisions into `data/models/` and writes `data/models/SHA256SUMS`.
 
 ## On the phone

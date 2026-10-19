@@ -560,9 +560,38 @@ MiniCPM5-2B (`openbmb/MiniCPM5-2B`, dense 2.52B, Apache-2.0) is a candidate smal
 - On the desktop, 18 seed questions with the phone settings: the pure file scores 0.494 (mixed 0.483, LFM2.5-1.2B 0.374), and it wins 14, ties 1 and loses 3 against LFM2.5-1.2B (p = 0.013). Against the mixed file it wins 5, ties 4 and loses 9 (p = 0.42). Desktop peak RSS: 2.49 GB.
 - N-gram drafting (all llama.cpp `ngram-*` types, greedy, the same 18 prompts) gave no speed-up on the desktop. At most 14.6% of the drafted tokens were accepted, because MiniCPM does not copy the passages word for word.
 
-Not measured: the app with MiniCPM (first word, PSS, heat), and a real Tensor G3. Source: `artifacts/pixel/llama-bench-minicpm5.md`.
+Not measured here: a real Tensor G3. The next section measures the app with MiniCPM. Source: `artifacts/pixel/llama-bench-minicpm5.md`.
+
+## Pixel 10: MiniCPM5-2B in the app, and the routing fixes (2026-10-19)
+
+The debug build with MiniCPM5-2B, the Starter set, on USB power. Session s2 of the long-session test (29 questions), typed through the app's UI. Then the same session with the routing and calculation fixes of `c2717c0`, on MiniCPM and on Ling.
+
+| | MiniCPM, before | MiniCPM, fixes | Ling, before | Ling, fixes |
+|---|---|---|---|---|
+| Crashes | 0 | 0 | 0 | 0 |
+| First word, median | 9.4 s | 11.7 s | 16.5 s | 14.7 s |
+| Tap to full answer, median | 38.4 s | 42.6 s | 39.8 s | 40.3 s |
+| Largest PSS | | 2.55 GB | | 5.40 GB |
+
+- The fixes repair 5 of the 7 failed turns on both models. "How do I reverse a list in Python?" is a question, not a reformat. "What should I know before I go?" no longer links the film "Before I Go". "And in the world?" finds the Burj Khalifa. "15 percent of 240" and "How many cups are in a liter?" get the exact value with no model call. Expand mode ("tell me more" about the wine stain) is unchanged: the library has no more text on the topic.
+- The first word on MiniCPM came later for two reasons. The run with the fixes started cooler (battery 29.5 °C against 37.0 °C), so turns 12–20 stayed below the thermal limit of 0.85 with 600 evidence tokens at about 50 tok/s. The bare calculations now skip the model, so they leave the median. On turns with the same budget, the build with the fixes is equal or about 1 s faster.
+- Prefill falls to 47–61 tok/s at a headroom of 0.76 (92 tok/s cool), so the evidence now shrinks to 400 tokens above 0.70. In 6 questions after this change, the first word came after 5.9–7.5 s, and the budget started at 0.71.
+- RSS grows by about 9 MB per question. RssAnon stays flat (2,140 → 2,158 MB in 6 questions), and RssFile grows (291 → 336 MB): these are pages of the memory-mapped indexes, which the kernel can reclaim.
+- In the app, prefill runs at about 92 tok/s on a cool phone, against 137–190 tok/s in `llama-bench`. The bench pins its threads (`--cpu-strict 1`) and the app does not.
+
+## Desktop: answer temperature (2026-10-19)
+
+The 63 seeds with the phone settings, at temperature 0.3 (the default), 0.1 and 0. Two runs at 0.3 and at 0 for MiniCPM.
+
+| Model | 0.3 | 0.1 | 0 |
+|---|---|---|---|
+| MiniCPM5-2B | 0.479, 0.478 | 0.467 | 0.475, 0.465 |
+| Ling-3.0-tiny | 0.530 | 0.516 | 0.516 |
+
+A lower temperature gives no gain. The two MiniCPM runs gave the same text for all 63 answers at 0.3 and at 0, because the sampler has a fixed seed. So the judge noise is about 0.01, and answers that change between Pixel runs come from different input or from thread timing, not from the temperature.
 
 ## To measure on the Pixel 10
+- Prefill with pinned threads (`strict_cpu`) and 5 batch threads against the app's 6 unpinned threads.
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.
 - LiteRT-LM Gemma 4 E2B on the Tensor G5 NPU under GrapheneOS (blocked, see above), and its quality on LiteRT CPU.

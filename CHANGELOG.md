@@ -1,8 +1,21 @@
 # Changelog
 
-Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs did not change after 0.1.1: they are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`.
+Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
-## [0.2.2] - 2026-10-16
+## [Unreleased]
+
+### Added
+
+- **A starter set for 8 GB phones** (8.1 GB): Wikipedia, Wikidata facts and the small model, MiniCPM5-2B. The set for 12 GB phones (11.3 GB) keeps Ling-3.0-tiny. The app shows the set for your phone first and marks it "For this phone".
+
+### Changed
+
+- **MiniCPM5-2B replaces LFM2.5-1.2B as the small model.** On 63 seed questions it scores 0.485 against 0.345, and its Apache-2.0 license has no revenue limit. A phone with less than 10 GB of RAM uses it by default and does not load Ling by itself, because Android kills the app at about 5.5 GB.
+- **Better routing.** "How do I reverse a list in Python?" is a question, not a request to rewrite the last answer. "What should I know before I go?" no longer links the film "Before I Go". "And in the world?" asks the last question again for the new place.
+- **Exact calculations.** "What is 15 percent of 240?" and "How many cups are in a liter?" get the exact value at once, with no model call.
+- **Faster on a warm phone.** The app sends less evidence from a thermal headroom of 0.70, not 0.85. On a Pixel 10 the first word came after 5.9–7.5 s in 6 questions.
+- **No duplicate topic chips.** "About Angkor Wat" no longer appears for the band "Angkor Wat" under an answer about the temple.
+
 
 ### Changed
 

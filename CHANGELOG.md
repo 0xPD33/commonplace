@@ -2,7 +2,7 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
-## [Unreleased]
+## [0.2.3] - 2026-10-19
 
 ### Added
 
@@ -71,6 +71,7 @@ The first release.
 - Comparisons, follow-up questions, thinking mode, voice input (a separate pack) and "My documents" for your own PDF, text and Markdown files.
 - The Library with an on/off switch for each pack and a 50 GB limit.
 
+[0.2.3]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.3
 [0.2.2]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.2
 [0.2.1]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.1
 [0.2.0]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.0

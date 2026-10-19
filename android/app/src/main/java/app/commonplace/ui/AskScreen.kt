@@ -117,6 +117,8 @@ import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.Prefs
+import app.commonplace.engine.SMALL_MODEL_PACK
 import app.commonplace.engine.loadCatalog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -177,7 +179,10 @@ fun AskScreen(
                 title = {
                     Column {
                         Text("Commonplace", style = MaterialTheme.typography.titleLarge, fontStyle = FontStyle.Italic)
-                        ModelStatusLine(model, installed = library?.models?.any { it.kind != ModelKind.VOICE } == true, known = library != null)
+                        val answerModels = library?.models?.filter { it.kind != ModelKind.VOICE }.orEmpty()
+                        // A low-RAM phone does not load the fast model by itself (see EngineHolder.ensureModel).
+                        val onlyFast = holder.prefs.lowRam && answerModels.isNotEmpty() && answerModels.all { it.kind == ModelKind.FAST } && holder.prefs.modelKind != ModelKind.FAST
+                        ModelStatusLine(model, installed = answerModels.isNotEmpty(), known = library != null, onlyFast = onlyFast)
                     }
                 },
                 actions = {
@@ -246,10 +251,11 @@ fun AskScreen(
 }
 
 @Composable
-private fun ModelStatusLine(model: ModelState, installed: Boolean, known: Boolean) {
+private fun ModelStatusLine(model: ModelState, installed: Boolean, known: Boolean, onlyFast: Boolean) {
     val (text, color) = when {
         // Until the library is open, the app cannot tell whether a model is installed.
         !known -> "" to MaterialTheme.colorScheme.onSurfaceVariant
+        onlyFast && model !is ModelState.Loaded -> "Search only · this phone needs the small model" to MaterialTheme.colorScheme.onSurfaceVariant
         else -> modelStatus(model, installed)
     }
     Text(text, style = MaterialTheme.typography.labelSmall, color = color, modifier = Modifier.testTag("model_status"))
@@ -383,7 +389,14 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
         OfflineBadge(onOffline)
         Spacer(Modifier.height(24.dp))
         // The starter bundle is one file. A catalog without bundles lists the starter packs instead.
-        val starters = remember { loadCatalog(ctx).let { c -> c.bundles.filter { it.recommended }.ifEmpty { c.packs.filter { it.recommended } } } }
+        val lowRam = remember { Prefs(ctx).lowRam }
+        val starters = remember {
+            loadCatalog(ctx).let { c ->
+                val set = c.bundles.filter { it.recommended }.ifEmpty { c.packs.filter { it.recommended } }
+                // The starter answer model does not fit a low-RAM phone.
+                if (lowRam && set.none { SMALL_MODEL_PACK in it.members || it.packId == SMALL_MODEL_PACK }) set + c.packs.filter { it.packId == SMALL_MODEL_PACK } else set
+            }
+        }
         val oneFile = starters.size == 1
         if (starters.isNotEmpty()) {
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
@@ -404,6 +417,14 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                             }
                             Text(bytes(p.downloadBytes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+                    }
+                    if (lowRam) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "This phone has less than 10 GB of memory, so it answers with the small model. The fast model needs a 12 GB phone.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }

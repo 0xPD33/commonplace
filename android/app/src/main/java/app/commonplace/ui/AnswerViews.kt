@@ -551,8 +551,10 @@ private fun FollowUpChips(turn: Turn, onAsk: (String) -> Unit, onDraft: ((String
             SuggestionChip(onClick = { onDraft("Compare $topic with ") }, label = { Text("Compare with…") }, modifier = Modifier.testTag("compare_with"))
         }
         // Other articles the answer drew on, from the main article's pack: a Q&A pack's titles are questions.
-        val related = turn.sources.filter { it.packId == card?.top?.packId }.map { it.title }.distinct()
+        // The chip drops the qualifier, so "Paris (film)" and "Paris (song)" would show the same label twice.
+        val related = turn.sources.filter { it.packId == card?.top?.packId }.map { it.title }
             .filter { it != card?.top?.title && card?.entities?.contains(it) != true }
+            .distinctBy { it.substringBefore(" (") }.filter { it.substringBefore(" (") != topic }
         for (t in related.take(2)) {
             SuggestionChip(onClick = { onAsk("Tell me about $t") }, label = { Text("About ${t.substringBefore(" (")}") }, modifier = Modifier.testTag("related_topic"))
         }

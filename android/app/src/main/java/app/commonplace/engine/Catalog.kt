@@ -26,6 +26,9 @@ data class CatalogPack(
 
 class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
 
+/** The answer model for phones with less than about 10 GB of memory. */
+const val SMALL_MODEL_PACK = "minicpm5-2b"
+
 /** The catalog bundled in the APK (assets/catalog.json, written by scripts/catalog.py). It may have no `bundles`. */
 fun loadCatalog(ctx: Context): Catalog = runCatching {
     val doc = JSONObject(ctx.assets.open("catalog.json").bufferedReader().use { it.readText() })

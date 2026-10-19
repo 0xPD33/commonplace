@@ -101,8 +101,9 @@ class EngineHolder(private val app: Application) {
             val gguf = lib.models.filter { !it.filePath.endsWith(".litertlm") }.map { it.kind }
             val litePack = lib.models.firstOrNull { it.filePath.endsWith(".litertlm") }
             val useTpu = prefs.backend == Backend.Tpu && litePack != null
-            // `null` means the everyday model: the user's choice, else fast, else small.
-            val want = kind ?: listOf(prefs.modelKind, ModelKind.FAST, ModelKind.SMALL).firstOrNull { it in gguf }
+            // `null` means the everyday model: the user's choice, else fast, else small. A low-RAM phone loads the
+            // fast model only when the user picks it: Android kills the app when it holds about 5.5 GB.
+            val want = kind ?: listOfNotNull(prefs.modelKind, ModelKind.FAST.takeIf { !prefs.lowRam }, ModelKind.SMALL).firstOrNull { it in gguf }
             val current = _model.value
             if (current is ModelState.Loaded && (if (useTpu) current.backend == Backend.Tpu else current.backend == Backend.Cpu && current.kind == want)) {
                 return@withLock

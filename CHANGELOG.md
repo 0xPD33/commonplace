@@ -10,12 +10,13 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 ### Changed
 
-- **MiniCPM5-2B replaces LFM2.5-1.2B as the small model.** On 63 seed questions it scores 0.485 against 0.345, and its Apache-2.0 license has no revenue limit. A phone with less than 10 GB of RAM uses it by default and does not load Ling by itself, because Android kills the app at about 5.5 GB.
+- **MiniCPM5-2B replaces LFM2.5-1.2B as the small model.** On 63 seed questions it scores 0.485 against 0.345, and its Apache-2.0 license has no revenue limit. A phone with less than 10 GB of RAM uses it by default and does not load Ling by itself: Ling needs about 5.5 GB of RAM, and MiniCPM about 2.6 GB.
 - **Better routing.** "How do I reverse a list in Python?" is a question, not a request to rewrite the last answer. "What should I know before I go?" no longer links the film "Before I Go". "And in the world?" asks the last question again for the new place.
-- **Exact calculations.** "What is 15 percent of 240?" and "How many cups are in a liter?" get the exact value at once, with no model call.
-- **Faster on a warm phone.** The app sends less evidence from a thermal headroom of 0.70, not 0.85. On a Pixel 10 the first word came after 5.9–7.5 s in 6 questions.
+- **Exact calculations.** "What is 15 percent of 240?" and "How many cups are in a liter?" get the exact value at once, with no model call. A longer question with such a calculation no longer runs a second model call to compute it.
+- **Faster on a warm phone.** The app sends less evidence from a thermal headroom of 0.70, not 0.85. On a Pixel 10 with MiniCPM, the first word came after 5.9–7.5 s in 6 questions.
 - **No duplicate topic chips.** "About Angkor Wat" no longer appears for the band "Angkor Wat" under an answer about the temple.
 
+## [0.2.2] - 2026-10-16
 
 ### Changed
 

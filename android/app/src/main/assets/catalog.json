@@ -168,22 +168,22 @@
       ]
     },
     {
-      "pack_id": "lfm25-1.2b",
-      "title": "LFM2.5 1.2B Instruct (Q4_0)",
-      "description": "Small answer model (LFM2.5 1.2B).",
+      "pack_id": "minicpm5-2b",
+      "title": "MiniCPM5 2B (pure Q4_0)",
+      "description": "Small answer model (MiniCPM5 2B).",
       "pack_type": "model",
       "snapshot": "",
-      "license": "LFM Open License v1.0 (commercial use only below US$10M annual revenue)",
+      "license": "Apache-2.0",
       "replaces": [],
       "recommended": false,
-      "download_bytes": 695769088,
-      "installed_bytes": 695763780,
+      "download_bytes": 1421436928,
+      "installed_bytes": 1421432353,
       "files": [
         {
-          "name": "lfm25-1.2b.tar",
-          "bytes": 695769088,
-          "sha256": "9d13e03e35e8c6858eb50ec361450c10102e73931cf88ab139f4b506aac9b554",
-          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/lfm25-1.2b.tar?download=true"
+          "name": "minicpm5-2b.tar",
+          "bytes": 1421436928,
+          "sha256": "3626eb5b74b82f5c419fe0b0604e6c44441046af64c3e1c8b5dc425ebb6fe892",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/minicpm5-2b.tar?download=true"
         }
       ]
     },

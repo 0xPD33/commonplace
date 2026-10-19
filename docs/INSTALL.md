@@ -5,7 +5,7 @@
 ### What you need
 
 - An Android phone with a 64-bit ARM CPU and Android 12 or later. Google Play Services are not necessary. I test on a Pixel 10 with GrapheneOS.
-- 12 GB of RAM for the main model, which uses about 5 GB while it runs. On a phone with 8 GB, use the small model (see [More packs](#more-packs)).
+- 12 GB of RAM for the main model, which uses about 5 GB while it runs. On a phone with 8 GB, install the small model (see [More packs](#more-packs)). The app uses it by default when the phone has less than 10 GB of RAM.
 - About 23 GB of free storage for the first import: the downloaded file and the installed packs. After the import, the app uses 11.3 GB.
 - A Wi-Fi connection. The Starter set is one file of 11.3 GB.
 
@@ -40,10 +40,10 @@ You get each of these files in the same way: tap it under **Get more**, download
 | `enwiki.tar` | 19.2 GB | All 6.8 million English Wikipedia articles. It replaces `enwiki-core`, and the app then skips `enwiki-core`. |
 | `arxiv-abs.tar` | 3.3 GB | 3.2 million arXiv abstracts |
 | `stackexchange.tar` | 2.5 GB | 1.2 million question threads from 51 Stack Exchange sites |
-| `lfm25-1.2b.tar` | 0.7 GB | LFM2.5-1.2B, a small model for phones with 8 GB of RAM. Select it in Settings. |
+| `minicpm5-2b.tar` | 1.4 GB | MiniCPM5-2B, a small model for phones with 8 GB of RAM. The app uses it by default on those phones. On other phones, select it in Settings. |
 | `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
 
-All files together use 35.8 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
+All files together use 36.5 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
 
 In the Library, each knowledge pack has a switch. A pack that is off stays installed but the app does not search it.
 

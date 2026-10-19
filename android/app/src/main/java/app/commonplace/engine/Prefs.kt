@@ -1,5 +1,6 @@
 package app.commonplace.engine
 
+import android.app.ActivityManager
 import android.app.UiModeManager
 import android.content.Context
 import uniffi.commonplace_ffi.CommonplaceEngine
@@ -9,6 +10,11 @@ import uniffi.commonplace_ffi.ModelKind
 class Prefs(context: Context) {
     private val sp = context.getSharedPreferences("commonplace", Context.MODE_PRIVATE)
 
+    // Ling needs about 5.5 GB; an 8 GB phone reports about 7.5 GB of total memory.
+    val lowRam = ActivityManager.MemoryInfo().also {
+        (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(it)
+    }.totalMem < 10_000_000_000L
+
     var backend: Backend
         get() = if (sp.getString("backend", "cpu") == "tpu") Backend.Tpu else Backend.Cpu
         set(v) = sp.edit().putString("backend", if (v == Backend.Tpu) "tpu" else "cpu").apply()
@@ -17,9 +23,9 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("show_timings", false)
         set(v) = sp.edit().putBoolean("show_timings", v).apply()
 
-    /** The everyday model when several are installed. */
+    /** The everyday model when several are installed. Without a choice, low-RAM phones get the small one. */
     var modelKind: ModelKind
-        get() = if (sp.getString("model", "fast") == "small") ModelKind.SMALL else ModelKind.FAST
+        get() = if (sp.getString("model", if (lowRam) "small" else "fast") == "small") ModelKind.SMALL else ModelKind.FAST
         set(v) = sp.edit().putString("model", if (v == ModelKind.SMALL) "small" else "fast").apply()
 
     /** A UiModeManager night mode. The system also persists it; this copy only shows the choice in Settings. */

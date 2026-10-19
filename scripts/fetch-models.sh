@@ -19,7 +19,7 @@ LEAF=MongoDB/mdbr-leaf-mt;               LEAF_REV=1ed41b22ce166d66c24f88ebfc340e
 ETTIN=0xPD33/ettin-reranker-17m-commonplace; ETTIN_REV=ebc0d6c8afdce3af49e12c6fd0b7cc6a6c398769
 ETTIN32=cross-encoder/ettin-reranker-32m-v1; ETTIN32_REV=b33e5ceb5110773ea9cf5e00c9bedc83a8c2afdd
 MXBAI=mixedbread-ai/mxbai-embed-large-v1; MXBAI_REV=b33106f585b9ce46904ad7443a3b52b7a63e231c
-LFM_S=LiquidAI/LFM2.5-1.2B-Instruct-GGUF; LFM_S_REV=8ed288026e23958ad9dfa92d53ed773a8eee7125
+MINICPM=0xPD33/MiniCPM5-2B-pureQ4_0-GGUF; MINICPM_REV=76674264cc1a1b11939b0e6875571d4aae84cb18
 LFM_F=LiquidAI/LFM2.5-8B-A1B-GGUF;        LFM_F_REV=49c14831707011e64d70b2ebd8462ba08d608434
 LING=bartowski/Ling-3.0-tiny-GGUF;         LING_REV=ea072726af0d2e8ba325b2f90fc0efa762105a91
 GEMMA=litert-community/gemma-4-E2B-it-litert-lm; GEMMA_REV=b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1
@@ -46,7 +46,7 @@ mxbai() {
   for f in onnx/model.onnx tokenizer.json; do fetch $MXBAI $MXBAI_REV $f mxbai/$f; done
 }
 llm_fast()  { fetch $LING $LING_REV Ling-3.0-tiny-Q4_0.gguf llm/Ling-3.0-tiny-Q4_0.gguf; }
-llm_small() { fetch $LFM_S $LFM_S_REV LFM2.5-1.2B-Instruct-Q4_0.gguf llm/LFM2.5-1.2B-Instruct-Q4_0.gguf; }
+llm_small() { fetch $MINICPM $MINICPM_REV MiniCPM5-2B-pureQ4_0.gguf llm/MiniCPM5-2B-pureQ4_0.gguf; }
 llm_lfm()   { fetch $LFM_F $LFM_F_REV LFM2.5-8B-A1B-Q4_0.gguf llm/LFM2.5-8B-A1B-Q4_0.gguf; }
 llm_gemma() { # LiteRT-LM: generic CPU/GPU build and the Tensor G5 NPU build (blocked, see docs/BENCHMARKS.md)
   fetch $GEMMA $GEMMA_REV gemma-4-E2B-it.litertlm llm/gemma-4-E2B-it.litertlm

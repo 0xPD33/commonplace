@@ -15,7 +15,7 @@ DESCRIPTIONS = {
     "simplewiki": "Simple English Wikipedia.",
     "wikidata-facts": "Structured facts from Wikidata.",
     "ling3-tiny": "Fast answer model (Ling 3.0 tiny).",
-    "lfm25-1.2b": "Small answer model (LFM2.5 1.2B).",
+    "minicpm5-2b": "Small answer model (MiniCPM5 2B).",
     "voice-en": "Speak your question instead of typing it. English only.",
     "arxiv-abs": "Abstracts of arXiv papers.",
     "stackexchange": "Questions and answers from 51 Stack Exchange sites.",

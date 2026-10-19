@@ -532,6 +532,36 @@ The evidence budget counted bytes ÷ 4 as tokens. Ling reads each digit as a tok
 - The yen question: 1,470 → 560 new prompt tokens, 4 sources instead of 1, and the answer gives €1 = ¥150.70 (2024) instead of reading yen per US dollar as yen per euro.
 - The 63 seeds: new prompt tokens median 586 → 571, largest 1,404 → 773. Blind pairwise against the build before: 24 wins, 16 ties, 23 losses (p = 1.00).
 
+## Pixel 10: `llama-bench`, MiniCPM5-2B (2026-10-19)
+
+MiniCPM5-2B (`openbmb/MiniCPM5-2B`, dense 2.52B, Apache-2.0) is a candidate small model for phones with 8 GB of RAM. Two files:
+
+- Mixed: `bartowski/MiniCPM5-2B-GGUF` @ `31fee03`, `MiniCPM5-2B-Q4_0.gguf` (1.52 GB). The output head and 22 other tensors are Q6_K or Q4_1, and llama.cpp repacks only the Q4_0 tensors for ARM.
+- Pure: made from the official F16 (`openbmb/MiniCPM5-2B-GGUF` @ `2079a22f`) with bartowski's imatrix, `llama-quantize --pure --output-tensor-type q4_0 --token-embedding-type q4_0` (1.42 GB). All 296 matrices are Q4_0.
+
+`-C <mask> --cpu-strict 1 -p 512 -n 64 -r 3`, build `680a03628`, on USB power. The first two runs started at 29.6 °C and 31.0 °C, all others at 33.0 °C. The masks 0xF8 (4 medium cores + the big core) and 4 threads stand in for a weaker phone. They do not model the slower cores of a Tensor G3.
+
+| Model | Mask | Threads | Prefill pp512 | Decode tg64 |
+|---|---|---|---|---|
+| MiniCPM5-2B mixed | 0xFC | 4 | 121.6 tok/s | 18.5 tok/s |
+| MiniCPM5-2B pure | 0xFC | 4 | 137.4 tok/s | 19.9 tok/s |
+| MiniCPM5-2B mixed | 0xFC | 6 | 166.6 tok/s | 19.5 tok/s |
+| MiniCPM5-2B pure | 0xFC | 6 | **190.6 tok/s** | 21.0 tok/s |
+| MiniCPM5-2B mixed | 0xF8 | 4 | 120.8 tok/s | 18.4 tok/s |
+| MiniCPM5-2B pure | 0xF8 | 4 | 137.1 tok/s | 20.0 tok/s |
+| MiniCPM5-2B mixed | 0xF8 | 5 | 148.0 tok/s | 19.7 tok/s |
+| MiniCPM5-2B pure | 0xF8 | 5 | 166.0 tok/s | **21.3 tok/s** |
+| LFM2.5-1.2B (the current small model) | 0xFC | 4 | 286.1 tok/s | 37.4 tok/s |
+| Ling-3.0-tiny | 0xFC | 6 | 122.7 ± 16.6 tok/s | 26.7 tok/s |
+
+- The pure file prefills 12–15% faster and decodes 8–9% faster than the mixed file in every setting.
+- MiniCPM prefills 55% faster than Ling at 6 threads, and Ling decodes 27% faster. For about 550 prompt tokens, prefill takes about 2.9 s with MiniCPM and 4.5 s with Ling.
+- MiniCPM decode gains little after 4 threads.
+- On the desktop, 18 seed questions with the phone settings: the pure file scores 0.494 (mixed 0.483, LFM2.5-1.2B 0.374), and it wins 14, ties 1 and loses 3 against LFM2.5-1.2B (p = 0.013). Against the mixed file it wins 5, ties 4 and loses 9 (p = 0.42). Desktop peak RSS: 2.49 GB.
+- N-gram drafting (all llama.cpp `ngram-*` types, greedy, the same 18 prompts) gave no speed-up on the desktop. At most 14.6% of the drafted tokens were accepted, because MiniCPM does not copy the passages word for word.
+
+Not measured: the app with MiniCPM (first word, PSS, heat), and a real Tensor G3. Source: `artifacts/pixel/llama-bench-minicpm5.md`.
+
 ## To measure on the Pixel 10
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.
 - `llama-bench` for Ling-3.0-tiny (Q4_0, Q4_K_M) at pp256/pp512/pp1024/tg128 with 4, 5 and 6 pinned threads, cold and after 5 minutes of load.

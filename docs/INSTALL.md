@@ -10,7 +10,7 @@
   - **Starter set for 8 GB phones** (8.1 GB) has the small model, MiniCPM5-2B, which uses about 2.6 GB.
   The app shows the set for your phone first and marks it **For this phone**. It counts a phone with less than 10 GB of RAM as an 8 GB phone.
 - Free storage of about twice the starter set for the first import: the downloaded file and the installed packs. After the import, the app uses 11.3 GB or 8.1 GB.
-- A Wi-Fi connection. Each starter set is one file.
+- A Wi-Fi connection. Each starter set is one file. On a 2.4 GHz network (about 1 MB/s), the 11.3 GB file took 3 hours on the Pixel 10. Use a 5 GHz network if you can.
 
 The app has no `INTERNET` permission. You download the packs with the phone's browser from the Hugging Face dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs). Then the app imports them from the **Downloads** folder.
 
@@ -22,6 +22,8 @@ The app has no `INTERNET` permission. You download the packs with the phone's br
    - `enwiki-core`: English Wikipedia (dump of 2026-09-01). It holds the opening passages of the 2 million most-viewed articles and the full text of the 200,000 most-viewed articles.
    - `ling3-tiny` or `minicpm5-2b`: the model that writes the answers.
    - `wikidata-facts`: numbers and dates from Wikidata, such as population, area and dates of birth.
+
+   Also download the **Reference shelf** (`commonplace-breadth.tar`, 2.0 GB). It adds travel guides, textbooks, how-to guides and medical pages ([More packs](#more-packs)). Without it, the app could not answer some travel and how-to questions in my tests.
 4. Wait until the download is complete. Then go back to Commonplace and tap **Install from Downloads** in the Library.
 5. Tap the starter file. To install several files in one step, long-press one file, tap the others, then tap **Select**.
    - The app checks every byte with SHA-256 while it copies the file. It ignores files that are not packs.

@@ -93,16 +93,17 @@ You need:
 
 - An Android phone with a 64-bit ARM CPU and Android 12 or later. Google Play Services are not necessary.
 - 8 GB of RAM. A phone with 12 GB gets the starter set with the fast model (Ling-3.0-tiny, 11.3 GB). A phone with 8 GB gets the starter set with the small model (MiniCPM5-2B, 8.1 GB). The app marks the set for your phone.
-- Free storage of about twice the starter set for the first import. After the import, the app uses 11.3 GB or 8.1 GB.
-- A Wi-Fi connection for one download of 11.3 GB or 8.1 GB.
+- Free storage of about twice the downloaded files for the first import. After the import, the app uses 11.3 GB or 8.1 GB, plus 2.0 GB for the Reference shelf.
+- A Wi-Fi connection for one download of 11.3 GB or 8.1 GB. On a 2.4 GHz network (about 1 MB/s), the 11.3 GB file took 3 hours on the Pixel 10. Use a 5 GHz network if you can.
 
 Steps:
 
 1. On the phone, open the [latest release](https://github.com/0xPD33/commonplace/releases/latest) and download `commonplace-<version>.apk`. Open the file and install the app.
 2. Open Commonplace and tap **Open Library**. Under **Get more**, tap the starter set marked **For this phone**, then tap **Download**. The browser saves `commonplace-starter.tar` (11.3 GB, for 12 GB phones) or `commonplace-starter-small.tar` (8.1 GB, for 8 GB phones) in **Downloads**.
-3. When the download is complete, tap **Install from Downloads** in the Library. Tap the starter file. The app checks every byte with SHA-256 while it copies the file.
-4. When the app asks, tap **Delete** to remove the downloaded file.
-5. Go back and ask a question. The first question is slower, because the app loads the model into memory.
+3. Also download the **Reference shelf** (`commonplace-breadth.tar`, 2.0 GB) in the same way. It adds travel guides, textbooks, how-to guides and medical pages. Without it, the app could not answer some travel and how-to questions in my tests.
+4. When the downloads are complete, tap **Install from Downloads** in the Library. Select both files: long-press one, tap the other, then tap **Select**. The app checks every byte with SHA-256 while it copies the files.
+5. When the app asks, tap **Delete** to remove the downloaded files.
+6. Go back and ask a question. The first question is slower, because the app loads the model into memory.
 
 To check that the app is offline, turn on airplane mode. Or open **Settings > Apps > Commonplace > Permissions**: the app has no network permission.
 
@@ -129,7 +130,7 @@ Limits of this measurement:
 
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
 - The baseline wins almost every single question (61 losses, 1 tie, 1 win). Commonplace gets half the points, not half the wins.
-- Travel (0.39), fact (0.43) and how-to questions (0.46) are below 0.50.
+- Travel (0.39), fact (0.43) and how-to questions (0.46) are below 0.50. This run had only the Starter set. On the Pixel 10, the Reference shelf answered travel and how-to questions that the Starter set refused ([BENCHMARKS](docs/BENCHMARKS.md#pixel-10-a-clean-install-of-023-2026-10-20-to-2026-10-21)). No judged run of the Starter set with the shelf exists yet.
 - The score ratio of 0.53 comes from the 0.2.0 build with the phone's settings and only the Starter set, run on the desktop (2026-10-14). The builds of 2026-10-10 scored 0.48 and 0.50 with the same settings ([BENCHMARKS](docs/BENCHMARKS.md#desktop-judged-evals-with-the-phone-settings-2026-10-10)). The desktop build of 2026-10-05 with all packs, including the full Wikipedia, scored 0.53.
 - The phone uses a selective int8 copy of the reranker. On NQ it stays within 1 point of hit@1 of the full model (0.510 against 0.515).
 

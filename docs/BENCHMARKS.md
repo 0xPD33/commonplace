@@ -590,6 +590,28 @@ The 63 seeds with the phone settings, at temperature 0.3 (the default), 0.1 and 
 
 A lower temperature gives no gain. The two MiniCPM runs gave the same text for all 63 answers at 0.3 and at 0, because the sampler has a fixed seed. So the judge noise is about 0.01, and answers that change between Pixel runs come from different input or from thread timing, not from the temperature.
 
+## Pixel 10: a clean install of 0.2.3 (2026-10-20 to 2026-10-21)
+
+The signed 0.2.3 release APK (`4d29fbe`), installed after the debug build was removed from both profiles. Paddy followed README "Install on a phone" by hand. The phone was on USB power and in airplane mode for all questions. The timings come from the app's Diagnostics screen.
+
+- Install: no blocker. The APK installed at 20:27:09, and Paddy tapped Download 30 s after the first launch. The app chose Ling-3.0-tiny by itself.
+- The browser download of `commonplace-starter.tar` (11.3 GB) took about 3 h on 2.4 GHz Wi-Fi (802.11n, RSSI −68, about 1 MB/s). The desktop gets the same file at 33 MB/s.
+- Model start after a force-stop: "Ready" after 18 s.
+
+| | Starter set | Starter set and Reference shelf |
+|---|---|---|
+| Questions with a model call | 10 | 11 |
+| Card, median (range) | 542 ms (412–934) | 599 ms (430–843) |
+| First word, median (range) | 6.3 s (5.0–13.0) | 6.3 s (4.4–9.1) |
+| Decode | 12.3–15.5 tok/s | 7.5–15.9 tok/s |
+| RSS | 4.9 GB | 5.0–5.1 GB |
+
+- Starter set: the Everest, northern lights, Golden Gate, 1964 Olympics, Nile and Amazon answers and the follow-up "Which one carries more water?" were right. "15 percent of 240" took 550 ms with no model call. The squeaky hinge and the tap water in Mexico City got "the sources do not contain…". The tipping answer for Japan was right, but it cited pages that do not mention tipping.
+- Reference shelf (`commonplace-breadth.tar`, 2.0 GB, no Stack Exchange): I pushed the file over adb, and Install from Downloads took less than 1 minute. Tipping in Japan, tap water in Mexico City, Kyoto in two days, vaccinations for Kenya and a jellyfish sting then got cited answers from Wikivoyage and CDC travel. "Why is the sky blue?" named Rayleigh scattering. The northern lights, vaccines, refrigerator and Linux port answers were right. The hinge answer stayed weak: uncited WD-40 advice, then a Wikibooks page about cabinet hinges, and the number check underlined "WD-40".
+- Heat: the last 5 shelf questions ran at a thermal headroom of 0.80–0.82 (status 1, battery 38 °C), and decode fell to 7.5–10.4 tok/s.
+- My documents: `quillfeather.pdf` gave 3 passages. "Ask this document" answered the keeper question from the PDF only.
+- Thinking mode: the density question for the Netherlands and Germany took about 75 s to the full answer on a hot phone (battery 40 °C). The values were right (480 and 234 per km², 2.05 times).
+
 ## To measure on the Pixel 10
 - Prefill with pinned threads (`strict_cpu`) and 5 batch threads against the app's 6 unpinned threads.
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.

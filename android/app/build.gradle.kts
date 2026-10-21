@@ -13,8 +13,8 @@ android {
         applicationId = "app.commonplace"
         minSdk = 31
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.2.3"
+        versionCode = 7
+        versionName = "0.2.4"
         // scripts/build-android.sh passes -Pabis=… to match the Rust libraries it built.
         ndk { abiFilters += (project.findProperty("abis") as String? ?: "arm64-v8a,x86_64").split(",") }
     }

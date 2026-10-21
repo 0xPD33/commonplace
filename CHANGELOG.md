@@ -2,6 +2,14 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
+## [0.2.4] - 2026-10-21
+
+### Fixed
+
+- **A second download imports.** The browser saves a second copy of a file as `commonplace-starter (1).tar`. The app now imports it, and no longer says that no selected file belongs to a pack.
+- **Diagnostics shows the build.** It showed "Build dev" in every release. It now shows the git hash of the release.
+- **One downloaded file is singular.** After an import of one file, the app asks "Delete the downloaded file?" and no longer says "The 1 downloaded files".
+
 ## [0.2.3] - 2026-10-19
 
 ### Added
@@ -72,6 +80,7 @@ The first release.
 - Comparisons, follow-up questions, thinking mode, voice input (a separate pack) and "My documents" for your own PDF, text and Markdown files.
 - The Library with an on/off switch for each pack and a 50 GB limit.
 
+[0.2.4]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.4
 [0.2.3]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.3
 [0.2.2]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.2
 [0.2.1]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.1

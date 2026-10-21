@@ -107,6 +107,8 @@ private val importState = ImportState()
 
 private const val WIKIDATA = "wikidata-facts"
 private val DOCUMENT_TYPES = arrayOf("application/pdf", "text/plain", "text/markdown")
+// A browser saves a second download of `x.tar` as `x (1).tar`; the catalog knows only `x.tar`.
+private val BROWSER_COPY = Regex("""\s?\(\d+\)(?=\.tar$|\.pack\.json$)""")
 private const val PDF_NEEDS_ANDROID_15 = "PDF import needs Android 15 or later. Text and Markdown files still work."
 
 /** The message of a core error without the UniFFI "msg=" wrapper. */
@@ -146,7 +148,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                         }
                     }
                 }
-                SelectedFile(uri, name, size)
+                SelectedFile(uri, name.replace(BROWSER_COPY, ""), size)
             }
             val plan = planImport(catalog, selected)
             val failed = plan.missing.toMutableList()
@@ -209,7 +211,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         deletable = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val ok = files.count { (uri, _) -> runCatching { DocumentsContract.deleteDocument(cr, uri) }.getOrDefault(false) }
-            withContext(Dispatchers.Main) { snackbar = "Deleted $ok of ${files.size} downloaded files" }
+            withContext(Dispatchers.Main) { snackbar = if (files.size == 1) "Deleted $ok of 1 downloaded file" else "Deleted $ok of ${files.size} downloaded files" }
         }
     }
 
@@ -491,10 +493,11 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
     }
     if (vm.deletable.isNotEmpty()) {
         val size = vm.deletable.sumOf { it.second }
+        val one = vm.deletable.size == 1
         AlertDialog(
             onDismissRequest = { vm.deletable = emptyList() },
-            title = { Text("Delete the downloaded files?") },
-            text = { Text("Installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
+            title = { Text(if (one) "Delete the downloaded file?" else "Delete the downloaded files?") },
+            text = { Text(if (one) "Installed and verified. The downloaded file (${bytes(size)}) is no longer needed." else "Installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
             confirmButton = { TextButton(onClick = vm::deleteSources, modifier = Modifier.testTag("delete_sources")) { Text("Delete") } },
             dismissButton = { TextButton(onClick = { vm.deletable = emptyList() }) { Text("Keep") } },
         )

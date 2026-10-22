@@ -157,6 +157,12 @@ impl Library {
         pack::dir_size(&Self::packs_dir(&self.root))
     }
 
+    /// How rare `word` is in the library: ln(passages ÷ (1 + passages that hold it)). 0 for a stopword.
+    pub fn rarity(&self, word: &str) -> f32 {
+        let (df, n) = self.packs.iter().filter_map(|p| p.sparse.as_ref()?.doc_freq(word)).fold((0, 0), |(a, b), (d, n)| (a + d, b + n));
+        if n == 0 { 0.0 } else { (n as f32 / (1 + df) as f32).ln().max(0.0) }
+    }
+
     /// Snapshot date of the largest knowledge pack.
     pub fn snapshot_date(&self) -> String {
         self.packs

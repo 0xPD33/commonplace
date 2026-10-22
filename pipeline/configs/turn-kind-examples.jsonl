@@ -64,7 +64,7 @@
 {"text": "How does it work?", "kind": "followup"}
 {"text": "Why did they do that?", "kind": "followup"}
 {"text": "What was his most famous work?", "kind": "followup"}
-{"text": "Is that true?", "kind": "followup"}
+{"text": "Is that true?", "kind": "check"}
 {"text": "Are there any exceptions?", "kind": "followup"}
 {"text": "What are the side effects?", "kind": "followup"}
 {"text": "How long does it last?", "kind": "followup"}
@@ -1187,3 +1187,99 @@
 {"text": "how do I say sorry in Mandarin?", "kind": "question"}
 {"text": "what is the polite way to say no in Japanese?", "kind": "question"}
 {"text": "how do you thank someone in Arabic?", "kind": "question"}
+{"text": "are you sure?", "kind": "check"}
+{"text": "are you sure about that?", "kind": "check"}
+{"text": "you sure?", "kind": "check"}
+{"text": "u sure?", "kind": "check"}
+{"text": "r u sure", "kind": "check"}
+{"text": "are you certain?", "kind": "check"}
+{"text": "how sure are you?", "kind": "check"}
+{"text": "is that right?", "kind": "check"}
+{"text": "is that correct?", "kind": "check"}
+{"text": "is this accurate?", "kind": "check"}
+{"text": "is that accurate?", "kind": "check"}
+{"text": "is that really true?", "kind": "check"}
+{"text": "really?", "kind": "check"}
+{"text": "seriously?", "kind": "check"}
+{"text": "for real?", "kind": "check"}
+{"text": "that's wrong", "kind": "check"}
+{"text": "thats wrong", "kind": "check"}
+{"text": "that is wrong", "kind": "check"}
+{"text": "wrong", "kind": "check"}
+{"text": "wrong answer", "kind": "check"}
+{"text": "that's not right", "kind": "check"}
+{"text": "thats not right", "kind": "check"}
+{"text": "that is not right", "kind": "check"}
+{"text": "that's incorrect", "kind": "check"}
+{"text": "incorrect", "kind": "check"}
+{"text": "not correct", "kind": "check"}
+{"text": "that's false", "kind": "check"}
+{"text": "that's not true", "kind": "check"}
+{"text": "no, that's not true", "kind": "check"}
+{"text": "nope, wrong", "kind": "check"}
+{"text": "you're wrong", "kind": "check"}
+{"text": "you are wrong", "kind": "check"}
+{"text": "you got that wrong", "kind": "check"}
+{"text": "you made a mistake", "kind": "check"}
+{"text": "there's a mistake in your answer", "kind": "check"}
+{"text": "I think you're mistaken", "kind": "check"}
+{"text": "pretty sure that's wrong", "kind": "check"}
+{"text": "I don't think that's right", "kind": "check"}
+{"text": "I don't think so", "kind": "check"}
+{"text": "that doesn't sound right", "kind": "check"}
+{"text": "that can't be right", "kind": "check"}
+{"text": "that seems off", "kind": "check"}
+{"text": "that seems wrong", "kind": "check"}
+{"text": "something's off there", "kind": "check"}
+{"text": "that doesn't add up", "kind": "check"}
+{"text": "that's not what happened", "kind": "check"}
+{"text": "I read something different", "kind": "check"}
+{"text": "that contradicts what I read", "kind": "check"}
+{"text": "hmm, I'm not sure that's right", "kind": "check"}
+{"text": "I doubt that", "kind": "check"}
+{"text": "isn't that wrong?", "kind": "check"}
+{"text": "are you making that up?", "kind": "check"}
+{"text": "did you make that up?", "kind": "check"}
+{"text": "is that a fact?", "kind": "check"}
+{"text": "how do you know?", "kind": "check"}
+{"text": "how do you know that?", "kind": "check"}
+{"text": "where did you get that?", "kind": "check"}
+{"text": "where does that come from?", "kind": "check"}
+{"text": "what's your source for that?", "kind": "check"}
+{"text": "source?", "kind": "check"}
+{"text": "can you confirm that?", "kind": "check"}
+{"text": "can you double-check?", "kind": "check"}
+{"text": "double check that", "kind": "check"}
+{"text": "please double-check that", "kind": "check"}
+{"text": "check that again", "kind": "check"}
+{"text": "check again please", "kind": "check"}
+{"text": "can you check your answer?", "kind": "check"}
+{"text": "recheck that", "kind": "check"}
+{"text": "please verify that", "kind": "check"}
+{"text": "can you verify that?", "kind": "check"}
+{"text": "fact check that", "kind": "check"}
+{"text": "try again", "kind": "check"}
+{"text": "think again", "kind": "check"}
+{"text": "look again", "kind": "check"}
+{"text": "reconsider that", "kind": "check"}
+{"text": "that is outdated", "kind": "check"}
+{"text": "is that still accurate?", "kind": "check"}
+{"text": "no way, that's not right", "kind": "check"}
+{"text": "that's not correct, check again", "kind": "check"}
+{"text": "are you sure that's right?", "kind": "check"}
+{"text": "wait, is that right?", "kind": "check"}
+{"text": "hold on, that's wrong", "kind": "check"}
+{"text": "what do you mean?", "kind": "reformat"}
+{"text": "what do you mean by that?", "kind": "reformat"}
+{"text": "what does that mean?", "kind": "reformat"}
+{"text": "I don't understand", "kind": "reformat"}
+{"text": "I don't get it", "kind": "reformat"}
+{"text": "I'm confused", "kind": "reformat"}
+{"text": "huh?", "kind": "reformat"}
+{"text": "come again?", "kind": "reformat"}
+{"text": "can you clarify?", "kind": "reformat"}
+{"text": "clarify please", "kind": "reformat"}
+{"text": "can you clarify that?", "kind": "reformat"}
+{"text": "I didn't follow that", "kind": "reformat"}
+{"text": "that makes no sense to me", "kind": "reformat"}
+{"text": "could you explain what you meant?", "kind": "reformat"}

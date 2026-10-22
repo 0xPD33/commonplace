@@ -426,10 +426,7 @@ impl Engine {
     fn referent(&self, history: &[Turn], message: &str, expand: bool) -> usize {
         let last = history.len().saturating_sub(1);
         let Some(rr) = self.rr.as_ref().filter(|_| !expand && history.len() >= 2) else { return last };
-        let first = |t: &Turn| {
-            let plain = citations::plain_text(&citations::check(&t.answer, 0, &HashSet::new()));
-            crate::text::sentences(&plain).into_iter().next().unwrap_or_default().to_string()
-        };
+        let first = |t: &Turn| claims(&t.answer).into_iter().next().unwrap_or_default();
         match rr.score(message, &[first(&history[last - 1]), first(&history[last])]) {
             Ok(s) if s[0] > s[1] + REFERENT_MARGIN => last - 1,
             _ => last,
@@ -670,7 +667,8 @@ impl Engine {
 
         // Small talk and reformat requests ("make it shorter") need no search, but a model to write the
         // reply. The empty card lets the app show it; a reformat also sends the last turn's sources, which
-        // its citations use. An expand request ("tell me more") is a question about the last topic.
+        // its citations use. An expand request ("tell me more") is a question about the last topic, and so is a
+        // check request ("are you sure?").
         let label = match &self.enc {
             Some(enc) => Head::turn().classify(&enc.encode(&req.query)?),
             None => "question",
@@ -679,6 +677,7 @@ impl Engine {
             // "How do I reverse a list in Python?" reads like "as a list", but a reformat request names no thing.
             "reformat" if !req.history.is_empty() && route::link_entities(&lib, &req.query, &req.packs).is_empty() => TurnKind::Reformat,
             "chat" => TurnKind::Chat,
+            "check" if req.history.is_empty() => TurnKind::Chat,
             _ => TurnKind::Question,
         };
         if let Some((_, l)) = llm.as_ref().filter(|_| kind != TurnKind::Question) {
@@ -728,9 +727,10 @@ impl Engine {
         let raw_query = route.query.clone();
         // Follow-ups without the rewrite step. A message that the follow-up head reads as needing the last turn
         // takes its topic, and its entities when the message names at most one thing; so does a comparison that
-        // names one thing ("Is France bigger?"). An expand request searches the last question again.
+        // names one thing ("Is France bigger?"). An expand or check request searches the last question again.
         let prev = req.history.last().filter(|_| rewritten.is_none());
-        let expand = label == "expand" && prev.is_some();
+        let check = label == "check" && prev.is_some();
+        let expand = (label == "expand" || check) && prev.is_some();
         let compares = !expand && emb.as_deref().is_some_and(|e| Head::intent().prob(e, "compare") >= COMPARE_PROB);
         if (route.compare || compares) && route.entities.len() < 2 {
             // A comparison of common nouns ("Compare lions and tigers") names its things in lowercase.
@@ -749,6 +749,8 @@ impl Engine {
         let inherit = expand || (own == 0 && route.needs_rewrite) || (prev.is_some() && own == 1 && (route.needs_rewrite || compares));
         let mut focus: Option<String> = None;
         let mut referent = req.history.len().saturating_sub(1);
+        // The earlier question that named the topic, when the referred one only followed it up.
+        let mut older: Option<&Turn> = None;
         if (inherit || route.needs_rewrite) && prev.is_some() {
             let at = self.referent(&req.history, &raw_query, expand);
             referent = at;
@@ -765,11 +767,12 @@ impl Engine {
                     break;
                 }
             }
+            older = (!std::ptr::eq(topic, prev)).then_some(topic);
             let mut from_answer = prev_entities.is_empty();
             if from_answer {
                 // "Who invented the telephone?" has no name in it, but the first sentence of its answer does.
-                let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
-                let first = crate::text::sentences(&plain).into_iter().next().unwrap_or_default();
+                let first = claims(&prev.answer).into_iter().next().unwrap_or_default();
+                let first = first.as_str();
                 prev_entities = route::link_entities(&lib, first, &req.packs);
                 prev_entities.sort_by_key(|e| first.find(&e.surface));
                 prev_entities.truncate(2);
@@ -803,8 +806,7 @@ impl Engine {
             let said = if expand || swap.is_some() || reask.is_some() || route.compare || compares || renamed || (!from_answer && prev_entities.len() >= 2) || prev.sources.is_empty() {
                 None
             } else {
-                let plain = citations::plain_text(&citations::check(&prev.answer, 0, &HashSet::new()));
-                let first = crate::text::sentences(&plain).into_iter().next().unwrap_or_default().trim().to_string();
+                let first = claims(&prev.answer).into_iter().next().unwrap_or_default();
                 let mut ents = route::link_entities(&lib, &first, &req.packs);
                 ents.sort_by_key(|e| first.find(&e.surface));
                 ents.truncate(2);
@@ -831,7 +833,9 @@ impl Engine {
             } else if !names.is_empty() {
                 route.query = format!("{} {}", names.join(" "), route.query);
             } else {
-                route.query = format!("{} {}", prev.query, route.query);
+                // "Should I get one before my holiday?" names nothing: the older question it followed up names the topic.
+                let topic_words = older.map_or(String::new(), |o| format!("{} ", o.query.trim()));
+                route.query = format!("{topic_words}{} {}", prev.query.trim(), route.query);
             }
             // Names read from an answer steer the search, but take no slot among compared things: "What is a
             // crocodile?" answered "…in Africa, Asia…" compares no continent.
@@ -848,7 +852,7 @@ impl Engine {
         let ranked = retriever.ranked(&route.query, &route.entities, &mut rec.retrieval)?;
         // At most three passages per article, so one long article cannot crowd out the others. "Tell me more"
         // wants new facts: the passages the last turn showed only fill slots that no other passage can.
-        let shown: HashSet<(&str, u32)> = prev.filter(|_| expand).map_or_else(HashSet::new, |p| p.sources.iter().map(|r| (r.pack_id.as_str(), r.passage_id)).collect());
+        let shown: HashSet<(&str, u32)> = prev.filter(|_| expand && !check).map_or_else(HashSet::new, |p| p.sources.iter().map(|r| (r.pack_id.as_str(), r.passage_id)).collect());
         let pick = |ranked: &[Hit]| {
             let (old, fresh): (Vec<Hit>, Vec<Hit>) = ranked.iter().cloned().partition(|h| shown.contains(&(lib.packs[h.pack as usize].manifest.pack_id.as_str(), h.pid)));
             let mut hits = select_diverse(&fresh, s.retrieval.rerank_keep, 3, &[]);
@@ -1087,11 +1091,19 @@ impl Engine {
         // Keep the user's own words in front of the model; a rewritten question can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
         // The exchange the follow-up refers to, so it builds on it. Its citations point at another turn's sources.
-        let earlier = req.history.get(referent).map(|t| {
-            let plain = citations::plain_text(&citations::check(&t.answer, 0, &HashSet::new()));
-            (t.query.as_str(), trunc(&crate::text::sentences(&plain).into_iter().take(2).collect::<Vec<_>>().join(" "), 300))
+        // The answer's opening sentences, and any later one that shares a word with this message ("What did you
+        // mean by the evaporator?").
+        let asked_terms: HashSet<String> = crate::text::terms(&req.query).into_iter().collect();
+        let earlier: Vec<(&str, String)> = req.history.get(referent).map_or_else(Vec::new, |t| {
+            let sents = claims(&t.answer);
+            let picked: Vec<&str> =
+                sents.iter().enumerate().filter(|(i, s)| *i < 2 || crate::text::terms(s).iter().any(|w| asked_terms.contains(w))).map(|(_, s)| s.as_str()).collect();
+            let mut turns: Vec<(&str, String)> = older.iter().map(|o| (o.query.as_str(), String::new())).collect();
+            turns.push((t.query.as_str(), trunc(&picked.join(" "), 500)));
+            turns
         });
-        let user = prompts::synthesis_user(&rendered, &asked, earlier.as_ref().map(|(q, a)| (*q, a.as_str())));
+        let earlier: Vec<(&str, &str)> = earlier.iter().map(|(q, a)| (*q, a.as_str())).collect();
+        let user = prompts::synthesis_user(&rendered, &asked, &earlier);
         let n = ev.count();
         let mut params = GenParams::synthesis(s.max_answer_tokens);
         params.think_budget = req.think.then_some(s.think_budget);
@@ -1132,13 +1144,48 @@ impl Engine {
         }
         rec.ttft_ms = first;
         rec.synthesis = Some(st);
-        let segments = citations::check(strip_echo(text.trim(), &[&question, &raw_query]), n, &ev.numbers);
+        // Words a supported sentence takes from: the evidence, the question and the earlier answer.
+        let known: HashSet<String> = crate::text::terms(&format!("{rendered} {} {question} {}", req.query, req.history.get(referent).map_or("", |t| t.answer.as_str()))).into_iter().collect();
+        let segments = citations::check_supported(strip_echo(text.trim(), &[&question, &raw_query]), n, &ev.numbers, &|s| supported(&lib, s, &known));
         rec.unverified_sentences = segments.iter().filter(|s| matches!(s, Segment::Unverified(_))).count();
         sink.event(Event::Answer { segments: segments.clone(), raw: text.clone(), done: true });
         let mut card = card;
         card.computed = ev.computed.clone();
         Ok(finish(rec, segments, sources, card))
     }
+}
+
+/// The sentences of an earlier answer without citations. Those about the sources ("The sources do not say …")
+/// name no topic, so they are left out.
+fn claims(answer: &str) -> Vec<String> {
+    let plain = citations::plain_text(&citations::check(answer, 0, &HashSet::new()));
+    crate::text::sentences(&plain).into_iter().filter(|s| !s.to_lowercase().contains("source")).map(str::to_string).collect()
+}
+
+/// Share of an uncited sentence's word rarity that the evidence must hold for the answer check to accept it. On 123
+/// uncited sentences that Claude labeled against the evidence, 0.6 underlined 49: 37 were from outside the evidence, of
+/// 54 such sentences in all. At 0.5 it underlined 33, 25 of them correctly.
+const MIN_SUPPORT: f32 = 0.6;
+
+/// Whether `known` (stemmed terms) holds enough of `sentence`. Each word counts by its rarity in the library, so
+/// "lubricate" weighs much and "provide" little. A sentence about the sources ("The sources do not say …") claims nothing.
+fn supported(lib: &Library, sentence: &str, known: &HashSet<String>) -> bool {
+    if sentence.to_lowercase().contains("source") {
+        return true;
+    }
+    let (mut have, mut all) = (0.0, 0.0);
+    for w in sentence.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty() && !w.chars().all(|c| c.is_ascii_digit())) {
+        let w = w.to_lowercase();
+        if crate::text::STOPWORDS.contains(w.as_str()) {
+            continue;
+        }
+        let r = lib.rarity(&w);
+        all += r;
+        if known.contains(&w.chars().take(6).collect::<String>()) {
+            have += r;
+        }
+    }
+    all == 0.0 || have >= MIN_SUPPORT * all
 }
 
 /// The question without the names of its entities: "which was bigger, the or the ?".

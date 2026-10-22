@@ -469,7 +469,7 @@ private fun UnverifiedLegend() {
         Icon(Icons.Outlined.Info, null, tint = LocalExtra.current.unverified, modifier = Modifier.size(14.dp))
         Spacer(Modifier.width(6.dp))
         Text(
-            "Underlined sentences contain numbers that are not in the sources. Check them.",
+            "The sources do not support the underlined sentences. Check them.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

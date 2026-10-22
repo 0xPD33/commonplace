@@ -7,8 +7,8 @@ use tantivy::collector::TopDocs;
 use tantivy::columnar::Column;
 use tantivy::query::QueryParser;
 use tantivy::schema::{FAST, Field, IndexRecordOption, Schema, TextFieldIndexing, TextOptions};
-use tantivy::tokenizer::{Language, LowerCaser, RemoveLongFilter, SimpleTokenizer, Stemmer, StopWordFilter, TextAnalyzer};
-use tantivy::{Index, IndexReader, IndexWriter, ReloadPolicy, TantivyDocument};
+use tantivy::tokenizer::{Language, LowerCaser, RemoveLongFilter, SimpleTokenizer, Stemmer, StopWordFilter, TextAnalyzer, TokenStream};
+use tantivy::{Index, IndexReader, IndexWriter, ReloadPolicy, TantivyDocument, Term};
 
 pub const TANTIVY_VERSION: &str = "0.26.2";
 const ANALYZER: &str = "cp_en";
@@ -62,6 +62,8 @@ pub struct SparseIndex {
     reader: IndexReader,
     parser: QueryParser,
     pids: Vec<Column<u64>>,
+    body: Field,
+    analyzer: TextAnalyzer,
 }
 
 impl SparseIndex {
@@ -80,7 +82,8 @@ impl SparseIndex {
         let reader = index.reader_builder().reload_policy(ReloadPolicy::Manual).try_into()?;
         let searcher = reader.searcher();
         let pids = searcher.segment_readers().iter().map(|s| s.fast_fields().u64("pid")).collect::<tantivy::Result<_>>()?;
-        Ok(Self { reader, parser, pids })
+        let analyzer = index.tokenizers().get(ANALYZER).expect("registered above");
+        Ok(Self { reader, parser, pids, body, analyzer })
     }
 
     /// BM25 search. Returns (passage_id, score), best first.
@@ -102,6 +105,15 @@ impl SparseIndex {
                 Some((pid as u32, score))
             })
             .collect())
+    }
+
+    /// (passages whose body holds `word`, all passages). `None` for a stopword.
+    pub fn doc_freq(&self, word: &str) -> Option<(u64, u64)> {
+        let mut analyzer = self.analyzer.clone();
+        let mut stream = analyzer.token_stream(word);
+        let token = stream.next()?;
+        let searcher = self.reader.searcher();
+        Some((searcher.doc_freq(&Term::from_field_text(self.body, &token.text)).unwrap_or(0), searcher.num_docs()))
     }
 }
 

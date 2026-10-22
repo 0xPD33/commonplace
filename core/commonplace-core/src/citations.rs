@@ -8,17 +8,24 @@ use std::collections::HashSet;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Segment {
     Text(String),
-    /// A sentence with at least one number not found in the evidence or COMPUTED lines.
+    /// A sentence with a number not found in the evidence or COMPUTED lines, or one that `check_supported` rejects.
     Unverified(String),
     Cite(u32),
 }
 
 /// Split `answer` into segments. Valid citations are 1..=n_sources.
 pub fn check(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>) -> Vec<Segment> {
+    check_supported(answer, n_sources, evidence_numbers, &|_| true)
+}
+
+/// `check`, and a sentence without a valid citation is also unverified when `supported` rejects its text.
+pub fn check_supported(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>, supported: &dyn Fn(&str) -> bool) -> Vec<Segment> {
     let mut out: Vec<Segment> = Vec::new();
     for sent in split_keep_ws(strip_sources_block(answer)) {
         let (plain, cites) = strip_citations(&sent, n_sources);
-        let unverified = numbers(&plain).iter().any(|n| !evidence_numbers.contains(n) && !matches_without_trailing_zero(n, evidence_numbers));
+        let cited = cites.iter().any(|p| matches!(p, Piece::Cite(_)));
+        let unverified = numbers(&plain).iter().any(|n| !evidence_numbers.contains(n) && !rounds_from(n, evidence_numbers))
+            || (!cited && !supported(&plain));
         let mut text = String::new();
         for piece in cites {
             match piece {
@@ -88,9 +95,15 @@ fn flush(out: &mut Vec<Segment>, text: &mut String, unverified: bool) {
     }
 }
 
-/// "5.0" in the answer matches "5" in the evidence.
-fn matches_without_trailing_zero(n: &str, ev: &HashSet<String>) -> bool {
-    n.strip_suffix(".0").is_some_and(|x| ev.contains(x))
+/// A rounded evidence number: "26.5" for 26.52, "27" for 26.52, and "16.4" (million) for 16,431,599.
+fn rounds_from(n: &str, ev: &HashSet<String>) -> bool {
+    let Ok(x) = n.parse::<f64>() else { return false };
+    let decimals = n.split_once('.').map_or(0, |(_, d)| d.len()) as i32;
+    let unit = 10f64.powi(-decimals);
+    ev.iter().filter_map(|e| e.parse::<f64>().ok()).any(|e| {
+        // Thousands and larger only with a decimal: "12" is not a rounded 12,345.
+        [1.0, 1e3, 1e6, 1e9, 1e12].iter().filter(|&&scale| scale == 1.0 || decimals > 0).any(|scale| ((e / scale) - x).abs() <= unit / 2.0 + 1e-9)
+    })
 }
 
 enum Piece {

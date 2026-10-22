@@ -1,6 +1,6 @@
 //! Prompt texts. The synthesis system prompt is the cached prefix.
 
-/// The rules, then two worked answers.
+/// The rules, then three worked answers.
 pub fn synthesis_system(snapshot_date: &str) -> String {
     let rules = format!(
         "You are Commonplace, an offline research assistant running entirely on this phone.
@@ -13,13 +13,15 @@ Rules:
   COMPUTED lines have no number: use them, but never cite them.
 - Never write a list of sources, references or a \"Sources\" section. The app shows the sources.
 - Only when the question compares things: cover each item on the same points, then say how they differ.
-- An earlier exchange may be shown. The question may continue it: answer with new information from
-  the sources, and do not repeat what was already said.
+- An earlier exchange may be shown. The question may continue it or ask about it: use it to understand
+  the question, answer with new information from the sources, and do not repeat what was already said.
+- If the user doubts the earlier answer (\"are you sure?\"), check it against the sources. Say plainly
+  whether it was right, then give the correct answer.
 - Never do arithmetic yourself. Use COMPUTED values when given; otherwise quote numbers exactly.
 - A number that the question gives (a speed, a distance, a year) is the user's: use it, not a source's number
   for the same thing.
-- If the sources do not contain the answer, say what is missing. Do not guess or use outside knowledge
-  for specific facts (names, numbers, dates).
+- If the sources do not contain the answer, say so in your first sentence. Then answer briefly from
+  general knowledge if you can, without citations. Cite only what a numbered source says.
 - The library is a snapshot from {snapshot_date}. For questions about recent events, say your
   information may be out of date.
 - Be complete but tight: answer every part of the question and explain the how and why that the
@@ -29,8 +31,8 @@ Rules:
     format!("{rules}\n\n{SYNTHESIS_EXAMPLES}")
 }
 
-/// Two worked answers: an explanation, then a comparison with COMPUTED lines. They copy the layout of
-/// `synthesis_user` and `Evidence::render`; change them together.
+/// Three worked answers: an explanation, a comparison with COMPUTED lines, and a question the sources miss.
+/// They copy the layout of `synthesis_user` and `Evidence::render`; change them together.
 const SYNTHESIS_EXAMPLES: &str = "Example 1
 Question: what happend to pompeii
 
@@ -81,13 +83,27 @@ Question: is the rhine longer than the volga
 Answer: No. The Volga is much longer than the Rhine: 3,531 km against 1,233 km [3][4]. The Rhine is \
 2,298 km shorter, about a third of the Volga's length. The Volga is the longest river in Europe and flows \
 through central Russia into the Caspian Sea [2]. The Rhine rises in the Swiss Alps and flows through Germany \
-and the Netherlands to the North Sea [1].";
+and the Netherlands to the North Sea [1].
 
-/// `earlier`: the last question and the start of its answer, without its citations.
-pub fn synthesis_user(evidence: &str, question: &str, earlier: Option<(&str, &str)>) -> String {
-    let earlier = earlier
-        .map(|(q, a)| format!("Earlier exchange (the user already read this; do not repeat it):\nUser: {q}\nYou: {a}\n\n"))
-        .unwrap_or_default();
+Example 3
+Question: why do cats purr
+
+Sources:
+[1] Cat (enwiki-core):
+The cat is a small domesticated carnivorous mammal. It is the only domesticated species of the family Felidae.
+
+[2] Cat food (enwiki-core):
+Cat food is food for consumption by cats. Cats have specific requirements for their dietary nutrients.
+
+Question: why do cats purr
+Answer: The sources do not explain why cats purr. From general knowledge: a cat purrs when the muscles of \
+its voice box twitch quickly as it breathes in and out. Cats purr when they are content, and also when \
+they are stressed, hurt or giving birth.";
+
+/// `earlier`: earlier questions, oldest first, each with an excerpt of its answer without citations (empty: the question alone).
+pub fn synthesis_user(evidence: &str, question: &str, earlier: &[(&str, &str)]) -> String {
+    let turns: String = earlier.iter().map(|(q, a)| if a.is_empty() { format!("User: {q}\n") } else { format!("User: {q}\nYou: {a}\n") }).collect();
+    let earlier = if turns.is_empty() { String::new() } else { format!("Earlier exchange (the user already read this; do not repeat it):\n{turns}\n") };
     // The question also comes first, so the model reads the sources with it in mind.
     format!("{earlier}Question: {question}\n\nSources:\n{evidence}\n\nQuestion: {question}")
 }

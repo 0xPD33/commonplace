@@ -53,7 +53,7 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 - **The planner**, an extra model call before some follow-ups. On a hot Pixel it took 35 to 66 s and mostly repeated the question. "Explain it for a ten year old" now takes 41 s from tap to answer instead of about two minutes.
 - **Deep mode** ("Think harder"). It needed a model pack that does not fit in phone RAM, so no one could use it. Thinking mode gives a more careful answer.
 
-Measured on a Pixel 10 with 29 questions in one conversation: no crash, first word after 18 s and the full answer after 41 s (medians), against 29 s and 67 s for 0.2.1. Part of the gain comes from a cooler phone at the start ([BENCHMARKS](docs/BENCHMARKS.md#pixel-10-the-build-after-021-2026-10-16)).
+Measured on a Pixel 10 with 29 questions in one conversation: no crash, first word after 18 s and the full answer after 41 s (medians), against 29 s and 67 s for 0.2.1. Part of the gain comes from a cooler phone at the start ([BENCHMARKS](docs/BENCHMARKS.md#long-sessions-and-heat)).
 
 ## [0.2.1] - 2026-10-15
 
@@ -63,7 +63,7 @@ Measured on a Pixel 10 with 29 questions in one conversation: no crash, first wo
 - **A question two turns back works.** The app checks the last two answers and takes the one that the question fits best.
 - **A new question keeps its own topic.** "What are the symptoms of dehydration?" asked after another topic no longer searches with that topic.
 
-Measured on a Pixel 10 with 75 questions in three long conversations: correct answers rose from 27 to 37, and answers about the wrong topic fell from 3 to 1 ([BENCHMARKS](docs/BENCHMARKS.md#desktop-follow-up-topics-in-long-sessions-2026-10-15)).
+Measured on a Pixel 10 with 75 questions in three long conversations: correct answers rose from 27 to 37, and answers about the wrong topic fell from 3 to 1 ([BENCHMARKS](docs/BENCHMARKS.md#answers-on-the-pixel)).
 
 ## [0.2.0] - 2026-10-14
 

@@ -130,8 +130,8 @@ Limits of this measurement:
 
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
 - The baseline wins almost every single question (61 losses, 1 tie, 1 win). Commonplace gets half the points, not half the wins.
-- Travel (0.39), fact (0.43) and how-to questions (0.46) are below 0.50. This run had only the Starter set. On the Pixel 10, the Reference shelf answered travel and how-to questions that the Starter set refused ([BENCHMARKS](docs/BENCHMARKS.md#pixel-10-a-clean-install-of-023-2026-10-20-to-2026-10-21)). No judged run of the Starter set with the shelf exists yet.
-- The score ratio of 0.53 comes from the 0.2.0 build with the phone's settings and only the Starter set, run on the desktop (2026-10-14). The builds of 2026-10-10 scored 0.48 and 0.50 with the same settings ([BENCHMARKS](docs/BENCHMARKS.md#desktop-judged-evals-with-the-phone-settings-2026-10-10)). The desktop build of 2026-10-05 with all packs, including the full Wikipedia, scored 0.53.
+- Travel (0.39), fact (0.43) and how-to questions (0.46) are below 0.50. This run had only the Starter set. On the Pixel 10, the Reference shelf answered travel and how-to questions that the Starter set refused ([BENCHMARKS](docs/BENCHMARKS.md#clean-install-of-the-023-release-2026-10-20-to-2026-10-21)). No judged run of the Starter set with the shelf exists yet.
+- The score ratio of 0.53 comes from the 0.2.0 build with the phone's settings and only the Starter set, run on the desktop (2026-10-14). The builds of 2026-10-10 scored 0.48 and 0.50 with the same settings ([BENCHMARKS](docs/BENCHMARKS.md#seeds-over-time)). The desktop build of 2026-10-05 with all packs, including the full Wikipedia, scored 0.53.
 - The phone uses a selective int8 copy of the reranker. On NQ it stays within 1 point of hit@1 of the full model (0.510 against 0.515).
 
 ### Quality by type of question

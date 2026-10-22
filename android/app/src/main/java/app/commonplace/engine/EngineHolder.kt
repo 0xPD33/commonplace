@@ -38,6 +38,9 @@ sealed interface ModelState {
 
 enum class Backend { Cpu, Tpu }
 
+/** LiteRT-LM cannot open the Pixel 10's Tensor NPU yet (docs/BENCHMARKS.md), so the TPU engine stays off. */
+const val TPU_AVAILABLE = false
+
 /** Owns the Rust engine for the whole process. All engine calls run off the main thread. */
 class EngineHolder(private val app: Application) {
     /** Process-wide work that must outlive a screen, such as an import that has to refresh the library. */
@@ -100,7 +103,7 @@ class EngineHolder(private val app: Application) {
             _library.value = lib
             val gguf = lib.models.filter { !it.filePath.endsWith(".litertlm") }.map { it.kind }
             val litePack = lib.models.firstOrNull { it.filePath.endsWith(".litertlm") }
-            val useTpu = prefs.backend == Backend.Tpu && litePack != null
+            val useTpu = TPU_AVAILABLE && prefs.backend == Backend.Tpu && litePack != null
             // `null` means the everyday model: the user's choice, else fast, else small. A low-RAM phone loads the
             // fast model only when the user picks it: Android kills the app when it holds about 5.5 GB.
             val want = kind ?: listOfNotNull(prefs.modelKind, ModelKind.FAST.takeIf { !prefs.lowRam }, ModelKind.SMALL).firstOrNull { it in gguf }

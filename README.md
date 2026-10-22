@@ -262,7 +262,7 @@ Known limits:
 - The phone gets slower when it gets hot. A long test of heat over many questions is still open.
 - Multi-step and numeric questions are the weakest categories ([EVAL](docs/EVAL.md)).
 - Voice input (Moonshine, on the phone) is English only and needs the optional `voice-en` pack. Real speech recognition is tested on the desktop, not yet on a phone's microphone.
-- The Tensor G5 NPU is not used. The LiteRT-LM library for it does not match the phone's runtime version.
+- The app uses only the CPU. The Tensor G5 NPU library crashes with the current LiteRT-LM. On the GPU, Gemma 4 E2B gives its first word in about 3.5 s, but its answer quality is not measured ([BENCHMARKS](docs/BENCHMARKS.md)).
 
 ## Desktop command line
 

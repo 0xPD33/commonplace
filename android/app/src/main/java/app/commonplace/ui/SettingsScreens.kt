@@ -62,6 +62,7 @@ import androidx.core.content.FileProvider
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.TPU_AVAILABLE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -170,7 +171,8 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 Backend.entries.forEachIndexed { i, b ->
                     SegmentedButton(
-                        selected = backend == b,
+                        selected = (if (TPU_AVAILABLE) backend else Backend.Cpu) == b,
+                        enabled = TPU_AVAILABLE || b == Backend.Cpu,
                         onClick = {
                             backend = b
                             prefs.backend = b
@@ -181,7 +183,8 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 }
             }
             Text(
-                "TPU needs a LiteRT model pack (.litertlm). Without one, the CPU engine is used.",
+                if (TPU_AVAILABLE) "TPU needs a LiteRT model pack (.litertlm). Without one, the CPU engine is used."
+                else "The TPU engine is not available yet: LiteRT-LM cannot use the Tensor chip on this Android version.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp),

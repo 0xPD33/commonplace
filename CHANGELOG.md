@@ -6,7 +6,7 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 ### Added
 
-- **"Are you sure?" checks the answer.** A doubt such as "are you sure?", "that's wrong" or "double check that" searches the last question again, and the model checks its answer against the sources. Before, the app often replied "I'm confident!" and did nothing.
+- **"Are you sure?" checks the answer.** A doubt such as "are you sure?", "that's wrong" or "double check that" searches the last question and its answer's first claim again, and the model checks its answer against the sources. Before, the app often replied "I'm confident!" and did nothing.
 
 ### Changed
 
@@ -14,6 +14,7 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 - **Rounded numbers are not underlined.** "26.5 times" matches 26.52 in the evidence, and "16.4 million km²" matches 16,431,599 km².
 - **Recent opens the conversation.** A question under Recent on the home screen opens its saved conversation, and "All conversations" opens the history. Before, the question started a new conversation.
 - **Shorter topic chips.** Chapter and page titles, such as "Microbiology (Boundless): 12.1D: Vaccine Safety", no longer appear as chips.
+- **The TPU engine choice is off.** LiteRT-LM cannot use the Pixel's Tensor chip yet, so Settings shows the choice greyed out and every answer uses the CPU.
 
 ### Fixed
 

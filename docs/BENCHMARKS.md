@@ -638,6 +638,29 @@ Seeds, score ratio against Claude with web search (63 questions):
 - The underline check: Claude Sonnet labeled 123 uncited sentences from 63 answers against their evidence. At 0.6 of the rarity weight, the check underlined 49 sentences, and 37 of them were from outside the evidence. It found 37 of the 54 such sentences. At 0.5 it underlined 33, and 25 were right. In the final seed run, 26 of 63 answers have an underline, and 14.8% of the answer text is underlined (control: 8 answers, 3.5%).
 - After these runs: when the question that a follow-up refers to names nothing and only followed up an older one, the search also takes the older question's words. In the replay, "What if I don't have it?" after "How do vaccines work?" and "Should I get one before my holiday?" searched for holidays without it and for vaccination with it. It changes no search in the 2 conversation threads with two earlier turns.
 
+## Pixel 10: the 0.2.4 release, LiteRT-LM GPU and NPU retry (2026-10-22)
+
+Pixel 10 (Tensor G5, PowerVR DXT-48-1536, GrapheneOS on Android 17), the signed 0.2.4 release APK (working tree of `ccaa6cf`), installed over 0.2.3. The install kept the library.
+
+**Release test, Ling-3.0-tiny on the CPU.** Total time from the tap on send to the last word: "How do vaccines work?" 19.2 s, its two follow-ups 22.3 s and 21.5 s, "are you sure?" 16.3 s, "How do I fix a squeaky door hinge?" 21.6 s, "Who was the US president in 2016?" 13.4 s, its "are you sure?" 17.3 s. The answers showed two faults:
+
+- "are you sure?" after "What if I don't have it?" searched with the vague question alone and cited Wiktionary ("use it or lose it", "get lost"). A check now also searches the first claim of the checked answer. On 11 check threads on the desktop (`x-ck2-b11` against `x-ck2-b12`, Opus pairwise), the fix won 7, lost 2 and tied 2. Its mean score was 8.00 against 5.67, with a 95% interval of the difference from 0.27 to 3.82.
+- "Yes, I am sure." got the underline. A sentence with fewer than 3 content words now gets no underline.
+
+**LiteRT-LM 0.18.1, Gemma 4 E2B** (`litert-community/gemma-4-E2B-it-litert-lm` @ `b3ca0d2`), a debug build with its own package name, "Why is the sky blue?" and "How do vaccines train the immune system?", phone at thermal headroom 0.78:
+
+| File, backend | First word | Prefill | Decode | RSS | Result |
+|---|---|---|---|---|---|
+| `gemma-4-E2B-it-gpu.litertlm`, GPU | — | — | — | — | Random tokens in many scripts; 124–129 s to the token cap |
+| `gemma-4-E2B-it.litertlm` (generic), GPU (OpenCL) | 3.6 s, 3.1 s | 516, 613 tok/s | 9.6, 9.5 tok/s | 2.1 GB | Correct, cited answers; total 11.8 s, 16.8 s |
+| `gemma-4-E2B-it_Google_Tensor_G5.litertlm`, NPU | — | — | — | — | SIGSEGV in `libLiteRtDispatch_GoogleTensor.so` (LiteRT v2.2.0) |
+
+- The app estimates the prefill tokens from the characters (÷ 4).
+- The first GPU load took about 50 s: LiteRT compiles the OpenCL kernels. LiteRT logs "Weights preparation on Gpu is disabled for PowerVR".
+- The Pixel exposes `libOpenCL.so` to apps as a vendor public library. The GPU backend needs `<uses-native-library android:name="libOpenCL.so">` in the manifest.
+- NPU: LiteRT-LM 0.18.1 pins LiteRT `ca21dc99` (2026-10-09). LiteRT v2.3.0 (2026-10-07) ships no `litert_npu_runtime_libraries.zip`, and the 0.18.1 AAR contains no dispatch library. The v2.2.0 library crashes right after "Found GoogleTensorOptions". A dispatch library built from LiteRT `ca21dc99` with Bazel is the only path left.
+- Decision: the app keeps Ling on the CPU. Gemma's answer quality is not measured, and it would be an extra 2.5 GB pack. The TPU engine choice in Settings is off (`TPU_AVAILABLE`).
+
 ## To measure on the Pixel 10
 - Prefill with pinned threads (`strict_cpu`) and 5 batch threads against the app's 6 unpinned threads.
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.

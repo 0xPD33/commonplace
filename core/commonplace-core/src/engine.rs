@@ -815,7 +815,10 @@ impl Engine {
                 (!ents.is_empty() || (from_answer && !first.is_empty())).then_some((first, ents))
             };
             if expand {
-                route.query = format!("{} {}", names.join(" "), prev.query).trim_start().to_string();
+                // A check searches what the answer claimed: "are you sure?" after "What if I don't have it?" must still
+                // find vaccines.
+                let claim = if check { claims(&prev.answer).into_iter().next().unwrap_or_default() } else { String::new() };
+                route.query = format!("{} {} {claim}", names.join(" "), prev.query).trim().to_string();
                 route.entities.clear();
                 route.needs_rewrite = false;
                 route.compare = false;
@@ -1173,7 +1176,7 @@ fn supported(lib: &Library, sentence: &str, known: &HashSet<String>) -> bool {
     if sentence.to_lowercase().contains("source") {
         return true;
     }
-    let (mut have, mut all) = (0.0, 0.0);
+    let (mut have, mut all, mut words) = (0.0, 0.0, 0);
     for w in sentence.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty() && !w.chars().all(|c| c.is_ascii_digit())) {
         let w = w.to_lowercase();
         if crate::text::STOPWORDS.contains(w.as_str()) {
@@ -1181,11 +1184,13 @@ fn supported(lib: &Library, sentence: &str, known: &HashSet<String>) -> bool {
         }
         let r = lib.rarity(&w);
         all += r;
+        words += 1;
         if known.contains(&w.chars().take(6).collect::<String>()) {
             have += r;
         }
     }
-    all == 0.0 || have >= MIN_SUPPORT * all
+    // Two words ("Yes, I am sure.") claim too little to check.
+    words < 3 || all == 0.0 || have >= MIN_SUPPORT * all
 }
 
 /// The question without the names of its entities: "which was bigger, the or the ?".

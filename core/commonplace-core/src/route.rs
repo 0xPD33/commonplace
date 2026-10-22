@@ -185,6 +185,11 @@ fn link_pass(lib: &Library, query: &str, rr: Option<&Reranker>, scope: &[String]
             // A lowercase phrase inside a sentence names a thing only if it matches a proper name
             // ("golden gate bridge"), not a common-noun article such as "Sky blue" or "Population density".
             let best = best.filter(|(_, a)| !(lowercase && n > 1 && !short && !proper_name(&a.title)));
+            // The sentence capitalizes a question's first word: "Should I bring a jacket?" is not about the song
+            // "Should I Stay or Should I Go". Alone, that word names a thing when it is the article's own title ("Japan",
+            // "Python (programming language)") or when the reranker ties the article to the question.
+            let own_title = |a: &Article| normalize_title(a.title.split(" (").next().unwrap_or(&a.title)) == norm;
+            let best = best.filter(|(_, a)| n > 1 || i > 0 || rr.is_none() || own_title(a) || about(a));
             if let Some((pack, article)) = best {
                 used[i..i + n].iter_mut().for_each(|u| *u = true);
                 if !found.iter().any(|e| e.article.qid.is_some() && e.article.qid == article.qid) {

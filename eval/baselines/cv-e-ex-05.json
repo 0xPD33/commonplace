@@ -1,0 +1,67 @@
+{
+  "id": "cv-e-ex-05",
+  "query": "dig deeper please",
+  "answer": "Plate tectonics divides Earth's outer layer by how it behaves, not just by what it's made of. The lithosphere, which is the crust plus the uppermost mantle, is cool and rigid. It is broken into seven or eight major plates, depending on how you count, plus many smaller ones. These plates ride on the asthenosphere, a hotter, weaker layer below that can flow slowly [1]. They move about as fast as fingernails grow, roughly 1–4 cm a year across the Mid-Atlantic Ridge, and the fastest move around 16 cm a year [1].\n\nMost of the action happens where plates meet, and there are three kinds of boundary [1]:\n- Divergent: plates pull apart and new crust forms, as at the Mid-Atlantic Ridge.\n- Convergent: plates collide. Either one plate dives under the other (subduction), creating deep ocean trenches and lines of volcanoes, or two continents crash together and push up mountains like the Himalayas.\n- Transform: plates slide past each other sideways, as along California's San Andreas Fault, which causes strong earthquakes.\n\nThe main force moving the plates is gravity, not the mantle simply carrying them along like a conveyor belt. The strongest driver is thought to be \"slab pull\": old, cold, dense ocean plate sinks into the mantle at subduction zones and drags the rest of the plate behind it [1]. A smaller force, \"ridge push,\" comes from young plate material sliding down and away from the raised mid-ocean ridges. It matters mostly for seafloor younger than about 90 million years [2]. Heat-driven currents in the mantle are part of the system too, but scientists still debate exactly how that energy gets passed to the plates [1].\n\nThe idea took about 50 years to be accepted. Alfred Wegener proposed continental drift in 1912, but most geologists rejected it because he couldn't explain what moved the continents [1]. In 1962 Harry Hess published the idea of seafloor spreading: new ocean floor forms at the ridges and moves outward [3]. In 1963 Fred Vine and Drummond Matthews predicted that this new floor should record flips in Earth's magnetic field as matching stripes on either side of a ridge. Magnetic surveys found exactly that, and this was key to changing minds [4]. The full theory was set out in papers from 1965 to 1967 [1].\n\nPlates have probably been moving for about 3 to 4 billion years, but when plate tectonics actually started is still an open research question [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Plate_tectonics",
+      "title": "Plate tectonics - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Ridge_push",
+      "title": "Ridge push - Wikipedia"
+    },
+    {
+      "n": 3,
+      "url": "https://pubs.usgs.gov/gip/dynamic/HHH.html",
+      "title": "Harry Hammond Hess: Spreading the seafloor - USGS, This Dynamic Earth"
+    },
+    {
+      "n": 4,
+      "url": "https://en.wikipedia.org/wiki/Drummond_Matthews",
+      "title": "Drummond Matthews - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Plate tectonics",
+    "Lithosphere",
+    "Asthenosphere",
+    "List of tectonic plates",
+    "Divergent boundary",
+    "Convergent boundary",
+    "Transform fault",
+    "Subduction",
+    "Slab pull",
+    "Ridge push",
+    "Mantle convection",
+    "Continental drift",
+    "Alfred Wegener",
+    "Seafloor spreading",
+    "Harry Hammond Hess",
+    "Vine–Matthews–Morley hypothesis",
+    "Drummond Matthews",
+    "San Andreas Fault",
+    "Mid-Atlantic Ridge"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Plate_tectonics",
+    "https://en.wikipedia.org/wiki/Ridge_push",
+    "https://pubs.usgs.gov/gip/dynamic/HHH.html",
+    "https://en.wikipedia.org/wiki/Drummond_Matthews"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1545642,
+  "duration_ms": 51034,
+  "num_turns": 6,
+  "web_search_requests": 2,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:22:31+00:00"
+}

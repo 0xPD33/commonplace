@@ -1,0 +1,41 @@
+{
+  "id": "cv-e-ref-04",
+  "query": "summarise it for a kid",
+  "answer": "The ground under our feet is made of huge pieces of rock called plates, and they move very, very slowly all the time. Sometimes the edges of two plates get stuck on each other, a bit like two rough blocks that won't slide [1]. The plates keep pushing, so pressure builds up until the rock suddenly slips or breaks along a crack called a fault [1][2]. That sudden jump sends out shaking waves through the ground, and that shaking is the earthquake [1]. It's like slowly bending a stick until it snaps: you feel the \"snap\" as a shake! Less often, volcanoes or landslides can cause earthquakes too [2].\n\nSources:\n[1] USGS – What is an earthquake and what causes them to happen? https://www.usgs.gov/media/audio/what-earthquake-and-what-causes-them-happen\n[2] USGS – Earthquakes (publication): https://www.usgs.gov/publications/earthquakes-1",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.usgs.gov/media/audio/what-earthquake-and-what-causes-them-happen",
+      "title": "What is an earthquake and what causes them to happen? (USGS)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.usgs.gov/publications/earthquakes-1",
+      "title": "Earthquakes (USGS publication)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Earthquake",
+    "Plate tectonics",
+    "Fault (geology)",
+    "Seismic wave",
+    "Elastic-rebound theory"
+  ],
+  "urls": [
+    "https://www.usgs.gov/media/audio/what-earthquake-and-what-causes-them-happen",
+    "https://www.usgs.gov/publications/earthquakes-1"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0715507,
+  "duration_ms": 21455,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:22:51+00:00"
+}

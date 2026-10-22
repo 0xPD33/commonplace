@@ -1,0 +1,48 @@
+{
+  "id": "cv-e-ex-04",
+  "query": "I'd like to know more",
+  "answer": "Marie Curie was born Maria Skłodowska in Warsaw on 7 November 1867. Poland was then part of the Russian Empire [1]. She moved to Paris to study physics and mathematics at the Sorbonne, where she met the physicist Pierre Curie and married him [2]. In 1898 the couple discovered two new radioactive elements in pitchblende ore: polonium, named after Poland, and radium [1].\n\nIn 1903 she shared the Nobel Prize in Physics with Pierre and Henri Becquerel, becoming the first woman to win a Nobel Prize. In 1911 she won the Nobel Prize in Chemistry on her own. She is still the only person to win Nobels in two different sciences [1]. Pierre died in 1906, and that same year she took over his teaching post, becoming the first woman professor at the University of Paris [1]. Radium institutes were later set up for her in Paris and Warsaw. During World War I she set up portable X-ray units to help treat wounded French soldiers [2].\n\nHer elder daughter, Irène Joliot-Curie, also won a Nobel Prize in Chemistry, together with her husband Frédéric Joliot [2]. Marie Curie died on 4 July 1934 from illness caused by years of handling radioactive material. Sources disagree on the exact diagnosis: some say aplastic anemia, others leukemia [1][2]. In 1995 she became the first woman buried in the Panthéon in Paris for her own achievements [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Marie_Curie",
+      "title": "Marie Curie - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.sciencehistory.org/education/scientific-biographies/marie-sklodowska-curie",
+      "title": "Marie Sklodowska Curie - Science History Institute"
+    }
+  ],
+  "wikipedia_articles": [
+    "Marie Curie",
+    "Pierre Curie",
+    "Polonium",
+    "Radium",
+    "Henri Becquerel",
+    "Nobel Prize in Physics",
+    "Nobel Prize in Chemistry",
+    "Irène Joliot-Curie",
+    "Frédéric Joliot-Curie",
+    "Petites Curies",
+    "Panthéon",
+    "Radioactivity"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Marie_Curie",
+    "https://www.sciencehistory.org/education/scientific-biographies/marie-sklodowska-curie"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1474613,
+  "duration_ms": 48743,
+  "num_turns": 7,
+  "web_search_requests": 2,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:22:01+00:00"
+}

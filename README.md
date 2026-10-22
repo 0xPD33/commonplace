@@ -122,7 +122,7 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 | Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.50 s (median). The first word of the written answer comes after about 7 s. The model then writes 16 to 17 tokens per second on a cool phone. |
 | Public GitHub repository with code, assets and instructions | This repository holds all code. The packs are on [Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs), and [docs/PACKS.md](docs/PACKS.md) shows how to build them again. |
 | Documents the models, datasets and indexes | [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md) and [PACKS](docs/PACKS.md). |
-| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). See the limits below. |
+| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). With the optional Reference shelf it gets 56%, and on 30 locked conversation threads 65% (59% without the small-talk threads) ([BENCHMARKS](docs/BENCHMARKS.md#conversations)). See the limits below. |
 
 How I measure quality: Claude Opus 5.5 with web search answers each question as the baseline. A second Claude call grades both answers blind on correctness, completeness, grounding and usefulness. The score ratio is our mean score divided by the baseline's mean score.
 
@@ -130,7 +130,7 @@ Limits of this measurement:
 
 - 63 questions is a small set. The ratio changes by about ±0.05 between two runs of the judge.
 - The baseline wins almost every single question (61 losses, 1 tie, 1 win). Commonplace gets half the points, not half the wins.
-- Travel (0.41), fact (0.42), long-tail (0.40) and how-to questions (0.49) are below 0.50. This run had only the Starter set. On the Pixel 10, the Reference shelf answered travel and how-to questions that the Starter set refused ([BENCHMARKS](docs/BENCHMARKS.md#clean-install-of-the-023-release-2026-10-20-to-2026-10-21)). No judged run of the Starter set with the shelf exists yet.
+- Travel (0.41), fact (0.42), long-tail (0.40) and how-to questions (0.49) are below 0.50. This run had only the Starter set. On the Pixel 10, the Reference shelf answered travel and how-to questions that the Starter set refused ([BENCHMARKS](docs/BENCHMARKS.md#clean-install-of-the-023-release-2026-10-20-to-2026-10-21)). With the shelf, the ratio is 0.555, travel rises to 0.53 and long-tail to 0.56 ([BENCHMARKS](docs/BENCHMARKS.md#seeds-over-time)).
 - The score ratio of 0.53 comes from the 0.2.4 code with the phone's settings and only the Starter set, run on the desktop (2026-10-22). The 0.2.0 build scored 0.53 too, and the builds of 2026-10-10 scored 0.48 and 0.50 with the same settings ([BENCHMARKS](docs/BENCHMARKS.md#seeds-over-time)). The desktop build of 2026-10-05 with all packs, including the full Wikipedia, scored 0.53.
 - The phone uses a selective int8 copy of the reranker. On NQ it stays within 1 point of hit@1 of the full model (0.510 against 0.515).
 

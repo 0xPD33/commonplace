@@ -1,0 +1,48 @@
+{
+  "id": "cv-e-ex-01",
+  "query": "explain further",
+  "answer": "Cleopatra VII was born in Alexandria around 69 BC. She was a daughter of Ptolemy XII Auletes and belonged to the Ptolemaic dynasty, which was probably of Macedonian-Greek origin. The family had ruled Egypt since Alexander the Great's death, and they presented themselves as heirs of the pharaohs. She may have been the first of her line to learn the Egyptian language [2]. She came to the throne in 51 BC as co-ruler with her younger brother Ptolemy XIII, who later drove her out. She took back power by allying with Julius Caesar when he came to Alexandria in 48 BC, and she had a son with him, Caesarion [1][2].\n\nAfter Caesar was assassinated in 44 BC (she was in Rome then), she formed a political and romantic partnership with the Roman general Mark Antony. They had three children: the twins Alexander Helios and Cleopatra Selene, and later Ptolemy Philadelphus. In the \"Donations of Alexandria\" in 34 BC, they divided territories among these children, and she took the title \"Queen of Kings\" [2]. Antony's rival Octavian turned this against them. In 31 BC Octavian's fleet defeated theirs at the Battle of Actium.\n\nWhen Octavian invaded Egypt in 30 BC, Antony killed himself, and Cleopatra died soon after, traditionally on 12 August. The famous story that she died from an asp's bite (probably an Egyptian cobra) may be legend, and no one really knows how she died [1][2]. Octavian had Caesarion executed, and Egypt became a Roman province, which ended the last major Hellenistic kingdom [1]. Historians now tend to see her mainly as a skilled stateswoman, not the romantic seductress of later legend [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.biography.com/royalty/cleopatra-vii",
+      "title": "Cleopatra VII - Biography.com"
+    },
+    {
+      "n": 2,
+      "url": "https://www.newworldencyclopedia.org/entry/cleopatra",
+      "title": "Cleopatra - New World Encyclopedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Cleopatra",
+    "Ptolemaic Kingdom",
+    "Ptolemy XII Auletes",
+    "Ptolemy XIII",
+    "Julius Caesar",
+    "Caesarion",
+    "Mark Antony",
+    "Donations of Alexandria",
+    "Battle of Actium",
+    "Death of Cleopatra",
+    "Augustus",
+    "Roman Egypt"
+  ],
+  "urls": [
+    "https://www.biography.com/royalty/cleopatra-vii",
+    "https://www.newworldencyclopedia.org/entry/cleopatra"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0891514,
+  "duration_ms": 33330,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:21:46+00:00"
+}

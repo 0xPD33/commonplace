@@ -1,0 +1,46 @@
+{
+  "id": "cv-e-ex-03",
+  "query": "give me more",
+  "answer": "The Industrial Revolution ran from about 1760 to 1840. It started in Britain, and by around 1840 it had spread to continental Europe and the United States [1]. Britain went first for several reasons. Better farming produced extra food and freed up workers. The country had plenty of coal, iron and water power, a dense network of ports, rivers, canals and roads, political stability, and money available to invest [1].\n\nTextiles came first. Machines like the spinning jenny, the water frame, the mule and later the power loom greatly raised how much each worker could produce [1]. Steam engines improved at the same time. They burned far less fuel and were adapted to drive factory machinery, and high-pressure versions later made railways and steamboats possible [1]. Iron got cheaper once coke replaced charcoal as furnace fuel [1]. After about 1870, a \"Second Industrial Revolution\" brought cheap steel, assembly lines and electric power [1].\n\nThe changes to society were huge. England's population roughly doubled, from 8.3 million in 1801 to 17 million in 1850, and cities like Manchester grew enormously [1]. Textile workers often worked 12 to 14 hours a day, and people lived in crowded slums where cholera and typhoid spread [1]. Children were hired because they cost so little. In 1788, about two-thirds of workers in water-powered cotton mills were children, which eventually led to reforms like the Factory Acts of 1833 and 1844 [1]. Some workers fought back. The Luddites smashed machines from 1811 on, and trade unions slowly formed despite being banned until 1824 [1].\n\nHistorians still argue about whether ordinary people were better off during the period itself. Some say living standards began rising steadily for the first time. Others point out that wages grew only about 15% between the 1780s and the 1850s, and life expectancy didn't rise sharply until the 1870s [1]. In the long run, though, it changed the whole world economy, and manufacturing shifted away from China and India toward Western Europe and North America [1][2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Industrial_Revolution",
+      "title": "Industrial Revolution – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://britannica.com/summary/Industrial-Revolution-Causes-and-Effects",
+      "title": "Industrial Revolution Causes and Effects – Britannica"
+    }
+  ],
+  "wikipedia_articles": [
+    "Industrial Revolution",
+    "Second Industrial Revolution",
+    "Spinning jenny",
+    "Watt steam engine",
+    "Factory Acts",
+    "Luddite",
+    "Child labour",
+    "Urbanization",
+    "Standard of living in Britain in the Industrial Revolution",
+    "Great Divergence"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Industrial_Revolution",
+    "https://britannica.com/summary/Industrial-Revolution-Causes-and-Effects"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1295655,
+  "duration_ms": 42747,
+  "num_turns": 6,
+  "web_search_requests": 1,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:21:55+00:00"
+}

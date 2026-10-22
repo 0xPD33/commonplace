@@ -1,0 +1,51 @@
+{
+  "id": "cv-e-ex-06",
+  "query": "what more is there to know?",
+  "answer": "Genghis Khan was born Temüjin around 1162, though estimates run from 1155 to 1167. His father was Yesugei, a Borjigin Mongol chief. When Temüjin was about eight, Tatars poisoned his father, and the tribe abandoned the family to near-poverty [1]. As a young man he was captured more than once, and he killed his older half-brother in a fight over who would lead the family. When Merkit raiders kidnapped his wife Börte, he got her back with help from his allies Toghrul and Jamukha. He later defeated both of them on his way to ruling the steppe alone, and he took the title \"Genghis Khan\" at a great assembly in 1206 [1].\n\nHis main change was to replace loyalty to a tribe with loyalty to the khan. He grouped men aged 15 to 70 into units of 10, 100 and 1,000 and spread warriors from defeated tribes across those units. He also built up an elite guard called the keshig [1]. His armies forced the Western Xia to pay tribute, took the Jin capital Zhongdu (near today's Beijing) in 1215, and destroyed the Khwarazmian Empire in Central Asia between 1219 and 1221 after its ruler had his envoys executed. Millions of people died in these wars [1].\n\nHe died in August 1227 while putting down a revolt by the Western Xia. Where he was buried is still unknown [1][2]. His third son Ögedei became khan in 1229, and his grandsons, including Kublai Khan, made the empire even bigger [1][2]. People still argue about his legacy. Russia and the Arab world have long seen him as a brutal tyrant, while Western historians have given a more mixed view since the 1990s, partly because his empire led to huge growth in trade and cultural exchange across Eurasia. In Mongolia he is honored as the nation's founding father [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Genghis_Khan",
+      "title": "Genghis Khan - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.newworldencyclopedia.org/entry/Genghis_Khan",
+      "title": "Genghis Khan - New World Encyclopedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Genghis Khan",
+    "Mongol Empire",
+    "Yesugei",
+    "Hö'elün",
+    "Börte",
+    "Jamukha",
+    "Toghrul",
+    "Kurultai",
+    "Keshig",
+    "Mongol conquest of Western Xia",
+    "Mongol conquest of the Jin dynasty",
+    "Mongol invasion of the Khwarazmian Empire",
+    "Ögedei Khan",
+    "Kublai Khan",
+    "Pax Mongolica"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Genghis_Khan",
+    "https://www.newworldencyclopedia.org/entry/Genghis_Khan"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1052909,
+  "duration_ms": 41548,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:22:28+00:00"
+}

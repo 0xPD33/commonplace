@@ -21,10 +21,13 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
-| `v22-answer-rules` | Seeds, the 0.2.4 changes with the phone's settings and the Starter set: general knowledge without citations, the underline check, check turns. See docs/BENCHMARKS.md (2026-10-22). | 0.533 |
+| `v23-starter-shelf` | Seeds, the 0.2.4 engine with the phone's settings, the Starter set and the Reference shelf (2026-10-23). | 0.555 |
+| `cv3-dev-024` | The 92 tuning threads, the 0.2.4 engine with the phone's settings and the Starter set (2026-10-23) | 0.649 |
+| `cv3-test-024` | The 30 locked test threads, the same settings (2026-10-23) | 0.646 |
+| `v22-answer-rules` | Seeds, the 0.2.4 changes with the phone's settings and the Starter set: general knowledge without citations, the underline check, check turns. See docs/BENCHMARKS.md (2026-10-22). It is the source of `docs/EVAL.md`. | 0.533 |
 | `v21-link-fix` | Seeds, the control of that comparison: 0.2.3 and the "Should I" link fix only. | 0.546 |
 | `v20-phone-starter` | Seeds, a rejected try: general knowledge marked with [0]. Ling never wrote the mark. | 0.512 |
-| `v19-phone-starter` | Seeds, the 0.2.0 build with the phone's settings (`--phone`) and the Starter set. It is the source of `docs/EVAL.md`. | 0.530 |
+| `v19-phone-starter` | Seeds, the 0.2.0 build with the phone's settings (`--phone`) and the Starter set. | 0.530 |
 | `v18-release` | Seeds, the 0.1 release build with all packs: clean passage text, entity linking by the other names in the question, no stray citation labels. | 0.529 |
 | `v17-norewrite` | Seeds, 2026 library, rewrite off | 0.521 |
 | `v16-enwiki2026` | Seeds, 2026 library, rewrite on | 0.508 |
@@ -33,7 +36,7 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `cv2-dev-intent` | The 60 tuning threads with the question-intent head | 0.615 |
 | `cv2-test-base` | The 30 locked test threads (2026-09-30) | 0.614 |
 
-The conversation runs used `--live-history` and the 2023 library. Judge noise is about +-0.05 on 63 questions.
+The `cv2` conversation runs used `--live-history` and the 2023 library. The `cv3` runs used `--live-history`, `--phone` and the Starter set. Judge noise is about +-0.05 on 63 questions.
 
 ## Query schema
 

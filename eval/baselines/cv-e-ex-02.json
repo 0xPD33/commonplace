@@ -1,0 +1,48 @@
+{
+  "id": "cv-e-ex-02",
+  "query": "any more details?",
+  "answer": "Black holes are a prediction of Einstein's general relativity: if enough mass is packed into a small enough space, it collapses into one [1]. The boundary of no return is called the event horizon. In general relativity, something falling through it wouldn't notice anything special at that point, but it could never get back out [1]. At the center, the theory predicts a singularity where spacetime curvature becomes infinite. Physicists expect that a theory combining gravity with quantum mechanics may change that picture [1].\n\nMost black holes form when a very massive star collapses at the end of its life, often in a supernova. They can then grow by pulling in more matter [1]. Black holes made from stars range from about 2 to 150 times the Sun's mass. Supermassive black holes are more than a million times the Sun's mass and are believed to sit at the centers of most large galaxies. The one at the center of our Milky Way, Sagittarius A*, is about 4.3 million solar masses [1].\n\nThe black hole itself gives off no light, but the gas swirling around it heats up and glows brightly. That's how astronomers can see them [2]. In 2015, LIGO made the first detection of gravitational waves, from two black holes merging about 1.4 billion light-years away [1]. In 2019, the Event Horizon Telescope released the first image of a black hole, the giant one at the center of the galaxy M87 [1].\n\nStephen Hawking predicted that black holes slowly give off radiation and lose mass over time. For black holes the size of stars, though, this effect is so weak that they currently absorb more energy from the cosmic background radiation than they lose [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Black_hole",
+      "title": "Black hole - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://alma-telescope.jp/en/column/bhimaging3",
+      "title": "Taking the First Picture of a Black Hole [3] - What is a black hole? (ALMA)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Black hole",
+    "Event horizon",
+    "Gravitational singularity",
+    "Stellar black hole",
+    "Supermassive black hole",
+    "Sagittarius A*",
+    "Accretion disk",
+    "First observation of gravitational waves",
+    "Event Horizon Telescope",
+    "Messier 87",
+    "Hawking radiation",
+    "General relativity"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Black_hole",
+    "https://alma-telescope.jp/en/column/bhimaging3"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.10329519999999999,
+  "duration_ms": 26612,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:21:39+00:00"
+}

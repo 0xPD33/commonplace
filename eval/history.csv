@@ -18,3 +18,4 @@ date,run_id,smoke,git,model,flags,n,n_judged,score_ratio,win,tie,loss,recall@10,
 2026-10-22T06:08:18+00:00,v20-phone-starter,False,v0.2.3-5-g8e5b4de-dirty,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5123,1,2,60,0.351,0.4722,0.2713,133,2114,4853,40.8356,0
 2026-10-22T06:08:19+00:00,v21-link-fix,False,v0.2.3-5-g8e5b4de-dirty,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5461,1,1,61,0.351,0.4722,0.2713,121,1968,4430,50.5784,0
 2026-10-22T06:08:21+00:00,v22-answer-rules,False,v0.2.3-5-g8e5b4de-dirty,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.533,1,1,61,0.351,0.4722,0.2713,110,1933,4034,51.4732,0
+2026-10-22T22:49:04+00:00,v23-starter-shelf,False,v0.2.4-1-g984dc0d,Ling-3.0-tiny-Q4_0.gguf,,63,63,0.5554,1,1,61,0.2793,0.3817,0.2302,219,3462,8029,25.8474,0

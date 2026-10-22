@@ -1,0 +1,48 @@
+{
+  "id": "cv-e-ref-02",
+  "query": "bullet it",
+  "answer": "Here's the earlier answer as bullets, with a few details added that I checked:\n\n- **What it is:** A quantum computer stores and processes information using quantum effects: superposition, interference and entanglement [1].\n- **Qubits:** A regular bit is either 0 or 1. A qubit, its quantum version, can be in a mix of both at once [1][2].\n- **Measurement:** When you read a qubit you get a plain 0 or 1. Which one you get comes down to probability, and the reading ends the superposition [1][2].\n- **Entanglement:** Qubits can be linked so they share one combined state instead of acting on their own [3].\n- **Where the speedup comes from:** It doesn't simply try every answer at once. Algorithms use interference to make the right answer more likely to come out [1].\n- **What it could help with:** Some problems, like breaking common encryption such as RSA or simulating physical systems. It doesn't make computers faster in general [1].\n- **Where it stands today:** It's still experimental and not practical for everyday use. Qubits lose their quantum behavior easily (\"decoherence\"), and that causes errors [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Quantum_computing",
+      "title": "Quantum computing - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://phoenixnap.com/blog/quantum-computing",
+      "title": "Quantum Computing Explained - phoenixNAP"
+    },
+    {
+      "n": 3,
+      "url": "https://www.spinquanta.com/news-detail/quantum-computing-explained",
+      "title": "Quantum Computing Explained: A Beginner's Guide to the Future of Technology - SpinQ"
+    }
+  ],
+  "wikipedia_articles": [
+    "Quantum computing",
+    "Qubit",
+    "Quantum superposition",
+    "Quantum entanglement",
+    "Quantum decoherence",
+    "Shor's algorithm"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Quantum_computing",
+    "https://phoenixnap.com/blog/quantum-computing",
+    "https://www.spinquanta.com/news-detail/quantum-computing-explained"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.068457,
+  "duration_ms": 26597,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.302 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-10-22T22:22:29+00:00"
+}

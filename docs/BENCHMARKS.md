@@ -17,6 +17,8 @@ Pixel 10, Ling-3.0-tiny Q4_0, the distilled Ettin-17m reranker (`model_sel8.onnx
 | Peak PSS with MiniCPM5-2B (8 GB phones) | 2.55 GB | `c2717c0`, 2026-10-19 |
 | Voice input | +0.58 GB PSS while the mic is on | 2026-09-29 |
 | Seeds, score ratio against Claude with web search | 0.533 (63 questions, Starter set, judge noise ±0.05) | `v22-answer-rules`, 2026-10-22 |
+| Seeds with the Reference shelf | 0.555 (63 questions, Starter set and Reference shelf) | `v23-starter-shelf`, 0.2.4, 2026-10-23 |
+| Conversation threads, score ratio | 0.649 on 92 tuning threads, 0.646 on 30 locked test threads (Starter set) | `cv3-dev-024`, `cv3-test-024`, 0.2.4, 2026-10-23 |
 | NQ-open retrieval, 2,610 held-out questions | hit@5 0.738, hit@10 0.780, pool recall 0.825 | 2026 Wikipedia, 2026-10-02 |
 
 Acceptance limits: card ≤ 1.5 s and first word ≤ 10 s at the median. Both pass.
@@ -170,15 +172,18 @@ The app keeps Ling on the CPU, and the TPU engine choice is off (`TPU_AVAILABLE`
 | `v19-phone-starter` | phone settings, Starter set | the 0.2.0 build (2026-10-14) | 0.530 |
 | `v21-link-fix` | same | the "Should I" link fix (2026-10-22) | 0.546 |
 | `v22-answer-rules` | same | general knowledge, underline check, check turns (2026-10-22) | 0.533 |
+| `v23-starter-shelf` | phone settings, Starter set and Reference shelf | the 0.2.4 engine (2026-10-23) | 0.555 |
 
 - The 2026 Wikipedia is the largest single gain. Out-of-corpus questions rose from 0.33 to 0.65, explanation from 0.41 to 0.52 and comparison from 0.37 to 0.45.
 - Since `v18`, every change sits inside the judge noise of ±0.05. Pairwise tests in the experiments table carry the smaller effects.
 - By category (`v22`, ours ÷ baseline): numeric 0.70, multi-hop 0.60, comparison 0.59, explanation 0.56, how-to 0.49, factual 0.42, travel 0.41, long tail 0.40, out of corpus 0.52. Evidence recall (the share of the baseline's sources that reached our evidence) is 0.13–0.54 by category, so retrieval limits most categories.
-- Travel and how-to need the Reference shelf: on 27 seeds, the full pack set beat the Starter set 17 / 2 / 6 pairwise (p = 0.035), and full evidence rose from 4 to 15 of 27 (2026-10-10).
+- The Reference shelf (`v23` against `v22`) raises travel from 0.41 to 0.53 and long tail from 0.40 to 0.56. Pairwise on all 63 seeds it is 27 / 9 / 27, with a mean gain of 0.52 points [−0.08, +1.13], so the overall gain is not significant. Travel gains 2.5 points, long tail 1.7 and comparison 0.9. Numeric loses 1.0 and explanation 0.3 (2026-10-23).
+- With the older engine on 27 seeds, the full pack set beat the Starter set 17 / 2 / 6 pairwise (p = 0.035), and full evidence rose from 4 to 15 of 27 (2026-10-10).
 - Model ceiling: Claude Sonnet, given exactly Ling's evidence on the 25 seeds with full evidence, scored 0.777 against Ling's 0.639 (2026-10-10). Across all 63 seeds that gap is worth about +0.05.
 
 ### Conversations
 
+- The 0.2.4 engine with the phone's settings and only the Starter set (2026-10-23): 0.646 on the 60 original tuning threads and 0.646 on the 30 locked test threads. The runs of 2026-09-30 with the full 2023 library scored 0.616 and 0.614 on the same threads. All 92 tuning threads score 0.649. By kind: chat 0.97, topic switch 0.71, reformat 0.70, follow-up 0.60, expand 0.52, compare follow-up 0.49. Small talk ties the baseline easily, so without the chat threads the test ratio is 0.589 (0.556 on 2026-09-30).
 - Score ratio on 60 conversation threads: 0.59 → 0.61 with the merged build of 2026-10-10; 22 topic-switch threads 0.59 → 0.70 (pairwise 17 / 1 / 4, p = 0.007).
 - Evidence recall of the expected sources on 96 searched turns rose from 0.764 to 0.866 with the follow-up head (2026-10-11). Topic leaks into a new question fell from 17 of 22 to 0 of 22.
 - The turn-kind head (question, expand, check, reformat, chat): cross-validation accuracy 0.964 with the fp32 encoder and 0.961 with int8. 89 of 92 conversation threads route right, and all 63 seeds stay questions (2026-10-22).

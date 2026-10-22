@@ -555,6 +555,8 @@ private fun FollowUpChips(turn: Turn, onAsk: (String) -> Unit, onDraft: ((String
         val related = turn.sources.filter { it.packId == card?.top?.packId }.map { it.title }
             .filter { it != card?.top?.title && card?.entities?.contains(it) != true }
             .distinctBy { it.substringBefore(" (") }.filter { it.substringBefore(" (") != topic }
+            // A chapter or subpage title ("Microbiology (Boundless): 12.1D: Vaccine Safety", "Book/Page") is no topic.
+            .filter { it.length <= 32 && ':' !in it && '/' !in it }
         for (t in related.take(2)) {
             SuggestionChip(onClick = { onAsk("Tell me about $t") }, label = { Text("About ${t.substringBefore(" (")}") }, modifier = Modifier.testTag("related_topic"))
         }

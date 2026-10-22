@@ -2,7 +2,7 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
-## [0.2.4] - 2026-10-21
+## [0.2.4] - 2026-10-22
 
 ### Added
 
@@ -20,7 +20,6 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 - **Questions that start with "Should I".** "Should I get one before my holiday?" no longer links the song "Should I Stay or Should I Go", so the next question searches the right topic.
 - **Follow-ups after "The sources do not…".** A follow-up no longer searches with a sentence about the sources from the last answer. "What if I don't have it?" after a question about vaccines now answers about the vaccine.
-
 - **A second download imports.** The browser saves a second copy of a file as `commonplace-starter (1).tar`. The app now imports it, and no longer says that no selected file belongs to a pack.
 - **Diagnostics shows the build.** It showed "Build dev" in every release. It now shows the git hash of the release.
 - **One downloaded file is singular.** After an import of one file, the app asks "Delete the downloaded file?" and no longer says "The 1 downloaded files".

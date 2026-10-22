@@ -21,6 +21,9 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
+| `v22-answer-rules` | Seeds, the 0.2.4 changes with the phone's settings and the Starter set: general knowledge without citations, the underline check, check turns. See docs/BENCHMARKS.md (2026-10-22). | 0.533 |
+| `v21-link-fix` | Seeds, the control of that comparison: 0.2.3 and the "Should I" link fix only. | 0.546 |
+| `v20-phone-starter` | Seeds, a rejected try: general knowledge marked with [0]. Ling never wrote the mark. | 0.512 |
 | `v19-phone-starter` | Seeds, the 0.2.0 build with the phone's settings (`--phone`) and the Starter set. It is the source of `docs/EVAL.md`. | 0.530 |
 | `v18-release` | Seeds, the 0.1 release build with all packs: clean passage text, entity linking by the other names in the question, no stray citation labels. | 0.529 |
 | `v17-norewrite` | Seeds, 2026 library, rewrite off | 0.521 |

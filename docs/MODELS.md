@@ -42,11 +42,11 @@ Notes:
 - LLM files ship as model packs (`packbuild model`), which the app imports like knowledge packs.
 - `commonplace-llm` saves the state of the answer system prompt to a file with `llama_state_seq_save_file`. The app uses `<data dir>/llm-state/`, and the CLI takes `--llm-state <dir>`. The file name is a hash of the model file name, its size and the system prompt. A new process loads the file only if its stored tokens equal the prompt's tokens; otherwise it prefills the prompt and writes a new file (`.tmp`, then a rename). At most 4 files stay, and the oldest goes first. For the 1,096-token answer prompt, the file is 26 MB.
 - Three softmax heads on the leaf-mt question embedding take the place of word lists. `pipeline/commonplace_pipeline/heads.py` trains them, and the core compiles them in:
-  - The turn-kind head: question, expand ("tell me more"), reformat or chat.
+  - The turn-kind head: question, expand ("tell me more"), check ("are you sure?"), reformat or chat.
   - The follow-up head: the message needs the last turn ("why is it green?"), or it stands alone.
   - The intent head: lookup, explain, compare or calc.
 
-  A costly label has its own probability bar, set by cross-validation: expand 0.635, reformat 0.639, chat 0.576 and calc 0.926.
+  A costly label has its own probability bar, set by cross-validation: expand 0.521, check 0.807, reformat 0.664, chat 0.488 and calc 0.926.
 - Property vectors (`pipeline/commonplace_pipeline/prop_vectors.py`, compiled in as `wikidata_props.json`) put each kept Wikidata property, and population density, in the leaf-mt space. The core picks the facts that a question asks about by the cosine to these vectors.
 
 ## Offline build only

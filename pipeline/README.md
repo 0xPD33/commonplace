@@ -122,7 +122,7 @@ uv run --project pipeline python -m commonplace_pipeline.heads intent --strict c
   --eval eval/queries.jsonl --map factual=lookup,explanation=explain,comparison=compare,numeric=calc
 ```
 
-- The turn-kind head sorts a chat message into question, expand ("tell me more"), reformat or chat. The follow-up head tells whether a question needs the last turn. Both learn from `configs/turn-kind-examples.jsonl`. The intent head sorts a question into lookup, explain, compare or calc.
+- The turn-kind head sorts a chat message into question, expand ("tell me more"), check ("are you sure?"), reformat or chat. The follow-up head tells whether a question needs the last turn. Both learn from `configs/turn-kind-examples.jsonl`. The intent head sorts a question into lookup, explain, compare or calc.
 - `--strict` names the labels whose mistakes are costly. Cross-validation sets a bar for each strict label (`min_probs`), so that no held-out example of another label reaches it. `--allow label=k` leaves out the k highest mistakes for that label.
 
 `prop_vectors` writes `core/commonplace-core/src/wikidata_props.json`: one vector per property of `configs/wikidata-props.tsv`, plus population density. Each vector is the mean leaf-mt embedding of the property's label, its Wikidata label and its English aliases. The core picks the Wikidata facts that a question asks about by the cosine to these vectors. Run it again after you change the property list or the query encoder:

@@ -612,6 +612,32 @@ The signed 0.2.3 release APK (`4d29fbe`), installed after the debug build was re
 - My documents: `quillfeather.pdf` gave 3 passages. "Ask this document" answered the keeper question from the PDF only.
 - Thinking mode: the density question for the Netherlands and Germany took about 75 s to the full answer on a hot phone (battery 40 °C). The values were right (480 and 234 per km², 2.05 times).
 
+## Desktop: answer rules, the underline check and check turns (2026-10-22)
+
+Desktop CLI, `run.py --phone`, the Starter set, Ling-3.0-tiny. The build is `8e5b4de` with the uncommitted changes of 2026-10-22. Claude Opus 5.5 judges. The judge noise on the seed score ratio is about ±0.05.
+
+Seeds, score ratio against Claude with web search (63 questions):
+
+| Variant | Score ratio | Mean score |
+|---|---:|---:|
+| Control: the "Should I" link fix only (`v21-link-fix`) | 0.546 | 5.31 |
+| General knowledge marked with [0] (`v20-phone-starter`) | 0.512 | 4.98 |
+| General knowledge without citations, and the underline check | 0.547 | 5.33 |
+| The same, and "ignore the sources about something else" | 0.547 | 5.33 |
+| The same, and "from" instead of "using ONLY" in the first line | 0.540 | 5.25 |
+| Final: general knowledge, underline check, check turns, earlier-answer context (`v22-answer-rules`) | 0.533 | 5.20 |
+
+- Final − control, per question: −0.11 points (standard error 0.17), 18 up and 23 down. A change to the prompt moves single answers by up to 3.5 points through greedy decoding, so all variants are equal within noise.
+- Ling never wrote the [0] mark: 0 of 63 answers and about 20 replays.
+- 92 conversation threads (`eval/conversation.jsonl`, live history), pairwise, final against control: 32 wins, 31 ties, 29 losses, mean +0.04 (95% interval −0.26 to +0.35). Topic switches +0.55, the other kinds within ±0.25.
+- 24 threads that ask about the last answer ("What did you mean by the evaporator?", "What if I don't have it?"), with fixed earlier turns, pairwise:
+  - The earlier-answer context (sentences that share a word with the message, the question that named the topic, no sentences about the sources) against the old 2 sentences: 5 wins, 15 ties, 4 losses, mean −0.17 (−0.60 to +0.25). It fixes the vaccine thread, so it stays.
+  - A rule against restating the earlier answer: 9 wins, 6 ties, 9 losses, mean +0.52 (−0.21 to +1.31). The answers it aimed at still restated the definition, so it is out.
+- 10 threads that doubt the last answer ("are you sure?", "that's wrong"), pairwise, check turns against the old head: 5 wins, 3 ties, 2 losses, mean 6.45 against 4.50 (+1.95, −0.20 to +4.05). The old head sent 5 of 10 to small talk ("I'm confident! What would you like to know?"). Neither version corrects a wrong first answer when the search does not find the right fact (Obama in 2016, Victoria in 1889).
+- The turn-kind head with the check label: cross-validation accuracy 0.964 (fp32 encoder) and 0.961 (int8). 89 of 92 conversation threads route right (3 reformat requests go to search). All 63 seeds and all 24 ask-about-the-answer messages stay questions.
+- The underline check: Claude Sonnet labeled 123 uncited sentences from 63 answers against their evidence. At 0.6 of the rarity weight, the check underlined 49 sentences, and 37 of them were from outside the evidence. It found 37 of the 54 such sentences. At 0.5 it underlined 33, and 25 were right. In the final seed run, 26 of 63 answers have an underline, and 14.8% of the answer text is underlined (control: 8 answers, 3.5%).
+- After these runs: when the question that a follow-up refers to names nothing and only followed up an older one, the search also takes the older question's words. In the replay, "What if I don't have it?" after "How do vaccines work?" and "Should I get one before my holiday?" searched for holidays without it and for vaccination with it. It changes no search in the 2 conversation threads with two earlier turns.
+
 ## To measure on the Pixel 10
 - Prefill with pinned threads (`strict_cpu`) and 5 batch threads against the app's 6 unpinned threads.
 - Voice input: install the debug build, `scripts/dev-push.sh stt`, then measure RSS with the mic on and off, stop-to-final latency, and CPU while Ling is idle.

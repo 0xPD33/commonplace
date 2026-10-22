@@ -4,7 +4,21 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 ## [0.2.4] - 2026-10-21
 
+### Added
+
+- **"Are you sure?" checks the answer.** A doubt such as "are you sure?", "that's wrong" or "double check that" searches the last question again, and the model checks its answer against the sources. Before, the app often replied "I'm confident!" and did nothing.
+
+### Changed
+
+- **Answers beyond the sources are marked.** When the sources do not answer a question, the model says so first and can then answer from general knowledge. The app underlines those sentences: a sentence without a citation gets the underline when the evidence does not have most of its rare words.
+- **Rounded numbers are not underlined.** "26.5 times" matches 26.52 in the evidence, and "16.4 million km²" matches 16,431,599 km².
+- **Recent opens the conversation.** A question under Recent on the home screen opens its saved conversation, and "All conversations" opens the history. Before, the question started a new conversation.
+- **Shorter topic chips.** Chapter and page titles, such as "Microbiology (Boundless): 12.1D: Vaccine Safety", no longer appear as chips.
+
 ### Fixed
+
+- **Questions that start with "Should I".** "Should I get one before my holiday?" no longer links the song "Should I Stay or Should I Go", so the next question searches the right topic.
+- **Follow-ups after "The sources do not…".** A follow-up no longer searches with a sentence about the sources from the last answer. "What if I don't have it?" after a question about vaccines now answers about the vaccine.
 
 - **A second download imports.** The browser saves a second copy of a file as `commonplace-starter (1).tar`. The app now imports it, and no longer says that no selected file belongs to a pack.
 - **Diagnostics shows the build.** It showed "Build dev" in every release. It now shows the git hash of the release.

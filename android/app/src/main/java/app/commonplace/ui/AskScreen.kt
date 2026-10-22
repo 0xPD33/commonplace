@@ -115,13 +115,16 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
+import app.commonplace.engine.Conversations
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.Prefs
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.suitsPhone
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
 
@@ -237,7 +240,7 @@ fun AskScreen(
                 if (lib == null || lib.packs.isEmpty()) {
                     EmptyLibrary(pad, onLibrary, onOffline = { showOffline = true })
                 } else if (vm.turns.isEmpty()) {
-                    Welcome(pad, lib, holder.prefs.recent, onAsk = { vm.ask(it) }, onOffline = { showOffline = true })
+                    Welcome(pad, lib, vm::history, onAsk = { vm.ask(it) }, onOpen = vm::open, onHistory = onHistory, onOffline = { showOffline = true })
                 } else {
                     Conversation(pad, vm, holder.prefs.showTimings, onOpen, onDraft = { d ->
                         vm.input = d
@@ -283,7 +286,17 @@ private fun Centered(pad: PaddingValues, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, onAsk: (String) -> Unit, onOffline: () -> Unit) {
+private fun Welcome(
+    pad: PaddingValues,
+    lib: LibraryInfo,
+    history: () -> List<Conversations.Summary>,
+    onAsk: (String) -> Unit,
+    onOpen: (Long) -> Unit,
+    onHistory: () -> Unit,
+    onOffline: () -> Unit,
+) {
+    var recent by remember { mutableStateOf(emptyList<Conversations.Summary>()) }
+    LaunchedEffect(Unit) { recent = withContext(Dispatchers.IO) { history().take(5) } }
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp).testTag("welcome"),
     ) {
@@ -310,7 +323,10 @@ private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, 
             Column(Modifier.riseIn("welcome_recent", delayMs = 280)) {
                 SectionLabel("Recent")
                 Spacer(Modifier.height(4.dp))
-                QuestionRows(recent.take(5), Icons.Outlined.History, onAsk)
+                QuestionRows(recent.map { c -> c.title to { onOpen(c.id) } }, Icons.Outlined.History, Modifier.testTag("recent"))
+                ClickableRow(onClick = onHistory, modifier = Modifier.testTag("recent_all")) {
+                    Text("All conversations", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 13.dp))
+                }
             }
         }
         Spacer(Modifier.height(24.dp))
@@ -318,17 +334,17 @@ private fun Welcome(pad: PaddingValues, lib: LibraryInfo, recent: List<String>, 
             SectionLabel("Try asking")
             Spacer(Modifier.height(4.dp))
             // Recent shows 5 questions and there are 6 examples, so at least one example is always left.
-            QuestionRows(EXAMPLES - recent.take(5).toSet(), null, onAsk, Modifier.testTag("examples"))
+            QuestionRows((EXAMPLES - recent.map { it.title }.toSet()).map { q -> q to { onAsk(q) } }, null, Modifier.testTag("examples"))
         }
     }
 }
 
 /** Questions as rows with rules between them, like the entries of an index. */
 @Composable
-private fun QuestionRows(questions: List<String>, icon: ImageVector?, onAsk: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun QuestionRows(rows: List<Pair<String, () -> Unit>>, icon: ImageVector?, modifier: Modifier = Modifier) {
     Column(modifier) {
-        for (q in questions) {
-            ClickableRow(onClick = { onAsk(q) }) {
+        for ((q, onClick) in rows) {
+            ClickableRow(onClick = onClick) {
                 Row(Modifier.padding(vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (icon != null) {
                         Icon(icon, null, tint = MaterialTheme.colorScheme.outline, modifier = Modifier.size(18.dp))

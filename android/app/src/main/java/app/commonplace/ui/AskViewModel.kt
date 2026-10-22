@@ -195,7 +195,6 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         }
         // A chip, Retry or Think it through must not wipe a draft the user is typing.
         if (query == input.trim()) input = ""
-        holder.prefs.remember(query)
         // Small talk carries nothing a later turn needs.
         val history = turns.filter { it.done && it.error == null && it.kind != TurnKind.CHAT }.takeLast(2).map { TurnRecord(it.query, it.answerText, it.sources) }
         val turn = Turn(query, think)

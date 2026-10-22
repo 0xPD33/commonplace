@@ -68,14 +68,6 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("rewrite", false)
         set(v) = sp.edit().putBoolean("rewrite", v).apply()
 
-    var recent: List<String>
-        get() = sp.getString("recent", "")!!.split('\n').filter { it.isNotBlank() }
-        set(v) = sp.edit().putString("recent", v.take(12).joinToString("\n")).apply()
-
-    fun remember(query: String) {
-        recent = listOf(query) + recent.filter { it != query }
-    }
-
     fun applyTo(engine: CommonplaceEngine) {
         val s = engine.settings()
         engine.updateSettings(

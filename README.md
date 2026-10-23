@@ -2,9 +2,11 @@
 
 Commonplace is an offline research assistant for Android. You ask a question, and it answers from Wikipedia and other reference text stored on your phone. Every answer cites its sources. The app has no `INTERNET` permission, so it cannot use the network.
 
+On a Pixel 10, Gemma 4 E2B writes the answer on the Tensor G5 NPU: the first word comes after about 2 seconds and the full answer after 6 to 8. Other phones run Ling-3.0-tiny or MiniCPM5-2B on the CPU through llama.cpp.
+
 I built it for the poidh bounty [Build the Best Offline AI Research App for Android](https://poidh.xyz/mainnet/bounty/31). I test it on a Google Pixel 10 with GrapheneOS and 12 GB of RAM.
 
-[Screens](#screens) · [The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source) · [Changelog](CHANGELOG.md)
+[Download the APK](https://github.com/0xPD33/commonplace/releases/latest) · [Screens](#screens) · [The idea](#the-idea) · [Install on a phone](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source) · [Changelog](CHANGELOG.md)
 
 [![Commonplace on a Pixel 10: you type "How tall is Mount Everest?", the best passage and Wikidata facts appear, then the answer streams in with citations](docs/media/commonplace-ask.gif)](docs/media/commonplace-showcase.mp4)
 
@@ -72,7 +74,7 @@ sequenceDiagram
   You->>S: Compare the Nile and the Amazon
   S-->>You: Best passages, facts and sources, in under 1 s
   S->>M: A few short passages
-  M-->>You: A written answer with citations, first word after about 7 s
+  M-->>You: A written answer with citations, first word after about 2 s (Gemma on a Pixel 10) or 7 s (Ling)
   Note over You,M: All of this runs on your phone. Nothing leaves it.
 ```
 
@@ -92,7 +94,7 @@ flowchart LR
 You need:
 
 - An Android phone with a 64-bit ARM CPU and Android 12 or later. Google Play Services are not necessary.
-- 8 GB of RAM. A phone with 12 GB gets the starter set with the fast model (Ling-3.0-tiny, 11.3 GB). A phone with 8 GB gets the starter set with the small model (MiniCPM5-2B, 8.1 GB). The app marks the set for your phone.
+- 8 GB of RAM. A phone with 12 GB gets the starter set with the fast model (Ling-3.0-tiny, 11.3 GB). A phone with 8 GB gets the starter set with the small model (MiniCPM5-2B, 8.1 GB). The app marks the set for your phone. On a Pixel 10, the Gemma pack (3.1 GB) adds the fastest model.
 - Free storage of about twice the downloaded files for the first import. After the import, the app uses 11.3 GB or 8.1 GB, plus 2.0 GB for the Reference shelf.
 - A Wi-Fi connection for one download of 11.3 GB or 8.1 GB. On a 2.4 GHz network (about 1 MB/s), the 11.3 GB file took 3 hours on the Pixel 10. Use a 5 GHz network if you can.
 
@@ -188,6 +190,7 @@ flowchart TB
       UI["Compose UI,<br/>Kotlin"] --> FFI["UniFFI"] --> CORE["commonplace-core,<br/>Rust"]
       CORE --> ORT["ONNX Runtime<br/>encoders"]
       CORE --> LLM["llama.cpp via<br/>commonplace-llm"]
+      CORE --> LRT["LiteRT-LM on the<br/>Tensor NPU (Gemma)"]
     end
   end
 ```
@@ -225,7 +228,7 @@ flowchart TD
   HOP -.-> EV
   EV --> COMP["Optional compute: ratios, units, calc"]
   INT -.->|"calc"| COMP
-  COMP --> GEN["Ling-3.0-tiny streams answer"]
+  COMP --> GEN["Ling or Gemma streams the answer"]
   THINK["Optional thinking mode"] -.-> GEN
   GEN --> CHK["Citation post-check"]
   CHK --> ANS["Answer with citations"]
@@ -237,7 +240,7 @@ flowchart TD
 
 1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. An Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop. I distilled it from Ettin-400m on 23,012 of the app's own search pools ([0xPD33/ettin-reranker-17m-commonplace](https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)).
 2. **An answer card before the answer.** The best passage, Wikidata facts and the source list appear before the model writes a word. The app highlights the sentence that matches. For a simple lookup, an extractive reader adds a short snippet.
-3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. Phones with 8 GB of RAM use MiniCPM5-2B (2.5B parameters, Apache-2.0). It reads short evidence, not whole articles. The system prompt holds the rules and three worked answers. The app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
+3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. Phones with 8 GB of RAM use MiniCPM5-2B (2.5B parameters, Apache-2.0). On a phone with a Tensor G5, Gemma 4 E2B (Apache-2.0) runs on the NPU through LiteRT-LM with speculative decoding: it reads the prompt at 800 to 2,000 tokens per second and writes 27 to 31. For the NPU, the app ships its own build of Google's Tensor dispatch library, because the prebuilt one crashes with LiteRT-LM 0.18.1 ([MODELS](docs/MODELS.md#runtimes)). Each model reads short evidence, not whole articles. The system prompt holds the rules and three worked answers. With llama.cpp, the app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
 4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist, and a list of sources that the model writes at the end of an answer. It underlines a sentence when the evidence does not have one of its numbers. It also underlines a sentence without a citation when the evidence does not have most of its rare words. When the sources do not answer a question, the model says so first and can then answer from general knowledge, and those sentences get the underline. Code does unit conversions, percentages and Wikidata ratios. A question that asks only for a conversion or a percentage gets the result from code, with no model call. For another calculation, the model writes an expression and code calculates the result.
 5. **Comparisons and follow-ups.** A comparison runs one search for each item. When a name has several articles ("Mars"), the other names in the question and their Wikidata classes decide which one it means. Each Wikidata entity is a numbered source, so the answer cites its numbers. When a question asks about a related thing ("the highest point of the country that hosted the 1964 Olympics"), Wikidata follows one link to it. A trained head decides if a message continues an earlier turn. Such a message searches with the first sentence of the answer it refers to, which usually names the subject; the reranker picks that answer from the last two turns. A new topic does not take the old one. "Tell me more" searches the last question again and prefers passages that the last answer did not show. A request such as "make it shorter" rewrites the last answer and does not search again. "Are you sure?" searches the last question again, and the model checks its answer against the sources.
 6. **Thinking mode.** The brain button next to the question box lets Ling reason before it answers. The default budget is 256 tokens. Settings has a slider for the budget.
@@ -293,7 +296,7 @@ The command line reads packs from `data/library/packs/`. To install a pack or a 
 
 The code is under Apache-2.0 ([LICENSE](LICENSE)).
 
-The packs and models keep the licenses of their sources. For example, Wikipedia is CC BY-SA 4.0 and GFDL, Wikidata is CC0, Ling-3.0-tiny is MIT, and MiniCPM5-2B is Apache-2.0.
+The packs and models keep the licenses of their sources. For example, Wikipedia is CC BY-SA 4.0 and GFDL, Wikidata is CC0, Ling-3.0-tiny is MIT, and MiniCPM5-2B and Gemma 4 E2B are Apache-2.0.
 
 - Each pack contains a `NOTICE.txt` with its credit, license and full license texts. The sources of these files are in [pipeline/notices](pipeline/notices).
 - [docs/DATASETS.md](docs/DATASETS.md) lists the license of each pack. [docs/MODELS.md](docs/MODELS.md) lists the license of each model.

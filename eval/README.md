@@ -21,6 +21,12 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
+| `x-gemma4-phone2` | Seeds asked in the app on the Pixel 10 with Gemma on the NPU and the full evidence (0.3.0 debug build, 2026-10-23) | 0.499 |
+| `x-gemma4-phone` | The same with the warm-phone evidence cut (52 of 63 answers) | 0.516 |
+| `x-gemma4-qat` | Seeds, Google's QAT Q4_0 GGUF of Gemma 4 E2B on the desktop | 0.505 |
+| `x-gemma4-qat-prompt` | The same with a rule to state the COMPUTED value (dropped) | 0.511 |
+| `x-gemma4-qat-ev1200` | The same with an evidence budget of 1,200 (about 1,000 tokens) | 0.479 |
+| `x-pool24`, `x-pool48`, `x-pool96` | Seeds, Ling with rerank pools of 24, 48 and 96, for recall only (not judged) | – |
 | `x-gemma4-cv-test` | The 30 locked test threads with the same Gemma GGUF and settings (2026-10-23) | 0.640 |
 | `x-gemma4-e2b` | Seeds, Gemma 4 E2B Q4_0 (`ggml-org/gemma-4-E2B-it-GGUF`) instead of Ling, the phone's settings, the Starter set (2026-10-23). A desktop stand-in for the NPU file. | 0.523 |
 | `v23-starter-shelf` | Seeds, the 0.2.4 engine with the phone's settings, the Starter set and the Reference shelf (2026-10-23). | 0.555 |

@@ -41,7 +41,7 @@ The app removes wiki reference marks (`[1]`, `[2][3]`, `[citation needed]`, `[a]
 
 ### Manifest
 
-`manifest.json` lists every file with its size and SHA-256, the snapshot date, the license and attribution, the counts, and the `embedder` block.
+`manifest.json` lists every file with its size and SHA-256, the snapshot date, the license and attribution, the counts, and the `embedder` block. A model pack's `model` block names the file, its role and, optionally, a `profile` with the model's defaults in the app (`commonplace_core::profiles`: `default`, `gemma4`, `gemma4-npu`; `packbuild model --profile`). Without one, the file name picks it.
 Every release pack holds a `NOTICE.txt` (credit, license names, disclaimers and license texts). `textbooks-en` and `stackexchange` also hold `CREDITS.txt` or `CREDITS.txt.zst`. `packbuild notice` adds these files and `build`, `model` and `wikidata` take `--notice` and `--credits`. The files are listed in the manifest, so verify and import check them like all other files.
 The app refuses a knowledge pack whose `embedder` differs from the installed packs.
 `replaces` names packs that this pack supersedes (`enwiki` replaces `enwiki-core`).

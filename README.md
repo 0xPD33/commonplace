@@ -122,7 +122,7 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 | Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.50 s (median). The first word of the written answer comes after about 7 s. The model then writes 16 to 17 tokens per second on a cool phone. With the Gemma pack, Gemma 4 E2B runs on the Tensor NPU: the first word comes after 1.4–3.1 s and the full answer after 5–8 s ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)). |
 | Public GitHub repository with code, assets and instructions | This repository holds all code. The packs are on [Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs), and [docs/PACKS.md](docs/PACKS.md) shows how to build them again. |
 | Documents the models, datasets and indexes | [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md) and [PACKS](docs/PACKS.md). |
-| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). With the optional Reference shelf it gets 56%, and on 30 locked conversation threads 65% (59% without the small-talk threads) ([BENCHMARKS](docs/BENCHMARKS.md#conversations)). Gemma 4 E2B, the faster model for a Pixel 10, gets 52% on the questions and 64% on the threads. See the limits below. |
+| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). With the optional Reference shelf it gets 56%, and on 30 locked conversation threads 65% (59% without the small-talk threads) ([BENCHMARKS](docs/BENCHMARKS.md#conversations)). Gemma 4 E2B, the faster model for a Pixel 10, gets 50% on the questions on the phone and 64% on the threads. See the limits below. |
 
 How I measure quality: Claude Opus 5.5 with web search answers each question as the baseline. A second Claude call grades both answers blind on correctness, completeness, grounding and usefulness. The score ratio is our mean score divided by the baseline's mean score.
 
@@ -262,7 +262,7 @@ Known limits:
 - The phone gets slower when it gets hot. A long test of heat over many questions is still open.
 - Long-tail (0.40), travel (0.41) and fact questions (0.42) are the weakest categories ([EVAL](docs/EVAL.md)).
 - Voice input (Moonshine, on the phone) is English only and needs the optional `voice-en` pack. Real speech recognition is tested on the desktop, not yet on a phone's microphone.
-- Only a Pixel 10 (Tensor G5) runs Gemma 4 E2B on its NPU, with the Gemma pack. Other phones answer on the CPU. On 63 seeds, Gemma's answers lose to Ling's head to head (Ling 37 / 7 / 19), although the score ratios are close (0.523 against 0.533) ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
+- Only a Pixel 10 (Tensor G5) runs Gemma 4 E2B on its NPU, with the Gemma pack. Other phones answer on the CPU. On 63 seeds asked on the phone, Ling's answers win more often head to head (33 / 7 / 21, not significant), and the score ratios are close (0.499 against 0.533). Gemma is weakest on numbers ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
 
 ## Desktop command line
 

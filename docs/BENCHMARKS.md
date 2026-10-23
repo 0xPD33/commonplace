@@ -158,7 +158,9 @@ LiteRT-LM 0.18.1 on the Pixel 10 with the Starter Wikipedia, in a debug build wi
 - Speculative decoding (`ExperimentalFlags.enableSpeculativeDecoding`) is off in LiteRT-LM by default. The G5 file carries the draft model (a `verify` signature). It gave the same token counts and 1.5 times the decode speed. Its effect on the GPU and CPU is not measured.
 - The first question after the app starts is the slowest on the NPU (first word 2.3–3.1 s).
 - Gemma 4 E4B has no G5 file. The first GPU load of a model took about 50 s while LiteRT compiled the OpenCL kernels.
-- Answer quality, on the desktop with a Q4_0 GGUF of Gemma 4 E2B, the phone's settings, the Starter set and Ling's prompt (`x-gemma4-e2b`, 2026-10-23): a score ratio of 0.523 against Ling's 0.533. Pairwise, Ling won 37, tied 7 and lost 19 (p = 0.022). Ling was better on travel, numeric, how-to and comparison questions. Gemma was better on long-tail and factual questions.
+- Answer quality on the Pixel, with the 63 seeds asked in the app (0.3.0 debug build, the Starter set, 2026-10-23): a score ratio of 0.516 when 52 of the 63 answers had the warm-phone cut to 400 evidence tokens (`x-gemma4-phone`), and 0.499 with the full evidence (`x-gemma4-phone2`). Pairwise against Ling's desktop run `v22-answer-rules`, Ling won 35 / 7 / 15 (p = 0.007) with the cut, and 33 / 7 / 21 (p = 0.134, mean +0.53 [−0.17, +1.25]) with the full evidence. The full evidence against the cut: 23 / 17 / 17 for the full evidence, not significant. Numbers are Gemma's weakest point: Ling won all 5 numeric seeds, because Gemma often leaves out the COMPUTED value.
+- The phone answers match the desktop stand-in: pairwise 25 / 13 / 19 against the Q4_0 GGUF run (`x-gemma4-e2b`, 0.523; pairwise against Ling 37 / 7 / 19). The phone run took 1.76 s to the first word and 6.0 s to the full answer at the median, and 1.94 s and 7.5 s with the full evidence.
+- Tests that did not raise Gemma's quality (desktop, 63 seeds, pairwise): Google's QAT Q4_0 GGUF against the plain Q4_0 (0.505 against 0.523; 21 / 24 / 18, `x-gemma4-qat`); a rule to state the COMPUTED value (0.511; 23 / 24 / 16, numeric seeds 2 / 1 / 2, `x-gemma4-qat-prompt`); and about 1,000 evidence tokens instead of 600 (0.479; 26 / 16 / 21 with a lower mean, numeric seeds 0 / 2 / 3, `x-gemma4-qat-ev1200`). The search hands over at most 10 passages, so even a budget of 2,500 gave about 1,000 tokens; the NPU read the 2,151-token prompt without trouble.
 - Conversations, on the desktop with the same GGUF (`x-gemma4-cv-test`, 2026-10-23): 0.640 on the 30 locked test threads against Ling's 0.646, and 0.597 against 0.589 without the small-talk threads.
 - On the Pixel with 0.3.0: a six-turn conversation (follow-ups, "are you sure?", "make it shorter", "thanks") took 9.7–13.8 s per turn. A reformat turn showed its first word after 0.34 s and wrote 34.6 tok/s. With Think on and a budget of 256 tokens, the first word of the answer came after 16.3 s ("Thought for 14 s").
 - The import of `gemma4-e2b-npu.tar` (3.1 GB) from Downloads took 28 s.
@@ -275,6 +277,9 @@ Each row is a change that we tested. "Kept" means the app has it now.
 | 10-23 | Speculative decoding on the NPU | Pixel, 3 questions each | Decode 18.6–19.0 → 27.0–30.8 tok/s, same token counts | On by default |
 | 10-23 | Gemma 4 E2B against Ling | 63 seeds and 30 threads, desktop | Seeds 0.523 against 0.533, Ling 37 / 7 / 19 (p = 0.022); threads 0.640 against 0.646 | Gemma for speed, Ling stays in Settings |
 | 10-23 | Gemma 4 E4B on the GPU | Pixel, 2 questions | First word 6.6–8.5 s, decode 6.5 tok/s | Not used |
+| 10-23 | No warm-phone evidence cut for Gemma on the NPU | 63 seeds on the Pixel, pairwise | 23 / 17 / 17 for the full evidence; first word +0.2 s | Kept (profile `gemma4-npu`) |
+| 10-23 | QAT GGUF, a COMPUTED rule, 1,000 evidence tokens for Gemma | 63 seeds, desktop, pairwise | No gain; see LiteRT-LM above | Not used |
+| 10-23 | Rerank pool of 48 or 96 instead of 24 (Ling) | 63 seeds, recall | R@ev 0.271 → 0.267 → 0.258; R@10 0.351 → 0.383 → 0.372; rerank 180 → 288 → 580 ms on the desktop | 24 |
 
 Known weak spots that these experiments did not fix:
 

@@ -9,10 +9,13 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 - **Gemma 4 E2B on the Tensor chip.** On a Pixel 10, the new Gemma pack (3.1 GB) runs Gemma 4 E2B on the Tensor G5 NPU. The first word comes after 1.4–3.1 s and the full answer after 5–8 s, against 17–29 s with Ling on the CPU. With the pack installed, Gemma is the answer model. The Library lists the pack only on phones with a Tensor G5 chip and marks it "For this phone", and the Get started card on such a phone names it.
 - **Speculative decoding** for Gemma on the NPU, on by default. It writes about 1.5 times faster. Settings can switch it off.
 - **Think with Gemma.** The Think button and "Think it through" work with Gemma: it reasons for at most the thinking budget, and the answer shows "Thought for N s".
+- **Defaults for each model.** The evidence budget in Settings shows the loaded model's default, and "Use the model's default" removes your own value.
 
 ### Changed
 
-- **One model list in Settings.** Gemma and the CPU models are choices in one list, and the separate engine choice is gone.
+- **One model list in Settings.** Gemma and the CPU models are choices in one list, and the separate engine choice is gone. An engine choice saved by an older version no longer keeps a phone with the Gemma pack on the CPU model.
+- **Gemma reads the full evidence on a warm phone.** The CPU models still read less when the phone is warm, because a hot CPU reads slowly. The NPU does not slow down.
+- **Get started on a Pixel 10** lists the Gemma pack next to the starter set.
 - **Exact token counts for Gemma** in the timings line, from LiteRT-LM's own counter.
 - LiteRT-LM 0.18.1, with a Tensor dispatch library built from the LiteRT commit that it pins.
 
@@ -20,7 +23,7 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 - **A Gemma file that cannot load no longer stops the app on every start.** If Gemma fails or stops the app while it loads, the app answers with the CPU model, and Settings says why. Choose Gemma in Settings to try again.
 
-Quality: on 63 seed questions with the Starter set, Gemma scores 0.523 of Claude's score and Ling 0.533, but Ling wins 37 of them head to head and Gemma 19. On 30 conversation threads, Gemma scores 0.640 and Ling 0.646 ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
+Quality: on 63 seed questions asked in the app on a Pixel 10, Gemma scores 0.499 of Claude's score, and Ling 0.533 on the desktop. Head to head, Ling wins 33 and Gemma 21, which is not significant. On 30 conversation threads, Gemma scores 0.640 and Ling 0.646 ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
 
 ## [0.2.4] - 2026-10-22
 

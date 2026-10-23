@@ -2,6 +2,26 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
+## [0.3.0] - 2026-10-23
+
+### Added
+
+- **Gemma 4 E2B on the Tensor chip.** On a Pixel 10, the new Gemma pack (3.1 GB) runs Gemma 4 E2B on the Tensor G5 NPU. The first word comes after 1.4–3.1 s and the full answer after 5–8 s, against 17–29 s with Ling on the CPU. With the pack installed, Gemma is the answer model. The Library lists the pack only on phones with a Tensor G5 chip and marks it "For this phone", and the Get started card on such a phone names it.
+- **Speculative decoding** for Gemma on the NPU, on by default. It writes about 1.5 times faster. Settings can switch it off.
+- **Think with Gemma.** The Think button and "Think it through" work with Gemma: it reasons for at most the thinking budget, and the answer shows "Thought for N s".
+
+### Changed
+
+- **One model list in Settings.** Gemma and the CPU models are choices in one list, and the separate engine choice is gone.
+- **Exact token counts for Gemma** in the timings line, from LiteRT-LM's own counter.
+- LiteRT-LM 0.18.1, with a Tensor dispatch library built from the LiteRT commit that it pins.
+
+### Fixed
+
+- **A Gemma file that cannot load no longer stops the app on every start.** If Gemma fails or stops the app while it loads, the app answers with the CPU model, and Settings says why. Choose Gemma in Settings to try again.
+
+Quality: on 63 seed questions with the Starter set, Gemma scores 0.523 of Claude's score and Ling 0.533, but Ling wins 37 of them head to head and Gemma 19. On 30 conversation threads, Gemma scores 0.640 and Ling 0.646 ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
+
 ## [0.2.4] - 2026-10-22
 
 ### Added
@@ -94,6 +114,7 @@ The first release.
 - Comparisons, follow-up questions, thinking mode, voice input (a separate pack) and "My documents" for your own PDF, text and Markdown files.
 - The Library with an on/off switch for each pack and a 50 GB limit.
 
+[0.3.0]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.0
 [0.2.4]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.4
 [0.2.3]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.3
 [0.2.2]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.2

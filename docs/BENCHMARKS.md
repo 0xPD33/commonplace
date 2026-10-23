@@ -14,6 +14,7 @@ Pixel 10, Ling-3.0-tiny Q4_0, the distilled Ettin-17m reranker (`model_sel8.onnx
 | Decode | 16–17 tok/s on a cool phone; 8–9 tok/s after the phone passes about 37 °C | 0.2.0, 2026-10-13 |
 | Model start after the app was closed | 16.3–16.6 s with the saved warm-up state, 23.9–26.0 s without it | 0.2.0, 2026-10-13 |
 | Peak RSS with Ling | 5.3 GB (limit: 6 GiB with the app on screen) | 0.2.0, 2026-10-13 |
+| Gemma 4 E2B on the Tensor NPU: first word, decode, full answer | 1.4–3.1 s, 27.0–30.8 tok/s with speculative decoding, 5.2–7.6 s | 0.3.0, 2026-10-23 |
 | Peak PSS with MiniCPM5-2B (8 GB phones) | 2.55 GB | `c2717c0`, 2026-10-19 |
 | Voice input | +0.58 GB PSS while the mic is on | 2026-09-29 |
 | Seeds, score ratio against Claude with web search | 0.533 (63 questions, Starter set, judge noise ±0.05) | `v22-answer-rules`, 2026-10-22 |
@@ -138,23 +139,31 @@ On the desktop, sel8 reranks 24 passages in a median of 131 ms against 180 ms fo
 - Voice input: app PSS 5.12 GB before the mic tap, 5.70 GB with the mic on, 5.16 GB after the stop tap (2026-09-29).
 - Thinking mode: 384 reasoning tokens took 34 s at 14 tok/s (2026-09-29). The default cap is now 256 tokens, about 18 s.
 
-### LiteRT-LM: GPU and Tensor NPU (2026-10-22)
+### LiteRT-LM: Gemma 4 on the GPU and the Tensor NPU (2026-10-22 to 2026-10-23)
 
-LiteRT-LM 0.18.1, Gemma 4 E2B (`litert-community/gemma-4-E2B-it-litert-lm` @ `b3ca0d2`), a debug build with its own package name, two questions, thermal headroom 0.78. Gemma on LiteRT's CPU backend (2026-09-29) is the reference row.
+LiteRT-LM 0.18.1 on the Pixel 10 with the Starter Wikipedia, in a debug build with its own package name. Each row asked "Why is the sky blue?" and "How do vaccines train the immune system?". The NPU rows also asked "What caused the fall of the Western Roman Empire?". Thermal headroom was 0.60–0.75.
 
-| File, backend | First word | Prefill | Decode | RSS | Result |
-|---|---|---|---|---|---|
-| Generic file, CPU (0.17.1, 2026-09-29) | 4.5–5.6 s | about 170–200 tok/s (~800 tokens in 4.0–4.8 s) | 9.5–10.5 tok/s | 2.8–2.9 GB | Works |
-| Generic file, GPU (OpenCL) | 3.1–3.6 s | 516–613 tok/s | 9.5–9.6 tok/s | 2.1 GB | Correct, cited answers |
-| `-gpu.litertlm`, GPU | — | — | — | — | Random tokens in many scripts |
-| `_Google_Tensor_G5.litertlm`, NPU | — | — | — | — | SIGSEGV in the LiteRT v2.2.0 dispatch library |
+| Model, file, accelerator | First word | Prefill | Decode | Full answer | Peak RSS | Result |
+|---|---|---|---|---|---|---|
+| Gemma 4 E2B, G5 file, NPU, speculative decoding | 1.4–3.1 s | 1,080–2,030 tok/s | 27.0–30.8 tok/s | 5.2–7.6 s | 2.2–2.3 GB | Correct, cited answers |
+| Gemma 4 E2B, G5 file, NPU | 1.5–2.3 s | 795–2,080 tok/s | 18.6–19.0 tok/s | 7.9–8.9 s | 2.2–2.3 GB | Correct, cited answers |
+| Gemma 4 E2B, generic file, GPU (OpenCL) | 3.1–4.8 s | about 420–610 tok/s | 9.5–9.6 tok/s | 16.6–20.3 s | 2.1 GB | Correct, cited answers |
+| Gemma 4 E4B, generic file, GPU | 6.6–8.5 s | about 230–260 tok/s | 6.5–6.6 tok/s | 21.1–25.7 s | 3.1 GB | Correct, cited; one paragraph began with "COMPUTED:" |
+| Gemma 4 E2B, `-gpu.litertlm`, GPU | — | — | — | — | — | Random tokens in many scripts |
+| Gemma 4 E2B, G5 file, NPU, Google's v2.2.0 dispatch library | — | — | — | — | — | SIGSEGV in the dispatch library |
+| Gemma 4 E2B, generic file, CPU (0.17.1, 2026-09-29) | 4.5–5.6 s | about 170–200 tok/s | 9.5–10.5 tok/s | — | 2.8–2.9 GB | Works |
 
-- The app estimates LiteRT's prompt tokens from the characters (÷ 4). The first GPU load took about 50 s, while LiteRT compiled the OpenCL kernels.
-- The Pixel exposes `libOpenCL.so` and `libedgetpu_litert.so` to apps as vendor public libraries, with no Play Services.
-- NPU: LiteRT-LM 0.17.1 rejects the v2.1.6 dispatch library ("Unsupported dispatch runtime version"). Both 0.17.1 and 0.18.1 crash inside the v2.2.0 one. No newer prebuilt library exists; LiteRT-LM 0.18.1 pins LiteRT `ca21dc99`, and a dispatch library built from that commit with Bazel is the only path left.
+- The NPU rows use LiteRT's own counter (`ExperimentalFlags.enableBenchmark`). The other rows estimate the prompt from its characters ÷ 4 and count one token per streamed message. On the NPU, that count matched LiteRT's counter (125 against 126 tokens).
+- The NPU needs `libLiteRtDispatch_GoogleTensor.so` from the LiteRT commit that LiteRT-LM pins (`ca21dc99`). LiteRT-LM 0.17.1 rejects Google's v2.1.6 library ("Unsupported dispatch runtime version"), and 0.17.1 and 0.18.1 crash in the v2.2.0 library. Our build from `ca21dc99` works ([MODELS](MODELS.md#runtimes)).
+- Speculative decoding (`ExperimentalFlags.enableSpeculativeDecoding`) is off in LiteRT-LM by default. The G5 file carries the draft model (a `verify` signature). It gave the same token counts and 1.5 times the decode speed. Its effect on the GPU and CPU is not measured.
+- The first question after the app starts is the slowest on the NPU (first word 2.3–3.1 s).
+- Gemma 4 E4B has no G5 file. The first GPU load of a model took about 50 s while LiteRT compiled the OpenCL kernels.
+- Answer quality, on the desktop with a Q4_0 GGUF of Gemma 4 E2B, the phone's settings, the Starter set and Ling's prompt (`x-gemma4-e2b`, 2026-10-23): a score ratio of 0.523 against Ling's 0.533. Pairwise, Ling won 37, tied 7 and lost 19 (p = 0.022). Ling was better on travel, numeric, how-to and comparison questions. Gemma was better on long-tail and factual questions.
+- Conversations, on the desktop with the same GGUF (`x-gemma4-cv-test`, 2026-10-23): 0.640 on the 30 locked test threads against Ling's 0.646, and 0.597 against 0.589 without the small-talk threads.
+- On the Pixel with 0.3.0: a six-turn conversation (follow-ups, "are you sure?", "make it shorter", "thanks") took 9.7–13.8 s per turn. A reformat turn showed its first word after 0.34 s and wrote 34.6 tok/s. With Think on and a budget of 256 tokens, the first word of the answer came after 16.3 s ("Thought for 14 s").
+- The import of `gemma4-e2b-npu.tar` (3.1 GB) from Downloads took 28 s.
+- From 0.3.0, the app uses Gemma on the NPU when the Gemma pack is installed. Settings can choose Ling.
 - llama.cpp on the PowerVR GPU was never run here. Planning-stage numbers (about 24 tok/s prefill, 2.5 tok/s decode, no integer dot product in the driver) ruled it out.
-
-The app keeps Ling on the CPU, and the TPU engine choice is off (`TPU_AVAILABLE`): Gemma's answer quality is not measured, and it would be an extra 2.5 GB pack.
 
 ## Answer quality
 
@@ -262,6 +271,10 @@ Each row is a change that we tested. "Kept" means the app has it now.
 | 10-22 | Rule to check dates against the question's year | 16 "who held this office then" questions | 12 of 16 right with and without it | Dropped |
 | 10-22 | Swap the card to the first cited source | 62 seed answers | 19 do not cite source 1, but only about 3 of those cards are wrong | Not done |
 | 10-22 | Gemma 4 E2B on the GPU or the Tensor NPU | Pixel, 2 questions | See LiteRT-LM above | Not used |
+| 10-23 | Gemma 4 E2B on the NPU with our dispatch library build | Pixel, 5 questions | First word 1.4–3.1 s, full answer 5.2–8.9 s | Answer model with the Gemma pack (0.3.0) |
+| 10-23 | Speculative decoding on the NPU | Pixel, 3 questions each | Decode 18.6–19.0 → 27.0–30.8 tok/s, same token counts | On by default |
+| 10-23 | Gemma 4 E2B against Ling | 63 seeds and 30 threads, desktop | Seeds 0.523 against 0.533, Ling 37 / 7 / 19 (p = 0.022); threads 0.640 against 0.646 | Gemma for speed, Ling stays in Settings |
+| 10-23 | Gemma 4 E4B on the GPU | Pixel, 2 questions | First word 6.6–8.5 s, decode 6.5 tok/s | Not used |
 
 Known weak spots that these experiments did not fix:
 
@@ -274,4 +287,5 @@ Known weak spots that these experiments did not fix:
 - The time of the Wikidata second hop on its own.
 - Prefill with pinned threads and with `n_ubatch` 1024 against 512 in the app.
 - Voice input with a real voice on the phone's microphone: transcript quality, stop-to-final latency, heat.
-- Gemma 4 E2B answer quality on the phone.
+- Gemma 4 E2B answer quality from the G5 file itself. The eval used a Q4_0 GGUF on the desktop.
+- Gemma on the NPU over a long session and on a hot phone.

@@ -100,7 +100,7 @@ Steps:
 
 1. On the phone, open the [latest release](https://github.com/0xPD33/commonplace/releases/latest) and download `commonplace-<version>.apk`. Open the file and install the app.
 2. Open Commonplace and tap **Open Library**. Under **Get more**, tap the starter set marked **For this phone**, then tap **Download**. The browser saves `commonplace-starter.tar` (11.3 GB, for 12 GB phones) or `commonplace-starter-small.tar` (8.1 GB, for 8 GB phones) in **Downloads**.
-3. Also download the **Reference shelf** (`commonplace-breadth.tar`, 2.0 GB) in the same way. It adds travel guides, textbooks, how-to guides and medical pages. Without it, the app could not answer some travel and how-to questions in my tests.
+3. Also download the **Reference shelf** (`commonplace-breadth.tar`, 2.0 GB) in the same way. It adds travel guides, textbooks, how-to guides and medical pages. Without it, the app could not answer some travel and how-to questions in my tests. On a Pixel 10, also download **Gemma 4 E2B (Tensor G5)** (3.1 GB): it runs on the Tensor chip and answers about three times faster.
 4. When the downloads are complete, tap **Install from Downloads** in the Library. Select both files: long-press one, tap the other, then tap **Select**. The app checks every byte with SHA-256 while it copies the files.
 5. When the app asks, tap **Delete** to remove the downloaded files.
 6. Go back and ask a question. The first question is slower, because the app loads the model into memory.
@@ -119,10 +119,10 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 | Works offline, with no network requests during use | The APK has no `INTERNET` permission, so Android blocks all network access. The release script stops if the permission appears. You download the packs once with the browser. |
 | No Google Play Services | The app uses no Google Play Services library: the APK contains no `com.google.android.gms` classes. |
 | Explanation, comparison, synthesis and reasoning | A comparison runs one search for each item and computes ratios from Wikidata in code. Follow-up questions use the earlier turns. A thinking mode lets the model reason before it answers. |
-| Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.50 s (median). The first word of the written answer comes after about 7 s. The model then writes 16 to 17 tokens per second on a cool phone. |
+| Usable speed on a phone | On the Pixel 10, the answer card with the best passage comes after 0.50 s (median). The first word of the written answer comes after about 7 s. The model then writes 16 to 17 tokens per second on a cool phone. With the Gemma pack, Gemma 4 E2B runs on the Tensor NPU: the first word comes after 1.4–3.1 s and the full answer after 5–8 s ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)). |
 | Public GitHub repository with code, assets and instructions | This repository holds all code. The packs are on [Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs), and [docs/PACKS.md](docs/PACKS.md) shows how to build them again. |
 | Documents the models, datasets and indexes | [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md) and [PACKS](docs/PACKS.md). |
-| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). With the optional Reference shelf it gets 56%, and on 30 locked conversation threads 65% (59% without the small-talk threads) ([BENCHMARKS](docs/BENCHMARKS.md#conversations)). See the limits below. |
+| More than 50% as good as internet search with a frontier model | On 63 of my own questions, Commonplace gets 53% of the score of Claude Opus 5.5 with web search ([EVAL](docs/EVAL.md)). With the optional Reference shelf it gets 56%, and on 30 locked conversation threads 65% (59% without the small-talk threads) ([BENCHMARKS](docs/BENCHMARKS.md#conversations)). Gemma 4 E2B, the faster model for a Pixel 10, gets 52% on the questions and 64% on the threads. See the limits below. |
 
 How I measure quality: Claude Opus 5.5 with web search answers each question as the baseline. A second Claude call grades both answers blind on correctness, completeness, grounding and usefulness. The score ratio is our mean score divided by the baseline's mean score.
 
@@ -145,7 +145,7 @@ Each bar is the score ratio for one type of question. 1.0 means as good as Claud
 
 ### What fits on the phone
 
-The starter set for 12 GB phones needs 11.3 GB, and the set for 8 GB phones needs 8.1 GB. Every pack together needs 36.5 GB, which leaves room under the 50 GB limit.
+The starter set for 12 GB phones needs 11.3 GB, and the set for 8 GB phones needs 8.1 GB. Every pack together needs 36.5 GB, which leaves room under the 50 GB limit. The Gemma pack for Pixel 10 phones adds 3.1 GB.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/chart-storage-dark.svg">
@@ -262,7 +262,7 @@ Known limits:
 - The phone gets slower when it gets hot. A long test of heat over many questions is still open.
 - Long-tail (0.40), travel (0.41) and fact questions (0.42) are the weakest categories ([EVAL](docs/EVAL.md)).
 - Voice input (Moonshine, on the phone) is English only and needs the optional `voice-en` pack. Real speech recognition is tested on the desktop, not yet on a phone's microphone.
-- The app uses only the CPU. The Tensor G5 NPU library crashes with the current LiteRT-LM. On the GPU, Gemma 4 E2B gives its first word in about 3.5 s, but its answer quality is not measured ([BENCHMARKS](docs/BENCHMARKS.md)).
+- Only a Pixel 10 (Tensor G5) runs Gemma 4 E2B on its NPU, with the Gemma pack. Other phones answer on the CPU. On 63 seeds, Gemma's answers lose to Ling's head to head (Ling 37 / 7 / 19), although the score ratios are close (0.523 against 0.533) ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
 
 ## Desktop command line
 

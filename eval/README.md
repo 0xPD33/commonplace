@@ -21,6 +21,8 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
+| `x-gemma4-cv-test` | The 30 locked test threads with the same Gemma GGUF and settings (2026-10-23) | 0.640 |
+| `x-gemma4-e2b` | Seeds, Gemma 4 E2B Q4_0 (`ggml-org/gemma-4-E2B-it-GGUF`) instead of Ling, the phone's settings, the Starter set (2026-10-23). A desktop stand-in for the NPU file. | 0.523 |
 | `v23-starter-shelf` | Seeds, the 0.2.4 engine with the phone's settings, the Starter set and the Reference shelf (2026-10-23). | 0.555 |
 | `cv3-dev-024` | The 92 tuning threads, the 0.2.4 engine with the phone's settings and the Starter set (2026-10-23) | 0.649 |
 | `cv3-test-024` | The 30 locked test threads, the same settings (2026-10-23) | 0.646 |

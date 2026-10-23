@@ -24,6 +24,8 @@ The app has no `INTERNET` permission. You download the packs with the phone's br
    - `wikidata-facts`: numbers and dates from Wikidata, such as population, area and dates of birth.
 
    Also download the **Reference shelf** (`commonplace-breadth.tar`, 2.0 GB). It adds travel guides, textbooks, how-to guides and medical pages ([More packs](#more-packs)). Without it, the app could not answer some travel and how-to questions in my tests.
+
+   On a Pixel 10 (Tensor G5 chip), also download **Gemma 4 E2B (Tensor G5)** (`gemma4-e2b-npu.tar`, 3.1 GB). It runs on the Tensor chip and answers about three times faster than Ling. It becomes the answer model; Settings can still choose Ling.
 4. Wait until the download is complete. Then go back to Commonplace and tap **Install from Downloads** in the Library.
 5. Tap the starter file. To install several files in one step, long-press one file, tap the others, then tap **Select**.
    - The app checks every byte with SHA-256 while it copies the file. It ignores files that are not packs.
@@ -48,8 +50,9 @@ You get each of these files in the same way: tap it under **Get more**, download
 | `stackexchange.tar` | 2.5 GB | 1.2 million question threads from 51 Stack Exchange sites |
 | `minicpm5-2b.tar` | 1.4 GB | MiniCPM5-2B, the small model, for a phone with the 12 GB starter set. Select it in Settings. |
 | `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
+| `gemma4-e2b-npu.tar` | 3.1 GB | Gemma 4 E2B for the Tensor G5 NPU: the fastest answers on a Pixel 10. The app lists it only on phones with that chip. It becomes the answer model; Settings can choose Ling. |
 
-All files together use 36.5 GB on the phone. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
+All files together use 36.5 GB on the phone, and 39.6 GB with the Gemma pack. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
 
 In the Library, each knowledge pack has a switch. A pack that is off stays installed but the app does not search it.
 

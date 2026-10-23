@@ -1,0 +1,90 @@
+{
+  "run_id": "x-gemma4-num-fix",
+  "started": "2026-10-23T14:18:44+00:00",
+  "git": "v0.3.0-1-g8efd672-dirty",
+  "bin": "/tmp/claude-1000/-home-paddy-dev-mobile-android-llm-wiki/0980b535-43e8-4fa6-a557-fddfa75736d1/scratchpad/bin/b-num",
+  "binary_sha256": "17765a856413a6712cdb14c0ba28dea19dd80f91dc4d136c3ab0fc8155d7a2ba",
+  "model": {
+    "path": "data/models/llm/gemma-4-E2B-it-Q4_0.gguf",
+    "sha256": "8e30dff3ac4c8434c49a7036fa15564bdbb6044e42bf04550bf1a096ad7e6a52",
+    "from_library": false
+  },
+  "flags": [],
+  "cli": [
+    "--fuse-keep=24",
+    "--leaf-model=onnx/model_quantized.onnx",
+    "--ettin-model=onnx/model_sel8.onnx",
+    "--fuse-keep=24",
+    "--leaf-model=onnx/model_quantized.onnx",
+    "--ettin-model=onnx/model_sel8.onnx"
+  ],
+  "phone": true,
+  "ort_dylib_path": "/nix/store/xpnhdp09h7hv06v5k4343vmm7h5l0g0h-onnxruntime-1.27.1/lib/libonnxruntime.so",
+  "think": false,
+  "live_history": false,
+  "queries": "eval/queries.jsonl",
+  "queries_sha256": "713517deb811980ae441f5a4bcbbaf913a894d41bb406377205cac6751b53272",
+  "subset": "numeric,comparison",
+  "library": "data/work/eval-kit/lib-starter-llm",
+  "packs": [
+    {
+      "pack_id": "enwiki-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (starter)",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-10-02",
+      "counts": {
+        "articles": 2000000,
+        "passages": 6518976
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "861b977039a1d2d1064e8b7a36cd9fa540120e3d0cac8f0cd911f4754b763ad7"
+    },
+    {
+      "pack_id": "ling3-tiny",
+      "pack_type": "model",
+      "title": "Ling 3.0 tiny (Q4_0)",
+      "snapshot_date": "",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "c0a1f4c1d6a55b02daff9d261f78e7a10f5723e9f43f5f55f880403a701f592c"
+    },
+    {
+      "pack_id": "wikidata-facts",
+      "pack_type": "wikidata",
+      "title": "Wikidata facts",
+      "snapshot_date": "2026-05-07",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "dfa355712a0217058c95bb7e3cb8ddc980f941042d0fc21bab749c56cc1ce5c2"
+    }
+  ],
+  "host": {
+    "node": "desktop",
+    "machine": "x86_64",
+    "cpus": 32
+  },
+  "query_ids": [
+    "seed-cmp-01",
+    "seed-cmp-02",
+    "seed-cmp-03",
+    "seed-cmp-04",
+    "seed-cmp-05",
+    "seed-cmp-06",
+    "seed-cmp-07",
+    "seed-cmp-08",
+    "seed-num-01",
+    "seed-num-02",
+    "seed-num-03",
+    "seed-num-04",
+    "seed-num-05"
+  ],
+  "finished": "2026-10-23T14:20:41+00:00"
+}

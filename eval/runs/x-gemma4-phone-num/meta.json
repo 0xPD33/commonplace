@@ -1,0 +1,83 @@
+{
+  "run_id": "x-gemma4-phone-num",
+  "started": "2026-10-23T03:05:19+00:00",
+  "git": "8efd672-dirty",
+  "bin": "app.commonplace.spike 0.3.0 debug build on a Pixel 10",
+  "binary_sha256": "",
+  "model": {
+    "path": "gemma-4-E2B-it_Google_Tensor_G5.litertlm",
+    "sha256": "af1082986639ecde7db95d91be6fe54f8b6b458104734c5bafc204e69d6852dc",
+    "from_library": true
+  },
+  "flags": [],
+  "cli": [],
+  "phone": true,
+  "ort_dylib_path": "/nix/store/xpnhdp09h7hv06v5k4343vmm7h5l0g0h-onnxruntime-1.27.1/lib/libonnxruntime.so",
+  "think": false,
+  "live_history": true,
+  "queries": "eval/queries.jsonl",
+  "queries_sha256": "713517deb811980ae441f5a4bcbbaf913a894d41bb406377205cac6751b53272",
+  "subset": null,
+  "library": "Pixel 10 app library: enwiki-core, wikidata-facts, gemma4-e2b-npu",
+  "packs": [
+    {
+      "pack_id": "enwiki-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (starter)",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-10-02",
+      "counts": {
+        "articles": 2000000,
+        "passages": 6518976
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "861b977039a1d2d1064e8b7a36cd9fa540120e3d0cac8f0cd911f4754b763ad7"
+    },
+    {
+      "pack_id": "wikidata-facts",
+      "pack_type": "wikidata",
+      "title": "Wikidata facts",
+      "snapshot_date": "2026-05-07",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "dfa355712a0217058c95bb7e3cb8ddc980f941042d0fc21bab749c56cc1ce5c2"
+    },
+    {
+      "pack_id": "gemma4-e2b-npu",
+      "pack_type": "model",
+      "title": "Gemma 4 E2B (Tensor G5)",
+      "snapshot_date": "",
+      "build_date": "2026-10-23",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "8acd107bdd75f4d082823b1c502d434a3791a525af27d563c0b65559ac673018"
+    }
+  ],
+  "host": {
+    "node": "Pixel 10",
+    "machine": "aarch64",
+    "cpus": 8
+  },
+  "query_ids": [
+    "seed-cmp-01",
+    "seed-cmp-02",
+    "seed-cmp-03",
+    "seed-cmp-04",
+    "seed-cmp-05",
+    "seed-cmp-06",
+    "seed-cmp-07",
+    "seed-cmp-08",
+    "seed-num-01",
+    "seed-num-02",
+    "seed-num-03",
+    "seed-num-04",
+    "seed-num-05"
+  ],
+  "finished": "2026-10-23T03:12:57+00:00"
+}

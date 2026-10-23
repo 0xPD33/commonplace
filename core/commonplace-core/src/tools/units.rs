@@ -112,3 +112,28 @@ pub fn convert_query(query: &str) -> Option<(String, bool)> {
     let out = if from.1 == Dim::Temp { from_kelvin(to_kelvin(v, from.3), to.3) } else { v * from.2 / to.2 };
     Some((format!("{} {} = {} {}", round_sig(v), from.3, round_sig(out), to.3), super::bare(&whole[..start])))
 }
+
+static SPEED: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)(\d[\d,]*(?:\.\d+)?)\s*(km/h|kph|kmh|mph|m/s|knots?|kilomet(?:er|re)s per hour|miles per hour|(?:km|kilomet(?:er|re)s?|mi|miles?|m|met(?:er|re)s?)\s+(?:an|a|per|each)\s+hour)\b").unwrap()
+});
+
+/// The speed a question states ("walking 5 km an hour", "at 60 mph"): m/s, and as written for a COMPUTED line.
+pub fn speed_in(query: &str) -> Option<(f64, String)> {
+    let caps = SPEED.captures(query)?;
+    let v: f64 = caps[1].replace(',', "").parse().ok()?;
+    let unit = caps[2].to_lowercase();
+    let (mps, shown) = match find(&unit).filter(|u| u.1 == Dim::Speed) {
+        Some(u) => (v * u.2, u.3.to_string()),
+        // "km an hour": a length per hour.
+        None => {
+            let len = find(unit.split_whitespace().next()?).filter(|u| u.1 == Dim::Length)?;
+            (v * len.2 / 3600.0, format!("{}/h", len.3))
+        }
+    };
+    Some((mps, format!("{} {shown}", round_sig(v))))
+}
+
+/// A length in metres, if `unit` is a length unit.
+pub fn metres(v: f64, unit: &str) -> Option<f64> {
+    find(unit).filter(|u| u.1 == Dim::Length).map(|u| v * u.2)
+}

@@ -16,7 +16,8 @@ use anyhow::{Context, Result, anyhow, ensure};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, RwLock};
+use regex::Regex;
+use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
@@ -620,6 +621,21 @@ impl Engine {
         let best = |facts: &[WdFact]| scores.iter().filter(|s| value(facts, s.id).is_some()).max_by(|a, b| a.score.total_cmp(&b.score));
         let round2 = |x: f64| (x * 100.0).round() / 100.0;
         let mut out = Vec::new();
+        // "Walking 5 km an hour, how long …": the user's speed, not a Wikidata one ("walking: speed 0.9 m/s"),
+        // over each entity's best-matching length.
+        let asks_time = ["how long", "how much time", "how many hours", "how many days"].iter().any(|w| lower.contains(w));
+        if let Some((mps, speed)) = units::speed_in(&route.query).filter(|_| asks_time) {
+            for (_, name, facts) in &ents {
+                let len = scores
+                    .iter()
+                    .filter_map(|s| pid_num(facts, s.id).and_then(|(v, u)| Some((s, v, units::metres(v, &u)?, u))))
+                    .max_by(|a, b| a.0.score.total_cmp(&b.0.score));
+                if let Some((s, v, m, u)) = len {
+                    let h = m / mps / 3600.0;
+                    out.push(format!("{} of {name} ÷ {speed} = {} {u} ÷ {speed} = {} hours = {} days", s.label, format_num(v), format_num(round2(h)), format_num(round2(h / 24.0))));
+                }
+            }
+        }
         let Some(prop) = ents.first().and_then(|(_, _, f)| best(f)).filter(|p| p.score >= FACT_RELEVANCE) else { return out };
         let label = prop.label;
         if let Some((pa, pb)) = prop.id.split_once('/') {
@@ -1156,10 +1172,11 @@ impl Engine {
             if first.is_none() {
                 first = Some(ms(t0));
             }
-            sink.event(Event::Answer { segments: citations::check(strip_echo(answer, &[&question, &raw_query]), n, &ev.numbers), raw: answer.to_string(), done: false });
+            let answer = tidy(answer);
+            sink.event(Event::Answer { segments: citations::check(strip_echo(&answer, &[&question, &raw_query]), n, &ev.numbers), raw: answer.clone(), done: false });
             !sink.cancelled()
         })?;
-        let mut text = split_thinking(&raw).1.to_string();
+        let mut text = tidy(split_thinking(&raw).1);
         if st.truncated {
             text = complete_part(&text).to_string();
         }
@@ -1228,6 +1245,19 @@ fn strip_echo<'a>(text: &'a str, questions: &[&str]) -> &'a str {
     let end = t.find(['\n', '?']).map(|i| i + 1).unwrap_or(t.len());
     let (first, rest) = t.split_at(end);
     if questions.iter().any(|q| !q.is_empty() && key(first) == key(q)) { rest.trim_start() } else { text }
+}
+
+static COMPUTED_LABEL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s*\[COMPUTED[^\]]*\]|\bCOMPUTED:\s*").unwrap());
+static LATEX_MATH: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\$([^$\n]*\\[^$\n]*)\$").unwrap());
+static LATEX_TEXT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\\(?:text|mathrm)\{\s*([^}]*?)\s*\}").unwrap());
+
+/// Model habits the reader should not see: the prompt's COMPUTED label copied into the answer, and LaTeX math
+/// ("$0.9 \text{ m/s}$"), which the app shows as raw text. A "$" pair without a backslash is money, not math.
+fn tidy(text: &str) -> String {
+    let t = COMPUTED_LABEL.replace_all(text, "");
+    let t = LATEX_MATH.replace_all(&t, "$1");
+    let t = LATEX_TEXT.replace_all(&t, "$1");
+    t.replace("\\times", "×").replace("\\approx", "≈").replace("\\div", "÷").replace("\\cdot", "·").replace("\\,", " ")
 }
 
 fn trunc(s: &str, n: usize) -> String {

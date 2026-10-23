@@ -110,22 +110,24 @@ pub fn prop_scores(emb: &[f32]) -> Vec<PropScore> {
     props.iter().zip(cos).map(|(p, c)| PropScore { id: &p.id, label: &p.label, quantity: p.quantity, score: c - mean }).collect()
 }
 
+/// Thousands separators in the whole part, decimals too: a model copies "4043.27" as written.
 pub fn format_num(x: f64) -> String {
-    if x.fract() == 0.0 && x.abs() < 1e15 {
-        let s = format!("{}", x as i64);
-        let (sign, digits) = s.strip_prefix('-').map(|d| ("-", d)).unwrap_or(("", &s));
-        let mut out = String::new();
-        for (i, c) in digits.chars().enumerate() {
-            if i > 0 && (digits.len() - i) % 3 == 0 {
-                out.push(',');
-            }
-            out.push(c);
-        }
-        format!("{sign}{out}")
+    let s = if x.fract() == 0.0 && x.abs() < 1e15 {
+        format!("{}", x as i64)
     } else {
         let s = format!("{x:.4}");
         s.trim_end_matches('0').trim_end_matches('.').to_string()
+    };
+    let (sign, rest) = s.strip_prefix('-').map(|d| ("-", d)).unwrap_or(("", &s));
+    let (digits, frac) = rest.split_once('.').map(|(d, f)| (d, format!(".{f}"))).unwrap_or((rest, String::new()));
+    let mut out = String::new();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            out.push(',');
+        }
+        out.push(c);
     }
+    format!("{sign}{out}{frac}")
 }
 
 pub struct WikidataDb {

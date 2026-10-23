@@ -410,10 +410,11 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
             loadCatalog(ctx).let { c ->
                 val set = c.bundles.filter { it.recommended }.ifEmpty { c.packs.filter { it.recommended } }
                 // One starter bundle per phone class: the fast model does not fit a low-RAM phone.
-                set.filter { it.members.isEmpty() || suitsPhone(it, lowRam) }.ifEmpty { set }
+                set.filter { it.members.isEmpty() || suitsPhone(it, lowRam) }.ifEmpty { set } +
+                    // A phone with the chip of a model pack gets it too: it becomes the answer model.
+                    c.packs.filter { it.chip != null && it.chip == android.os.Build.SOC_MODEL }
             }
         }
-        val chipPack = remember { loadCatalog(ctx).packs.firstOrNull { it.chip != null && it.chip == android.os.Build.SOC_MODEL } }
         val oneFile = starters.size == 1
         if (starters.isNotEmpty()) {
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
@@ -443,10 +444,10 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    if (chipPack != null) {
+                    starters.firstOrNull { it.chip != null }?.let { p ->
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "This phone has a ${chipPack.chip} chip. Add ${chipPack.title} in Library (${bytes(chipPack.downloadBytes)}) for answers about three times faster.",
+                            "This phone has a ${p.chip} chip, so ${p.title} answers about three times faster than the model in the starter set.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

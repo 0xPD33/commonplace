@@ -413,6 +413,7 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                 set.filter { it.members.isEmpty() || suitsPhone(it, lowRam) }.ifEmpty { set }
             }
         }
+        val chipPack = remember { loadCatalog(ctx).packs.firstOrNull { it.chip != null && it.chip == android.os.Build.SOC_MODEL } }
         val oneFile = starters.size == 1
         if (starters.isNotEmpty()) {
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
@@ -438,6 +439,14 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                         Spacer(Modifier.height(8.dp))
                         Text(
                             "This phone has less than 10 GB of memory, so it gets the starter set with the small model. The fast model needs a 12 GB phone.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (chipPack != null) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "This phone has a ${chipPack.chip} chip. Add ${chipPack.title} in Library (${bytes(chipPack.downloadBytes)}) for answers about three times faster.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

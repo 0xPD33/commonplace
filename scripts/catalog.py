@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Write catalog.json for a packs release from the pack files and the pack manifests.
-Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo NAMESPACE/NAME --out FILE [--readme FILE] [--bundle SPEC]...
+Usage: scripts/catalog.py --dist DIR --library DIR --tag TAG --repo NAMESPACE/NAME --out FILE [--readme FILE] [--base FILE] [--bundle SPEC]...
 Lists every <pack_id>.tar in DIR. <library>/<pack_id>/manifest.json supplies the metadata.
+--base keeps the entries of an earlier catalog whose files are not in DIR, so one new pack can join a released set.
 --bundle 'ID|TITLE|DESCRIPTION|PACK_ID PACK_ID...' (repeatable) lists the bundle file commonplace-ID.tar when DIR has it.
 --repo is the Hugging Face dataset repo; the files live in its folder TAG. --readme writes the dataset card."""
 import argparse, hashlib, json
@@ -9,6 +10,8 @@ from pathlib import Path
 
 RECOMMENDED = {"enwiki-core", "ling3-tiny", "wikidata-facts"}
 RECOMMENDED_BUNDLES = {"starter", "starter-small"}
+# Packs that run on one chip only (Android's Build.SOC_MODEL); the app hides them on other phones.
+CHIPS = {"gemma4-e2b-npu": "Tensor G5"}
 DESCRIPTIONS = {
     "enwiki-core": "The 2 million most useful English Wikipedia articles.",
     "enwiki": "All of English Wikipedia. Replaces the starter pack.",
@@ -17,6 +20,7 @@ DESCRIPTIONS = {
     "ling3-tiny": "Fast answer model (Ling 3.0 tiny).",
     "minicpm5-2b": "Small answer model (MiniCPM5 2B).",
     "voice-en": "Speak your question instead of typing it. English only.",
+    "gemma4-e2b-npu": "Fastest answers on a Pixel 10: Gemma 4 E2B on the Tensor G5 chip. Becomes the answer model.",
     "arxiv-abs": "Abstracts of arXiv papers.",
     "stackexchange": "Questions and answers from 51 Stack Exchange sites.",
     "textbooks-en": "Open textbooks from Pressbooks and LibreTexts.",
@@ -38,6 +42,7 @@ ap = argparse.ArgumentParser()
 for a in ("dist", "library", "tag", "repo", "out"):
     ap.add_argument("--" + a, required=True)
 ap.add_argument("--readme")
+ap.add_argument("--base")
 ap.add_argument("--bundle", action="append", default=[])
 args = ap.parse_args()
 dist, library = Path(args.dist), Path(args.library)
@@ -88,12 +93,23 @@ for tar in sorted(dist.glob("*.tar")):
         "pack_type": m["pack_type"],
         "snapshot": m["snapshot_date"],
         "license": m["license"],
+        "attribution": m["attribution"],
         "replaces": m["replaces"],
         "recommended": pid in RECOMMENDED,
         "download_bytes": size,
         "installed_bytes": m["size_bytes"],
         "files": files,
-    })
+    } | ({"chip": CHIPS[pid]} if pid in CHIPS else {}))
+if args.base and Path(args.base).exists():
+    base = json.loads(Path(args.base).read_text())
+    built = {p["pack_id"] for p in packs}
+    packs += [p for p in base.get("packs", []) if p["pack_id"] not in built]
+    # Keep the published order of the bundles; a rebuilt bundle takes its old place.
+    built = {b["bundle_id"]: b for b in bundles}
+    bundles = [built.pop(b["bundle_id"], b) for b in base.get("bundles", [])] + list(built.values())
+    for p in packs:
+        manifest = library / p["pack_id"] / "manifest.json"
+        credits.setdefault(p["pack_id"], json.loads(manifest.read_text())["attribution"] if manifest.exists() else p["attribution"])
 packs.sort(key=lambda p: (not p["recommended"], p["pack_id"]))
 doc = {"catalog_version": 1, "tag": args.tag, "repo": args.repo, "bundles": bundles, "packs": packs}
 Path(args.out).write_text(json.dumps(doc, indent=2) + "\n")
@@ -110,12 +126,12 @@ if args.readme:
         for b in bundles
     )
     member = lambda i: json.loads((library / i / "manifest.json").read_text())
-    member_rows = "\n".join(
-        f"| `{i}` | {cell(member(i)['license'])} | {cell(member(i)['attribution'])} |" for b in bundles for i in b["pack_ids"]
-    )
+    members = list(dict.fromkeys(i for b in bundles for i in b["pack_ids"]))
+    member_rows = "\n".join(f"| `{i}` | {cell(member(i)['license'])} | {cell(member(i)['attribution'])} |" for i in members)
+    own_file = [f"`{i}`" for i in members if i in {p["pack_id"] for p in packs}]
     bundle_section = f"""## Bundles
 
-A bundle is one `.tar` file with several packs. It only saves downloads: every pack inside is a normal pack. A pack inside a bundle has no file of its own.
+A bundle is one `.tar` file with several packs. It only saves downloads: every pack inside is a normal pack. A pack inside a bundle has no file of its own{", except " + ", ".join(own_file) if own_file else ""}.
 
 | File | Contents | Size | SHA-256 |
 |---|---|---|---|

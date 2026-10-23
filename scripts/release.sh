@@ -7,7 +7,7 @@
 #     Verify the packs (default: the starter set) and write each one as a single file <pack_id>.tar.
 #     Also write the bundles (see BUNDLES below) whose packs are all in the list as commonplace-<bundle_id>.tar.
 #     A pack inside such a bundle gets no single file.
-#     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs and bundles already in OUT stay in the catalog.
+#     Then write SHA256SUMS, catalog.json and README.md (the dataset card). Packs and bundles already in OUT or in the app's catalog stay in the catalog.
 #     HF_REPO is the Hugging Face dataset repo (required, no default). The catalog URLs point into its folder <tag>:
 #     https://huggingface.co/datasets/<HF_REPO>/resolve/main/<tag>/<file>?download=true
 #     LIBRARY=dir reads the pack directories (default data/library/packs).
@@ -82,9 +82,11 @@ packs)
     "$PB" bundle --pack "${dirs[@]}" --out "$OUT/commonplace-$id.tar"
   done <<<"$BUNDLES"
   rm -f "$OUT/catalog.json" "$OUT/SHA256SUMS" "$OUT/README.md"
-  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$HF_REPO" --out "$OUT/catalog.json" --readme "$OUT/README.md" "${BUNDLE_ARGS[@]}"
+  # The app's catalog is the base: packs that are only on Hugging Face keep their entries.
+  scripts/catalog.py --dist "$OUT" --library "$LIBRARY" --tag "$NAME" --repo "$HF_REPO" --out "$OUT/catalog.json" --readme "$OUT/README.md" --base "$CATALOG_ASSET" "${BUNDLE_ARGS[@]}"
   cp "$OUT/catalog.json" "$CATALOG_ASSET"
-  (cd "$OUT" && sha256sum -- *.tar catalog.json > SHA256SUMS)
+  # From the catalog, not the folder: it also lists the files that are only on Hugging Face.
+  (cd "$OUT" && python3 -c 'import json; d = json.load(open("catalog.json")); [print(f"{f["sha256"]}  {f["name"]}") for e in d["bundles"] + d["packs"] for f in e["files"]]' > SHA256SUMS && sha256sum catalog.json >> SHA256SUMS)
   ls -la "$OUT"
   ;;
 upload)

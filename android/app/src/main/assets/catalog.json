@@ -4,41 +4,6 @@
   "repo": "0xPD33/commonplace-packs",
   "bundles": [
     {
-      "bundle_id": "starter",
-      "title": "Starter set for 12 GB phones",
-      "description": "Wikipedia (2M articles), the fast answer model (Ling 3.0 tiny) and Wikidata facts. For phones with 12 GB of memory or more.",
-      "pack_ids": [
-        "enwiki-core",
-        "ling3-tiny",
-        "wikidata-facts"
-      ],
-      "members": [
-        {
-          "pack_id": "enwiki-core",
-          "title": "English Wikipedia (starter)"
-        },
-        {
-          "pack_id": "ling3-tiny",
-          "title": "Ling 3.0 tiny (Q4_0)"
-        },
-        {
-          "pack_id": "wikidata-facts",
-          "title": "Wikidata facts"
-        }
-      ],
-      "recommended": true,
-      "download_bytes": 11312024064,
-      "installed_bytes": 11311999263,
-      "files": [
-        {
-          "name": "commonplace-starter.tar",
-          "bytes": 11312024064,
-          "sha256": "ee8434aa8334c8cfec977f02486c41c8b10a76d0eab49fe13bc4764db7c56525",
-          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-starter.tar?download=true"
-        }
-      ]
-    },
-    {
       "bundle_id": "starter-small",
       "title": "Starter set for 8 GB phones",
       "description": "Wikipedia (2M articles), the small answer model (MiniCPM5 2B) and Wikidata facts. For phones with less than 12 GB of memory.",
@@ -70,6 +35,41 @@
           "bytes": 8109540864,
           "sha256": "b322965d6589e388b511536da3bb8da2790b144d7e86cd8f088c5bd9047c4bec",
           "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-starter-small.tar?download=true"
+        }
+      ]
+    },
+    {
+      "bundle_id": "starter",
+      "title": "Starter set for 12 GB phones",
+      "description": "Wikipedia (2M articles), the fast answer model (Ling 3.0 tiny) and Wikidata facts. For phones with 12 GB of memory or more.",
+      "pack_ids": [
+        "enwiki-core",
+        "ling3-tiny",
+        "wikidata-facts"
+      ],
+      "members": [
+        {
+          "pack_id": "enwiki-core",
+          "title": "English Wikipedia (starter)"
+        },
+        {
+          "pack_id": "ling3-tiny",
+          "title": "Ling 3.0 tiny (Q4_0)"
+        },
+        {
+          "pack_id": "wikidata-facts",
+          "title": "Wikidata facts"
+        }
+      ],
+      "recommended": true,
+      "download_bytes": 11312024064,
+      "installed_bytes": 11311999263,
+      "files": [
+        {
+          "name": "commonplace-starter.tar",
+          "bytes": 11312024064,
+          "sha256": "ee8434aa8334c8cfec977f02486c41c8b10a76d0eab49fe13bc4764db7c56525",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-starter.tar?download=true"
         }
       ]
     },
@@ -200,7 +200,30 @@
           "sha256": "07034519b2ce2c440ea2fc5fab24e13538ba2044524aebe8397bd2ef3cf568c8",
           "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/enwiki.tar?download=true"
         }
-      ]
+      ],
+      "attribution": "Wikipedia contributors (authors in each article's page history); Wikimedia dump enwiki-20260901"
+    },
+    {
+      "pack_id": "gemma4-e2b-npu",
+      "title": "Gemma 4 E2B (Tensor G5)",
+      "description": "Fastest answers on a Pixel 10: Gemma 4 E2B on the Tensor G5 chip. Becomes the answer model.",
+      "pack_type": "model",
+      "snapshot": "",
+      "license": "Apache-2.0",
+      "attribution": "litert-community/gemma-4-E2B-it-litert-lm",
+      "replaces": [],
+      "recommended": false,
+      "download_bytes": 3113562624,
+      "installed_bytes": 3113558059,
+      "files": [
+        {
+          "name": "gemma4-e2b-npu.tar",
+          "bytes": 3113562624,
+          "sha256": "eafbf39535a74972ab4da1e05dfff69edaf67f8f58b7d8f229ff9b308dccaa17",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/gemma4-e2b-npu.tar?download=true"
+        }
+      ],
+      "chip": "Tensor G5"
     },
     {
       "pack_id": "minicpm5-2b",
@@ -209,6 +232,7 @@
       "pack_type": "model",
       "snapshot": "",
       "license": "Apache-2.0",
+      "attribution": "MiniCPM5-2B by OpenBMB (huggingface.co/openbmb/MiniCPM5-2B); pure Q4_0 GGUF from 0xPD33/MiniCPM5-2B-pureQ4_0-GGUF",
       "replaces": [],
       "recommended": false,
       "download_bytes": 1421436928,

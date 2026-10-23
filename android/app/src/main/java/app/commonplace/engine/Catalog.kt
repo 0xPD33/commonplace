@@ -1,6 +1,7 @@
 package app.commonplace.engine
 
 import android.content.Context
+import android.os.Build
 import org.json.JSONObject
 
 data class CatalogFile(val name: String, val bytes: Long, val sha256: String, val url: String)
@@ -22,6 +23,8 @@ data class CatalogPack(
     val files: List<CatalogFile>,
     val members: List<String> = emptyList(),
     val memberTitles: Map<String, String> = emptyMap(),
+    /** The only chip the pack runs on (`Build.SOC_MODEL`, such as "Tensor G5"); null for every phone. */
+    val chip: String? = null,
 )
 
 class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
@@ -57,6 +60,7 @@ fun loadCatalog(ctx: Context): Catalog = runCatching {
                 },
                 members = List(members?.length() ?: 0) { members!!.getString(it) },
                 memberTitles = List(titled?.length() ?: 0) { titled!!.getJSONObject(it) }.associate { it.getString("pack_id") to it.getString("title") },
+                chip = p.optString("chip").ifEmpty { null },
             )
         }
     }.orEmpty()
@@ -67,10 +71,14 @@ fun loadCatalog(ctx: Context): Catalog = runCatching {
 private fun present(catalog: Catalog, installedIds: Set<String>) =
     installedIds + catalog.packs.filter { it.packId in installedIds }.flatMap { it.replaces }
 
-/** Catalog packs that are neither installed nor replaced by an installed catalog pack. Starter packs first. */
+/**
+ * Catalog packs that are neither installed nor replaced by an installed catalog pack, and that run on this phone's
+ * chip. Packs for this chip first, then starter packs.
+ */
 fun availablePacks(catalog: Catalog, installedIds: Set<String>): List<CatalogPack> {
     val have = present(catalog, installedIds)
-    return catalog.packs.filter { it.packId !in have }.sortedByDescending { it.recommended }
+    return catalog.packs.filter { it.packId !in have && (it.chip == null || it.chip == Build.SOC_MODEL) }
+        .sortedWith(compareByDescending<CatalogPack> { it.chip != null }.thenByDescending { it.recommended })
 }
 
 /** Bundles that have a pack that is not installed yet, each with the number of its packs that are installed. */

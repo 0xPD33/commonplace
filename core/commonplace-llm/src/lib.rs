@@ -264,13 +264,19 @@ impl Inner {
             n = unsafe { sys::llama_chat_apply_template(tmpl, chat.as_ptr(), chat.len(), add_ass, buf.as_mut_ptr() as *mut _, buf.len() as i32) };
         }
         if n < 0 {
-            // Unknown template: fall back to ChatML, which LFM2 and Qwen use.
+            // Unknown template: Gemma 4 uses <|turn>role … <turn|>; otherwise ChatML, which LFM2 and Qwen use.
+            let gemma4 = !tmpl.is_null() && unsafe { CStr::from_ptr(tmpl) }.to_string_lossy().contains("<|turn>");
             let mut s = String::new();
             for (r, c) in msgs {
-                s.push_str(&format!("<|im_start|>{r}\n{c}<|im_end|>\n"));
+                if gemma4 {
+                    let r = if *r == "assistant" { "model" } else { r };
+                    s.push_str(&format!("<|turn>{r}\n{c}<turn|>\n"));
+                } else {
+                    s.push_str(&format!("<|im_start|>{r}\n{c}<|im_end|>\n"));
+                }
             }
             if add_ass {
-                s.push_str("<|im_start|>assistant\n");
+                s.push_str(if gemma4 { "<|turn>model\n" } else { "<|im_start|>assistant\n" });
             }
             return Ok(s);
         }

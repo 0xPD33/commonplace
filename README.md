@@ -262,7 +262,7 @@ The table comes from the 0.2.0 build of 2026-10-13. [docs/BENCHMARKS.md](docs/BE
 
 Known limits:
 
-- The phone gets slower when it gets hot. A long test of heat over many questions is still open.
+- Ling and MiniCPM on the CPU get slower when the phone gets hot. Gemma on the NPU kept its speed over 126 questions in 76 minutes (first word 2.8 s at most), but those runs did not make the phone hot ([BENCHMARKS](docs/BENCHMARKS.md#long-sessions-and-heat)).
 - Long-tail (0.40), travel (0.41) and fact questions (0.42) are the weakest categories ([EVAL](docs/EVAL.md)).
 - Voice input (Moonshine, on the phone) is English only and needs the optional `voice-en` pack. Real speech recognition is tested on the desktop, not yet on a phone's microphone.
 - Only a Pixel 10 (Tensor G5) runs Gemma 4 E2B on its NPU, with the Gemma pack. Other phones answer on the CPU. On 63 seeds asked on the phone, Ling's answers win more often head to head (33 / 7 / 21, not significant), and the score ratios are close (0.499 against 0.533). Gemma is weakest on numbers ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).

@@ -100,6 +100,18 @@ Three conversations of 25 questions each (follow-ups, topic switches, typos, fal
 
 Session s2 was the second session in the first runs, so those runs started on a hotter phone. RSS grows by about 9 MB per question: RssAnon stays flat, and RssFile grows with pages of the memory-mapped indexes, which the kernel can reclaim.
 
+Gemma 4 E2B on the NPU (0.3.0 debug build, 2026-10-23): the phone eval runs `x-gemma4-phone` and `x-gemma4-phone2` asked the 63 seeds two times, 4.3 minutes apart. That is 126 questions in 76 minutes, each in a new conversation, on USB power. Thermal headroom rose from 0.57 to 0.83.
+
+| Answers | Headroom | First word, median | Decode, median | Prefill, median |
+|---|---|---|---|---|
+| 11 seeds with the same evidence and answer in both runs | 0.63 | 1.86 s | 27.5 tok/s | 1,573 tok/s |
+| The same 11 seeds | 0.78 | 1.83 s | 27.0 tok/s | 1,592 tok/s |
+| 42 answers with the full evidence | 0.81–0.83 | 1.95 s | 24.9 tok/s | 1,506 tok/s |
+
+- The paired seeds show no slowdown from 0.63 to 0.78. Above 0.80 the median decode is about 10 % lower, but those are other seeds, and speculative decoding is faster on some texts than on others.
+- The slowest first word of the 126 answers was 2.76 s. In Ling's 75-question session, the first word went from 13 s to 28–30 s.
+- The headroom never reached 0.85, where Ling's session stayed from question 10 on. The driver typed each question and opened a new conversation, so the NPU worked about 7 s of every 36 s. Ling's session answered with almost no pause. Gemma on a hot phone is not measured yet.
+
 ### `llama-bench`
 
 Pinned to the cores of the mask, repacked, in RAM, 3 repetitions, on USB power.
@@ -293,5 +305,4 @@ Known weak spots that these experiments did not fix:
 - The time of the Wikidata second hop on its own.
 - Prefill with pinned threads and with `n_ubatch` 1024 against 512 in the app.
 - Voice input with a real voice on the phone's microphone: transcript quality, stop-to-final latency, heat.
-- Gemma 4 E2B answer quality from the G5 file itself. The eval used a Q4_0 GGUF on the desktop.
-- Gemma on the NPU over a long session and on a hot phone.
+- Gemma on the NPU on a hot phone (thermal headroom above 0.85). A long session is measured in [Long sessions and heat](#long-sessions-and-heat).

@@ -15,9 +15,20 @@ class Prefs(context: Context) {
         (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(it)
     }.totalMem < 10_000_000_000L
 
+    /** Tpu runs an installed Gemma pack with LiteRT-LM; without one, every answer uses llama.cpp. */
     var backend: Backend
-        get() = if (sp.getString("backend", "cpu") == "tpu") Backend.Tpu else Backend.Cpu
+        get() = if (sp.getString("backend", "tpu") == "tpu") Backend.Tpu else Backend.Cpu
         set(v) = sp.edit().putString("backend", if (v == Backend.Tpu) "tpu" else "cpu").apply()
+
+    /** The LiteRT model file that killed the app while it loaded; the app uses llama.cpp until the user picks Gemma again. */
+    var liteCrashed: String?
+        get() = sp.getString("lite_crashed", null)
+        set(v) = sp.edit().putString("lite_crashed", v).apply()
+
+    /** Speculative decoding for Gemma on the Tensor NPU. */
+    var speculative: Boolean
+        get() = sp.getBoolean("speculative", true)
+        set(v) = sp.edit().putBoolean("speculative", v).apply()
 
     var showTimings: Boolean
         get() = sp.getBoolean("show_timings", false)

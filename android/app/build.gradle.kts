@@ -20,6 +20,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // ORG_GRADLE_PROJECT_appIdSuffix=.spike installs a test build next to the release app (another signing key).
+            (project.findProperty("appIdSuffix") as String?)?.let { applicationIdSuffix = it }
+        }
         release {
             isMinifyEnabled = false
         }
@@ -35,6 +39,12 @@ android {
     androidResources {
         noCompress += listOf("onnx", "onnx_data", "safetensors", "json")
     }
+    packaging {
+        // LiteRT-LM loads libLiteRtDispatch_GoogleTensor.so by path from the native library directory.
+        jniLibs { useLegacyPackaging = true }
+    }
+    // jniLibs is the Rust build's output (git-ignored); vendorLibs holds the prebuilt Tensor dispatch library.
+    sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs", "src/main/vendorLibs")
 }
 
 // The app must never gain network access. Fails the build if any
@@ -103,7 +113,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.10.2")
     implementation("net.java.dev.jna:jna:5.19.1@aar")
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.30.0")
-    implementation("com.google.ai.edge.litertlm:litertlm-android:0.17.1")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.1")
     // Voice input. Models load from files, so the downloader stack (OkHttp, WorkManager) is never used.
     implementation(files(slimMoonshine))
     implementation("androidx.appcompat:appcompat:1.6.1")

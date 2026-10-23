@@ -360,7 +360,9 @@ pub trait ImportListener: Send + Sync {
 #[uniffi::export(with_foreign)]
 pub trait ForeignLlm: Send + Sync {
     fn id(&self) -> String;
-    fn generate(&self, system: String, user: String, max_tokens: u32, temperature: f32, top_p: f32, json_only: bool, sink: Arc<TokenSink>) -> R<GenStatsRecord>;
+    /// `think_budget`: reason first, for at most this many tokens, and stream the reasoning as `<think>…</think>`
+    /// before the answer, as the llama.cpp backend does.
+    fn generate(&self, system: String, user: String, max_tokens: u32, temperature: f32, top_p: f32, json_only: bool, think_budget: Option<u32>, sink: Arc<TokenSink>) -> R<GenStatsRecord>;
 }
 
 /// Receives streamed tokens from a ForeignLlm. `on_token` returns false when the app wants it to stop.
@@ -389,9 +391,9 @@ impl LlmBackend for ForeignAdapter {
         let (tx, rx) = std::sync::mpsc::channel();
         let sink = Arc::new(TokenSink { tx: Mutex::new(tx), stop: AtomicBool::new(false) });
         let (sys, usr, llm, s2) = (system.to_string(), user.to_string(), self.0.clone(), sink.clone());
-        let (max, temp, top_p, json) = (p.max_tokens, p.temperature, p.top_p, p.grammar.is_some());
+        let (max, temp, top_p, json, think) = (p.max_tokens, p.temperature, p.top_p, p.grammar.is_some(), p.think_budget);
         let worker = std::thread::spawn(move || {
-            let r = llm.generate(sys, usr, max, temp, top_p, json, s2.clone());
+            let r = llm.generate(sys, usr, max, temp, top_p, json, think, s2.clone());
             // Close the channel so the receiver loop ends.
             *s2.tx.lock().unwrap() = std::sync::mpsc::channel().0;
             r

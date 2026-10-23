@@ -62,7 +62,6 @@ import androidx.core.content.FileProvider
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
 import app.commonplace.engine.ModelState
-import app.commonplace.engine.TPU_AVAILABLE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -89,6 +88,8 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
     var modelKind by remember { mutableStateOf(prefs.modelKind) }
     val model by holder.model.collectAsState()
     var backend by remember { mutableStateOf(prefs.backend) }
+    var speculative by remember { mutableStateOf(prefs.speculative) }
+    var liteCrashed by remember { mutableStateOf(prefs.liteCrashed) }
     var threads by remember { mutableIntStateOf(prefs.threads) }
     var evidence by remember { mutableIntStateOf(prefs.evidenceTokens) }
     var answer by remember { mutableIntStateOf(prefs.answerTokens) }
@@ -144,55 +145,67 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
-            val choices = lib?.models?.filter { it.kind != ModelKind.VOICE && !it.filePath.endsWith(".litertlm") } ?: emptyList()
+            // A Gemma pack (LiteRT-LM) is one choice next to the llama.cpp models; choosing it sets the engine.
+            val choices = lib?.models?.filter { it.kind != ModelKind.VOICE } ?: emptyList()
+            val gemma = choices.firstOrNull { it.filePath.endsWith(".litertlm") }
             if (choices.size > 1) {
                 Spacer(Modifier.height(8.dp))
                 for (m in choices) {
+                    val lite = m == gemma
+                    val selected = if (lite) backend == Backend.Tpu else (backend == Backend.Cpu || gemma == null) && modelKind == m.kind
                     Row(
-                        Modifier.fillMaxWidth().selectable(selected = modelKind == m.kind, role = Role.RadioButton) {
-                            modelKind = m.kind
-                            prefs.modelKind = m.kind
+                        Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton) {
+                            backend = if (lite) Backend.Tpu else Backend.Cpu
+                            prefs.backend = backend
+                            if (lite) {
+                                // Choosing Gemma again retries a model that crashed while it loaded.
+                                liteCrashed = null
+                                prefs.liteCrashed = null
+                            } else {
+                                modelKind = m.kind
+                                prefs.modelKind = m.kind
+                            }
                             holder.reloadModel()
-                        }.padding(vertical = 6.dp),
+                        }.padding(vertical = 6.dp).testTag(if (lite) "model_gemma" else "model_${m.kind.name.lowercase()}"),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(selected = modelKind == m.kind, onClick = null)
+                        RadioButton(selected = selected, onClick = null)
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text(m.title, style = MaterialTheme.typography.bodyLarge)
-                            Text(if (m.kind == ModelKind.FAST) "Better answers" else "Faster, less memory", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                when {
+                                    lite && m.filePath.contains("_Google_Tensor_") -> "Fastest: runs on the Tensor chip"
+                                    lite -> "Runs with LiteRT-LM"
+                                    m.kind == ModelKind.FAST -> "Best answers, on the CPU"
+                                    else -> "Less memory, on the CPU"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
-            Text("Engine", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(6.dp))
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                Backend.entries.forEachIndexed { i, b ->
-                    SegmentedButton(
-                        selected = (if (TPU_AVAILABLE) backend else Backend.Cpu) == b,
-                        enabled = TPU_AVAILABLE || b == Backend.Cpu,
-                        onClick = {
-                            backend = b
-                            prefs.backend = b
-                            holder.reloadModel()
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(i, Backend.entries.size),
-                    ) { Text(if (b == Backend.Cpu) "CPU · llama.cpp" else "TPU · LiteRT-LM") }
+            if (gemma != null && backend == Backend.Tpu && liteCrashed == gemma.filePath) {
+                Text(
+                    "${gemma.title} stopped the app while it loaded, so the CPU model answers. Choose ${gemma.title} to try again.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 4.dp).testTag("lite_crashed"),
+                )
+            }
+            if (gemma != null && backend == Backend.Tpu) {
+                SwitchRow("Speculative decoding (writes about 1.5× faster on the Tensor chip)", speculative) {
+                    speculative = it
+                    prefs.speculative = it
+                    holder.reloadModel()
                 }
             }
-            Text(
-                if (TPU_AVAILABLE) "TPU needs a LiteRT model pack (.litertlm). Without one, the CPU engine is used."
-                else "The TPU engine is not available yet: LiteRT-LM cannot use the Tensor chip on this Android version.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp),
-            )
 
             Spacer(Modifier.height(20.dp))
             LabeledSlider("CPU threads", threads.toFloat(), 2f..6f, 3, "$threads") { threads = it.toInt() }
-            Text("4 is cooler, 6 is faster until the phone gets hot.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("For the models on the CPU. 4 is cooler, 6 is faster until the phone gets hot.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Spacer(Modifier.height(20.dp))
             SectionLabel("Answers")
@@ -201,7 +214,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             LabeledSlider("Answer length (tokens)", answer.toFloat(), 150f..800f, 12, "$answer") { answer = (it / 50).toInt() * 50 }
             LabeledSlider("Thinking budget (tokens)", thinkBudget.toFloat(), 128f..1536f, 10, "$thinkBudget") { thinkBudget = (it / 128).toInt() * 128 }
             Text(
-                "When Think is on (the button next to the question box), the model reasons for at most this many tokens before it answers. A warm phone writes about 15 tokens a second.",
+                "When Think is on (the button next to the question box), the model reasons for at most this many tokens before it answers. Ling writes about 15 tokens a second on a warm phone, Gemma on the Tensor chip about 18.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -38,9 +38,6 @@ sealed interface ModelState {
 
 enum class Backend { Cpu, Tpu }
 
-/** LiteRT-LM cannot open the Pixel 10's Tensor NPU yet (docs/BENCHMARKS.md), so the TPU engine stays off. */
-const val TPU_AVAILABLE = false
-
 /** Owns the Rust engine for the whole process. All engine calls run off the main thread. */
 class EngineHolder(private val app: Application) {
     /** Process-wide work that must outlive a screen, such as an import that has to refresh the library. */
@@ -58,6 +55,10 @@ class EngineHolder(private val app: Application) {
     val model: StateFlow<ModelState> = _model.asStateFlow()
 
     private var liteRt: LiteRtBackend? = null
+    /** The Gemma pack failed to start (another chip, or no NPU access): answer with llama.cpp until the next reload. */
+    private var liteFailed = false
+    /** Exists while LiteRT loads a model. A native crash there kills the process, so the next start finds it. */
+    private val liteLoading = File(app.filesDir, "litert-loading")
 
     val engineOrNull: CommonplaceEngine?
         get() = (state.value as? EngineState.Ready)?.engine
@@ -103,7 +104,11 @@ class EngineHolder(private val app: Application) {
             _library.value = lib
             val gguf = lib.models.filter { !it.filePath.endsWith(".litertlm") }.map { it.kind }
             val litePack = lib.models.firstOrNull { it.filePath.endsWith(".litertlm") }
-            val useTpu = TPU_AVAILABLE && prefs.backend == Backend.Tpu && litePack != null
+            if (liteLoading.exists()) {
+                prefs.liteCrashed = liteLoading.readText()
+                liteLoading.delete()
+            }
+            val useTpu = prefs.backend == Backend.Tpu && litePack != null && !liteFailed && prefs.liteCrashed != litePack.filePath
             // `null` means the everyday model: the user's choice, else fast, else small. A low-RAM phone loads the
             // fast model only when the user picks it: Android kills the app when it holds about 5.5 GB.
             val want = kind ?: listOfNotNull(prefs.modelKind, ModelKind.FAST.takeIf { !prefs.lowRam }, ModelKind.SMALL).firstOrNull { it in gguf }
@@ -125,8 +130,13 @@ class EngineHolder(private val app: Application) {
             try {
                 if (useTpu) {
                     e.unloadModel()
-                    val lr = liteRt ?: LiteRtBackend(app, litePack!!.filePath).also { liteRt = it }
-                    lr.initialize()
+                    val lr = liteRt ?: LiteRtBackend(app, litePack!!.filePath, prefs.speculative).also { liteRt = it }
+                    liteLoading.writeText(litePack.filePath)
+                    try {
+                        lr.initialize()
+                    } finally {
+                        liteLoading.delete()
+                    }
                     e.setForeignLlm(lr)
                     _model.value = ModelState.Loaded(litePack!!.kind, lr.id(), Backend.Tpu)
                 } else {
@@ -137,6 +147,18 @@ class EngineHolder(private val app: Application) {
                 }
             } catch (t: Throwable) {
                 Log.e(TAG, "model load failed", t)
+                if (useTpu) {
+                    liteRt?.close()
+                    liteRt = null
+                    liteFailed = true
+                    if (want != null && want in gguf) {
+                        val st = runCatching { e.loadModel(want) }.getOrNull()
+                        if (st != null && st.loaded) {
+                            _model.value = ModelState.Loaded(st.kind, st.id, Backend.Cpu)
+                            return@withLock
+                        }
+                    }
+                }
                 _model.value = ModelState.Failed(t.message ?: t.toString())
             }
         }
@@ -159,7 +181,14 @@ class EngineHolder(private val app: Application) {
         engineOrNull?.cancel()
         scope.launch {
             modelLock.withLock {
-                engineOrNull?.unloadModel()
+                engineOrNull?.let {
+                    it.unloadModel()
+                    it.setForeignLlm(null)
+                }
+                // A new LiteRT engine picks up changed settings, such as speculative decoding.
+                liteRt?.close()
+                liteRt = null
+                liteFailed = false
                 _model.value = ModelState.None
             }
             ensureModel(null)

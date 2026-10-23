@@ -18,6 +18,9 @@ ONNX Runtime 1.30.0  MIT
 The Rust code links C code from some crates: Zstandard (BSD-3-Clause) and SQLite (public domain).
 LiteRT-LM publishes the notices of its own dependencies in THIRD_PARTY_NOTICE.txt inside its Android library
 (https://github.com/google-ai-edge/LiteRT-LM).
+LiteRT Google Tensor dispatch library (libLiteRtDispatch_GoogleTensor.so)  Apache-2.0
+    Copyright Google LLC (https://github.com/google-ai-edge/LiteRT). Built for this app from commit
+    ca21dc99de51c76bdcc572afeea1dd937d3c9e5c without the Google-internal hooks target (docs/MODELS.md).
 
 3. MODELS IN THE APP
 --------------------
@@ -67,7 +70,7 @@ androidx.lifecycle:lifecycle-viewmodel-compose 2.11.0  Apache-2.0
     The Android Open Source Project
 androidx.navigation:navigation-compose 2.10.2  Apache-2.0
     The Android Open Source Project
-com.google.ai.edge.litertlm:litertlm-android 0.17.1  Apache-2.0
+com.google.ai.edge.litertlm:litertlm-android 0.18.1  Apache-2.0
     Google LLC (https://github.com/google-ai-edge/LiteRT-LM)
 com.microsoft.onnxruntime:onnxruntime-android 1.30.0  MIT
     Microsoft Corporation (https://github.com/microsoft/onnxruntime)

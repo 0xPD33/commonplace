@@ -307,7 +307,8 @@ pub struct ImportPart {
 #[derive(uniffi::Record)]
 pub struct Settings {
     pub llm_threads: u32,
-    pub evidence_tokens: u32,
+    /// The user's evidence budget; `None` uses the loaded model's (`model_profile`).
+    pub evidence_tokens: Option<u32>,
     pub max_answer_tokens: u32,
     pub think_budget: u32,
     /// Rewrite each message into a standalone, typo-free search query first (one short model call).
@@ -316,6 +317,13 @@ pub struct Settings {
     pub use_dense: bool,
     pub nprobe: u32,
     pub rerank_keep: u32,
+}
+
+/// The loaded model's defaults, for the Settings screen.
+#[derive(uniffi::Record)]
+pub struct ModelProfileRecord {
+    pub name: String,
+    pub evidence_tokens: u32,
 }
 
 #[derive(uniffi::Record)]
@@ -702,8 +710,18 @@ impl CommonplaceEngine {
         }
     }
 
-    /// Use a Kotlin-side engine (LiteRT-LM) instead of llama.cpp. `None` unloads it.
-    pub fn set_foreign_llm(&self, llm: Option<Arc<dyn ForeignLlm>>) {
+    /// Use a Kotlin-side engine (LiteRT-LM) instead of llama.cpp. `None` unloads it. `model_file` is the path of
+    /// the pack's model file: its manifest, or else its name, picks the model's defaults.
+    pub fn set_foreign_llm(&self, llm: Option<Arc<dyn ForeignLlm>>, model_file: Option<String>) {
+        let lib = self.engine.library();
+        let profile = match &model_file {
+            Some(f) => lib.models.iter().find(|m| m.file().is_some_and(|p| p.to_string_lossy() == f.as_str())).map_or_else(
+                || commonplace_core::profiles::for_model(None, std::path::Path::new(f).file_name().and_then(|n| n.to_str()).unwrap_or("")),
+                |m| m.profile(),
+            ),
+            None => &commonplace_core::profiles::DEFAULT,
+        };
+        self.engine.set_profile(profile);
         self.engine.set_llm(ModelRole::LlmFast, llm.map(|l| Arc::new(ForeignAdapter(l)) as Arc<dyn LlmBackend>));
     }
 
@@ -934,7 +952,7 @@ impl CommonplaceEngine {
         let s = self.engine.settings.read().unwrap();
         Settings {
             llm_threads: s.llm_threads,
-            evidence_tokens: s.evidence_tokens as u32,
+            evidence_tokens: s.evidence_tokens.map(|n| n as u32),
             max_answer_tokens: s.max_answer_tokens,
             think_budget: s.think_budget,
             rewrite: s.rewrite,
@@ -945,10 +963,15 @@ impl CommonplaceEngine {
         }
     }
 
+    pub fn model_profile(&self) -> ModelProfileRecord {
+        let p = self.engine.profile();
+        ModelProfileRecord { name: p.name.into(), evidence_tokens: p.evidence_tokens as u32 }
+    }
+
     pub fn update_settings(&self, n: Settings) {
         let mut s = self.engine.settings.write().unwrap();
         s.llm_threads = n.llm_threads.clamp(1, 8);
-        s.evidence_tokens = n.evidence_tokens.clamp(200, 4000) as usize;
+        s.evidence_tokens = n.evidence_tokens.map(|n| n.clamp(200, 4000) as usize);
         s.max_answer_tokens = n.max_answer_tokens.clamp(64, 1024);
         s.think_budget = n.think_budget.clamp(64, 2048);
         s.rewrite = n.rewrite;

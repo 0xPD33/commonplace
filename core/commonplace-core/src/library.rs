@@ -20,6 +20,10 @@ impl ModelPack {
     pub fn file(&self) -> Option<PathBuf> {
         self.manifest.model.as_ref().map(|m| self.dir.join(&m.file))
     }
+    pub fn profile(&self) -> &'static crate::profiles::ModelProfile {
+        let m = self.manifest.model.as_ref();
+        crate::profiles::for_model(m.and_then(|m| m.profile.as_deref()), m.map_or("", |m| m.file.as_str()))
+    }
 }
 
 pub struct Library {

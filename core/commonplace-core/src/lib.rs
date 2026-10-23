@@ -7,6 +7,7 @@ pub mod evidence;
 pub mod library;
 pub mod llm;
 pub mod pack;
+pub mod profiles;
 pub mod prompts;
 pub mod retrieval;
 pub mod route;

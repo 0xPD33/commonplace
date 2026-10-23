@@ -118,7 +118,7 @@ class EngineHolder(private val app: Application) {
             }
             if (!useTpu && (want == null || want !in gguf)) {
                 liteRt?.let {
-                    e.setForeignLlm(null)
+                    e.setForeignLlm(null, null)
                     it.close()
                     liteRt = null
                 }
@@ -137,7 +137,7 @@ class EngineHolder(private val app: Application) {
                     } finally {
                         liteLoading.delete()
                     }
-                    e.setForeignLlm(lr)
+                    e.setForeignLlm(lr, litePack.filePath)
                     _model.value = ModelState.Loaded(litePack!!.kind, lr.id(), Backend.Tpu)
                 } else {
                     liteRt?.close()
@@ -183,7 +183,7 @@ class EngineHolder(private val app: Application) {
             modelLock.withLock {
                 engineOrNull?.let {
                     it.unloadModel()
-                    it.setForeignLlm(null)
+                    it.setForeignLlm(null, null)
                 }
                 // A new LiteRT engine picks up changed settings, such as speculative decoding.
                 liteRt?.close()

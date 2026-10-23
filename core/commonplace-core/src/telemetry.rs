@@ -45,6 +45,8 @@ pub struct QueryRecord {
     pub thermal_headroom: Option<f32>,
     pub threads: Option<u32>,
     pub model_id: Option<String>,
+    /// The model's defaults (`profiles::ModelProfile::name`).
+    pub profile: String,
     pub build: String,
     pub error: Option<String>,
 }

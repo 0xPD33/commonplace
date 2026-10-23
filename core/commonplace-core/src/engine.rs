@@ -6,6 +6,7 @@ use crate::evidence::{self, Evidence};
 use crate::library::{Library, ModelPack};
 use crate::llm::{GenParams, GenStats, LlmBackend};
 use crate::pack::{ModelRole, normalize_title};
+use crate::profiles::{self, ModelProfile};
 use crate::prompts;
 use crate::retrieval::{Hit, RetrievalSettings, Retriever, select_diverse};
 use crate::route::{self, Route};
@@ -37,7 +38,8 @@ pub struct EngineConfig {
 #[derive(Debug, Clone, Serialize)]
 pub struct Settings {
     pub retrieval: RetrievalSettings,
-    pub evidence_tokens: usize,
+    /// The user's evidence budget; `None` takes the loaded model's (`profiles::ModelProfile::evidence_tokens`).
+    pub evidence_tokens: Option<usize>,
     /// Leave out passages whose rerank score is more than this below the best one (keeps at least 3).
     pub evidence_score_gap: Option<f32>,
     pub max_answer_tokens: u32,
@@ -54,7 +56,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             retrieval: RetrievalSettings::default(),
-            evidence_tokens: 600,
+            evidence_tokens: None,
             evidence_score_gap: None,
             max_answer_tokens: 400,
             // Off: on the Pixel it doubles the card time (2.0 vs 1.0 s) and did not raise the seeds score (docs/BENCHMARKS.md).
@@ -264,6 +266,8 @@ pub struct Engine {
     rr: Option<Reranker>,
     reader: Option<Reader>,
     llm: RwLock<Option<(ModelRole, Arc<dyn LlmBackend>)>>,
+    /// The loaded model's defaults; set with the model.
+    profile: RwLock<&'static ModelProfile>,
     loader: Option<LlmLoader>,
     pub settings: RwLock<Settings>,
     recent: Mutex<VecDeque<QueryRecord>>,
@@ -299,6 +303,7 @@ impl Engine {
             rr,
             reader,
             llm: RwLock::new(None),
+            profile: RwLock::new(&profiles::DEFAULT),
             loader,
             settings: RwLock::new(Settings::default()),
             recent: Mutex::new(VecDeque::new()),
@@ -357,6 +362,15 @@ impl Engine {
         *self.llm.write().unwrap() = llm.map(|l| (role, l));
     }
 
+    /// The defaults of the model set with `set_llm`; `load_model` sets them itself.
+    pub fn set_profile(&self, p: &'static ModelProfile) {
+        *self.profile.write().unwrap() = p;
+    }
+
+    pub fn profile(&self) -> &'static ModelProfile {
+        *self.profile.read().unwrap()
+    }
+
     pub fn llm(&self) -> Option<(ModelRole, Arc<dyn LlmBackend>)> {
         self.llm.read().unwrap().clone()
     }
@@ -372,6 +386,7 @@ impl Engine {
             (s.llm_threads, s.rewrite)
         };
         let llm = loader(mp, threads)?;
+        self.set_profile(mp.profile());
         Self::warm_up(llm.as_ref(), &lib.snapshot_date(), rewrite);
         *self.llm.write().unwrap() = Some((role, llm));
         Ok(())
@@ -644,6 +659,7 @@ impl Engine {
             build: telemetry::BUILD.to_string(),
             thermal_headroom: *self.thermal.lock().unwrap(),
             model_id: llm.as_ref().map(|(_, l)| l.id()),
+            profile: self.profile().name.to_string(),
             ..Default::default()
         };
         let stage = |rec: &mut QueryRecord, st: Stage, detail: String| {
@@ -999,8 +1015,10 @@ impl Engine {
         }
 
         // Stage 3: evidence.
-        let warm = rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
-        let budget = if warm { s.evidence_tokens.min(HOT_EVIDENCE_TOKENS) } else { s.evidence_tokens };
+        let profile = self.profile();
+        let base = s.evidence_tokens.unwrap_or(profile.evidence_tokens);
+        let warm = profile.warm_evidence_cut && rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
+        let budget = if warm { base.min(HOT_EVIDENCE_TOKENS) } else { base };
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {

@@ -91,7 +91,9 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
     var speculative by remember { mutableStateOf(prefs.speculative) }
     var liteCrashed by remember { mutableStateOf(prefs.liteCrashed) }
     var threads by remember { mutableIntStateOf(prefs.threads) }
-    var evidence by remember { mutableIntStateOf(prefs.evidenceTokens) }
+    var evidenceOverride by remember { mutableStateOf(prefs.evidenceOverride) }
+    // The loaded model's own budget (its profile in the core); it changes when another model loads.
+    val modelEvidence = remember(model) { holder.engineOrNull?.modelProfile()?.evidenceTokens?.toInt() ?: 600 }
     var answer by remember { mutableIntStateOf(prefs.answerTokens) }
     var thinkBudget by remember { mutableIntStateOf(prefs.thinkBudget) }
     var rewrite by remember { mutableStateOf(prefs.rewrite) }
@@ -100,7 +102,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
 
     fun apply() {
         prefs.threads = threads
-        prefs.evidenceTokens = evidence
+        prefs.evidenceOverride = evidenceOverride
         prefs.answerTokens = answer
         prefs.thinkBudget = thinkBudget
         prefs.rewrite = rewrite
@@ -221,12 +223,16 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
 
             Spacer(Modifier.height(20.dp))
             SectionLabel("Advanced")
-            LabeledSlider("Evidence budget (tokens)", evidence.toFloat(), 300f..2500f, 21, "$evidence") { evidence = (it / 100).toInt() * 100 }
+            val evidence = evidenceOverride ?: modelEvidence
+            LabeledSlider("Evidence budget (tokens)", evidence.toFloat(), 300f..2500f, 21, "$evidence") { evidenceOverride = (it / 100).toInt() * 100 }
             Text(
-                "More evidence can help long answers but takes longer to read on a phone CPU.",
+                "More evidence can help long answers but takes longer to read on a phone CPU. The default for this model is $modelEvidence.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (evidenceOverride != null) {
+                TextButton(onClick = { evidenceOverride = null }, modifier = Modifier.testTag("evidence_default")) { Text("Use the model's default") }
+            }
             Spacer(Modifier.height(24.dp))
             HorizontalDivider()
             TextButton(onClick = onDiagnostics, modifier = Modifier.testTag("open_diagnostics")) { Text("Diagnostics and benchmark") }

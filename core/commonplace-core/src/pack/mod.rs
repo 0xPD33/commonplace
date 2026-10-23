@@ -54,6 +54,9 @@ pub struct ModelInfo {
     pub revision: String,
     #[serde(default = "default_ctx")]
     pub n_ctx: u32,
+    /// The model's defaults (`profiles::by_name`). Without it, the file name picks them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub profile: Option<String>,
 }
 
 fn default_ctx() -> u32 {

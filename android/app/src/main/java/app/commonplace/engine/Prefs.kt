@@ -48,9 +48,10 @@ class Prefs(context: Context) {
         get() = sp.getInt("threads", 4)
         set(v) = sp.edit().putInt("threads", v).apply()
 
-    var evidenceTokens: Int
-        get() = sp.getInt("evidence_tokens", 600)
-        set(v) = sp.edit().putInt("evidence_tokens", v).apply()
+    /** The user's evidence budget; null uses the loaded model's default. Until 0.3.0, Settings saved 600 under "evidence_tokens". */
+    var evidenceOverride: Int?
+        get() = sp.getInt("evidence_override", 0).takeIf { it > 0 }
+        set(v) = sp.edit().apply { if (v == null) remove("evidence_override") else putInt("evidence_override", v) }.apply()
 
     var answerTokens: Int
         get() = sp.getInt("answer_tokens", 400)
@@ -84,7 +85,7 @@ class Prefs(context: Context) {
         engine.updateSettings(
             s.copy(
                 llmThreads = threads.toUInt(),
-                evidenceTokens = evidenceTokens.toUInt(),
+                evidenceTokens = evidenceOverride?.toUInt(),
                 maxAnswerTokens = answerTokens.toUInt(),
                 thinkBudget = thinkBudget.toUInt(),
                 rewrite = rewrite,

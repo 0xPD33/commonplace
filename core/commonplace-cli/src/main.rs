@@ -6,6 +6,7 @@ use commonplace_core::citations::{Segment, plain_text};
 use commonplace_core::engine::{AskOutcome, AskRequest, Engine, EngineConfig, Event, EventSink, Stage, Turn};
 use commonplace_core::llm::LlmBackend;
 use commonplace_core::pack::ModelRole;
+use commonplace_core::profiles;
 use commonplace_llm::{LlamaBackend, LoadOptions};
 use serde::Deserialize;
 use std::io::{BufRead, Write};
@@ -14,7 +15,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Parser)]
-#[command(name = "commonplace", about = "Offline research assistant (desktop CLI)")]
+// A later flag replaces an earlier one, so an eval run can override the phone settings (eval/run.py --cli).
+#[command(name = "commonplace", about = "Offline research assistant (desktop CLI)", args_override_self = true)]
 struct Cli {
     #[command(flatten)]
     opts: Opts,
@@ -92,9 +94,12 @@ struct Opts {
     /// Drop evidence passages scoring more than this below the best rerank score.
     #[arg(long, global = true)]
     evidence_gap: Option<f32>,
-    /// Evidence token budget (phone default 600, desktop 900).
+    /// Evidence token budget (default: the model profile's, 600 for every profile today).
     #[arg(long, global = true)]
     evidence_tokens: Option<usize>,
+    /// Model defaults to use instead of the ones the model file implies: default, gemma4 or gemma4-npu.
+    #[arg(long, global = true)]
+    profile: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -203,7 +208,7 @@ fn engine(o: &Opts) -> Result<Engine> {
         s.think_budget = o.think_budget.unwrap_or(s.think_budget);
         s.max_answer_tokens = o.max_answer_tokens.unwrap_or(s.max_answer_tokens);
         s.evidence_score_gap = o.evidence_gap.or(s.evidence_score_gap);
-        s.evidence_tokens = o.evidence_tokens.unwrap_or(s.evidence_tokens);
+        s.evidence_tokens = o.evidence_tokens.or(s.evidence_tokens);
     }
     if o.no_doc2query {
         eprintln!("note: --no-doc2query needs a pack built without questions; flag recorded only");
@@ -211,6 +216,7 @@ fn engine(o: &Opts) -> Result<Engine> {
     if !o.no_llm {
         if let Some(path) = &o.model {
             let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads: threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
+            e.set_profile(profiles::for_model(None, &path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()));
             Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite);
             e.set_llm(ModelRole::LlmFast, Some(Arc::new(llm)));
         } else if e.library().model(&ModelRole::LlmFast).is_some() {
@@ -218,6 +224,9 @@ fn engine(o: &Opts) -> Result<Engine> {
         } else if e.library().model(&ModelRole::LlmSmall).is_some() {
             e.load_model(ModelRole::LlmSmall)?;
         }
+    }
+    if let Some(name) = &o.profile {
+        e.set_profile(profiles::by_name(name).ok_or_else(|| anyhow::anyhow!("unknown profile {name}"))?);
     }
     let lib = e.library();
     for (p, why) in &lib.skipped {

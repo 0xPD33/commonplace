@@ -134,6 +134,9 @@ enum Cmd {
         license: String,
         #[arg(long, default_value_t = 4096)]
         n_ctx: u32,
+        /// The model's defaults in the app (`commonplace_core::profiles`), such as `gemma4-npu`.
+        #[arg(long)]
+        profile: Option<String>,
         /// Hard-link instead of copying the GGUF.
         #[arg(long)]
         link: bool,
@@ -567,6 +570,7 @@ fn build_model(
     license: &str,
     attribution: Option<&str>,
     n_ctx: u32,
+    profile: Option<&str>,
     link: bool,
 ) -> Result<()> {
     std::fs::create_dir_all(out)?;
@@ -610,7 +614,7 @@ fn build_model(
         counts: None,
         embedder: None,
         tantivy_version: None,
-        model: Some(ModelInfo { role, file: name, hf_repo: repo.into(), revision: rev.into(), n_ctx }),
+        model: Some(ModelInfo { role, file: name, hf_repo: repo.into(), revision: rev.into(), n_ctx, profile: profile.map(Into::into) }),
         user_document: false,
         files,
         size_bytes: size,
@@ -709,8 +713,11 @@ fn main() -> Result<()> {
             build_wikidata(&input, &out, &snapshot)?;
             add_notices(&out, &notices, None, None)
         }
-        Cmd::Model { gguf, dir, file, out, pack_id, title, role, hf_repo, revision, license, n_ctx, link, attribution, notices } => {
-            build_model(gguf.as_deref(), dir.as_deref(), file.as_deref(), &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, link)?;
+        Cmd::Model { gguf, dir, file, out, pack_id, title, role, hf_repo, revision, license, n_ctx, profile, link, attribution, notices } => {
+            if let Some(p) = &profile {
+                anyhow::ensure!(commonplace_core::profiles::by_name(p).is_some(), "unknown profile {p}");
+            }
+            build_model(gguf.as_deref(), dir.as_deref(), file.as_deref(), &out, &pack_id, &title, &role, &hf_repo, &revision, &license, attribution.as_deref(), n_ctx, profile.as_deref(), link)?;
             add_notices(&out, &notices, None, None)
         }
         Cmd::Split { pack, out, part_size, single } => split(std::slice::from_ref(&pack), &Manifest::read(&pack)?.pack_id, &out, part_size, single),

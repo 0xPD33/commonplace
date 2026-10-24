@@ -32,6 +32,9 @@ class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
 /** The answer model for phones with less than about 10 GB of memory. */
 const val SMALL_MODEL_PACK = "minicpm5-2b"
 
+/** The Reference shelf bundle: travel guides, textbooks and how-to guides. Get started lists it on every phone. */
+const val SHELF_BUNDLE = "breadth"
+
 /** Whether a starter bundle suits this phone: the one with the small model below about 10 GB of memory. */
 fun suitsPhone(starter: CatalogPack, lowRam: Boolean) = (SMALL_MODEL_PACK in starter.members) == lowRam
 

@@ -119,6 +119,7 @@ import app.commonplace.engine.Conversations
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.Prefs
+import app.commonplace.engine.SHELF_BUNDLE
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.suitsPhone
 import kotlinx.coroutines.Dispatchers
@@ -412,7 +413,8 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                 // One starter bundle per phone class: the fast model does not fit a low-RAM phone.
                 set.filter { it.members.isEmpty() || suitsPhone(it, lowRam) }.ifEmpty { set } +
                     // A phone with the chip of a model pack gets it too: it becomes the answer model.
-                    c.packs.filter { it.chip != null && it.chip == android.os.Build.SOC_MODEL }
+                    c.packs.filter { it.chip != null && it.chip == android.os.Build.SOC_MODEL } +
+                    c.bundles.filter { it.packId == SHELF_BUNDLE }
             }
         }
         val oneFile = starters.size == 1
@@ -448,6 +450,14 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                         Spacer(Modifier.height(8.dp))
                         Text(
                             "This phone has a ${p.chip} chip, so ${p.title} answers about three times faster than the model in the starter set.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    starters.firstOrNull { it.packId == SHELF_BUNDLE }?.let { p ->
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "The ${p.title} adds travel guides, textbooks and how-to guides that Wikipedia does not have.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

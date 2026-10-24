@@ -162,7 +162,10 @@ fun TurnView(
             }
         }
 
+        // A finished answer shows the sources it cites first, in the order it cites them. The numbers stay.
+        val cited = if (turn.done) turn.segments.filterIsInstance<AnswerSegment.Cite>().map { it.n }.distinct() else emptyList()
         val sources = turn.sources.ifEmpty { card?.sources ?: emptyList() }
+            .sortedBy { s -> cited.indexOf(s.n).takeIf { turn.sources.isNotEmpty() && it >= 0 } ?: Int.MAX_VALUE }
         if (sources.isNotEmpty() && (turn.done || turn.sources.isNotEmpty())) {
             Spacer(Modifier.height(18.dp))
             SectionLabel("Sources", Modifier.padding(bottom = 8.dp))

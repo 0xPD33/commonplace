@@ -114,10 +114,11 @@ To check that the app is offline, turn on airplane mode. Or open **Settings > Ap
 
 Questions to try, each in a new conversation:
 
-- "Compare Mars and Venus": Wikidata facts side by side, then a written comparison.
+- "Compare the Nile and the Amazon": Wikidata facts side by side, then a written comparison.
 - "Walking 5 km an hour, how long would it take to walk the length of the Great Wall of China?": code computes the time from Wikidata.
-- "Is tap water safe to drink in Mexico City?": a travel answer from Wikivoyage and CDC travel health pages. It needs the Reference shelf.
-- "What causes the northern lights?", then "Why are they mostly green?", then "Are you sure?": follow-up questions and a check of the last answer.
+- "Do I need to tip in Japan?": a travel answer from Wikivoyage. It needs the Reference shelf.
+- "What vaccinations do I need for Kenya?": an answer from the CDC travel health pages. It also needs the Reference shelf.
+- "Who built the pyramids of Giza?", then "How long did it take to build them?": a follow-up question keeps the topic.
 
 [docs/INSTALL.md](docs/INSTALL.md) has the other packs, the install from a computer and the build from source.
 
@@ -267,9 +268,10 @@ The app also has a History screen and a reader for passages and articles. Each s
 | Full answer | 7.5 s median | 40 s median in a session of 25 questions |
 | Writing speed | 25 to 31 tokens/s | 16 to 17 tokens/s on a cool phone, about 8 tokens/s after the phone passes about 37 °C |
 | Long session | 126 questions in 76 minutes, first word 2.8 s at most | The median first word rose from 13 s to 28–30 s over 75 questions |
+| Model start after the app was closed | 6 to 9 s | About 16.5 s (about 25 s without the saved warm-up state) |
 | Peak memory | 2.3 GB | 5.3 GB |
 
-The Gemma column comes from the 63 seed questions on the 0.3.0 build (2026-10-23). The Ling column comes from the builds of 2026-10-13 to 2026-10-19. [docs/BENCHMARKS.md](docs/BENCHMARKS.md) has all measurements with their dates and builds.
+The Gemma column comes from the 63 seed questions on the 0.3.0 build (2026-10-23) and the model start on 0.3.2 (2026-10-24). The Ling column comes from the builds of 2026-10-13 to 2026-10-19. [docs/BENCHMARKS.md](docs/BENCHMARKS.md) has all measurements with their dates and builds.
 
 Known limits:
 

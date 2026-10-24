@@ -178,6 +178,7 @@ LiteRT-LM 0.18.1 on the Pixel 10 with the Starter Wikipedia, in a debug build wi
 - Conversations, on the desktop with the same GGUF (`x-gemma4-cv-test`, 2026-10-23): 0.640 on the 30 locked test threads against Ling's 0.646, and 0.597 against 0.589 without the small-talk threads.
 - On the Pixel with 0.3.0: a six-turn conversation (follow-ups, "are you sure?", "make it shorter", "thanks") took 9.7–13.8 s per turn. A reformat turn showed its first word after 0.34 s and wrote 34.6 tok/s. With Think on and a budget of 256 tokens, the first word of the answer came after 16.3 s ("Thought for 14 s").
 - The import of `gemma4-e2b-npu.tar` (3.1 GB) from Downloads took 28 s.
+- Model start with the 0.3.2 release (2026-10-24): "Ready" came 9.2 s and 6.1 s after a force-stop and a new start. The test read the screen about once a second.
 - From 0.3.0, the app uses Gemma on the NPU when the Gemma pack is installed. Settings can choose Ling.
 - llama.cpp on the PowerVR GPU was never run here. Planning-stage numbers (about 24 tok/s prefill, 2.5 tok/s decode, no integer dot product in the driver) ruled it out.
 

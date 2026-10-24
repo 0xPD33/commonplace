@@ -2,6 +2,19 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
+## [0.3.1] - 2026-10-24
+
+### Changed
+
+- **Travel times are computed.** A question with a speed, such as "how long to walk the Great Wall at 5 km an hour", gets the time from Wikidata's length and your speed. Before, Gemma sometimes used Wikidata's walking speed of 0.9 m/s instead of yours.
+- **Decimals in Wikidata facts get thousands separators** ("4,043.27"), so the model copies them as written.
+
+### Fixed
+
+- **Cleaner number answers from Gemma.** The app removes a copied "COMPUTED:" label from the answer and turns LaTeX math, such as `$\times$` and `\text{km}`, into plain text.
+
+Quality: on the 13 numeric and comparison seeds on a Pixel 10, Gemma with these changes won 2, tied 9 and lost 1 against 0.3.0 (mean 8.6 against 7.6). The Great Wall seed rose from 2.0 to 9.5. With the Reference shelf, Gemma's travel answers rise from 0.41 to 0.53 of Claude's score ([BENCHMARKS](docs/BENCHMARKS.md#litert-lm-gemma-4-on-the-gpu-and-the-tensor-npu-2026-10-22-to-2026-10-23)).
+
 ## [0.3.0] - 2026-10-23
 
 ### Added

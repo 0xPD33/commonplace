@@ -2,6 +2,13 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
 
+## [0.3.2] - 2026-10-24
+
+### Changed
+
+- **Cited sources come first.** Under a finished answer, the Sources row shows the sources that the answer cites, in the order it cites them. The other sources follow. Each source keeps its number.
+- **Get started lists the Reference shelf.** On a phone with no packs, the Get started card lists the Reference shelf (2.0 GB) next to the starter set. The shelf adds travel guides, textbooks and how-to guides. With it, travel answers score 0.53 of Claude's score instead of 0.41.
+
 ## [0.3.1] - 2026-10-24
 
 ### Changed

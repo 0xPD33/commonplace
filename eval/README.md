@@ -21,6 +21,8 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Run | What it is | Score ratio |
 |---|---|---|
+| `x-032-phone-full` | The 63 seeds in the 0.3.2 test app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (2026-10-24). The same answers as `x-gemma4-phone-shelf`, so not judged | – |
+| `x-032-phone-cv` | The 30 locked test threads in the same app; the app wrote the earlier turns (2026-10-24) | 0.605 |
 | `x-gemma4-phone-shelf` | Seeds asked in the app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (debug build with the number changes, 2026-10-23) | 0.511 |
 | `x-gemma4-phone-num` | The 13 numeric and comparison seeds on the Pixel with the number changes, pairwise against `x-gemma4-phone2` only | – |
 | `x-gemma4-d-prompt` | Seeds, the Gemma GGUF on the desktop with an answer prompt after Google's RAG sample (dropped) | 0.516 |

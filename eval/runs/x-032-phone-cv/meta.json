@@ -1,0 +1,100 @@
+{
+  "run_id": "x-032-phone-cv",
+  "started": "2026-10-23T03:05:19+00:00",
+  "git": "affd9a3",
+  "bin": "app.commonplace.spike 0.3.2 debug build on a Pixel 10",
+  "binary_sha256": "",
+  "model": {
+    "path": "gemma-4-E2B-it_Google_Tensor_G5.litertlm",
+    "sha256": "af1082986639ecde7db95d91be6fe54f8b6b458104734c5bafc204e69d6852dc",
+    "from_library": true
+  },
+  "flags": [],
+  "cli": [],
+  "phone": true,
+  "ort_dylib_path": "/nix/store/xpnhdp09h7hv06v5k4343vmm7h5l0g0h-onnxruntime-1.27.1/lib/libonnxruntime.so",
+  "think": false,
+  "live_history": true,
+  "queries": "eval/conversation-test.jsonl",
+  "queries_sha256": "713517deb811980ae441f5a4bcbbaf913a894d41bb406377205cac6751b53272",
+  "subset": null,
+  "library": "Pixel 10 app library: enwiki-core, wikidata-facts, gemma4-e2b-npu, Reference shelf (13 packs)",
+  "packs": [
+    {
+      "pack_id": "enwiki-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (starter)",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-10-02",
+      "counts": {
+        "articles": 2000000,
+        "passages": 6518976
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "861b977039a1d2d1064e8b7a36cd9fa540120e3d0cac8f0cd911f4754b763ad7"
+    },
+    {
+      "pack_id": "wikidata-facts",
+      "pack_type": "wikidata",
+      "title": "Wikidata facts",
+      "snapshot_date": "2026-05-07",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "dfa355712a0217058c95bb7e3cb8ddc980f941042d0fc21bab749c56cc1ce5c2"
+    },
+    {
+      "pack_id": "gemma4-e2b-npu",
+      "pack_type": "model",
+      "title": "Gemma 4 E2B (Tensor G5)",
+      "snapshot_date": "",
+      "build_date": "2026-10-23",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "8acd107bdd75f4d082823b1c502d434a3791a525af27d563c0b65559ac673018"
+    }
+  ],
+  "host": {
+    "node": "Pixel 10",
+    "machine": "aarch64",
+    "cpus": 8
+  },
+  "query_ids": [
+    "cv-t-fu-01",
+    "cv-t-fu-02",
+    "cv-t-fu-03",
+    "cv-t-fu-04",
+    "cv-t-fu-05",
+    "cv-t-fu-06",
+    "cv-t-fu-07",
+    "cv-t-fu-08",
+    "cv-t-ex-01",
+    "cv-t-ex-02",
+    "cv-t-ex-03",
+    "cv-t-ex-04",
+    "cv-t-ex-05",
+    "cv-t-cmp-01",
+    "cv-t-cmp-02",
+    "cv-t-cmp-03",
+    "cv-t-cmp-04",
+    "cv-t-cmp-05",
+    "cv-t-cmp-06",
+    "cv-t-cmp-07",
+    "cv-t-ref-01",
+    "cv-t-ref-02",
+    "cv-t-ref-03",
+    "cv-t-ref-04",
+    "cv-t-ref-05",
+    "cv-t-chat-01",
+    "cv-t-chat-02",
+    "cv-t-chat-03",
+    "cv-t-chat-04",
+    "cv-t-ref-06"
+  ],
+  "finished": "2026-10-23T03:12:57+00:00"
+}

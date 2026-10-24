@@ -25,6 +25,7 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `x-gemma4-phone-num` | The 13 numeric and comparison seeds on the Pixel with the number changes, pairwise against `x-gemma4-phone2` only | – |
 | `x-gemma4-d-prompt` | Seeds, the Gemma GGUF on the desktop with an answer prompt after Google's RAG sample (dropped) | 0.516 |
 | `x-gemma4-d-base` | The control of that comparison: the same build with our answer prompt | 0.526 |
+| `x-gemma4-d-len` | The same build with an answer target of 150 to 250 words instead of 100 to 200 (dropped) | 0.527 |
 | `x-gemma4-num-fix`, `x-gemma4-num-base` | The 13 numeric and comparison seeds with the Gemma GGUF on the desktop, with and without the number changes, pairwise only | – |
 | `x-gemma4-phone2` | Seeds asked in the app on the Pixel 10 with Gemma on the NPU and the full evidence (0.3.0 debug build, 2026-10-23) | 0.499 |
 | `x-gemma4-phone` | The same with the warm-phone evidence cut (52 of 63 answers) | 0.516 |

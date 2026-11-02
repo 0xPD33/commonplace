@@ -152,7 +152,7 @@ impl Library {
         Ok(())
     }
 
-    /// The GGUF model pack with `role`. LiteRT packs (`.litertlm`) and the voice pack (`Stt`) belong to the Kotlin side.
+    /// The GGUF model pack with `role`. LiteRT packs (`.litertlm`) and the voice packs (`Stt`, `Tts`) belong to the Kotlin side.
     pub fn model(&self, role: &ModelRole) -> Option<&ModelPack> {
         self.models.iter().find(|m| m.role() == Some(role) && !m.file().is_some_and(|f| f.extension().is_some_and(|e| e == "litertlm")))
     }

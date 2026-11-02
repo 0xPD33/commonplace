@@ -62,6 +62,7 @@ import androidx.core.content.FileProvider
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.answers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -99,6 +100,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
     var rewrite by remember { mutableStateOf(prefs.rewrite) }
     var timings by remember { mutableStateOf(prefs.showTimings) }
     var nightMode by remember { mutableIntStateOf(prefs.nightMode) }
+    var bundledVoice by remember { mutableStateOf(prefs.bundledVoice) }
 
     fun apply() {
         prefs.threads = threads
@@ -148,7 +150,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 style = MaterialTheme.typography.bodyMedium,
             )
             // A Gemma pack (LiteRT-LM) is one choice next to the llama.cpp models; choosing it sets the engine.
-            val choices = lib?.models?.filter { it.kind != ModelKind.VOICE } ?: emptyList()
+            val choices = lib?.models?.filter { it.answers } ?: emptyList()
             val gemma = choices.firstOrNull { it.filePath.endsWith(".litertlm") }
             if (choices.size > 1) {
                 Spacer(Modifier.height(8.dp))
@@ -220,6 +222,31 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            if (lib?.models?.any { it.kind == ModelKind.READ_ALOUD } == true) {
+                Spacer(Modifier.height(20.dp))
+                SectionLabel("Read aloud")
+                Spacer(Modifier.height(8.dp))
+                val voices = listOf(false to "System", true to "Bundled voice")
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().testTag("voice_choice")) {
+                    voices.forEachIndexed { i, (bundled, label) ->
+                        SegmentedButton(
+                            selected = bundledVoice == bundled,
+                            onClick = {
+                                bundledVoice = bundled
+                                prefs.bundledVoice = bundled
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(i, voices.size),
+                        ) { Text(label) }
+                    }
+                }
+                Text(
+                    "System uses the phone's offline voice for the answer's language. The bundled voice (Supertonic, from the Read aloud pack) speaks English answers; other languages use the system voice.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             SectionLabel("Advanced")

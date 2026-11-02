@@ -42,6 +42,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -51,6 +52,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -111,6 +113,9 @@ fun TurnView(
     onRetry: (() -> Unit)?,
     onAsk: ((String) -> Unit)?,
     onDraft: ((String) -> Unit)?,
+    speaking: Boolean,
+    speakError: String?,
+    onSpeak: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxWidth().animateContentSize().testTag("turn")) {
@@ -179,7 +184,17 @@ fun TurnView(
                     turn,
                     onThinkThrough.takeIf { !turn.think && !turn.stopped && turn.kind == TurnKind.QUESTION },
                     onRetry,
+                    speaking,
+                    onSpeak,
                 )
+                if (speakError != null) {
+                    Text(
+                        "Could not read the answer aloud: $speakError",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 6.dp).testTag("speak_error"),
+                    )
+                }
                 if (onAsk != null && !turn.stopped) FollowUpChips(turn, onAsk, onDraft)
             }
         }
@@ -511,7 +526,7 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
 }
 
 @Composable
-private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?) {
+private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?, speaking: Boolean, onSpeak: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -526,6 +541,10 @@ private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: ((
             },
             modifier = Modifier.testTag("share_answer"),
         ) { Icon(Icons.Outlined.Share, "Share answer", Modifier.size(20.dp), tint = tint) }
+        IconButton(onClick = onSpeak, modifier = Modifier.testTag("read_aloud")) {
+            if (speaking) Icon(Icons.Outlined.Stop, "Stop reading", Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+            else Icon(Icons.AutoMirrored.Outlined.VolumeUp, "Read aloud", Modifier.size(22.dp), tint = tint)
+        }
         if (onRetry != null) {
             IconButton(onClick = onRetry, modifier = Modifier.testTag("retry")) { Icon(Icons.Outlined.Refresh, "Retry", Modifier.size(22.dp), tint = tint) }
         }

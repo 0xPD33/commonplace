@@ -76,6 +76,7 @@ import app.commonplace.engine.Catalog
 import app.commonplace.engine.CatalogPack
 import app.commonplace.engine.DocumentText
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.answers
 import app.commonplace.engine.Prefs
 import app.commonplace.engine.SelectedFile
 import app.commonplace.engine.availableBundles
@@ -439,11 +440,11 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                 }
             }
             item { SectionLabel("Models", Modifier.padding(top = 12.dp)) }
-            if (l == null || l.models.none { it.kind != ModelKind.VOICE }) {
+            if (l == null || l.models.none { it.answers }) {
                 item { InfoNote("No model pack installed. Search still works; a model adds written answers with citations.") }
             }
             items(l?.models ?: emptyList(), key = { it.packId }) { m ->
-                val loaded = m.kind != ModelKind.VOICE && (model as? ModelState.Loaded)?.kind == m.kind
+                val loaded = m.answers && (model as? ModelState.Loaded)?.kind == m.kind
                 PackRow(
                     icon = Icons.Outlined.Memory,
                     title = m.title,
@@ -451,6 +452,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                         ModelKind.FAST -> "Fast model · default"
                         ModelKind.SMALL -> "Small model · for 8 GB phones"
                         ModelKind.VOICE -> "Voice input · speak your question"
+                        ModelKind.READ_ALOUD -> "Read aloud · a voice for answers, English"
                     } + if (loaded) " · loaded" else "",
                     detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}",
                     onVerify = { vm.verify(m.packId) },

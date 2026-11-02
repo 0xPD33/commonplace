@@ -40,6 +40,20 @@ private val RULE = Regex("""^(-{3,}|\*{3,}|_{3,})$""")
 private val MARKS = Regex("""\*\*|[*`]|(?m)^\s*(#{1,6}|[-+•]|\d{1,3}[.)])\s+""")
 
 /**
+ * The answer as plain lines for reading aloud: no Markdown marks, rules or citation numbers. A line without
+ * end punctuation (a heading, a list item) gets a full stop, so the voice pauses after it.
+ */
+fun spokenText(segments: List<AnswerSegment>): String =
+    segments.joinToString("") {
+        when (it) {
+            is AnswerSegment.Text -> it.text
+            is AnswerSegment.Unverified -> it.text
+            is AnswerSegment.Cite -> ""
+        }
+    }.lines().map { it.replace(MARKS, "").trim() }.filter { it.isNotEmpty() && !RULE.matches(it) }
+        .joinToString("\n") { if (it.last() in ".!?:;") it else "$it." }
+
+/**
  * The Markdown subset small models write (headings, bullet and numbered lists, **bold**, *italic*,
  * `code`) over the checked answer segments. Citations stay tappable and unverified sentences stay
  * underlined. An unclosed marker styles the rest of its line, so half-streamed text looks right.

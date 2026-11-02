@@ -50,6 +50,8 @@ pub enum ModelKind {
     Small,
     /// Voice input. `load_model` finds no such model.
     Voice,
+    /// The read-aloud voice. `load_model` finds no such model.
+    ReadAloud,
 }
 
 impl From<ModelKind> for ModelRole {
@@ -58,6 +60,7 @@ impl From<ModelKind> for ModelRole {
             ModelKind::Fast => ModelRole::LlmFast,
             ModelKind::Small => ModelRole::LlmSmall,
             ModelKind::Voice => ModelRole::Stt,
+            ModelKind::ReadAloud => ModelRole::Tts,
         }
     }
 }
@@ -67,6 +70,7 @@ fn kind(r: &ModelRole) -> ModelKind {
         ModelRole::LlmFast => ModelKind::Fast,
         ModelRole::LlmSmall => ModelKind::Small,
         ModelRole::Stt => ModelKind::Voice,
+        ModelRole::Tts => ModelKind::ReadAloud,
     }
 }
 

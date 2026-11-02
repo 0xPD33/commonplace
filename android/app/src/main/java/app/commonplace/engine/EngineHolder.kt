@@ -20,6 +20,7 @@ import uniffi.commonplace_ffi.CommonplaceEngine
 import uniffi.commonplace_ffi.EngineOptions
 import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
+import uniffi.commonplace_ffi.ModelPackInfo
 import java.io.File
 
 sealed interface EngineState {
@@ -37,6 +38,9 @@ sealed interface ModelState {
 }
 
 enum class Backend { Cpu, Tpu }
+
+/** An answer model, not a voice pack. */
+val ModelPackInfo.answers: Boolean get() = kind == ModelKind.FAST || kind == ModelKind.SMALL
 
 /** Owns the Rust engine for the whole process. All engine calls run off the main thread. */
 class EngineHolder(private val app: Application) {

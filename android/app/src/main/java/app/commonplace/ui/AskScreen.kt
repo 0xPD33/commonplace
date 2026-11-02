@@ -118,6 +118,7 @@ import app.commonplace.engine.Backend
 import app.commonplace.engine.Conversations
 import app.commonplace.engine.EngineState
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.answers
 import app.commonplace.engine.Prefs
 import app.commonplace.engine.SHELF_BUNDLE
 import app.commonplace.engine.loadCatalog
@@ -170,9 +171,9 @@ fun AskScreen(
     // A removed or switched-off document cannot be searched: drop the scope instead of answering from nothing.
     val scopeGone = vm.scope?.let { s -> library?.packs?.none { it.packId == s.packId && it.enabled } == true } == true
     LaunchedEffect(scopeGone) { if (scopeGone) vm.clearScope() }
-    // The mic must not outlive the screen, in the background or behind a source page.
-    DisposableEffect(Unit) { onDispose { vm.stopVoice() } }
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopVoice() }
+    // The mic and the voice reading an answer must not outlive the screen, in the background or behind a source page.
+    DisposableEffect(Unit) { onDispose { vm.stopVoice(); vm.stopSpeaking() } }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopVoice(); vm.stopSpeaking() }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -183,7 +184,7 @@ fun AskScreen(
                 title = {
                     Column {
                         Text("Commonplace", style = MaterialTheme.typography.titleLarge, fontStyle = FontStyle.Italic)
-                        val answerModels = library?.models?.filter { it.kind != ModelKind.VOICE }.orEmpty()
+                        val answerModels = library?.models?.filter { it.answers }.orEmpty()
                         // A low-RAM phone does not load the fast model by itself (see EngineHolder.ensureModel).
                         val onlyFast = holder.prefs.lowRam && answerModels.isNotEmpty() && answerModels.all { it.kind == ModelKind.FAST } && holder.prefs.modelKind != ModelKind.FAST
                         ModelStatusLine(model, installed = answerModels.isNotEmpty(), known = library != null, onlyFast = onlyFast)
@@ -551,6 +552,9 @@ private fun Conversation(
                         // A reformat rewrites the latest answer, so only the latest answer offers one.
                         onAsk = if (latest) ({ q -> vm.ask(q) }) else null,
                         onDraft = if (latest) onDraft else null,
+                        speaking = vm.speaking == t.id,
+                        speakError = vm.speakError?.takeIf { it.first == t.id }?.second,
+                        onSpeak = { vm.toggleSpeak(t) },
                     )
                 }
             }

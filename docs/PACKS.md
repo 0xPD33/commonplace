@@ -16,7 +16,8 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
   tantivy/           optional BM25 index (tantivy 0.26.2)
   dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
   wikidata.sqlite    wikidata packs only
-  <model>.gguf       model packs only (a voice pack, role `stt`, holds the Moonshine files instead; `model.file` names the main one)
+  <model>.gguf       model packs only (a voice pack holds other files instead: role `stt` the Moonshine files, role `tts`
+                     the Supertonic files; `model.file` names the main one)
 ```
 
 ### Frame store (`store/`, `cards/`)
@@ -111,6 +112,12 @@ $PB model --dir data/models/stt/moonshine-medium-streaming-en --file encoder.ort
   --title "Voice input (Moonshine Medium, English)" --role stt --hf-repo download.moonshine.ai/model/medium-streaming-en \
   --revision quantized_26_08_21 --license MIT --notice pipeline/notices/voice-en.txt \
   --attribution "Moonshine Medium Streaming EN by Moonshine AI (UsefulSensors); download.moonshine.ai"
+# The read-aloud voice: the same, role tts (scripts/fetch-models.sh tts gets the files).
+$PB model --dir data/models/tts/supertonic-2-int8 --file tts.json --out data/library/packs/tts-en --pack-id tts-en \
+  --title "Read aloud voice (Supertonic 2, English)" --role tts \
+  --hf-repo github.com/k2-fsa/sherpa-onnx/releases/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06 \
+  --revision supertonic-2@75e6727618a02f323c720cba9478152d4bc16ca4 --license "BigScience OpenRAIL-M" --notice pipeline/notices/tts-en.txt \
+  --attribution "Supertonic 2 by Supertone Inc.; int8 ONNX export by the sherpa-onnx project (k2-fsa)"
 
 # Notices: copy the notice into a built pack and fix its license or attribution (sources: pipeline/notices/).
 $PB notice --pack data/library/packs/wikem-en --notice pipeline/notices/wikem-en.txt --license "CC BY-SA 4.0"

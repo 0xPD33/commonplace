@@ -36,6 +36,10 @@ deberta-v3-xsmall-squad2  Apache-2.0
 Moonshine Medium Streaming (English)  MIT
     Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.
     (https://github.com/moonshine-ai/moonshine)
+Supertonic 2 (int8)  BigScience OpenRAIL-M
+    Read-aloud voice by Supertone Inc., int8 ONNX export by the sherpa-onnx project. It is not in the app file:
+    you install it as the optional tts-en pack, which holds the license text and its use restrictions.
+    (https://huggingface.co/Supertone/supertonic-2)
 
 4. FONT
 -------
@@ -74,10 +78,13 @@ com.google.ai.edge.litertlm:litertlm-android 0.18.1  Apache-2.0
     Google LLC (https://github.com/google-ai-edge/LiteRT-LM)
 com.microsoft.onnxruntime:onnxruntime-android 1.30.0  MIT
     Microsoft Corporation (https://github.com/microsoft/onnxruntime)
+k2-fsa:sherpa-onnx-static-link-onnxruntime 2.0.1  Apache-2.0
+    Xiaomi Corporation and the k2-fsa authors (https://github.com/k2-fsa/sherpa-onnx)
 net.java.dev.jna:jna 5.19.1  Apache-2.0
     JNA contributors (https://github.com/java-native-access/jna); also offered under LGPL-2.1-or-later
 Their own dependencies (AndroidX, the Kotlin standard library, Kotlin coroutines) are Apache-2.0.
 The Moonshine library bundles its own ONNX Runtime 1.23.2 (MIT, Microsoft Corporation).
+The sherpa-onnx library links its own ONNX Runtime 1.28.2 (MIT, Microsoft Corporation) statically.
 
 6. RUST CRATES (237)
 ------------------

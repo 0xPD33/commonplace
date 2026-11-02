@@ -33,6 +33,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("speculative", true)
         set(v) = sp.edit().putBoolean("speculative", v).apply()
 
+    /** Read answers aloud with the bundled voice (the `tts-en` pack) instead of the system engine. */
+    var bundledVoice: Boolean
+        get() = sp.getBoolean("bundled_voice", false)
+        set(v) = sp.edit().putBoolean("bundled_voice", v).apply()
+
     var showTimings: Boolean
         get() = sp.getBoolean("show_timings", false)
         set(v) = sp.edit().putBoolean("show_timings", v).apply()

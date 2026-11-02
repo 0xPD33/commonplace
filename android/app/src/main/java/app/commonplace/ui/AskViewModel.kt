@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Conversations
 import app.commonplace.engine.ModelState
+import app.commonplace.engine.ReadAloud
 import app.commonplace.engine.SavedTurn
 import app.commonplace.engine.VoiceInput
 import kotlinx.coroutines.Dispatchers
@@ -169,7 +170,36 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         voice.stop()
     }
 
+    private val readAloud = ReadAloud(app)
+    /** The id of the turn being read aloud. */
+    var speaking by mutableStateOf<Long?>(null)
+        private set
+    /** Why reading a turn aloud failed: the turn id and the message. */
+    var speakError by mutableStateOf<Pair<Long, String>?>(null)
+        private set
+
+    /** Read the answer aloud, or stop when it is the one being read. */
+    fun toggleSpeak(turn: Turn) {
+        val was = speaking
+        stopSpeaking()
+        // The bundled voice needs about 0.3 GB, which a model that is still writing may need.
+        if (was == turn.id || busy) return
+        speaking = turn.id
+        speakError = null
+        readAloud.speak(spokenText(turn.segments), holder.prefs.bundledVoice) { error ->
+            speaking = null
+            if (error != null) speakError = turn.id to error
+        }
+    }
+
+    fun stopSpeaking() {
+        if (speaking == null) return
+        speaking = null
+        readAloud.stop()
+    }
+
     override fun onCleared() {
+        readAloud.close()
         voice.stop()
         // The foreground service can keep the process alive; do not leave an answer running nobody sees.
         if (busy) holder.engineOrNull?.cancel()
@@ -187,6 +217,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         val query = text.trim()
         if (query.isEmpty() || busy) return
         val engine = holder.engineOrNull ?: return
+        stopSpeaking()
         if (listening) {
             // Free the speech model before the LLM needs the RAM; its trailing line is dropped.
             listening = false
@@ -260,6 +291,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
 
     fun newTopic() {
         if (busy) return
+        stopSpeaking()
         turns.clear()
         conversationId = System.currentTimeMillis()
     }
@@ -277,6 +309,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         if (busy) return
         val loaded = saved.load(id)
         if (loaded.isEmpty()) return
+        stopSpeaking()
         turns.clear()
         turns += loaded.map(Turn::restore)
         conversationId = id

@@ -125,6 +125,8 @@ ANDROID_LICENSE = {  # checked against each artifact's POM
     # The POM offers LGPL-2.1-or-later or Apache-2.0 at the user's choice.
     "net.java.dev.jna": ("Apache-2.0", "JNA contributors (https://github.com/java-native-access/jna); also offered under LGPL-2.1-or-later"),
     "ai.moonshine": ("MIT", "Moonshine AI (https://github.com/moonshine-ai/moonshine)"),
+    # A GitHub release file, not a Maven artifact: checked against the LICENSE of the repository at tag v2.0.1.
+    "k2-fsa": ("Apache-2.0", "Xiaomi Corporation and the k2-fsa authors (https://github.com/k2-fsa/sherpa-onnx)"),
 }
 
 
@@ -139,6 +141,7 @@ def android_section():
     out += [
         "Their own dependencies (AndroidX, the Kotlin standard library, Kotlin coroutines) are Apache-2.0.",
         "The Moonshine library bundles its own ONNX Runtime 1.23.2 (MIT, Microsoft Corporation).",
+        "The sherpa-onnx library links its own ONNX Runtime 1.28.2 (MIT, Microsoft Corporation) statically.",
     ]
     return out
 
@@ -249,6 +252,10 @@ def main():
     w("Moonshine Medium Streaming (English)  MIT")
     w("    Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.")
     w("    (https://github.com/moonshine-ai/moonshine)")
+    w("Supertonic 2 (int8)  BigScience OpenRAIL-M")
+    w("    Read-aloud voice by Supertone Inc., int8 ONNX export by the sherpa-onnx project. It is not in the app file:")
+    w("    you install it as the optional tts-en pack, which holds the license text and its use restrictions.")
+    w("    (https://huggingface.co/Supertone/supertonic-2)")
     w("")
     w("4. FONT")
     w("-" * 7)

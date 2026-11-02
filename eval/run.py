@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from common import (ABLATIONS, BIN, DEFAULT_MODEL, LIBRARY, PHONE_CLI, REPO, RUNS, append_jsonl,
-                    cli_flags, git_describe, library_model, library_packs, load_queries, now,
+                    cli_flags, git_describe, library_model, library_packs, load_queries, now, portable,
                     read_jsonl, sha256, split_evidence, write_json)
 
 
@@ -66,7 +66,7 @@ def main():
     meta_path = out / "meta.json"
     if meta_path.exists():
         meta = json.loads(meta_path.read_text())
-        if meta["flags"] != flags or meta.get("cli", []) != cli or meta["model"]["path"] != model["path"] or meta["library"] != a.library or meta.get("live_history", False) != a.live_history:
+        if meta["flags"] != flags or meta.get("cli", []) != cli or portable(REPO / meta["model"]["path"]) != portable(REPO / model["path"]) or meta["library"] != a.library or meta.get("live_history", False) != a.live_history:
             sys.exit(f"{run_id} exists with other settings; pick a new --run-id")
         # A resume may add query files (the earlier answers stay).
         meta["queries"] = a.queries
@@ -76,9 +76,9 @@ def main():
             "run_id": run_id,
             "started": now(),
             "git": git_describe(),
-            "bin": str(Path(a.bin).resolve()),
+            "bin": portable(a.bin),
             "binary_sha256": sha256(Path(a.bin)),
-            "model": {"path": model["path"], "sha256": model.get("sha256") or sha256(REPO / model["path"]),
+            "model": {"path": portable(REPO / model["path"]), "sha256": model.get("sha256") or sha256(REPO / model["path"]),
                       "from_library": not own_model},
             "flags": flags,
             "cli": cli,

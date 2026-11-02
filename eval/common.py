@@ -18,6 +18,16 @@ LIBRARY = "data/library"
 DEFAULT_MODEL = "data/models/llm/Ling-3.0-tiny-Q4_0.gguf"
 # What the phone ships, as `commonplace` flags: fusion pool size and the quantized encoders.
 PHONE_CLI = ["--fuse-keep=24", "--leaf-model=onnx/model_quantized.onnx", "--ettin-model=onnx/model_sel8.onnx"]
+
+
+def portable(p):
+    """A path for files we publish, without the user name: relative to the repo, ~ for the home folder, else the file name."""
+    p = Path(p).resolve()
+    if p.is_relative_to(REPO):
+        return str(p.relative_to(REPO))
+    if p.is_relative_to(Path.home()):
+        return "~/" + str(p.relative_to(Path.home()))
+    return p.name
 ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-doc2query", "no-llm"]
 CATEGORIES = [
     "factual", "explanation", "comparison", "multihop", "numeric",

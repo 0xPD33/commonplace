@@ -1,4 +1,4 @@
-//! Desktop CLI over the same core as the app: ask, retrieve, bench, serve-eval, info.
+//! Desktop CLI over the same core as the app: ask, retrieve, bench, serve-eval, pool, rerank, encode, add-doc, info, pack.
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
@@ -100,6 +100,9 @@ struct Opts {
     /// Model defaults to use instead of the ones the model file implies: default, gemma4 or gemma4-npu.
     #[arg(long, global = true)]
     profile: Option<String>,
+    /// serve-eval only: answer from the model alone, with no search (the eval's closed-book reference).
+    #[arg(long, global = true)]
+    closed_book: bool,
 }
 
 #[derive(Subcommand)]
@@ -300,6 +303,28 @@ fn outcome_json(o: &AskOutcome) -> serde_json::Value {
     })
 }
 
+const CLOSED_BOOK_SYSTEM: &str = "You are a research assistant with no sources and no internet access. Answer from your own
+knowledge. Start with a direct answer in one or two sentences, then give supporting detail, in about 100 to 200
+words of plain prose. If you do not know, or the question needs live or personal data, say so in your first sentence.";
+
+/// The model alone, without the library: shows what retrieval adds. Numbers come out unverified, as in small talk.
+fn closed_book(e: &Engine, req: &EvalReq) -> Result<serde_json::Value> {
+    let (_, llm) = e.llm().context("no model loaded")?;
+    let earlier: String = req.history.iter().map(|t| format!("Earlier question: {}\nEarlier answer: {}\n\n", t.query, t.answer)).collect();
+    let t0 = std::time::Instant::now();
+    let mut raw = String::new();
+    let max_tokens = e.settings.read().unwrap().max_answer_tokens;
+    let st = llm.generate(CLOSED_BOOK_SYSTEM, &format!("{earlier}{}", req.query), &commonplace_core::llm::GenParams::synthesis(max_tokens), &mut |t| {
+        raw.push_str(t);
+        true
+    })?;
+    let segments = commonplace_core::citations::check(raw.trim(), 0, &Default::default());
+    Ok(serde_json::json!({
+        "kind": "Question", "answer": plain_text(&segments), "segments": segments, "sources": [],
+        "record": { "total_ms": t0.elapsed().as_secs_f64() * 1000.0, "synthesis": st },
+    }))
+}
+
 fn print_summary(o: &AskOutcome) {
     let unverified: Vec<&String> = o.segments.iter().filter_map(|s| if let Segment::Unverified(t) = s { Some(t) } else { None }).collect();
     if !unverified.is_empty() {
@@ -454,8 +479,8 @@ fn main() -> Result<()> {
                 }
                 let req: EvalReq = serde_json::from_str(&line)?;
                 let sink = TermSink { printed: 0.into(), quiet: true };
-                let v = match e.ask(&AskRequest { query: req.query, history: req.history, think: req.think, packs: req.packs }, &sink) {
-                    Ok(out) => outcome_json(&out),
+                let v = match if o.closed_book { closed_book(&e, &req) } else { e.ask(&AskRequest { query: req.query, history: req.history, think: req.think, packs: req.packs }, &sink).map(|out| outcome_json(&out)) } {
+                    Ok(v) => v,
                     Err(err) => serde_json::json!({ "error": format!("{err:#}") }),
                 };
                 println!("{v}");

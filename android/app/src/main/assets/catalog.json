@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "tag": "packs-2026-09",
+  "tag": "packs-2026-11",
   "repo": "0xPD33/commonplace-packs",
   "bundles": [
     {
@@ -95,66 +95,79 @@
       "members": [
         {
           "pack_id": "textbooks-en",
-          "title": "Open textbooks (Pressbooks, LibreTexts)"
+          "title": "Open textbooks (Pressbooks, LibreTexts)",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "wikibooks-en",
-          "title": "English Wikibooks"
+          "title": "English Wikibooks",
+          "build_date": "2026-11-02"
         },
         {
           "pack_id": "wikiquote-en",
-          "title": "English Wikiquote"
+          "title": "English Wikiquote",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "wikivoyage-en",
-          "title": "English Wikivoyage"
+          "title": "English Wikivoyage",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "wiktionary-en",
-          "title": "English Wiktionary (dictionary)"
+          "title": "English Wiktionary (dictionary)",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "wikiversity-en",
-          "title": "English Wikiversity"
+          "title": "English Wikiversity",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "devdocs-en",
-          "title": "DevDocs (20 documentation sets)"
+          "title": "DevDocs (20 documentation sets)",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "archwiki-en",
-          "title": "ArchWiki"
+          "title": "ArchWiki",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "wikem-en",
-          "title": "WikEM emergency medicine"
+          "title": "WikEM emergency medicine",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "openstax",
-          "title": "OpenStax textbooks"
+          "title": "OpenStax textbooks",
+          "build_date": "2026-10-02"
         },
         {
           "pack_id": "medlineplus",
-          "title": "MedlinePlus health topics"
+          "title": "MedlinePlus health topics",
+          "build_date": "2026-09-29"
         },
         {
           "pack_id": "cdc-travel",
-          "title": "CDC travel health by destination"
+          "title": "CDC travel health by destination",
+          "build_date": "2026-09-30"
         },
         {
           "pack_id": "factbook",
-          "title": "CIA World Factbook (final edition)"
+          "title": "CIA World Factbook (final edition)",
+          "build_date": "2026-09-30"
         }
       ],
       "recommended": false,
-      "download_bytes": 1995067392,
-      "installed_bytes": 1994826475,
+      "download_bytes": 1993971712,
+      "installed_bytes": 1993728079,
       "files": [
         {
           "name": "commonplace-breadth.tar",
-          "bytes": 1995067392,
-          "sha256": "36a7db9870c411e082316e2d48aad0fc570efab995697f4ef53422d39c32c525",
-          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/commonplace-breadth.tar?download=true"
+          "bytes": 1993971712,
+          "sha256": "27031b820b97bab5a601ab9384558ebfe5d1ea8433f5f087d2489929a030cf11",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-11/commonplace-breadth.tar?download=true"
         }
       ]
     }
@@ -167,6 +180,7 @@
       "pack_type": "knowledge",
       "snapshot": "2026-09-25",
       "license": "CC0 1.0 (arXiv metadata)",
+      "attribution": "arXiv.org metadata via librarian-bots/arxiv-metadata-snapshot@1901619",
       "replaces": [],
       "recommended": false,
       "download_bytes": 3342380032,
@@ -253,6 +267,7 @@
       "pack_type": "knowledge",
       "snapshot": "2024-12-31",
       "license": "CC BY-SA 2.5/3.0/4.0 (per post)",
+      "attribution": "Stack Exchange, Inc. and the contributors of each site (thread URL in each article; authors in CREDITS.txt.zst); common-pile/stackexchange@5ec3aa2",
       "replaces": [],
       "recommended": false,
       "download_bytes": 2459783680,
@@ -294,6 +309,7 @@
       "pack_type": "model",
       "snapshot": "",
       "license": "MIT",
+      "attribution": "Moonshine Medium Streaming EN by Moonshine AI (UsefulSensors); download.moonshine.ai",
       "replaces": [],
       "recommended": false,
       "download_bytes": 269154816,

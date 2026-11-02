@@ -182,7 +182,7 @@ flowchart TB
     direction LR
     SRC["Dumps, ZIMs,<br/>datasets, GGUF"] --> CHUNK["Chunk into<br/>passages"] --> EMB["mxbai embeddings<br/>on the GPU"] --> PB["packbuild: one .tar<br/>per pack, bundles"]
   end
-  PB --> HF["Hugging Face dataset, folder packs-2026-09"]
+  PB --> HF["Hugging Face dataset, folders packs-2026-09 and packs-2026-11"]
   HF --> BR
   subgraph Phone["Phone: no INTERNET permission"]
     direction TB

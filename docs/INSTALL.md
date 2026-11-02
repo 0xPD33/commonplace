@@ -59,8 +59,8 @@ In the Library, each knowledge pack has a switch. A pack that is off stays insta
 
 ### Install from a computer
 
-1. Download the files from the folder `packs-2026-09` of the dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs/tree/main/packs-2026-09).
-2. Compare each file with `SHA256SUMS` in the same folder: `sha256sum -c SHA256SUMS --ignore-missing`.
+1. Download the files from the dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs/tree/main). The Reference shelf is in the folder `packs-2026-11`, and all other files are in `packs-2026-09`.
+2. Compare each file with `SHA256SUMS` in the folder `packs-2026-11`, which lists every file: `sha256sum -c SHA256SUMS --ignore-missing`.
 3. Connect the phone with USB and copy the files to its **Downloads** folder.
 4. On the phone, tap **Install from Downloads** in the Library and select the files.
 

@@ -1,6 +1,20 @@
 # Changelog
 
-Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`.
+Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`. Since 0.4.0 the Reference shelf (`commonplace-breadth.tar`) is in the folder `packs-2026-11`; the old file stays in `packs-2026-09` for older app versions.
+
+## [0.4.0] - 2026-11-02
+
+### Added
+
+- **Pack updates.** When this version of the app lists a newer build of a pack you have, the Library shows it under Updates. Download it and install it: it replaces the old pack. The app has no internet access, so it learns of new builds only from a new app version.
+- **Read aloud.** A speaker button under each answer reads it aloud, on the phone. By default the app uses the phone's own offline voice for the answer's language. The optional `tts-en` pack (65 MB) adds a bundled English voice, Phonon, which Settings offers once the pack is installed. It needs an arm64 phone and holds about 0.2 GB of memory while it reads. Reading stops when you ask a new question or leave the Ask screen.
+
+### Changed
+
+- **Better how-to answers.** A question that starts with "How do I", "How can I" or "How to" gets the steps in order. The model writes the method it knows and checks it against the sources, which win for health and safety steps. On 34 how-to questions with Ling, Claude's grade rose from 4.18 to 4.90 of 10. With Gemma the average stayed the same, and the first-aid answers got more correct. No first-aid answer got less correct with either model. Steps that no source supports show as unverified.
+- **Wikibooks without folk remedies.** The Reference shelf now leaves out the Wikibooks alternative-medicine books (482 of 83,521 pages). Their home remedies, such as raw onion on a burn, reached first-aid answers. The Library lists the Reference shelf under Updates until you install the new one.
+- **llama.cpp b12032.** The CPU models run on the newer llama.cpp, with the same speed on a Pixel 10.
+- **Think it through** is now one of the follow-up chips, so it no longer covers the answer's buttons.
 
 ## [0.3.2] - 2026-10-24
 

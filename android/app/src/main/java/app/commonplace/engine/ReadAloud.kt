@@ -163,12 +163,14 @@ class ReadAloud(context: Context) {
                 // a blocking write could hang on a track that stop() paused.
                 // Temperature 0.3 instead of 0.7 misread fewer words in the desktop round trip (scripts/e2e_tts.py).
                 val config = GenerationConfig(numSteps = 5, referenceAudio = voice.samples, referenceSampleRate = voice.sampleRate, extra = mapOf("temperature" to "0.3"))
-                tts.generateWithConfigAndCallback(text, config) { samples ->
+                // Sherpa's JNI looks up invoke([F)Ljava/lang/Integer; on the callback's class. Kotlin 2 compiles a plain
+                // lambda through invokedynamic without that method, so the call aborts; a class-based lambda has it.
+                tts.generateWithConfigAndCallback(text, config) @JvmSerializableLambda chunk@{ samples ->
                     var off = 0
                     while (off < samples.size) {
-                        if (!current(id)) return@generateWithConfigAndCallback 0
+                        if (!current(id)) return@chunk 0
                         val n = t.write(samples, off, samples.size - off, AudioTrack.WRITE_NON_BLOCKING)
-                        if (n < 0) return@generateWithConfigAndCallback 0
+                        if (n < 0) return@chunk 0
                         off += n
                         if (off < samples.size) Thread.sleep(20)
                     }

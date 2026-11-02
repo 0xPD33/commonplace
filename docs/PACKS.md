@@ -16,8 +16,7 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
   tantivy/           optional BM25 index (tantivy 0.26.2)
   dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
   wikidata.sqlite    wikidata packs only
-  <model>.gguf       model packs only (a voice pack holds other files instead: role `stt` the Moonshine files, role `tts`
-                     the Pocket TTS files and its voice clip; `model.file` names the main one)
+  <model>.gguf       model packs only (a voice pack, role `stt`, holds the Moonshine files instead; `model.file` names the main one)
 ```
 
 ### Frame store (`store/`, `cards/`)
@@ -112,7 +111,8 @@ $PB model --dir data/models/stt/moonshine-medium-streaming-en --file encoder.ort
   --title "Voice input (Moonshine Medium, English)" --role stt --hf-repo download.moonshine.ai/model/medium-streaming-en \
   --revision quantized_26_08_21 --license MIT --notice pipeline/notices/voice-en.txt \
   --attribution "Moonshine Medium Streaming EN by Moonshine AI (UsefulSensors); download.moonshine.ai"
-# The read-aloud voice: the same, role tts (scripts/fetch-models.sh tts gets the files).
+# Developer builds only, not in the catalog: a bundled read-aloud voice, role tts (scripts/fetch-models.sh tts gets
+# the files). Push it to filesDir/library/packs/tts-en; Settings then offers it under Read aloud.
 $PB model --dir data/models/tts/pocket-tts-int8 --file lm_main.int8.onnx --out data/library/packs/tts-en --pack-id tts-en \
   --title "Read aloud voice (Pocket TTS, English)" --role tts \
   --hf-repo github.com/k2-fsa/sherpa-onnx/releases/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26 \

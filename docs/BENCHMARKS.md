@@ -254,6 +254,12 @@ The reranker files, on the distillation harness (161 questions with Claude-grade
 
 Moonshine Medium Streaming EN on a 44 s LibriVox clip, streamed in 100 ms chunks at real time: WER 2.5–4.2% over four runs, first live text 1.8 s after the audio starts, final text 0.33–0.46 s after a stop in the middle of a sentence, no text from 8 s of silence. Memory: 750 MB after load, 830–925 MB peak. A real voice on the phone's microphone is not tested.
 
+### Read aloud (2026-11-02)
+
+Pixel 10, GrapheneOS. The system voice (GrapheneOS Speech Services) gave the first audio 3.1 s after the tap, cold.
+The bundled voice (developer builds only; Pocket TTS int8 through sherpa-onnx, 2 threads) ran at a real-time factor of about 1.0, against 0.2 on the desktop. It had 2 audio underruns per 25-word answer, first audio after 4.3–4.8 s, and +523–562 MB PSS. 4 threads were no faster than 2. So the app ships the system voice only.
+On the desktop (2 threads, Moonshine round trip, 3 runs each), spelling numbers out before Pocket TTS cut the WER of an answer full of numbers from 13.0% to 6.1%, and of the Eiffel Tower answer from 12.5% to 8.8%.
+
 ## Experiments and decisions
 
 Each row is a change that we tested. "Kept" means the app has it now.

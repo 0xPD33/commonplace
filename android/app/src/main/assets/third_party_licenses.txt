@@ -36,13 +36,6 @@ deberta-v3-xsmall-squad2  Apache-2.0
 Moonshine Medium Streaming (English)  MIT
     Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.
     (https://github.com/moonshine-ai/moonshine)
-Pocket TTS (int8)  CC-BY-4.0
-    Read-aloud model by Kyutai (https://huggingface.co/kyutai/pocket-tts), ONNX export by KevinAHM
-    (https://huggingface.co/KevinAHM/pocket-tts-onnx), packaged by the sherpa-onnx project. It is not in the app
-    file: you install it as the optional tts-en pack, which holds the license text and Kyutai's use policy.
-Pocket TTS voice "stuart_bell"  CC0-1.0
-    The one voice of the tts-en pack: a LibriVox recording read by Stuart Bell, from Voice-Zero
-    (https://github.com/OwenTyme/voice-zero) through https://huggingface.co/kyutai/tts-voices (voice-zero/stuart_bell.wav).
 
 4. FONT
 -------

@@ -31,6 +31,11 @@ SKIP_TITLE_RE = re.compile(r"^(File|Category|Template|Help|Special|Wikibooks|Wik
 # real English pages that end the same way ("Perl Programming/Keywords/no"), hence a flag.
 TRANSLATION_RE = re.compile(r"/(ar|bg|bn|ca|cs|da|de|el|es|et|fa|fi|fr|he|hi|hr|hu|id|it|ja|ko|lt|lv|ms|nb|nl|no|pl|pt|pt-br|"
                             r"ro|ru|sk|sl|sr|sv|sw|ta|te|th|tr|uk|ur|vi|zh|zh-hans|zh-hant)$")
+# Wikibooks' "Alternative medicine" shelf (2026-11), plus Homeopathy. Their folk cures ("raw onion on a burn") reached
+# first-aid answers next to the nursing textbooks.
+ALT_MEDICINE = {"Ayurveda", "Chinese Medicinal Formulas", "Complete Guide to Essential Oils", "Ethnomedicine", "Field Remedies",
+                "Home Remedies", "Homeopathy", "Hypnosis", "Massage - Synergistic Techniques",
+                "The Complete Encyclopedia of Self-Help Techniques", "Tools for Healthy Living", "Traditional Chinese Medicine"}
 MIN_ARTICLE_WORDS = 40
 WS = re.compile(r"\s+")
 
@@ -94,6 +99,7 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--prefix", action="store_true", help="prefix titles with the docset name (DevDocs)")
     ap.add_argument("--drop-translations", action="store_true", help="skip language-code subpages (WikEM)")
+    ap.add_argument("--drop-alt-medicine", action="store_true", help="skip the alternative-medicine books (Wikibooks)")
     a = ap.parse_args()
 
     w = PackWriter(a.out)
@@ -103,7 +109,8 @@ def main() -> None:
         kept = 0
         for i in range(zim.all_entry_count):
             e = zim._get_entry_by_id(i)
-            if e.is_redirect or SKIP_TITLE_RE.match(e.title) or (a.drop_translations and TRANSLATION_RE.search(e.title)):
+            if (e.is_redirect or SKIP_TITLE_RE.match(e.title) or (a.drop_translations and TRANSLATION_RE.search(e.title))
+                    or (a.drop_alt_medicine and e.title.split("/")[0] in ALT_MEDICINE)):
                 continue
             item = e.get_item()
             if not item.mimetype.startswith("text/html"):

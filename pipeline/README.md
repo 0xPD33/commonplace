@@ -36,7 +36,7 @@ python -m commonplace_pipeline.stackexchange --input data/raw/stackexchange --ou
 python -m commonplace_pipeline.openstax --input data/raw/openstax/openstax_books.jsonl --out data/work/openstax
 python -m commonplace_pipeline.arxiv --input data/raw/arxiv --out data/work/arxiv-abs
 python -m commonplace_pipeline.medlineplus --input data/raw/medlineplus/mplus_topics_2026-09-26.xml --out data/work/medlineplus
-python -m commonplace_pipeline.zim --input data/raw/zim/wikibooks_en_all_nopic_2026-04.zim --out data/work/wikibooks-en
+python -m commonplace_pipeline.zim --drop-alt-medicine --input data/raw/zim/wikibooks_en_all_nopic_2026-04.zim --out data/work/wikibooks-en
 python -m commonplace_pipeline.zim --prefix --input data/raw/zim/devdocs_en_*.zim --out data/work/devdocs-en
 python -m commonplace_pipeline.textbooks --input data/raw/common-pile/pressbooks-0000.json.gz \
   data/raw/common-pile/libretexts-0000.json.gz --out data/work/textbooks-en

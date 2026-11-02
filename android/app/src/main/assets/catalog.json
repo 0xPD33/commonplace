@@ -268,21 +268,21 @@
     },
     {
       "pack_id": "tts-en",
-      "title": "Read aloud voice (Supertonic 2, English)",
+      "title": "Read aloud voice (Pocket TTS, English)",
       "description": "A natural voice that reads answers aloud. English only. Without it, the phone's own voice reads them.",
       "pack_type": "model",
       "snapshot": "",
-      "license": "BigScience OpenRAIL-M",
-      "attribution": "Supertonic 2 by Supertone Inc.; int8 ONNX export by the sherpa-onnx project (k2-fsa)",
+      "license": "CC-BY-4.0 (model), CC0-1.0 (voice)",
+      "attribution": "Pocket TTS by Kyutai; ONNX export by KevinAHM, packaged by sherpa-onnx (k2-fsa); voice: Stuart Bell (LibriVox, via Voice-Zero)",
       "replaces": [],
       "recommended": false,
-      "download_bytes": 96430592,
-      "installed_bytes": 96420760,
+      "download_bytes": 199070208,
+      "installed_bytes": 199058811,
       "files": [
         {
           "name": "tts-en.tar",
-          "bytes": 96430592,
-          "sha256": "11c9eba777c5941e4cd2d48be190dd0f5771cc64181698317b9763eb077fbb3a",
+          "bytes": 199070208,
+          "sha256": "eac80978859b5a2f32efb0d795f05ffd9c7146feaba5bec5f9ee60e6db8bd9b2",
           "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-09/tts-en.tar?download=true"
         }
       ]

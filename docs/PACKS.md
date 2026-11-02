@@ -17,7 +17,7 @@ There are three pack types: `knowledge`, `wikidata` and `model`.
   dense/             optional binary IVF: info.json, centroids.f16, lists.idx, codes.bin, ids.bin
   wikidata.sqlite    wikidata packs only
   <model>.gguf       model packs only (a voice pack holds other files instead: role `stt` the Moonshine files, role `tts`
-                     the Supertonic files; `model.file` names the main one)
+                     the Pocket TTS files and its voice clip; `model.file` names the main one)
 ```
 
 ### Frame store (`store/`, `cards/`)
@@ -113,11 +113,11 @@ $PB model --dir data/models/stt/moonshine-medium-streaming-en --file encoder.ort
   --revision quantized_26_08_21 --license MIT --notice pipeline/notices/voice-en.txt \
   --attribution "Moonshine Medium Streaming EN by Moonshine AI (UsefulSensors); download.moonshine.ai"
 # The read-aloud voice: the same, role tts (scripts/fetch-models.sh tts gets the files).
-$PB model --dir data/models/tts/supertonic-2-int8 --file tts.json --out data/library/packs/tts-en --pack-id tts-en \
-  --title "Read aloud voice (Supertonic 2, English)" --role tts \
-  --hf-repo github.com/k2-fsa/sherpa-onnx/releases/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06 \
-  --revision supertonic-2@75e6727618a02f323c720cba9478152d4bc16ca4 --license "BigScience OpenRAIL-M" --notice pipeline/notices/tts-en.txt \
-  --attribution "Supertonic 2 by Supertone Inc.; int8 ONNX export by the sherpa-onnx project (k2-fsa)"
+$PB model --dir data/models/tts/pocket-tts-int8 --file lm_main.int8.onnx --out data/library/packs/tts-en --pack-id tts-en \
+  --title "Read aloud voice (Pocket TTS, English)" --role tts \
+  --hf-repo github.com/k2-fsa/sherpa-onnx/releases/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26 \
+  --revision pocket-tts@db04f0e653473e5c7333c69686ac92b7460b0c1d --license "CC-BY-4.0 (model), CC0-1.0 (voice)" --notice pipeline/notices/tts-en.txt \
+  --attribution "Pocket TTS by Kyutai; ONNX export by KevinAHM, packaged by sherpa-onnx (k2-fsa); voice: Stuart Bell (LibriVox, via Voice-Zero)"
 
 # Notices: copy the notice into a built pack and fix its license or attribution (sources: pipeline/notices/).
 $PB notice --pack data/library/packs/wikem-en --notice pipeline/notices/wikem-en.txt --license "CC BY-SA 4.0"

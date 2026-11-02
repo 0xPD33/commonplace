@@ -14,7 +14,8 @@ import com.k2fsa.sherpa.onnx.GenerationConfig
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
-import com.k2fsa.sherpa.onnx.OfflineTtsSupertonicModelConfig
+import com.k2fsa.sherpa.onnx.OfflineTtsPocketModelConfig
+import com.k2fsa.sherpa.onnx.WaveReader
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
@@ -24,8 +25,9 @@ import java.util.concurrent.TimeUnit
  * Reads an answer aloud on the device, with the system engine or the bundled voice.
  *
  * The system engine only uses a voice that needs no network, for the language of the answer. The bundled voice is
- * Supertonic 2 (English) from the `tts-en` pack, run by sherpa-onnx. It holds about 0.3 GB while it speaks, so it
- * loads for each answer and is freed at the end. `onDone` runs on the main thread, and never for a stopped answer.
+ * Pocket TTS (English) from the `tts-en` pack, run by sherpa-onnx, always with the pack's own voice clip. It holds
+ * about 0.6 GB while it speaks, so it loads for each answer and is freed at the end. `onDone` runs on the main
+ * thread, and never for a stopped answer.
  */
 class ReadAloud(context: Context) {
     private val app = context.applicationContext
@@ -38,7 +40,7 @@ class ReadAloud(context: Context) {
     private var track: AudioTrack? = null
     @Volatile private var system: TextToSpeech? = null
 
-    val bundledInstalled: Boolean get() = File(dir, "tts.json").isFile
+    val bundledInstalled: Boolean get() = File(dir, "lm_main.int8.onnx").isFile
 
     /** Starts reading [text]; a message comes back through [onDone] if it cannot. */
     fun speak(text: String, bundled: Boolean, onDone: (error: String?) -> Unit) {
@@ -123,17 +125,18 @@ class ReadAloud(context: Context) {
 
     private fun speakBundled(id: Int, text: String): String? {
         val model = OfflineTtsModelConfig(
-            supertonic = OfflineTtsSupertonicModelConfig(
-                durationPredictor = "$dir/duration_predictor.int8.onnx",
-                textEncoder = "$dir/text_encoder.int8.onnx",
-                vectorEstimator = "$dir/vector_estimator.int8.onnx",
-                vocoder = "$dir/vocoder.int8.onnx",
-                ttsJson = "$dir/tts.json",
-                unicodeIndexer = "$dir/unicode_indexer.bin",
-                voiceStyle = "$dir/voice.bin",
+            pocket = OfflineTtsPocketModelConfig(
+                lmFlow = "$dir/lm_flow.int8.onnx",
+                lmMain = "$dir/lm_main.int8.onnx",
+                encoder = "$dir/encoder.onnx",
+                decoder = "$dir/decoder.int8.onnx",
+                textConditioner = "$dir/text_conditioner.onnx",
+                vocabJson = "$dir/vocab.json",
+                tokenScoresJson = "$dir/token_scores.json",
             ),
             numThreads = 2,
         )
+        val voice = WaveReader.readWave("$dir/voice.wav")
         val tts = OfflineTts(config = OfflineTtsConfig(model = model))
         try {
             val rate = tts.sampleRate()
@@ -149,9 +152,10 @@ class ReadAloud(context: Context) {
             try {
                 t.play()
                 var frames = 0
-                // Sherpa calls back once per sentence. Waiting for room in the track paces synthesis to playback;
+                // Sherpa calls back with each piece of audio. Waiting for room in the track paces synthesis to playback;
                 // a blocking write could hang on a track that stop() paused.
-                val config = GenerationConfig(sid = 0, numSteps = 5, extra = mapOf("lang" to "en"))
+                // Temperature 0.3 instead of 0.7 misread fewer words in the desktop round trip (scripts/e2e_tts.py).
+                val config = GenerationConfig(numSteps = 5, referenceAudio = voice.samples, referenceSampleRate = voice.sampleRate, extra = mapOf("temperature" to "0.3"))
                 tts.generateWithConfigAndCallback(text, config) { samples ->
                     var off = 0
                     while (off < samples.size) {

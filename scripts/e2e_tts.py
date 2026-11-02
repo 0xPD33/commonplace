@@ -3,10 +3,10 @@
 # requires-python = ">=3.10"
 # dependencies = ["sherpa-onnx==2.0.1", "moonshine-voice==0.1.5", "numpy", "soundfile"]
 # ///
-"""Desktop end-to-end check of the read-aloud voice (Supertonic 2 int8 through sherpa-onnx, the tts-en pack).
+"""Desktop end-to-end check of the read-aloud voice (Pocket TTS int8 through sherpa-onnx, the tts-en pack).
 
-Synthesizes a sample answer with the app's settings (2 threads, 5 steps, voice 0) and the per-sentence callback
-the app plays from. Checks the real-time factor, the time to the first sentence and memory, then transcribes the
+Synthesizes a sample answer with the app's settings (2 threads, 5 steps, temperature 0.3, the pack's voice.wav) and the streaming
+callback the app plays from. Checks the real-time factor, the time to the first sentence and memory, then transcribes the
 audio with Moonshine (the voice-input model) and checks the word error rate against the text.
 Writes artifacts/tts/<stamp>/{answer.wav,report.json,transcript.txt}.
 
@@ -29,7 +29,7 @@ from moonshine_voice import ModelArch
 from moonshine_voice.transcriber import Transcriber, TranscriptEventListener
 
 ROOT = Path(__file__).resolve().parent.parent
-VOICE = next((d for d in (ROOT / "data/library/packs/tts-en", ROOT / "data/models/tts/supertonic-2-int8") if (d / "tts.json").is_file()), None)
+VOICE = next((d for d in (ROOT / "data/library/packs/tts-en", ROOT / "data/models/tts/pocket-tts-int8") if (d / "lm_main.int8.onnx").is_file()), None)
 STT = ROOT / "data/models/stt/moonshine-medium-streaming-en"
 TEXT = (
     "The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris. "
@@ -39,11 +39,11 @@ TEXT = (
 )
 
 # Pass thresholds. Speed is loose: the desktop shares its CPU with other jobs, and a phone core is slower.
-# The voice starts from random noise, so the WER of the round trip varies from run to run (about 3-15%).
-MAX_RTF = 0.3
+# The voice samples its output, so the WER of the round trip varies from run to run (about 8-15%).
+MAX_RTF = 0.5
 MAX_FIRST_AUDIO_S = 2.0
 MAX_WER = 0.20
-MAX_RSS_MB = 600
+MAX_RSS_MB = 900
 
 sys.path.insert(0, str(ROOT / "scripts"))
 from e2e_stt import wer, words  # noqa: E402
@@ -77,15 +77,17 @@ def main() -> int:
         sys.exit(f"Moonshine missing: run scripts/fetch-models.sh stt ({STT})")
     d = VOICE
     model = so.OfflineTtsModelConfig(num_threads=2, provider="cpu")
-    model.supertonic = so.OfflineTtsSupertonicModelConfig(
-        f"{d}/duration_predictor.int8.onnx", f"{d}/text_encoder.int8.onnx", f"{d}/vector_estimator.int8.onnx",
-        f"{d}/vocoder.int8.onnx", f"{d}/tts.json", f"{d}/unicode_indexer.bin", f"{d}/voice.bin",
+    model.pocket = so.OfflineTtsPocketModelConfig(
+        f"{d}/lm_flow.int8.onnx", f"{d}/lm_main.int8.onnx", f"{d}/encoder.onnx", f"{d}/decoder.int8.onnx",
+        f"{d}/text_conditioner.onnx", f"{d}/vocab.json", f"{d}/token_scores.json",
     )
     t0 = time.perf_counter()
     tts = so.OfflineTts(so.OfflineTtsConfig(model=model))
     load_s = time.perf_counter() - t0
+    voice, voice_sr = sf.read(d / "voice.wav", dtype="float32")
     gen = so.GenerationConfig()
-    gen.sid, gen.num_steps, gen.extra = 0, 5, {"lang": "en"}
+    gen.num_steps, gen.reference_audio, gen.reference_sample_rate = 5, voice.tolist(), voice_sr
+    gen.extra = {"temperature": "0.3"}
     blocks: list[tuple[float, int]] = []
     t0 = time.perf_counter()
 
@@ -118,8 +120,8 @@ def main() -> int:
     }
     checks = {
         f"RTF <= {MAX_RTF}": r["rtf"] <= MAX_RTF,
-        "audio arrives sentence by sentence": len(blocks) > 1,
-        f"first sentence in <= {MAX_FIRST_AUDIO_S}s": bool(blocks) and blocks[0][0] <= MAX_FIRST_AUDIO_S,
+        "audio arrives in pieces": len(blocks) > 1,
+        f"first audio in <= {MAX_FIRST_AUDIO_S}s": bool(blocks) and blocks[0][0] <= MAX_FIRST_AUDIO_S,
         f"WER <= {MAX_WER:.0%}": speech_wer <= MAX_WER,
         f"peak RSS <= {MAX_RSS_MB} MB": peak_mb <= MAX_RSS_MB,
     }

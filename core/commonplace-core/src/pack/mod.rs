@@ -44,7 +44,7 @@ pub enum ModelRole {
     LlmSmall,
     /// Speech to text (Moonshine). The Kotlin app loads it; no LLM loader does.
     Stt,
-    /// Text to speech (Supertonic through sherpa-onnx). The Kotlin app loads it, like `Stt`.
+    /// Text to speech (Pocket TTS through sherpa-onnx). The Kotlin app loads it, like `Stt`.
     Tts,
 }
 

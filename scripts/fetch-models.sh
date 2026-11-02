@@ -25,7 +25,8 @@ LING=bartowski/Ling-3.0-tiny-GGUF;         LING_REV=ea072726af0d2e8ba325b2f90fc0
 GEMMA=litert-community/gemma-4-E2B-it-litert-lm; GEMMA_REV=b3ca0d2f076785a8f4b2219ddbd2bdb99954eae1
 MAPLE=deepgrove/maple-preview-GGUF;       MAPLE_REV=f5466f918e0c50cdb9d4d47a6f35813509a42a30
 STT_URL=https://download.moonshine.ai/model/medium-streaming-en/quantized_26_08_21
-TTS_URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-supertonic-tts-int8-2026-03-06.tar.bz2
+TTS_URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-pocket-tts-int8-2026-01-26.tar.bz2
+VOICES=kyutai/tts-voices;                 VOICES_REV=323332d33f997de8394f24a193e1a76df720e01a
 READER=tomasmcm/nlpconnect-deberta-v3-xsmall-squad2-onnx; READER_REV=96a6338a770f28b36ace1915a3c22685534ffe1b
 
 encoders() {
@@ -68,12 +69,14 @@ stt() { # Moonshine Medium Streaming EN (MIT), the voice-input model
     mv "$dest.part" "$dest"
   done
 }
-tts() { # Supertonic 2 int8 (OpenRAIL-M) as sherpa-onnx exported it, the read-aloud voice; the model files only
-  local dest="$OUT/tts/supertonic-2-int8"
-  if [[ -s "$dest/tts.json" ]]; then echo "have $dest"; return; fi
-  echo "get  $dest"
-  mkdir -p "$dest"
-  curl -fL --retry 5 "$TTS_URL" | tar -xj -C "$dest" --strip-components=1 --wildcards '*.onnx' '*/tts.json' '*/unicode_indexer.bin' '*/voice.bin'
+tts() { # Pocket TTS int8 (CC-BY-4.0) as sherpa-onnx exported it, plus the built-in voice Stuart Bell (CC0): read aloud
+  local dest="$OUT/tts/pocket-tts-int8"
+  if [[ -s "$dest/lm_main.int8.onnx" ]]; then echo "have $dest"; else
+    echo "get  $dest"
+    mkdir -p "$dest"
+    curl -fL --retry 5 "$TTS_URL" | tar -xj -C "$dest" --strip-components=1 --wildcards '*.onnx' '*/vocab.json' '*/token_scores.json'
+  fi
+  fetch $VOICES $VOICES_REV voice-zero/stuart_bell.wav tts/pocket-tts-int8/voice.wav
 }
 for target in "${@:-all}"; do
   case "$target" in

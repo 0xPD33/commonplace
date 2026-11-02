@@ -60,7 +60,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -180,13 +179,7 @@ fun TurnView(
         if (turn.done && turn.error == null && !turn.searchOnly && turn.kind != TurnKind.CHAT) {
             Spacer(Modifier.height(8.dp))
             Column(Modifier.riseIn("actions-${turn.id}", delayMs = 120, rise = 10.dp, enabled = !turn.restored)) {
-                AnswerActions(
-                    turn,
-                    onThinkThrough.takeIf { !turn.think && !turn.stopped && turn.kind == TurnKind.QUESTION },
-                    onRetry,
-                    speaking,
-                    onSpeak,
-                )
+                AnswerActions(turn, onRetry, speaking, onSpeak)
                 if (speakError != null) {
                     Text(
                         "Could not read the answer aloud: $speakError",
@@ -195,7 +188,9 @@ fun TurnView(
                         modifier = Modifier.padding(bottom = 6.dp).testTag("speak_error"),
                     )
                 }
-                if (onAsk != null && !turn.stopped) FollowUpChips(turn, onAsk, onDraft)
+                val think = onThinkThrough.takeIf { !turn.think && !turn.stopped && turn.kind == TurnKind.QUESTION }
+                val ask = onAsk.takeIf { !turn.stopped }
+                if (think != null || ask != null) FollowUpChips(turn, think, ask, onDraft)
             }
         }
     }
@@ -526,11 +521,12 @@ fun SourcesRow(sources: List<SourceItem>, numbered: Boolean, onOpen: (OpenSource
 }
 
 @Composable
-private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: (() -> Unit)?, speaking: Boolean, onSpeak: () -> Unit) {
+private fun AnswerActions(turn: Turn, onRetry: (() -> Unit)?, speaking: Boolean, onSpeak: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().offset(x = (-12).dp)) {
+    // The offset lines the first icon up with the answer text; an IconButton pads its 24 dp icon to 48 dp.
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.offset(x = (-12).dp)) {
         IconButton(onClick = { clipboard.setText(AnnotatedString(shareText(turn, withQuestion = false))) }, modifier = Modifier.testTag("copy_answer")) {
             Icon(Icons.Outlined.ContentCopy, "Copy answer", Modifier.size(20.dp), tint = tint)
         }
@@ -548,22 +544,23 @@ private fun AnswerActions(turn: Turn, onThinkThrough: (() -> Unit)?, onRetry: ((
         if (onRetry != null) {
             IconButton(onClick = onRetry, modifier = Modifier.testTag("retry")) { Icon(Icons.Outlined.Refresh, "Retry", Modifier.size(22.dp), tint = tint) }
         }
-        Spacer(Modifier.weight(1f))
-        if (onThinkThrough != null) {
-            OutlinedButton(onClick = onThinkThrough, modifier = Modifier.offset(x = 12.dp).testTag("think_through")) {
-                Icon(Icons.Outlined.Psychology, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Think it through")
-            }
-        }
     }
 }
 
-/** Next steps under the latest answer: rewrite it, compare its main topic, or go on to a related article. */
+/** Next steps under an answer: think it through, and under the latest one rewrite it, compare its main topic, or go on to a related article. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FollowUpChips(turn: Turn, onAsk: (String) -> Unit, onDraft: ((String) -> Unit)?) {
+private fun FollowUpChips(turn: Turn, onThinkThrough: (() -> Unit)?, onAsk: ((String) -> Unit)?, onDraft: ((String) -> Unit)?) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("follow_up_chips")) {
+        if (onThinkThrough != null) {
+            AssistChip(
+                onClick = onThinkThrough,
+                label = { Text("Think it through") },
+                leadingIcon = { Icon(Icons.Outlined.Psychology, null, Modifier.size(AssistChipDefaults.IconSize)) },
+                modifier = Modifier.testTag("think_through"),
+            )
+        }
+        if (onAsk == null) return@FlowRow
         SuggestionChip(onClick = { onAsk("Make it shorter") }, label = { Text("Shorter") })
         SuggestionChip(onClick = { onAsk("Explain it more simply") }, label = { Text("Simpler") })
         if (turn.kind != TurnKind.QUESTION) return@FlowRow

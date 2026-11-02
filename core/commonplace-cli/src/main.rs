@@ -94,6 +94,9 @@ struct Opts {
     /// Drop evidence passages scoring more than this below the best rerank score.
     #[arg(long, global = true)]
     evidence_gap: Option<f32>,
+    /// Answer "how do I" questions with the general synthesis prompt, as before eval run `v2-A-ref`.
+    #[arg(long, global = true)]
+    no_how_to_steps: bool,
     /// Evidence token budget (default: the model profile's, 600 for every profile today).
     #[arg(long, global = true)]
     evidence_tokens: Option<usize>,
@@ -212,6 +215,7 @@ fn engine(o: &Opts) -> Result<Engine> {
         s.max_answer_tokens = o.max_answer_tokens.unwrap_or(s.max_answer_tokens);
         s.evidence_score_gap = o.evidence_gap.or(s.evidence_score_gap);
         s.evidence_tokens = o.evidence_tokens.or(s.evidence_tokens);
+        s.how_to_steps &= !o.no_how_to_steps;
     }
     if o.no_doc2query {
         eprintln!("note: --no-doc2query needs a pack built without questions; flag recorded only");

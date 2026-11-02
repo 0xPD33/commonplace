@@ -43,6 +43,9 @@ pub struct Settings {
     pub evidence_tokens: Option<usize>,
     /// Leave out passages whose rerank score is more than this below the best one (keeps at least 3).
     pub evidence_score_gap: Option<f32>,
+    /// Answer "how do I" questions with `prompts::HOW_TO_SYSTEM`. On 34 how-to questions it raised the judge's mean
+    /// from 4.18 to 4.90 of 10 (eval run `v2-A-ref`); the model's own steps show as unverified.
+    pub how_to_steps: bool,
     pub max_answer_tokens: u32,
     /// Let the model rewrite each message into a standalone, typo-free search query first.
     pub rewrite: bool,
@@ -59,6 +62,7 @@ impl Default for Settings {
             retrieval: RetrievalSettings::default(),
             evidence_tokens: None,
             evidence_score_gap: None,
+            how_to_steps: true,
             max_answer_tokens: 400,
             // Off: on the Pixel it doubles the card time (2.0 vs 1.0 s) and did not raise the seeds score (docs/BENCHMARKS.md).
             rewrite: false,
@@ -1124,7 +1128,8 @@ impl Engine {
         rec.evidence = rendered.clone();
         rec.evidence_tokens = crate::text::approx_tokens(&rendered);
         ev.numbers.extend(crate::text::numbers(&lib.snapshot_date()));
-        let system = prompts::synthesis_system(&lib.snapshot_date());
+        let how_to = s.how_to_steps && req.history.is_empty() && is_how_to(&req.query);
+        let system = if how_to { prompts::HOW_TO_SYSTEM.to_string() } else { prompts::synthesis_system(&lib.snapshot_date()) };
         // Keep the user's own words in front of the model; a rewritten question can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
         // The exchange the follow-up refers to, so it builds on it. Its citations point at another turn's sources.
@@ -1191,6 +1196,12 @@ impl Engine {
         card.computed = ev.computed.clone();
         Ok(finish(rec, segments, sources, card))
     }
+}
+
+/// A practical task ("How do I bleed a radiator?"). Phrasebook questions ("How do I say …") are travel lookups.
+fn is_how_to(query: &str) -> bool {
+    let q = query.trim().to_lowercase();
+    ["how do i ", "how can i ", "how should i ", "how to "].iter().any(|p| q.starts_with(p)) && !q.contains(" say ")
 }
 
 /// The sentences of an earlier answer without citations. Those about the sources ("The sources do not say …")

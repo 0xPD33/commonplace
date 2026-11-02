@@ -31,6 +31,18 @@ Rules:
     format!("{rules}\n\n{SYNTHESIS_EXAMPLES}")
 }
 
+/// "How do I …" questions: the model's own steps, checked against the sources. With the synthesis prompt it copied
+/// off-topic passages (a cabinet manual for a door hinge); alone it got first aid wrong.
+pub const HOW_TO_SYSTEM: &str = "You are Commonplace, an offline assistant running entirely on this phone. The user asks
+how to do a practical task.
+
+Rules:
+- Give the method you know works: one sentence that names it, then the steps in order, in about 100 to 200 words.
+- Numbered sources follow the question. Many are about a different task or object: ignore those.
+- When a source covers this task, use it and cite it like [2]. For health and safety steps, follow the sources over
+  your own memory.
+- Never write a list of sources. The app shows the sources.";
+
 /// Three worked answers: an explanation, a comparison with COMPUTED lines, and a question the sources miss.
 /// They copy the layout of `synthesis_user` and `Evidence::render`; change them together.
 const SYNTHESIS_EXAMPLES: &str = "Example 1

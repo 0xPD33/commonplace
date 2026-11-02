@@ -49,8 +49,8 @@ RANGE = {"to", "-", "–", "and", "or", "by", "x", "×", "+/-", "±", "and(-)", 
 FIRST_ARG = {"nowrap", "nobr", "small", "smaller", "big", "large", "em", "strong", "sic", "math", "mvar", "sub", "sup",
              "abbr", "keypress", "code", "var", "ill", "interlanguage link", "lang-rtl", "linktext", "not a typo", "flag",
              "flagcountry", "flagu", "country", "tooltip", "visible anchor", "vanchor", "anchor+", "title case", "gaps",
-             "ship", "sclass", "ussc", "wikt", "pslink"}
-SECOND_ARG = {"lang", "transl", "transliteration"}
+             "ship", "sclass", "ussc", "wikt", "pslink", "esc", "esccnty", "escyr", "nihongo foot", "nihongo2"}
+SECOND_ARG = {"lang", "langr", "transl", "transliteration"}
 LISTS = {"ubl", "unbulleted list", "plainlist", "flatlist", "hlist", "bulleted list", "bull list", "ordered list",
          "collapsible list", "cslist", "enum"}
 DATES = {"birth date", "death date", "birth date and age", "death date and age", "start date", "end date", "dob",
@@ -144,6 +144,8 @@ def render_template(t: wtp.Template) -> str:
         return ", ".join(x for x in p if x)
     if n in ("frac", "sfrac", "fraction") and p:
         return f"1/{p[0]}" if len(p) == 1 else f"{p[0]}/{p[1]}" if len(p) == 2 else f"{p[0]} {p[1]}/{p[2]}"
+    if n == "f1 gp" and len(p) >= 2:
+        return f"{p[0]} {p[1]} Grand Prix"
     if n in ("circa", "c.", "ca"):
         return f"c. {first}".strip()
     if n in ("as of", "asof"):

@@ -1,6 +1,12 @@
 package app.commonplace.engine
 
 import android.content.Context
+import android.icu.text.MeasureFormat
+import android.icu.text.MessageFormat
+import android.icu.util.Currency
+import android.icu.util.CurrencyAmount
+import android.icu.util.Measure
+import android.icu.util.MeasureUnit
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
@@ -17,6 +23,7 @@ import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsPocketModelConfig
 import com.k2fsa.sherpa.onnx.WaveReader
 import java.io.File
+import java.math.BigDecimal
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -48,7 +55,7 @@ class ReadAloud(context: Context) {
         Thread {
             val error = runCatching {
                 val lang = language(text)
-                if (bundled && bundledInstalled && lang.language == "en") speakBundled(id, text) else speakSystem(id, text, lang)
+                if (bundled && bundledInstalled && lang.language == "en") speakBundled(id, spellNumbers(text, lang)) else speakSystem(id, text, lang)
             }.getOrElse { it.message ?: it.toString() }
             main.post { if (synchronized(lock) { id == session }) onDone(error) }
         }.start()
@@ -191,5 +198,42 @@ class ReadAloud(context: Context) {
             }
         }
         return out.map { it.toString() }.filter { it.isNotBlank() }
+    }
+}
+
+/** A number token: a dollar sign, digits with thousands commas and decimals, then an ordinal suffix or a unit. */
+private val NUMBER = Regex("""(\$)?\b(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(st|nd|rd|th)?\b(?:\s?(%|°[CF]|(?:km|kg|cm|mm|m)\b))?""")
+private val UNITS = mapOf(
+    "%" to MeasureUnit.PERCENT, "°C" to MeasureUnit.CELSIUS, "°F" to MeasureUnit.FAHRENHEIT, "km" to MeasureUnit.KILOMETER,
+    "m" to MeasureUnit.METER, "cm" to MeasureUnit.CENTIMETER, "mm" to MeasureUnit.MILLIMETER, "kg" to MeasureUnit.KILOGRAM,
+)
+private val DIGITS = Regex("""[\d.,]*\d""")
+
+/**
+ * Numbers in words for the bundled voice, which misreads digits ("330" as "30-30"). ICU spells them out: a plain
+ * 4-digit number from 1000 to 2099 reads as a year ("nineteen thirty"), and a unit or dollar amount gets its full name.
+ * The SDK hides RuleBasedNumberFormat, so its rule sets come through MessageFormat's `spellout` argument.
+ * The system engine normalizes numbers itself.
+ */
+private fun spellNumbers(text: String, locale: Locale): String {
+    val words = MessageFormat("{0,spellout}", locale)
+    val year = MessageFormat("{0,spellout,%spellout-numbering-year}", locale)
+    val ordinal = MessageFormat("{0,spellout,%spellout-ordinal}", locale)
+    val measures = MeasureFormat.getInstance(locale, MeasureFormat.FormatWidth.WIDE)
+    return NUMBER.replace(text) { m ->
+        val (sign, whole, frac, suffix, unit) = m.destructured
+        val digits = whole.replace(",", "")
+        if (digits.length > 15) return@replace m.value
+        val n = BigDecimal(if (frac.isEmpty()) digits else "$digits.$frac")
+        val said = words.format(arrayOf(n))
+        when {
+            suffix.isNotEmpty() -> ordinal.format(arrayOf(digits.toLong()))
+            sign.isNotEmpty() || unit.isNotEmpty() -> {
+                val q = if (sign.isNotEmpty()) CurrencyAmount(n, Currency.getInstance("USD")) else Measure(n, UNITS.getValue(unit))
+                DIGITS.replaceFirst(measures.format(q), Regex.escapeReplacement(said))
+            }
+            frac.isEmpty() && ',' !in whole && digits.length == 4 && n.toInt() in 1000..2099 -> year.format(arrayOf(digits.toLong()))
+            else -> said
+        }
     }
 }

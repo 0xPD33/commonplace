@@ -1,0 +1,122 @@
+[
+ {
+  "id": "seed-cmp-06",
+  "judge": "yes"
+ },
+ {
+  "id": "seed-exp-04",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-fac-15",
+  "judge": "no"
+ },
+ {
+  "id": "seed-how-09",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-lt-11",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-mh-07",
+  "judge": "yes"
+ },
+ {
+  "id": "seed-num-16",
+  "judge": "yes"
+ },
+ {
+  "id": "seed-ooc-05",
+  "judge": "partly"
+ },
+ {
+  "id": "rob-cmp-01",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-trv-10",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-cmp-03",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-fu-02",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-fac-10",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-how-02",
+  "judge": "no"
+ },
+ {
+  "id": "seed-lt-02",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-fu-03",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-num-02",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-ooc-04",
+  "judge": "no"
+ },
+ {
+  "id": "rob-exp-03",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-trv-01",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-cmp-08",
+  "judge": "no"
+ },
+ {
+  "id": "seed-exp-05",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-fac-06",
+  "judge": "yes"
+ },
+ {
+  "id": "seed-how-06",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-lt-04",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-mh-14",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-num-10",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-ooc-06",
+  "judge": "no"
+ },
+ {
+  "id": "rob-fac-04",
+  "judge": "partly"
+ },
+ {
+  "id": "seed-trv-02",
+  "judge": "partly"
+ }
+]

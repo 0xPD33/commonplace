@@ -1,4 +1,4 @@
-//! The installed library: `<root>/packs/<pack_id>/` for knowledge, Wikidata and find(|m| m.role() == Some(role) && *role != ModelRole::Stt &&odel packs.
+//! The installed library: `<root>/packs/<pack_id>/` for knowledge, Wikidata and model packs.
 
 use crate::pack::{self, Embedder, Manifest, ModelRole, Pack, PackType};
 use crate::tools::wikidata::WikidataDb;

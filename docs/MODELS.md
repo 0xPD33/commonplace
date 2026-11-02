@@ -38,7 +38,7 @@ Notes:
 
 - The leaf-mt ONNX graph includes mean pooling and the 384→1024 projection. Its `sentence_embedding` output goes straight to the dense index. The app keeps the first 512 dimensions and normalizes them.
 - The Ettin ONNX graph stops at the transformer. The Rust core applies the sentence-transformers head itself: CLS token → Dense 256 (GELU) → LayerNorm → Dense 1. The Rust scores match a NumPy reference to three decimals (`commonplace rerank`).
-- Thinking is off by default. Ling-3.0-tiny needs "detailed thinking off" at the end of the system turn and `\n<think></think>` after the assistant header. llama.cpp `b11240` maps its template to the Ling 2.0 one, which adds neither, so `commonplace-llm` adds both.
+- Thinking is off by default. Ling-3.0-tiny needs "detailed thinking off" at the end of the system turn and `\n<think></think>` after the assistant header. llama.cpp `b12032` maps its template to the Ling 2.0 one, which adds neither, so `commonplace-llm` adds both.
 - LLM files ship as model packs (`packbuild model`), which the app imports like knowledge packs.
 - `commonplace-llm` saves the state of the answer system prompt to a file with `llama_state_seq_save_file`. The app uses `<data dir>/llm-state/`, and the CLI takes `--llm-state <dir>`. The file name is a hash of the model file name, its size and the system prompt. A new process loads the file only if its stored tokens equal the prompt's tokens; otherwise it prefills the prompt and writes a new file (`.tmp`, then a rename). At most 4 files stay, and the oldest goes first. For the 1,096-token answer prompt, the file is 26 MB.
 - Three softmax heads on the leaf-mt question embedding take the place of word lists. `pipeline/commonplace_pipeline/heads.py` trains them, and the core compiles them in:
@@ -61,7 +61,7 @@ The phone never runs this model. It embeds only the passages at build time. The 
 
 | Component | Version | Notes |
 |---|---|---|
-| llama.cpp | tag `b11240` (git submodule `third_party/llama.cpp`) | Static build. Android arm64 uses `GGML_CPU_ARM_ARCH=armv8.2-a+dotprod+i8mm` and KleidiAI. x86_64 uses explicit AVX2/FMA/F16C flags. |
+| llama.cpp | tag `b12032` (git submodule `third_party/llama.cpp`) | Static build. Android arm64 uses `GGML_CPU_ARM_ARCH=armv8.2-a+dotprod+i8mm` and KleidiAI. x86_64 uses explicit AVX2/FMA/F16C flags. |
 | ONNX Runtime | Android AAR `com.microsoft.onnxruntime:onnxruntime-android:1.30.0`; desktop `onnxruntime` 1.27.1 (nixpkgs) | Loaded at run time (`ort` crate, `load-dynamic`, C API level 22). |
 | Moonshine Voice | Android AAR `ai.moonshine:moonshine-voice:0.1.5`; desktop test `moonshine-voice==0.1.5` (PyPI) | JNI + C++ runtime for the voice model. Repacked without its ONNX Runtime copy. |
 | LiteRT-LM | `com.google.ai.edge.litertlm:litertlm-android:0.18.1` | Runs a `.litertlm` model pack. The file name picks the accelerator: `_Google_Tensor_` the NPU, `-gpu` the GPU, any other file the CPU. Speculative decoding is on for the NPU (Settings). If the pack cannot start, the app uses llama.cpp. |

@@ -303,7 +303,7 @@ The command line reads packs from `data/library/packs/`. To install a pack or a 
 | `eval/` | Evaluation harness (Claude with web search as the baseline and the judge) and the runs that the docs cite |
 | `scripts/` | Model and data downloads, Android build, emulator, end-to-end test driver, release |
 | `docs/` | [INSTALL](docs/INSTALL.md), [MODELS](docs/MODELS.md), [DATASETS](docs/DATASETS.md), [PACKS](docs/PACKS.md), [BENCHMARKS](docs/BENCHMARKS.md), [EVAL](docs/EVAL.md) |
-| `third_party/llama.cpp` | llama.cpp at tag `b11240` (git submodule) |
+| `third_party/llama.cpp` | llama.cpp at tag `b12032` (git submodule) |
 
 ## License
 

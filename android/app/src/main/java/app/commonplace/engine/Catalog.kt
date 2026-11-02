@@ -25,6 +25,9 @@ data class CatalogPack(
     val memberTitles: Map<String, String> = emptyMap(),
     /** The only chip the pack runs on (`Build.SOC_MODEL`, such as "Tensor G5"); null for every phone. */
     val chip: String? = null,
+    /** The manifest build date of this pack, or of each bundle member; null or absent in catalogs before 0.4.0. */
+    val buildDate: String? = null,
+    val memberBuildDates: Map<String, String> = emptyMap(),
 )
 
 class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
@@ -64,6 +67,9 @@ fun loadCatalog(ctx: Context): Catalog = runCatching {
                 members = List(members?.length() ?: 0) { members!!.getString(it) },
                 memberTitles = List(titled?.length() ?: 0) { titled!!.getJSONObject(it) }.associate { it.getString("pack_id") to it.getString("title") },
                 chip = p.optString("chip").ifEmpty { null },
+                buildDate = p.optString("build_date").ifEmpty { null },
+                memberBuildDates = List(titled?.length() ?: 0) { titled!!.getJSONObject(it) }
+                    .filter { it.has("build_date") }.associate { it.getString("pack_id") to it.getString("build_date") },
             )
         }
     }.orEmpty()
@@ -88,6 +94,18 @@ fun availablePacks(catalog: Catalog, installedIds: Set<String>): List<CatalogPac
 fun availableBundles(catalog: Catalog, installedIds: Set<String>): List<Pair<CatalogPack, Int>> {
     val have = present(catalog, installedIds)
     return catalog.bundles.map { b -> b to b.members.count { it in have } }.filter { (b, n) -> n < b.members.size }
+}
+
+/**
+ * Catalog downloads that hold a newer build of an installed pack (`installed` maps pack id to build date). The app has
+ * no internet access, so it learns of a new build only from the catalog of a new app version. Bundles come first, and
+ * a pack inside a listed bundle is not listed again.
+ */
+fun updates(catalog: Catalog, installed: Map<String, String>): List<CatalogPack> {
+    fun newer(id: String, date: String?) = date != null && installed[id]?.let { it < date } == true
+    val bundles = catalog.bundles.filter { b -> b.members.any { newer(it, b.memberBuildDates[it]) } }
+    val inBundles = bundles.flatMap { it.members }.toSet()
+    return bundles + catalog.packs.filter { it.packId !in inBundles && newer(it.packId, it.buildDate) }
 }
 
 class SelectedFile<T>(val handle: T, val name: String, val size: Long)

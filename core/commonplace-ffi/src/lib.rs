@@ -122,6 +122,8 @@ pub struct LibraryInfo {
     pub total_bytes: u64,
     pub cap_bytes: u64,
     pub snapshot_date: String,
+    /// The manifest `build_date` of every installed pack, switched on or off: the app compares it with the catalog's.
+    pub build_dates: std::collections::HashMap<String, String>,
 }
 
 #[derive(uniffi::Record)]
@@ -683,6 +685,15 @@ impl CommonplaceEngine {
             total_bytes: lib.total_bytes(),
             cap_bytes: FOOTPRINT_CAP,
             snapshot_date: lib.snapshot_date(),
+            build_dates: lib
+                .packs
+                .iter()
+                .map(|p| &p.manifest)
+                .chain(lib.models.iter().map(|m| &m.manifest))
+                .chain(lib.wikidata.as_ref().map(|(m, _)| m))
+                .chain(lib.disabled.iter())
+                .map(|m| (m.pack_id.clone(), m.build_date.clone()))
+                .collect(),
         }
     }
 

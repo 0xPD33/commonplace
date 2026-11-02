@@ -81,6 +81,7 @@ import app.commonplace.engine.Prefs
 import app.commonplace.engine.SelectedFile
 import app.commonplace.engine.availableBundles
 import app.commonplace.engine.availablePacks
+import app.commonplace.engine.updates
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.planImport
 import app.commonplace.engine.suitsPhone
@@ -322,6 +323,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
         lib?.let { l -> l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata }) }.orEmpty().toSet()
     }
     val available = remember(catalog, installedIds) { if (lib == null) emptyList() else availablePacks(catalog, installedIds) }
+    val newer = remember(catalog, lib) { lib?.let { updates(catalog, it.buildDates) }.orEmpty() }
     val lowRam = remember { Prefs(ctx).lowRam }
     // The starter bundle for this phone comes first and carries the badge.
     val bundles = remember(catalog, installedIds) {
@@ -359,6 +361,11 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (vm.import.running && !vm.import.passages) item { ImportProgress(vm.import) }
             if (vm.problems.isNotEmpty() && !vm.import.running) {
                 item { ErrorNote("Not installed:\n" + vm.problems.joinToString("\n") { "• $it" }) }
+            }
+            if (newer.isNotEmpty()) {
+                item { SectionLabel("Updates", Modifier.padding(top = 12.dp)) }
+                item { InfoNote("This version of the app lists newer builds of packs you have. Download one and install it: it replaces the old packs.") }
+                items(newer, key = { "update-" + it.packId }) { p -> AvailableRow(p, onClick = { detail = p }, badge = false) }
             }
             val getMore: LazyListScope.() -> Unit = {
                 if (bundles.isNotEmpty() || available.isNotEmpty()) {

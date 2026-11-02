@@ -70,7 +70,9 @@ for bid, title, description, members in bundle_specs:
         "title": title,
         "description": description,
         "pack_ids": ids,
-        "members": [{"pack_id": i, "title": json.loads((library / i / "manifest.json").read_text())["title"]} for i in ids],
+        # The app offers an update when an installed member is older than its build_date here.
+        "members": [{k: m[k] for k in ("pack_id", "title", "build_date")}
+                    for m in (json.loads((library / i / "manifest.json").read_text()) for i in ids)],
         "recommended": bid in RECOMMENDED_BUNDLES,
         "download_bytes": file["bytes"],
         "installed_bytes": sum(json.loads((library / i / "manifest.json").read_text())["size_bytes"] for i in ids),
@@ -95,6 +97,7 @@ for tar in sorted(dist.glob("*.tar")):
         "snapshot": m["snapshot_date"],
         "license": m["license"],
         "attribution": m["attribution"],
+        "build_date": m["build_date"],
         "replaces": m["replaces"],
         "recommended": pid in RECOMMENDED,
         "download_bytes": size,
@@ -117,16 +120,19 @@ Path(args.out).write_text(json.dumps(doc, indent=2) + "\n")
 
 if args.readme:
     cell = lambda s: " ".join(s.split()).replace("|", "/")
+    # A release adds files to a new folder; the files of earlier folders keep their place.
+    path = lambda f: f["url"].split("/resolve/main/", 1)[1].split("?", 1)[0]
     human = lambda n: f"{n / 1e9:.2f} GB" if n >= 1e9 else f"{n / 1e6:.1f} MB"
     rows = "\n".join(
-        f"| `{args.tag}/{p['files'][0]['name']}` | {human(p['download_bytes'])} | {cell(p['license'])} | {cell(credits[p['pack_id']])} | `{p['files'][0]['sha256']}` |"
+        f"| `{path(p['files'][0])}` | {human(p['download_bytes'])} | {cell(p['license'])} | {cell(credits[p['pack_id']])} | `{p['files'][0]['sha256']}` |"
         for p in packs
     )
     bundle_rows = "\n".join(
-        f"| `{args.tag}/{b['files'][0]['name']}` | {cell(b['title'])}: {', '.join(f'`{i}`' for i in b['pack_ids'])} | {human(b['download_bytes'])} | `{b['files'][0]['sha256']}` |"
+        f"| `{path(b['files'][0])}` | {cell(b['title'])}: {', '.join(f'`{i}`' for i in b['pack_ids'])} | {human(b['download_bytes'])} | `{b['files'][0]['sha256']}` |"
         for b in bundles
     )
-    member = lambda i: json.loads((library / i / "manifest.json").read_text())
+    entry = {p["pack_id"]: p for p in packs}
+    member = lambda i: json.loads((library / i / "manifest.json").read_text()) if (library / i / "manifest.json").exists() else entry[i]
     members = list(dict.fromkeys(i for b in bundles for i in b["pack_ids"]))
     member_rows = "\n".join(f"| `{i}` | {cell(member(i)['license'])} | {cell(member(i)['attribution'])} |" for i in members)
     own_file = [f"`{i}`" for i in members if i in {p["pack_id"] for p in packs}]
@@ -159,7 +165,7 @@ tags:
 
 These files are the knowledge packs and model packs of the Commonplace Android app. The app works offline and has no network permission. You download the files with a browser and install them with the app.
 
-Release: `{args.tag}`. Each pack is one `.tar` file in the folder `{args.tag}/`, and each bundle is one `.tar` file with several packs. The folder also holds `catalog.json` and `SHA256SUMS`.
+Release: `{args.tag}`. Each pack is one `.tar` file, and each bundle is one `.tar` file with several packs. The tables give each file's folder: a release adds its new files to a new folder and keeps the others in place. The folder `{args.tag}/` also holds `catalog.json` and `SHA256SUMS`.
 
 ## Install
 

@@ -257,7 +257,8 @@ Moonshine Medium Streaming EN on a 44 s LibriVox clip, streamed in 100 ms chunks
 ### Read aloud (2026-11-02)
 
 Pixel 10, GrapheneOS. The system voice (GrapheneOS Speech Services) gave the first audio 3.1 s after the tap, cold.
-The bundled voice (developer builds only; Pocket TTS int8 through sherpa-onnx, 2 threads) ran at a real-time factor of about 1.0, against 0.2 on the desktop. It had 2 audio underruns per 25-word answer, first audio after 4.3–4.8 s, and +523–562 MB PSS. 4 threads were no faster than 2. So the app ships the system voice only.
+The bundled voice (developer builds only; Pocket TTS int8 through sherpa-onnx, 2 threads) ran at a real-time factor of about 1.0, against 0.2 on the desktop. It had 2 audio underruns per 25-word answer, first audio after 4.3–4.8 s, and +523–562 MB PSS. 4 threads were no faster than 2.
+Phonon 31m English (`gradium/phonon-31m-en` @ `92741c5`, `model.q8.gguf`, default voice) ran as the phone's system TTS engine: Gradium's `tts-engine` app from `xn-ptts` @ `31e4e9f`, with `libptts_ffi.so` built for arm64 with dotprod and fp16, and 2 threads. The app read the same Eiffel Tower answer (12.0 s of audio) with the System voice setting. Cold, the first audio came after 2.8 s; warm, after 2.5 s (two runs). There were 0 underruns, and playback took 11.9–12.3 s. The engine process held 210–218 MB PSS idle with the model loaded and 268–270 MB at most while it spoke. The app's own PSS did not change. The first-audio times include about 0.5–1 s of polling granularity (one `dumpsys` per sample). So Phonon replaced Pocket TTS as the bundled voice.
 On the desktop (2 threads, Moonshine round trip, 3 runs each), spelling numbers out before Pocket TTS cut the WER of an answer full of numbers from 13.0% to 6.1%, and of the Eiffel Tower answer from 12.5% to 8.8%.
 
 ## Experiments and decisions

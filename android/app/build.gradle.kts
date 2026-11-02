@@ -43,11 +43,9 @@ android {
         // LiteRT-LM loads libLiteRtDispatch_GoogleTensor.so by path from the native library directory.
         jniLibs {
             useLegacyPackaging = true
-            // No build ships x86 (abiFilters), and sherpa-onnx's x86 copy of libonnxruntime.so clashes with ours at the merge.
-            excludes += "lib/x86/**"
         }
     }
-    // jniLibs is the Rust build's output (git-ignored); vendorLibs holds the prebuilt Tensor dispatch library.
+    // jniLibs is the Rust build's output (git-ignored); vendorLibs holds the prebuilt Tensor dispatch and Phonon libraries.
     sourceSets["main"].jniLibs.srcDirs("src/main/jniLibs", "src/main/vendorLibs")
 }
 
@@ -120,9 +118,6 @@ dependencies {
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.1")
     // Voice input. Models load from files, so the downloader stack (OkHttp, WorkManager) is never used.
     implementation(files(slimMoonshine))
-    // Read aloud with the bundled voice. This build links ONNX Runtime statically and exports none of its symbols,
-    // so it does not clash with libonnxruntime.so.
-    implementation("k2-fsa:sherpa-onnx-static-link-onnxruntime:2.0.1@aar")
     implementation("androidx.appcompat:appcompat:1.6.1")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

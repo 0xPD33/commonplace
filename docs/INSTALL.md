@@ -50,9 +50,10 @@ You get each of these files in the same way: tap it under **Get more**, download
 | `stackexchange.tar` | 2.5 GB | 1.2 million question threads from 51 Stack Exchange sites |
 | `minicpm5-2b.tar` | 1.4 GB | MiniCPM5-2B, the small model, for a phone with the 12 GB starter set. Select it in Settings. |
 | `voice-en.tar` | 0.3 GB | Voice input: speak your question instead of typing. English. About 0.6 GB of extra RAM while the mic is on. The mic button appears on the Ask screen after the install. |
+| `tts-en.tar` | 0.07 GB | Read aloud with a bundled English voice (Phonon) instead of the phone's own voice. About 0.2 GB of extra RAM once it has read an answer. Choose it in Settings, under Read aloud. Needs an arm64 phone. |
 | `gemma4-e2b-npu.tar` | 3.1 GB | Gemma 4 E2B for the Tensor G5 NPU: the fastest answers on a Pixel 10. The app lists it only on phones with that chip. It becomes the answer model; Settings can choose Ling. |
 
-All files together use 36.5 GB on the phone, and 39.6 GB with the Gemma pack. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
+All files together use 36.5 GB on the phone, and 39.7 GB with the Gemma pack. The app refuses an import that takes the total above 50 GB. [DATASETS.md](DATASETS.md) lists each pack with its source and license, and [MODELS.md](MODELS.md) lists the models.
 
 In the Library, each knowledge pack has a switch. A pack that is off stays installed but the app does not search it.
 

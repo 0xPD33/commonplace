@@ -241,7 +241,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                     }
                 }
                 Text(
-                    "System uses the phone's offline voice for the answer's language. The bundled voice (Pocket TTS, from the Read aloud pack) speaks English answers; other languages use the system voice.",
+                    "System uses the phone's offline voice for the answer's language. The bundled voice (Phonon, from the Read aloud pack) speaks English answers; other languages use the system voice.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp),

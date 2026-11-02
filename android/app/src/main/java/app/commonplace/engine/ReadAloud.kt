@@ -12,16 +12,13 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.system.Os
+import android.util.Log
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextLanguage
-import com.k2fsa.sherpa.onnx.GenerationConfig
-import com.k2fsa.sherpa.onnx.OfflineTts
-import com.k2fsa.sherpa.onnx.OfflineTtsConfig
-import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
-import com.k2fsa.sherpa.onnx.OfflineTtsPocketModelConfig
-import com.k2fsa.sherpa.onnx.WaveReader
 import java.io.File
 import java.math.BigDecimal
 import java.util.Locale
@@ -32,9 +29,9 @@ import java.util.concurrent.TimeUnit
  * Reads an answer aloud on the device, with the system engine or the bundled voice.
  *
  * The system engine only uses a voice that needs no network, for the language of the answer. The bundled voice is
- * Pocket TTS (English) from the `tts-en` pack, run by sherpa-onnx, always with the pack's own voice clip. It holds
- * about 0.6 GB while it speaks, so it loads for each answer and is freed at the end. `onDone` runs on the main
- * thread, and never for a stopped answer.
+ * Phonon (English) from the `tts-en` pack, always with the pack's default voice. It holds about 0.2 GB, so it stays
+ * loaded from the first answer it reads until [close]. `onDone` runs on the main thread, and never for a stopped
+ * answer.
  */
 class ReadAloud(context: Context) {
     private val app = context.applicationContext
@@ -47,7 +44,12 @@ class ReadAloud(context: Context) {
     private var track: AudioTrack? = null
     @Volatile private var system: TextToSpeech? = null
 
-    val bundledInstalled: Boolean get() = File(dir, "lm_main.int8.onnx").isFile
+    // Guarded by [bundledLock]: the model takes one call at a time.
+    private val bundledLock = Any()
+    private var phonon: PhononTTS? = null
+    @Volatile private var closed = false
+
+    val bundledInstalled: Boolean get() = File(dir, "model.q8.gguf").isFile
 
     /** Starts reading [text]; a message comes back through [onDone] if it cannot. */
     fun speak(text: String, bundled: Boolean, onDone: (error: String?) -> Unit) {
@@ -72,8 +74,11 @@ class ReadAloud(context: Context) {
 
     fun close() {
         stop()
+        closed = true
         system?.shutdown()
         system = null
+        // Off the main thread: an answer that is still stopping holds the model until its next piece of audio.
+        Thread { synchronized(bundledLock) { phonon?.close(); phonon = null } }.start()
     }
 
     private fun current(id: Int) = synchronized(lock) { id == session }
@@ -131,25 +136,23 @@ class ReadAloud(context: Context) {
     }
 
     private fun speakBundled(id: Int, text: String): String? {
-        val model = OfflineTtsModelConfig(
-            pocket = OfflineTtsPocketModelConfig(
-                lmFlow = "$dir/lm_flow.int8.onnx",
-                lmMain = "$dir/lm_main.int8.onnx",
-                encoder = "$dir/encoder.onnx",
-                decoder = "$dir/decoder.int8.onnx",
-                textConditioner = "$dir/text_conditioner.onnx",
-                vocabJson = "$dir/vocab.json",
-                tokenScoresJson = "$dir/token_scores.json",
-            ),
-            numThreads = 2,
-        )
-        val voice = WaveReader.readWave("$dir/voice.wav")
-        val tts = OfflineTts(config = OfflineTtsConfig(model = model))
-        try {
-            val rate = tts.sampleRate()
+        synchronized(bundledLock) {
+            if (closed || !current(id)) return null
+            val tts = phonon ?: try {
+                val start = SystemClock.elapsedRealtime()
+                // Phonon reads it at its first load. Our Rust core sizes its own rayon pool from it too, if it has none yet.
+                Os.setenv("RAYON_NUM_THREADS", "2", true)
+                PhononTTS(dir.path, "en").also {
+                    phonon = it
+                    Log.i(TAG, "Phonon loaded in ${SystemClock.elapsedRealtime() - start} ms")
+                }
+            } catch (e: LinkageError) {
+                // No libptts_ffi.so for this ABI: only arm64 builds ship it.
+                return "the bundled voice is not available on this device. Choose System in Settings."
+            }
             val t = AudioTrack.Builder()
                 .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
-                .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_FLOAT).setSampleRate(rate).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+                .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_FLOAT).setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()
             synchronized(lock) {
@@ -159,33 +162,28 @@ class ReadAloud(context: Context) {
             try {
                 t.play()
                 var frames = 0
-                // Sherpa calls back with each piece of audio. Waiting for room in the track paces synthesis to playback;
-                // a blocking write could hang on a track that stop() paused.
-                // Temperature 0.3 instead of 0.7 misread fewer words in the desktop round trip (scripts/e2e_tts.py).
-                val config = GenerationConfig(numSteps = 5, referenceAudio = voice.samples, referenceSampleRate = voice.sampleRate, extra = mapOf("temperature" to "0.3"))
-                // Sherpa's JNI looks up invoke([F)Ljava/lang/Integer; on the callback's class. Kotlin 2 compiles a plain
-                // lambda through invokedynamic without that method, so the call aborts; a class-based lambda has it.
-                tts.generateWithConfigAndCallback(text, config) @JvmSerializableLambda chunk@{ samples ->
+                // Phonon calls back with each piece of audio, and false stops it. Waiting for room in the track paces
+                // synthesis to playback; a blocking write could hang on a track that stop() paused.
+                val r = tts.speak(text) chunk@{ samples ->
                     var off = 0
                     while (off < samples.size) {
-                        if (!current(id)) return@chunk 0
+                        if (!current(id)) return@chunk false
                         val n = t.write(samples, off, samples.size - off, AudioTrack.WRITE_NON_BLOCKING)
-                        if (n < 0) return@chunk 0
+                        if (n < 0) return@chunk false
                         off += n
                         if (off < samples.size) Thread.sleep(20)
                     }
                     frames += samples.size
-                    1
+                    true
                 }
+                Log.i(TAG, "first audio after ${r.ttfaMs.toLong()} ms, ${r.samples} samples in ${r.totalMs.toLong()} ms")
                 t.stop() // plays out what is queued
-                val end = System.currentTimeMillis() + 1000L * (frames - t.playbackHeadPosition) / rate + 1000
+                val end = System.currentTimeMillis() + 1000L * (frames - t.playbackHeadPosition) / RATE + 1000
                 while (current(id) && t.playbackHeadPosition < frames && System.currentTimeMillis() < end) Thread.sleep(50)
             } finally {
                 synchronized(lock) { if (track === t) track = null }
                 t.release()
             }
-        } finally {
-            tts.release()
         }
         return null
     }
@@ -201,6 +199,13 @@ class ReadAloud(context: Context) {
         }
         return out.map { it.toString() }.filter { it.isNotBlank() }
     }
+
+    private companion object {
+        const val TAG = "ReadAloud"
+
+        /** Phonon's output: 24 kHz mono. */
+        const val RATE = 24000
+    }
 }
 
 /** A number token: a dollar sign, digits with thousands commas and decimals, then an ordinal suffix or a unit. */
@@ -212,8 +217,9 @@ private val UNITS = mapOf(
 private val DIGITS = Regex("""[\d.,]*\d""")
 
 /**
- * Numbers in words for the bundled voice, which misreads digits ("330" as "30-30"). ICU spells them out: a plain
- * 4-digit number from 1000 to 2099 reads as a year ("nineteen thirty"), and a unit or dollar amount gets its full name.
+ * Numbers in words for the bundled voice. Phonon has its own English normalizer, not yet checked against this step.
+ * ICU spells them out: a plain 4-digit number from 1000 to 2099 reads as a year ("nineteen thirty"), and a unit or
+ * dollar amount gets its full name.
  * The SDK hides RuleBasedNumberFormat, so its rule sets come through MessageFormat's `spellout` argument.
  * The system engine normalizes numbers itself.
  */

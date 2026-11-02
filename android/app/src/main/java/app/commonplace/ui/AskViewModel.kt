@@ -182,7 +182,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleSpeak(turn: Turn) {
         val was = speaking
         stopSpeaking()
-        // The bundled voice needs about 0.6 GB, which a model that is still writing may need.
+        // The bundled voice needs CPU and about 0.2 GB, which a model that is still writing may need.
         if (was == turn.id || busy) return
         speaking = turn.id
         speakError = null

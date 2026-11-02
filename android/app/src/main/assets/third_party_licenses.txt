@@ -21,6 +21,9 @@ LiteRT-LM publishes the notices of its own dependencies in THIRD_PARTY_NOTICE.tx
 LiteRT Google Tensor dispatch library (libLiteRtDispatch_GoogleTensor.so)  Apache-2.0
     Copyright Google LLC (https://github.com/google-ai-edge/LiteRT). Built for this app from commit
     ca21dc99de51c76bdcc572afeea1dd937d3c9e5c without the Google-internal hooks target (docs/MODELS.md).
+Phonon runtime (libptts_ffi.so, arm64 only)  MIT OR Apache-2.0  (used under MIT)
+    Gradium (https://github.com/gradium-ai/xn-ptts), the crates ptts and ptts-ffi, built for this app from commit
+    31e4e9f (docs/MODELS.md). Its Rust dependencies are in section 6.
 
 3. MODELS IN THE APP
 --------------------
@@ -36,6 +39,10 @@ deberta-v3-xsmall-squad2  Apache-2.0
 Moonshine Medium Streaming (English)  MIT
     Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.
     (https://github.com/moonshine-ai/moonshine)
+Phonon 31m English  Apache-2.0
+    Read-aloud model by Gradium, built on Pocket TTS and the Mimi codec by Kyutai
+    (https://huggingface.co/gradium/phonon-31m-en). It is not in the app file: you install it as the optional tts-en
+    pack, which holds the license text.
 
 4. FONT
 -------
@@ -74,19 +81,20 @@ com.google.ai.edge.litertlm:litertlm-android 0.18.1  Apache-2.0
     Google LLC (https://github.com/google-ai-edge/LiteRT-LM)
 com.microsoft.onnxruntime:onnxruntime-android 1.30.0  MIT
     Microsoft Corporation (https://github.com/microsoft/onnxruntime)
-k2-fsa:sherpa-onnx-static-link-onnxruntime 2.0.1  Apache-2.0
-    Xiaomi Corporation and the k2-fsa authors (https://github.com/k2-fsa/sherpa-onnx)
 net.java.dev.jna:jna 5.19.1  Apache-2.0
     JNA contributors (https://github.com/java-native-access/jna); also offered under LGPL-2.1-or-later
 Their own dependencies (AndroidX, the Kotlin standard library, Kotlin coroutines) are Apache-2.0.
 The Moonshine library bundles its own ONNX Runtime 1.23.2 (MIT, Microsoft Corporation).
-The sherpa-onnx library links its own ONNX Runtime 1.28.2 (MIT, Microsoft Corporation) statically.
 
-6. RUST CRATES (237)
+6. RUST CRATES (476)
 ------------------
+Linked into libcommonplace_ffi.so and, on arm64, into the Phonon runtime libptts_ffi.so.
 ahash 0.8.12  MIT OR Apache-2.0  (used under MIT)
     https://github.com/tkaitchuck/ahash
     Copyright (c) 2018 Tom Kaitchuck
+aho-corasick 1.1.4  Unlicense OR MIT  (used under MIT)
+    https://github.com/BurntSushi/aho-corasick
+    Copyright (c) 2015 Andrew Gallant
 aho-corasick 1.1.5  Unlicense OR MIT  (used under MIT)
     https://github.com/BurntSushi/aho-corasick
     Copyright (c) 2015 Andrew Gallant
@@ -99,6 +107,9 @@ android_log-sys 0.3.2  MIT OR Apache-2.0  (used under MIT)
 android_logger 0.15.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-mobile/android_logger-rs
     Copyright (c) 2016 The android_logger Developers
+android_system_properties 0.1.5  MIT/Apache-2.0  (used under MIT)
+    https://github.com/nical/android_system_properties
+    Copyright (c) 2013 Nicolas Silva
 anstream 1.0.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-cli/anstyle.git
     Copyright (c) Individual contributors
@@ -111,12 +122,21 @@ anstyle-parse 1.0.0  MIT OR Apache-2.0  (used under MIT)
 anstyle-query 1.1.5  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-cli/anstyle.git
     Copyright (c) Individual contributors
+anyhow 1.0.102  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/anyhow
+    Authors: David Tolnay <dtolnay@gmail.com>
 anyhow 1.0.104  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/anyhow
     Authors: David Tolnay <dtolnay@gmail.com>
+approx 0.5.1  Apache-2.0
+    https://github.com/brendanzab/approx
+    Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>
 arc-swap 1.9.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/vorner/arc-swap
     Copyright (c) 2017 arc-swap developers
+arrayvec 0.7.6  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/bluss/arrayvec
+    Copyright (c) Ulrik Sverdrup "bluss" 2015-2023
 askama 0.16.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/askama-rs/askama
     Copyright (c) 2017-2020 Dirkjan Ochtman
@@ -132,12 +152,24 @@ askama_parser 0.16.1  MIT OR Apache-2.0  (used under MIT)
 async-trait 0.1.92  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/async-trait
     Authors: David Tolnay <dtolnay@gmail.com>
+atomic-waker 1.1.2  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/smol-rs/atomic-waker
+    Authors: Stjepan Glavina <stjepang@gmail.com>, Contributors to futures-rs
+aws-lc-rs 1.18.1  ISC AND (Apache-2.0 OR ISC)  (used under ISC and Apache-2.0)
+    https://github.com/aws/aws-lc-rs
+    Authors: AWS-LibCrypto
+aws-lc-sys 0.45.0  ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0)  (used under ISC and Apache-2.0 and Apache-2.0 and MIT and BSD-3-Clause and MIT and Apache-2.0)
+    https://github.com/aws/aws-lc-rs
+    Authors: AWS-LC
 base64 0.13.1  MIT/Apache-2.0  (used under MIT)
     https://github.com/marshallpierce/rust-base64
     Copyright (c) 2015 Alice Maz
 base64 0.22.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/marshallpierce/rust-base64
     Copyright (c) 2015 Alice Maz
+base64 0.23.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/marshallpierce/rust-base64
+    Copyright (c) 2025 Alice Maz, Marshall Pierce
 basic-toml 0.1.10  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/basic-toml
     Authors: Alex Crichton <alex@alexcrichton.com>, David Tolnay <dtolnay@gmail.com>
@@ -147,24 +179,48 @@ bit-set 0.8.0  Apache-2.0 OR MIT  (used under MIT)
 bit-vec 0.8.0  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/contain-rs/bit-vec
     Copyright (c) 2023 The Rust Project Developers
+bitflags 1.3.2  MIT/Apache-2.0  (used under MIT)
+    https://github.com/bitflags/bitflags
+    Copyright (c) 2014 The Rust Project Developers
+bitflags 2.11.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/bitflags/bitflags
+    Copyright (c) 2014 The Rust Project Developers
 bitflags 2.13.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/bitflags/bitflags
     Copyright (c) 2014 The Rust Project Developers
 bitpacking 0.9.3  MIT
     https://github.com/quickwit-oss/bitpacking
     Copyright (c) 2016 Paul Masurel
+blake3 1.8.7  CC0-1.0 OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception  (used under Apache-2.0)
+    https://github.com/BLAKE3-team/BLAKE3
+    Authors: Jack O'Connor <oconnor663@gmail.com>, Samuel Neves
 block-buffer 0.10.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RustCrypto/utils
     Copyright (c) 2018-2019 The RustCrypto Project Developers
+block-buffer 0.12.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/utils
+    Copyright (c) 2018-2025 The RustCrypto Project Developers
 bon 3.10.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/elastio/bon
     Copyright (c) 2024 Elastio Software Inc
 bon-macros 3.10.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/elastio/bon
     Copyright (c) 2024 Elastio Software Inc
+bstr 1.13.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/BurntSushi/bstr
+    Copyright (c) 2018-2019 Andrew Gallant
+bytemuck 1.25.0  Zlib OR Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/Lokathor/bytemuck
+    Copyright (c) 2019 Daniel "Lokathor" Gee.
+bytemuck_derive 1.10.2  Zlib OR Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/Lokathor/bytemuck
+    Copyright (c) 2019 Daniel "Lokathor" Gee.
 byteorder 1.5.0  Unlicense OR MIT  (used under MIT)
     https://github.com/BurntSushi/byteorder
     Copyright (c) 2015 Andrew Gallant
+bytes 1.11.1  MIT
+    https://github.com/tokio-rs/bytes
+    Copyright (c) 2018 Carl Lerche
 bytes 1.12.1  MIT
     https://github.com/tokio-rs/bytes
     Copyright (c) 2018 Carl Lerche
@@ -182,9 +238,17 @@ castaway 0.2.4  MIT
 census 0.4.2  MIT
     https://github.com/quickwit-inc/census
     Copyright (c) 2018 by Quickwit, Inc.
+cfg-if 1.0.4  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/cfg-if
+    Copyright (c) 2014 Alex Crichton
 cfg-if 1.0.5  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/cfg-if
     Copyright (c) 2014 Alex Crichton
+chacha20 0.10.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/stream-ciphers
+    Copyright (c) 2019-2026 The RustCrypto Project Developers
+chrono 0.4.45  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/chronotope/chrono
 clap 4.6.7  MIT OR Apache-2.0  (used under MIT)
     https://github.com/clap-rs/clap
     Copyright (c) Individual contributors
@@ -200,28 +264,67 @@ clap_lex 1.1.1  MIT OR Apache-2.0  (used under MIT)
 colorchoice 1.0.5  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-cli/anstyle.git
     Copyright (c) Individual contributors
+colored 3.1.1  MPL-2.0
+    https://github.com/mackwic/colored
+    Authors: Thomas Wickham <mackwic@gmail.com>
+combine 4.6.8  MIT
+    https://github.com/Marwes/combine
+    Copyright (c) 2015 Markus Westerlind
+compact_str 0.9.0  MIT
+    https://github.com/ParkMyCar/compact_str
+    Copyright (c) 2021 Parker Timmerman
 compact_str 0.9.1  MIT
     https://github.com/ParkMyCar/compact_str
     Copyright (c) 2021 Parker Timmerman
+const-oid 0.10.2  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/RustCrypto/formats
+    Copyright (c) 2020-2026 The RustCrypto Project Developers
 const-random 0.1.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/tkaitchuck/constrandom
     Copyright (c) 2016 Amanieu d'Antras
 const-random-macro 0.1.16  MIT OR Apache-2.0  (used under MIT)
     https://github.com/tkaitchuck/constrandom
     Copyright (c) 2016 Amanieu d'Antras
+const-str 1.1.0  MIT
+    https://github.com/Nugine/const-str
+    Copyright (c) 2020-2026 Nugine
+const_panic 0.2.17  Zlib
+    https://github.com/rodrimati1992/const_panic/
+    Copyright (c) 2021 Matias Rodriguez.
+constant_time_eq 0.4.2  CC0-1.0 OR MIT-0 OR Apache-2.0  (used under Apache-2.0)
+    https://github.com/cesarb/constant_time_eq
+    Authors: Cesar Eduardo Barros <cesarb@cesarb.eti.br>
+countio 0.3.0  MIT
+    https://github.com/spire-rs/countio
+    Copyright (c) 2024 Spire Team
 cpufeatures 0.2.17  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RustCrypto/utils
     Copyright (c) 2020-2025 The RustCrypto Project Developers
+cpufeatures 0.3.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/utils
+    Copyright (c) 2020-2026 The RustCrypto Project Developers
+crc32fast 1.5.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/srijs/rust-crc32fast
+    Copyright (c) 2018 Sam Rijs, Alex Crichton and contributors
 crc32fast 1.5.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/srijs/rust-crc32fast
     Copyright (c) 2018 Sam Rijs, Alex Crichton and contributors
 crossbeam-channel 0.5.17  MIT OR Apache-2.0  (used under MIT)
     https://github.com/crossbeam-rs/crossbeam
     Copyright (c) 2019 The Crossbeam Project Developers
+crossbeam-deque 0.8.6  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/crossbeam-rs/crossbeam
+    Copyright (c) 2019 The Crossbeam Project Developers
 crossbeam-deque 0.8.8  MIT OR Apache-2.0  (used under MIT)
     https://github.com/crossbeam-rs/crossbeam
     Copyright (c) 2019 The Crossbeam Project Developers
+crossbeam-epoch 0.9.18  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/crossbeam-rs/crossbeam
+    Copyright (c) 2019 The Crossbeam Project Developers
 crossbeam-epoch 0.9.21  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/crossbeam-rs/crossbeam
+    Copyright (c) 2019 The Crossbeam Project Developers
+crossbeam-utils 0.8.21  MIT OR Apache-2.0  (used under MIT)
     https://github.com/crossbeam-rs/crossbeam
     Copyright (c) 2019 The Crossbeam Project Developers
 crossbeam-utils 0.8.23  MIT OR Apache-2.0  (used under MIT)
@@ -233,6 +336,15 @@ crunchy 0.2.4  MIT
 crypto-common 0.1.7  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RustCrypto/traits
     Copyright (c) 2021 RustCrypto Developers
+crypto-common 0.2.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/traits
+    Copyright (c) 2021-2026 RustCrypto Developers
+ctor 1.0.13  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/mmastrac/linktime
+    Authors: Matt Mastracci <matthew@mastracci.com>
+daachorse 1.0.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/daac-tools/daachorse
+    Authors: Koichi Akabe <vbkaisetsu@gmail.com>, Shunsuke Kanda <shnsk.knd@gmail.com>
 darling 0.20.11  MIT
     https://github.com/TedDriggs/darling
     Copyright (c) 2017 Ted Driggs
@@ -254,6 +366,12 @@ darling_macro 0.24.1  MIT
 dary_heap 0.3.9  MIT OR Apache-2.0  (used under MIT)
     https://github.com/hanmertens/dary_heap
     Authors: Han Mertens <hanmertens@outlook.com>
+dasp_frame 0.11.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustaudio/dasp.git
+    Authors: mitchmindtree <mitchell.nordine@gmail.com>
+dasp_sample 0.11.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustaudio/sample.git
+    Authors: mitchmindtree <mitchell.nordine@gmail.com>
 datasketches 0.2.0  Apache-2.0
     https://github.com/apache/datasketches-rust
 deranged 0.5.8  MIT OR Apache-2.0  (used under MIT)
@@ -271,12 +389,41 @@ derive_builder_macro 0.20.2  MIT OR Apache-2.0  (used under MIT)
 digest 0.10.7  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RustCrypto/traits
     Copyright (c) 2017 Artyom Pavlov
+digest 0.11.3  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/traits
+    Copyright (c) 2017-2025 RustCrypto Developers
+    Copyright (c) 2017 Artyom Pavlov
+dirs 6.0.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/soc/dirs-rs
+    Copyright (c) 2018-2019 dirs-rs contributors
+dirs-sys 0.5.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dirs-dev/dirs-sys-rs
+    Copyright (c) 2018-2019 dirs-rs contributors
+displaydoc 0.2.5  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/yaahc/displaydoc
+    Authors: Jane Lusby <jlusby@yaah.dev>
 downcast-rs 2.0.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/marcianx/downcast-rs
     Copyright (c) 2020 Ashish Myles and contributors
+dyn-stack 0.13.2  MIT
+    https://codeberg.org/sarah-quinones/dyn-stack
+    Copyright (c) 2022 sarah
+dyn-stack-macros 0.1.3  MIT
+    https://github.com/kitegi/dynstack/
+    Copyright (c) 2025 sarah quiñones el kazdadi
+ebur128 0.1.10  MIT
+    https://github.com/sdroege/ebur128
+    Copyright (c) 2011 Jan Kokemüller
+    Copyright (c) 2020 Sebastian Dröge <sebastian@centricular.com>
+either 1.15.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rayon-rs/either
+    Copyright (c) 2015
 either 1.18.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rayon-rs/either
     Copyright (c) 2015
+encoding_rs 0.8.35  (Apache-2.0 OR MIT) AND BSD-3-Clause  (used under MIT and BSD-3-Clause)
+    https://github.com/hsivonen/encoding_rs
+    Copyright © WHATWG (Apple, Google, Mozilla, Microsoft).
 env_filter 0.1.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-cli/env_logger
     Copyright (c) Individual contributors
@@ -301,6 +448,9 @@ fallible-streaming-iterator 0.1.9  MIT/Apache-2.0  (used under MIT)
 fancy-regex 0.14.0  MIT
     https://github.com/fancy-regex/fancy-regex
     Copyright 2015 The Fancy Regex Authors.
+fancy-regex 0.17.0  MIT
+    https://github.com/fancy-regex/fancy-regex
+    Copyright 2015 The Fancy Regex Authors.
 fastdivide 0.4.2  zlib-acknowledgement OR MIT  (used under MIT)
     https://github.com/fulmicoton/fastdivide
     Copyright (C) 2024-Present Paul Masurel
@@ -316,13 +466,40 @@ fnv 1.0.7  Apache-2.0 / MIT  (used under MIT)
 foldhash 0.2.0  Zlib
     https://github.com/orlp/foldhash
     Copyright (c) 2024 Orson Peters
+form_urlencoded 1.2.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/servo/rust-url
+    Copyright (c) 2013-2016 The rust-url developers
 fs-err 3.3.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/andrewhickman/fs-err
     Authors: Andrew Hickman <andrew.hickman1@sky.com>
 fs4 0.13.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/al8n/fs4-rs
     Copyright (c) 2015 The Rust Project Developers
+futures 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-channel 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-core 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
 futures-core 0.3.34  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-executor 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-io 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-macro 0.3.32  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/futures-rs
     Copyright (c) 2016 Alex Crichton
     Copyright (c) 2017 The Tokio Authors
@@ -330,7 +507,19 @@ futures-macro 0.3.34  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/futures-rs
     Copyright (c) 2016 Alex Crichton
     Copyright (c) 2017 The Tokio Authors
+futures-sink 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-task 0.3.32  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
 futures-task 0.3.34  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/futures-rs
+    Copyright (c) 2016 Alex Crichton
+    Copyright (c) 2017 The Tokio Authors
+futures-util 0.3.32  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/futures-rs
     Copyright (c) 2016 Alex Crichton
     Copyright (c) 2017 The Tokio Authors
@@ -338,6 +527,9 @@ futures-util 0.3.34  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/futures-rs
     Copyright (c) 2016 Alex Crichton
     Copyright (c) 2017 The Tokio Authors
+gearhash 0.1.4  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/srijs/rust-gearhash
+    Copyright (c) 2019 Sam Rijs and contributors
 generic-array 0.14.7  MIT
     https://github.com/fizyk20/generic-array.git
     Copyright (c) 2015 Bartłomiej Kamiński
@@ -349,20 +541,39 @@ getrandom 0.3.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-random/getrandom
     Copyright (c) 2018-2025 The rust-random Project Developers
     Copyright (c) 2014 The Rust Project Developers
+getrandom 0.4.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/getrandom
+    Copyright (c) 2018-2026 The rust-random Project Developers
+    Copyright (c) 2014 The Rust Project Developers
 getrandom 0.4.3  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-random/getrandom
     Copyright (c) 2018-2026 The rust-random Project Developers
     Copyright (c) 2014 The Rust Project Developers
+git-version 0.3.9  BSD-2-Clause
+    https://github.com/fusion-engineering/rust-git-version
+    Copyright (c) 2017-2020
+git-version-macro 0.3.9  BSD-2-Clause
+    https://github.com/fusion-engineering/rust-git-version
+    Copyright (c) 2017-2020
 glob 0.3.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/glob
     Copyright (c) 2014 The Rust Project Developers
+globset 0.4.19  Unlicense OR MIT  (used under MIT)
+    https://github.com/BurntSushi/ripgrep/tree/master/crates/globset
+    Copyright (c) 2015 Andrew Gallant
 goblin 0.8.2  MIT
     https://github.com/m4b/goblin
     Copyright (c) m4b 2016-2024
+h2 0.4.19  MIT
+    https://github.com/hyperium/h2
+    Copyright (c) 2017 h2 authors
 half 2.7.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/VoidStarKat/half-rs
     Authors: Kathryn Long <squeeself@gmail.com>
 hashbrown 0.16.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/hashbrown
+    Copyright (c) 2016 Amanieu d'Antras
+hashbrown 0.17.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/hashbrown
     Copyright (c) 2016 Amanieu d'Antras
 hashbrown 0.17.1  MIT OR Apache-2.0  (used under MIT)
@@ -370,6 +581,9 @@ hashbrown 0.17.1  MIT OR Apache-2.0  (used under MIT)
     Copyright (c) 2016 Amanieu d'Antras
 hashlink 0.12.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/djc/hashlink
+heapify 0.2.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/ethereal-sheep/heapify
+    Copyright (c) 2021 ethereal-sheep <55541825+ethereal-sheep@users.noreply.github.com>
 heck 0.5.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/withoutboats/heck
     Copyright (c) 2015 The Rust Project Developers
@@ -377,18 +591,94 @@ hex 0.4.3  MIT OR Apache-2.0  (used under MIT)
     https://github.com/KokaKiwi/rust-hex
     Copyright (c) 2013-2014 The Rust Project Developers.
     Copyright (c) 2015-2020 The rust-hex Developers
+hf-hub 1.0.0  Apache-2.0
+    https://github.com/huggingface/hf-hub
+hf-xet 1.6.0  Apache-2.0
+    https://github.com/huggingface/xet-core
 htmlescape 0.3.1  Apache-2.0 / MIT / MPL-2.0  (used under MIT)
     https://github.com/veddan/rust-htmlescape
     Authors: Viktor Dahl <pazaconyoman@gmail.com>
+http 1.4.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/hyperium/http
+    Copyright (c) 2017 http-rs authors
+http-body 1.0.1  MIT
+    https://github.com/hyperium/http-body
+    Copyright (c) 2019-2024 Sean McArthur & Hyper Contributors
+http-body-util 0.1.3  MIT
+    https://github.com/hyperium/http-body
+    Copyright (c) 2019-2025 Sean McArthur & Hyper Contributors
+httparse 1.10.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/seanmonstar/httparse
+    Copyright (c) 2015-2025 Sean McArthur
+httpdate 1.0.3  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/pyfisch/httpdate
+    Copyright (c) 2016 Pyfisch
+humantime 2.4.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/chronotope/humantime
+    Copyright (c) 2016 The humantime Developers
+    Copyright (c) 2016 Pyfisch
+    Copyright © 2005-2013 Rich Felker
+hybrid-array 0.4.15  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/hybrid-array
+    Copyright (c) 2022-2026 The RustCrypto Project Developers
+hyper 1.9.0  MIT
+    https://github.com/hyperium/hyper
+    Copyright (c) 2014-2026 Sean McArthur
+hyper-rustls 0.27.9  Apache-2.0 OR ISC OR MIT  (used under MIT)
+    https://github.com/rustls/hyper-rustls
+    Copyright (c) 2016, Joseph Birr-Pixton <jpixton@gmail.com>
+    Copyright (c) 2016 Joseph Birr-Pixton <jpixton@gmail.com>
+hyper-util 0.1.20  MIT
+    https://github.com/hyperium/hyper-util
+    Copyright (c) 2023-2025 Sean McArthur
+iana-time-zone 0.1.65  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/strawlab/iana-time-zone
+    Copyright (c) 2020 Andrew D. Straw
+icu_collections 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_locale_core 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_normalizer 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_normalizer_data 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_properties 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_properties_data 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+icu_provider 2.2.0  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
 ident_case 1.0.1  MIT/Apache-2.0  (used under MIT)
     https://github.com/TedDriggs/ident_case
     Authors: Ted Driggs <ted.driggs@outlook.com>
+idna 1.1.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/servo/rust-url/
+    Copyright (c) 2013-2025 The rust-url developers
+idna_adapter 1.2.2  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/hsivonen/idna_adapter
+    Copyright (c) The rust-url developers
+indexmap 2.14.0  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/indexmap-rs/indexmap
+    Copyright (c) 2016--2017
 indexmap 2.14.2  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/indexmap-rs/indexmap
     Copyright (c) 2016--2017
 inventory 0.3.24  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/inventory
     Authors: David Tolnay <dtolnay@gmail.com>
+ipnet 2.12.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/krisprice/ipnet
+    Copyright 2017 Juniper Networks, Inc.
+iri-string 0.7.14  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/lo48576/iri-string
+    Copyright 2019-2024 YOSHIOKA Takuma
 is_terminal_polyfill 1.70.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/polyfill-rs/is_terminal_polyfill
     Copyright (c) Individual contributors
@@ -398,9 +688,32 @@ itertools 0.14.0  MIT OR Apache-2.0  (used under MIT)
 itoa 1.0.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/itoa
     Authors: David Tolnay <dtolnay@gmail.com>
+jni 0.22.4  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/jni-rs/jni-rs
+    Authors: jni team
+jni-macros 0.22.4  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/jni-rs/jni-rs
+jni-sys 0.4.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/jni-rs/jni-sys
+    Copyright (c) 2015 The rust-jni-sys Developers
+jni-sys-macros 0.4.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/jni-rs/jni-sys
+    Authors: Robert Bragg <robert@sixbynine.org>
+konst 0.4.3  Zlib
+    https://github.com/rodrimati1992/konst/
+    Copyright (c) 2021 Matias Rodriguez.
+konst_proc_macros 0.4.1  Zlib
+    https://github.com/rodrimati1992/konst/
+    Copyright (c) 2021 Matias Rodriguez.
+lazy_static 1.5.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang-nursery/lazy-static.rs
+    Copyright (c) 2010 The Rust Project Developers
 levenshtein_automata 0.2.1  MIT
     https://github.com/tantivy-search/levenshtein-automata
     Copyright (c) 2018 Paul Masurel
+libc 0.2.186  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/libc
+    Copyright (c) The Rust Project Developers
 libc 0.2.189  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/libc
     Copyright (c) The Rust Project Developers
@@ -413,24 +726,51 @@ libm 0.2.16  MIT
 libsqlite3-sys 0.38.2  MIT
     https://github.com/rusqlite/rusqlite
     Copyright (c) 2014 The rusqlite developers
+link-section 0.19.3  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/mmastrac/linktime
+    Authors: Matt Mastracci <matthew@mastracci.com>
+linktime-proc-macro 0.2.3  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/mmastrac/linktime
+    Authors: Matt Mastracci <matthew@mastracci.com>
 linux-raw-sys 0.12.1  Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT  (used under MIT)
     https://github.com/sunfishcode/linux-raw-sys
     Authors: Dan Gohman <dev@sunfishcode.online>
+litemap 0.8.2  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+lock_api 0.4.14  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/Amanieu/parking_lot
+    Copyright (c) 2016 The Rust Project Developers
+log 0.4.29  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/log
+    Copyright (c) 2014 The Rust Project Developers
 log 0.4.34  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/log
     Copyright (c) 2014 The Rust Project Developers
 lru 0.16.4  MIT
     https://github.com/jeromefroe/lru-rs.git
     Copyright (c) 2016 Jerome Froelich
+lru-slab 0.1.3  MIT OR Apache-2.0 OR Zlib  (used under MIT)
+    https://github.com/Ralith/lru-slab
+    Copyright (c) 2024 The lru-slab Developers
 lz4_flex 0.13.1  MIT
     https://github.com/pseitz/lz4_flex
     Copyright (c) 2020 Pascal Seitz
+macro_rules_attribute 0.2.2  Apache-2.0 OR MIT OR Zlib  (used under MIT)
+    https://github.com/danielhenrymantilla/macro_rules_attribute-rs
+    Copyright (c) 2019 Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>
 macro_rules_attribute 0.2.3  Apache-2.0 OR MIT OR Zlib  (used under MIT)
+    https://github.com/danielhenrymantilla/macro_rules_attribute-rs
+    Copyright (c) 2019 Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>
+macro_rules_attribute-proc_macro 0.2.2  Apache-2.0 OR MIT OR Zlib  (used under MIT)
     https://github.com/danielhenrymantilla/macro_rules_attribute-rs
     Copyright (c) 2019 Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>
 macro_rules_attribute-proc_macro 0.2.3  Apache-2.0 OR MIT OR Zlib  (used under MIT)
     https://github.com/danielhenrymantilla/macro_rules_attribute-rs
     Copyright (c) 2019 Daniel Henry-Mantilla <daniel.henry.mantilla@gmail.com>
+matchers 0.2.0  MIT
+    https://github.com/hawkw/matchers
+    Copyright (c) 2019 Eliza Weisman
 matrixmultiply 0.3.11  MIT/Apache-2.0  (used under MIT)
     https://github.com/bluss/matrixmultiply/
     Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"
@@ -438,22 +778,41 @@ matrixmultiply 0.3.11  MIT/Apache-2.0  (used under MIT)
 measure_time 0.9.0  MIT
     https://github.com/PSeitz/rust_measure_time
     Copyright (c) 2016 The humantime Developers
+memchr 2.8.0  Unlicense OR MIT  (used under MIT)
+    https://github.com/BurntSushi/memchr
+    Copyright (c) 2015 Andrew Gallant
 memchr 2.8.3  Unlicense OR MIT  (used under MIT)
     https://github.com/BurntSushi/memchr
     Copyright (c) 2015 Andrew Gallant
+memmap2 0.9.10  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RazrFalcon/memmap2-rs
+    Copyright (c) 2020 Yevhenii Reizner
+    Copyright (c) 2015 Dan Burkert
 memmap2 0.9.11  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RazrFalcon/memmap2-rs
     Copyright (c) 2020 Yevhenii Reizner
     Copyright (c) 2015 Dan Burkert
+mime 0.3.17  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/hyperium/mime
+    Copyright (c) 2014 Sean McArthur
+mime_guess 2.0.5  MIT
+    https://github.com/abonander/mime_guess
+    Copyright (c) 2015 Austin Bonander
 minimal-lexical 0.2.1  MIT/Apache-2.0  (used under MIT)
     https://github.com/Alexhuszagh/minimal-lexical
     Copyright (c) 2009 The Go Authors. All rights reserved.
+mio 1.2.0  MIT
+    https://github.com/tokio-rs/mio
+    Copyright (c) 2014 Carl Lerche and other MIO contributors
 monostate 0.1.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/monostate
     Authors: David Tolnay <dtolnay@gmail.com>
 monostate-impl 0.1.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/monostate
     Authors: David Tolnay <dtolnay@gmail.com>
+more-asserts 0.3.1  Unlicense OR MIT OR Apache-2.0 OR CC0-1.0  (used under MIT)
+    https://github.com/thomcc/rust-more-asserts
+    Copyright (C) 2022 Thom Chiovoloni <thom@shift.click>
 murmurhash32 0.3.1  MIT
     https://github.com/quickwit-inc/murmurhash32
     Copyright (c) 2024 by Quickwit Inc.
@@ -463,9 +822,16 @@ ndarray 0.17.2  MIT OR Apache-2.0  (used under MIT)
 nom 7.1.3  MIT
     https://github.com/Geal/nom
     Copyright (c) 2014-2019 Geoffroy Couprie
+nu-ansi-term 0.50.3  MIT
+    https://github.com/nushell/nu-ansi-term
+    Copyright (c) 2014 Benjamin Sago
+    Copyright (c) 2021-2022 The Nushell Project Developers
 num-complex 0.4.6  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-num/num-complex
     Copyright (c) 2014 The Rust Project Developers
+num-conv 0.2.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/jhpratt/num-conv
+    Copyright (c) Jacob Pratt
 num-conv 0.2.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/jhpratt/num-conv
     Copyright (c) Jacob Pratt
@@ -475,12 +841,18 @@ num-integer 0.1.47  MIT OR Apache-2.0  (used under MIT)
 num-traits 0.2.19  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-num/num-traits
     Copyright (c) 2014 The Rust Project Developers
+num_cpus 1.17.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/seanmonstar/num_cpus
+    Copyright (c) 2015-2025 Sean McArthur
 once_cell 1.21.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/matklad/once_cell
     Authors: Aleksey Kladov <aleksey.kladov@gmail.com>
 oneshot 0.1.13  MIT OR Apache-2.0  (used under MIT)
     https://github.com/faern/oneshot
     Authors: Linus Färnstrand <faern@faern.net>
+option-ext 0.2.0  MPL-2.0
+    https://github.com/soc/option-ext.git
+    Authors: Simon Ochsenreither <simon@ochsenreither.de>
 ordered-float 5.5.0  MIT
     https://github.com/reem/rust-ordered-float
     Copyright (c) 2015 Jonathan Reem
@@ -492,23 +864,42 @@ ort-sys 2.0.0-rc.13  MIT OR Apache-2.0  (used under MIT)
     https://github.com/pykeio/ort
     Copyright (c) 2023-2026 pyke.io
     Copyright (c) 2020 Nicolas Bigaouette
+os_str_bytes 6.6.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dylni/os_str_bytes
+    Copyright (c) 2019 dylni (https://github.com/dylni)
 ownedbytes 0.9.0  MIT
     https://github.com/quickwit-oss/tantivy
     Authors: Paul Masurel <paul@quickwit.io>, Pascal Seitz <pascal@quickwit.io>
+parking_lot 0.12.5  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/Amanieu/parking_lot
+    Copyright (c) 2016 The Rust Project Developers
+parking_lot_core 0.9.12  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/Amanieu/parking_lot
+    Copyright (c) 2016 The Rust Project Developers
 paste 1.0.15  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/paste
     Authors: David Tolnay <dtolnay@gmail.com>
 pastey 0.2.3  MIT OR Apache-2.0  (used under MIT)
     https://github.com/as1100k/pastey
     Authors: Aditya Kumar <git@adityais.dev>, David Tolnay <dtolnay@gmail.com>
+pathdiff 0.2.3  MIT/Apache-2.0  (used under MIT)
+    https://github.com/Manishearth/pathdiff
+    Authors: Manish Goregaokar <manishsmail@gmail.com>
 percent-encoding 2.3.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/servo/rust-url/
     Copyright (c) 2013-2025 The rust-url developers
+pin-project 1.1.12  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/taiki-e/pin-project
+pin-project-internal 1.1.12  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/taiki-e/pin-project
 pin-project-lite 0.2.17  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/taiki-e/pin-project-lite
 plain 0.2.3  MIT/Apache-2.0  (used under MIT)
     https://github.com/randomites/plain
     Copyright (c) 2017 Plain contributors
+potential_utf 0.1.5  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
 powerfmt 0.2.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/jhpratt/powerfmt
     Copyright (c) 2023 Jacob Pratt et al.
@@ -518,12 +909,41 @@ ppv-lite86 0.2.21  MIT OR Apache-2.0  (used under MIT)
 prettyplease 0.3.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/prettyplease
     Authors: David Tolnay <dtolnay@gmail.com>
+proc-macro2 1.0.106  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/proc-macro2
+    Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
 proc-macro2 1.0.107  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/proc-macro2
     Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
+pulp 0.22.2  MIT
+    https://github.com/sarah-quinones/pulp/
+    Copyright (c) 2021 sarah
+pulp-wasm-simd-flag 0.1.0  MIT
+    https://github.com/sarah-quinones/pulp/
+    Authors: sarah quiñones <sarah@veganb.tw>
+quinn 0.11.12  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/quinn-rs/quinn
+    Copyright (c) 2018 The quinn Developers
+quinn-proto 0.11.18  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/quinn-rs/quinn
+    Copyright (c) 2018 The quinn Developers
+quinn-udp 0.5.15  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/quinn-rs/quinn
+    Copyright (c) 2018 The quinn Developers
+quote 1.0.45  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/quote
+    Authors: David Tolnay <dtolnay@gmail.com>
 quote 1.0.47  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/quote
     Authors: David Tolnay <dtolnay@gmail.com>
+rand 0.10.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/rand
+    Copyright 2018 Developers of the Rand project
+    Copyright (c) 2014 The Rust Project Developers
+rand 0.9.4  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/rand
+    Copyright 2018 Developers of the Rand project
+    Copyright (c) 2014 The Rust Project Developers
 rand 0.9.5  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-random/rand
     Copyright 2018 Developers of the Rand project
@@ -532,10 +952,23 @@ rand_chacha 0.9.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-random/rand
     Copyright 2018 Developers of the Rand project
     Copyright (c) 2014 The Rust Project Developers
+rand_core 0.10.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/rand_core
+    Copyright (c) 2018-2026 The Rand Project Developers
 rand_core 0.9.5  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-random/rand
     Copyright 2018 Developers of the Rand project
     Copyright (c) 2014 The Rust Project Developers
+rand_distr 0.5.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/rand_distr
+    Copyright 2018 Developers of the Rand project
+rand_pcg 0.10.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-random/rngs
+    Copyright (c) 2014-2017 Melissa O'Neill and PCG Project contributors
+    Copyright 2018 Developers of the Rand project
+raw-cpuid 11.6.0  MIT
+    https://github.com/gz/rust-cpuid
+    Copyright (c) 2015 Gerd Zellweger
 rawpointer 0.2.1  MIT/Apache-2.0  (used under MIT)
     https://github.com/bluss/rawpointer/
     Copyright (c) 2015
@@ -548,35 +981,88 @@ rayon-cond 0.4.0  Apache-2.0/MIT  (used under MIT)
 rayon-core 1.13.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rayon-rs/rayon
     Copyright (c) 2010 The Rust Project Developers
+reborrow 0.5.5  MIT
+    https://github.com/sarah-ek/reborrow/
+    Copyright (c) 2022 sarah
+redb 3.1.3  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/cberner/redb
+    Copyright (c) 2021 Christopher Berner
+regex 1.12.3  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/regex
+    Copyright (c) 2014 The Rust Project Developers
 regex 1.13.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/regex
+    Copyright (c) 2014 The Rust Project Developers
+regex-automata 0.4.14  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/regex
     Copyright (c) 2014 The Rust Project Developers
 regex-automata 0.4.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/regex
     Copyright (c) 2014 The Rust Project Developers
+regex-syntax 0.8.10  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/regex
+    Copyright (c) 2014 The Rust Project Developers
 regex-syntax 0.8.11  MIT OR Apache-2.0  (used under MIT)
     https://github.com/rust-lang/regex
     Copyright (c) 2014 The Rust Project Developers
+reqwest 0.13.5  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/seanmonstar/reqwest
+    Copyright (c) 2016-2026 Sean McArthur
+reqwest-middleware 0.5.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/TrueLayer/reqwest-middleware
+    Copyright (c) 2021 TrueLayer
+ring 0.17.14  Apache-2.0 AND ISC
+    https://github.com/briansmith/ring
+    Copyright 2015-2025 Brian Smith.
 rusqlite 0.40.2  MIT
     https://github.com/rusqlite/rusqlite
     Copyright (c) 2014 The rusqlite developers
 rust-stemmers 1.2.0  MIT/BSD-3-Clause  (used under MIT)
     https://github.com/CurrySoftware/rust-stemmers
     Copyright (c) 2017 Jakob Demler
+rustc-hash 2.1.2  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/rust-lang/rustc-hash
+    Authors: The Rust Project Developers
 rustc-hash 2.1.3  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/rust-lang/rustc-hash
     Authors: The Rust Project Developers
 rustix 1.1.5  Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT  (used under MIT)
     https://github.com/bytecodealliance/rustix
     Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
+rustls 0.23.40  Apache-2.0 OR ISC OR MIT  (used under MIT)
+    https://github.com/rustls/rustls
+    Copyright (c) 2016, Joseph Birr-Pixton <jpixton@gmail.com>
+    Copyright (c) 2016 Joseph Birr-Pixton <jpixton@gmail.com>
+rustls-pki-types 1.14.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustls/pki-types
+    Copyright (c) 2023 Dirkjan Ochtman <dirkjan@ochtman.nl>
+rustls-platform-verifier 0.7.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustls/rustls-platform-verifier
+    Copyright (c) 2022 1Password
+rustls-platform-verifier-android 0.1.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustls/rustls-platform-verifier
+rustls-webpki 0.103.13  ISC
+    https://github.com/rustls/webpki
+    Copyright 2015 Brian Smith.
+rustversion 1.0.22  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/rustversion
+    Authors: David Tolnay <dtolnay@gmail.com>
 rustversion 1.0.23  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/rustversion
     Authors: David Tolnay <dtolnay@gmail.com>
 ryu 1.0.23  Apache-2.0 OR BSL-1.0  (used under Apache-2.0)
     https://github.com/dtolnay/ryu
     Authors: David Tolnay <dtolnay@gmail.com>
+safe-transmute 0.11.3  MIT
+    https://github.com/nabijaczleweli/safe-transmute-rs
+    Copyright (c) 2016 nabijaczleweli
 safetensors 0.6.2  Apache-2.0
     https://github.com/huggingface/safetensors
+safetensors 0.7.0  Apache-2.0
+    https://github.com/huggingface/safetensors
+scopeguard 1.2.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/bluss/scopeguard
+    Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers
 scroll 0.12.0  MIT
     https://github.com/m4b/scroll
     Copyright (c) m4b 2016
@@ -586,26 +1072,68 @@ scroll_derive 0.12.1  MIT
 semver 1.0.28  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/semver
     Authors: David Tolnay <dtolnay@gmail.com>
+seq-macro 0.3.6  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/seq-macro
+    Authors: David Tolnay <dtolnay@gmail.com>
+serde 1.0.228  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/serde-rs/serde
+    Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
 serde 1.0.229  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/serde-rs/serde
+    Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+serde_core 1.0.228  MIT OR Apache-2.0  (used under MIT)
     https://github.com/serde-rs/serde
     Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
 serde_core 1.0.229  MIT OR Apache-2.0  (used under MIT)
     https://github.com/serde-rs/serde
     Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+serde_derive 1.0.228  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/serde-rs/serde
+    Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
 serde_derive 1.0.229  MIT OR Apache-2.0  (used under MIT)
     https://github.com/serde-rs/serde
+    Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+serde_json 1.0.149  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/serde-rs/json
     Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
 serde_json 1.0.151  MIT OR Apache-2.0  (used under MIT)
     https://github.com/serde-rs/json
     Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+serde_repr 0.1.21  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/serde-repr
+    Authors: David Tolnay <dtolnay@gmail.com>
 serde_spanned 1.1.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/toml-rs/toml
     Copyright (c) Individual contributors
+serde_urlencoded 0.7.1  MIT/Apache-2.0  (used under MIT)
+    https://github.com/nox/serde_urlencoded
+    Copyright (c) 2016 Anthony Ramine
 sha2 0.10.9  MIT OR Apache-2.0  (used under MIT)
     https://github.com/RustCrypto/hashes
     Copyright (c) 2006-2009 Graydon Hoare
     Copyright (c) 2009-2013 Mozilla Foundation
     Copyright (c) 2016 Artyom Pavlov
+sha2 0.11.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/RustCrypto/hashes
+    Copyright (c) 2016-2026 The RustCrypto Project Developers
+    Copyright (c) 2016 Artyom Pavlov
+    Copyright (c) 2009-2013 Mozilla Foundation
+    Copyright (c) 2006-2009 Graydon Hoare
+sharded-slab 0.1.7  MIT
+    https://github.com/hawkw/sharded-slab
+    Copyright (c) 2019 Eliza Weisman
+shellexpand 3.1.2  MIT/Apache-2.0  (used under MIT)
+    https://gitlab.com/ijackson/rust-shellexpand
+    Copyright (c) 2016 Vladimir Matveev
+signal-hook-registry 1.4.8  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/vorner/signal-hook
+    Copyright (c) 2017 tokio-jsonrpc developers
+simd_cesu8 1.2.0  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/seancroach/simd_cesu8
+    Authors: Sean C. Roach <me@seancroach.dev>
+simdutf8 0.1.5  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rusticstuff/simdutf8
+    Authors: Hans Kratz <hans@appfour.com>
 siphasher 1.0.4  MIT OR Apache-2.0  (used under MIT)
     https://github.com/jedisct1/rust-siphash
     Authors: Frank Denis <github@pureftpd.org>
@@ -615,12 +1143,18 @@ sketches-ddsketch 0.4.1  Apache-2.0
 slab 0.4.12  MIT
     https://github.com/tokio-rs/slab
     Copyright (c) 2019 Carl Lerche
+smallvec 1.15.1  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/servo/rust-smallvec
+    Copyright (c) 2018 The Servo Project Developers
 smallvec 1.16.2  MIT OR Apache-2.0  (used under MIT)
     https://github.com/servo/rust-smallvec
     Copyright (c) 2018 The Servo Project Developers
 smawk 0.3.3  MIT
     https://github.com/mgeisler/smawk
     Copyright (c) 2017 Martin Geisler
+socket2 0.6.3  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rust-lang/socket2
+    Copyright (c) 2014 Alex Crichton
 spm_precompiled 0.1.4  Apache-2.0
     https://github.com/huggingface/spm_precompiled
     Authors: Nicolas Patry <patry.nicolas@protonmail.com>
@@ -630,17 +1164,39 @@ stable_deref_trait 1.2.1  MIT OR Apache-2.0  (used under MIT)
 static_assertions 1.1.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/nvzqz/static-assertions-rs
     Copyright (c) 2017 Nikolai Vazquez
+statrs 0.18.0  MIT
+    https://github.com/statrs-dev/statrs
+    Copyright (c) 2016 Michael Ma
 strsim 0.11.1  MIT
     https://github.com/rapidfuzz/strsim-rs
     Copyright (c) 2015 Danny Guo
     Copyright (c) 2016 Titus Wormer <tituswormer@gmail.com>
     Copyright (c) 2018 Akash Kurdekar
+subtle 2.6.1  BSD-3-Clause
+    https://github.com/dalek-cryptography/subtle
+    Copyright (c) 2016-2017 Isis Agora Lovecruft, Henry de Valence. All rights reserved.
+    Copyright (c) 2016-2024 Isis Agora Lovecruft. All rights reserved.
+symlink 0.1.0  MIT/Apache-2.0  (used under MIT)
+    https://gitlab.com/chris-morgan/symlink
+    Copyright (c) 2014 Chris Morgan and the Teepee project developers
+syn 2.0.117  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/syn
+    Authors: David Tolnay <dtolnay@gmail.com>
 syn 2.0.119  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/syn
     Authors: David Tolnay <dtolnay@gmail.com>
 syn 3.0.6  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/syn
     Authors: David Tolnay <dtolnay@gmail.com>
+sync_wrapper 1.0.2  Apache-2.0
+    https://github.com/Actyx/sync_wrapper
+    Authors: Actyx AG <developer@actyx.io>
+synstructure 0.13.2  MIT
+    https://github.com/mystor/synstructure
+    Copyright 2016 Nika Layzell
+sysinfo 0.38.4  MIT
+    https://github.com/GuillaumeGomez/sysinfo
+    Copyright (c) 2015 Guillaume Gomez
 tantivy 0.26.2  MIT
     https://github.com/quickwit-oss/tantivy
     Copyright (c) 2018 by the project authors, as listed in the AUTHORS file.
@@ -674,16 +1230,34 @@ tempfile 3.27.0  MIT OR Apache-2.0  (used under MIT)
 textwrap 0.16.4  MIT
     https://github.com/mgeisler/textwrap
     Copyright (c) 2016 Martin Geisler
+thiserror 2.0.18  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/thiserror
+    Authors: David Tolnay <dtolnay@gmail.com>
 thiserror 2.0.21  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/dtolnay/thiserror
+    Authors: David Tolnay <dtolnay@gmail.com>
+thiserror-impl 2.0.18  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/thiserror
     Authors: David Tolnay <dtolnay@gmail.com>
 thiserror-impl 2.0.21  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/thiserror
     Authors: David Tolnay <dtolnay@gmail.com>
+thread_local 1.1.9  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/Amanieu/thread_local-rs
+    Copyright (c) 2016 The Rust Project Developers
+time 0.3.47  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/time-rs/time
+    Copyright (c) Jacob Pratt et al.
 time 0.3.55  MIT OR Apache-2.0  (used under MIT)
     https://github.com/time-rs/time
     Copyright (c) Jacob Pratt et al.
+time-core 0.1.8  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/time-rs/time
+    Copyright (c) Jacob Pratt et al.
 time-core 0.1.9  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/time-rs/time
+    Copyright (c) Jacob Pratt et al.
+time-macros 0.2.27  MIT OR Apache-2.0  (used under MIT)
     https://github.com/time-rs/time
     Copyright (c) Jacob Pratt et al.
 time-macros 0.2.32  MIT OR Apache-2.0  (used under MIT)
@@ -691,9 +1265,34 @@ time-macros 0.2.32  MIT OR Apache-2.0  (used under MIT)
     Copyright (c) Jacob Pratt et al.
 tiny-keccak 2.0.2  CC0-1.0
     Authors: debris <marek.kotewicz@gmail.com>
+tinystr 0.8.3  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+tinyvec 1.13.3  Zlib OR Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/Lokathor/tinyvec
+    Copyright (c) 2019 Daniel "Lokathor" Gee.
 tokenizers 0.22.2  Apache-2.0
     https://github.com/huggingface/tokenizers
     Authors: Anthony MOI <m.anthony.moi@gmail.com>, Nicolas Patry <patry.nicolas@protonmail.com>
+tokenizers 0.23.1  Apache-2.0
+    https://github.com/huggingface/tokenizers
+    Authors: Anthony MOI <m.anthony.moi@gmail.com>, Nicolas Patry <patry.nicolas@protonmail.com>
+tokio 1.52.1  MIT
+    https://github.com/tokio-rs/tokio
+    Copyright (c) Tokio Contributors
+tokio-macros 2.7.0  MIT
+    https://github.com/tokio-rs/tokio
+    Copyright (c) 2019 Yoshua Wuyts
+    Copyright (c) Tokio Contributors
+tokio-retry 0.3.2  MIT
+    https://github.com/djc/tokio-retry
+    Copyright (c) 2017 Sam Rijs
+tokio-rustls 0.26.5  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/rustls/tokio-rustls
+    Copyright (c) 2017 quininer kel
+tokio-util 0.7.19  MIT
+    https://github.com/tokio-rs/tokio
+    Copyright (c) Tokio Contributors
 toml 1.1.6+spec-1.1.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/toml-rs/toml
     Copyright (c) Individual contributors
@@ -706,15 +1305,52 @@ toml_parser 1.1.3+spec-1.1.0  MIT OR Apache-2.0  (used under MIT)
 toml_writer 1.1.2+spec-1.1.0  MIT OR Apache-2.0  (used under MIT)
     https://github.com/toml-rs/toml
     Copyright (c) Individual contributors
+tower 0.5.3  MIT
+    https://github.com/tower-rs/tower
+    Copyright (c) 2019 Tower Contributors
+tower-http 0.6.8  MIT
+    https://github.com/tower-rs/tower-http
+    Copyright (c) 2019-2021 Tower Contributors
+tower-layer 0.3.3  MIT
+    https://github.com/tower-rs/tower
+    Copyright (c) 2019 Tower Contributors
+tower-service 0.3.3  MIT
+    https://github.com/tower-rs/tower
+    Copyright (c) 2019 Tower Contributors
 tracing 0.1.44  MIT
+    https://github.com/tokio-rs/tracing
+    Copyright (c) 2019 Tokio Contributors
+tracing-appender 0.2.5  MIT
+    https://github.com/tokio-rs/tracing
+    Copyright (c) 2019 Tokio Contributors
+tracing-attributes 0.1.31  MIT
     https://github.com/tokio-rs/tracing
     Copyright (c) 2019 Tokio Contributors
 tracing-core 0.1.36  MIT
     https://github.com/tokio-rs/tracing
     Copyright (c) 2019 Tokio Contributors
+tracing-log 0.2.0  MIT
+    https://github.com/tokio-rs/tracing
+    Copyright (c) 2019 Tokio Contributors
+tracing-serde 0.2.0  MIT
+    https://github.com/tokio-rs/tracing
+    Copyright (c) 2019 Tokio Contributors
+tracing-subscriber 0.3.23  MIT
+    https://github.com/tokio-rs/tracing
+    Copyright (c) 2019 Tokio Contributors
+try-lock 0.2.5  MIT
+    https://github.com/seanmonstar/try-lock
+    Copyright (c) 2018-2023 Sean McArthur
+    Copyright (c) 2016 Alex Crichton
+twox-hash 2.1.4  MIT
+    https://github.com/shepmaster/twox-hash
+    Copyright (c) 2015 Jake Goulding
 typeid 1.0.3  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/typeid
     Authors: David Tolnay <dtolnay@gmail.com>
+typenum 1.20.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/paholg/typenum
+    Copyright (c) 2014 Paho Lurie-Gregg
 typenum 1.20.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/paholg/typenum
     Copyright (c) 2014 Paho Lurie-Gregg
@@ -724,11 +1360,23 @@ typetag 0.2.23  MIT OR Apache-2.0  (used under MIT)
 typetag-impl 0.2.23  MIT OR Apache-2.0  (used under MIT)
     https://github.com/dtolnay/typetag
     Authors: David Tolnay <dtolnay@gmail.com>
+typewit 1.15.2  Zlib
+    https://github.com/rodrimati1992/typewit/
+    Copyright (c) 2023 Matias Rodriguez.
+unicase 2.9.0  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/seanmonstar/unicase
+    Copyright (c) 2014-2026 Sean McArthur
+unicode-ident 1.0.24  (MIT OR Apache-2.0) AND Unicode-3.0  (used under MIT and Unicode-3.0)
+    https://github.com/dtolnay/unicode-ident
+    Copyright © 1991-2023 Unicode, Inc.
 unicode-ident 1.0.26  (MIT OR Apache-2.0) AND Unicode-3.0  (used under MIT and Unicode-3.0)
     https://github.com/dtolnay/unicode-ident
     Copyright © 1991-2023 Unicode, Inc.
 unicode-normalization-alignments 0.1.12  MIT/Apache-2.0  (used under MIT)
     https://github.com/n1t0/unicode-normalization
+    Copyright (c) 2015 The Rust Project Developers
+unicode-segmentation 1.13.2  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/unicode-rs/unicode-segmentation
     Copyright (c) 2015 The Rust Project Developers
 unicode-segmentation 1.13.3  MIT OR Apache-2.0  (used under MIT)
     https://github.com/unicode-rs/unicode-segmentation
@@ -755,26 +1403,96 @@ uniffi_pipeline 0.32.2  MPL-2.0
     https://github.com/mozilla/uniffi-rs
 uniffi_udl 0.32.2  MPL-2.0
     https://github.com/mozilla/uniffi-rs
+untrusted 0.9.0  ISC
+    https://github.com/briansmith/untrusted
+    Authors: Brian Smith <brian@briansmith.org>
+url 2.5.8  MIT OR Apache-2.0  (used under MIT)
+    https://github.com/servo/rust-url
+    Copyright (c) 2013-2025 The rust-url developers
+urlencoding 2.1.3  MIT
+    https://github.com/kornelski/rust_urlencoding
+    © 2016 Bertram Truong
+    © 2021 Kornel Lesiński
 utf8-ranges 1.0.5  Unlicense/MIT  (used under MIT)
     https://github.com/BurntSushi/utf8-ranges
     Copyright (c) 2015 Andrew Gallant
+utf8_iter 1.0.4  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/hsivonen/utf8_iter
+    Authors: Henri Sivonen <hsivonen@hsivonen.fi>
 utf8parse 0.2.2  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/alacritty/vte
     Copyright (c) 2016 Joe Wilm
+uuid 1.23.1  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/uuid-rs/uuid
+    Copyright (c) 2014 The Rust Project Developers
+    Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
 uuid 1.26.1  Apache-2.0 OR MIT  (used under MIT)
     https://github.com/uuid-rs/uuid
     Copyright (c) 2014 The Rust Project Developers
     Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
+want 0.3.1  MIT
+    https://github.com/seanmonstar/want
+    Copyright (c) 2018-2019 Sean McArthur
 weedle2 5.0.0  MIT
     https://github.com/mozilla/uniffi-rs
     Copyright 2018-Present Sharad Chand
     Copyright 2022 Jan-Erik Rediger
+whoami 2.1.3  Apache-2.0 OR BSL-1.0 OR MIT  (used under MIT)
+    https://github.com/ardaku/whoami
 winnow 1.0.4  MIT
     https://github.com/winnow-rs/winnow
+writeable 0.6.3  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
 xattr 1.6.1  MIT OR Apache-2.0  (used under MIT)
     https://github.com/Stebalien/xattr
     Copyright (c) 2015 Steven Allen
+xet-client 1.6.0  Apache-2.0
+    https://github.com/huggingface/xet-core
+xet-core-structures 1.6.0  Apache-2.0
+    https://github.com/huggingface/xet-core
+xet-data 1.6.0  Apache-2.0
+    https://github.com/huggingface/xet-core
+xet-runtime 1.6.0  Apache-2.0
+    https://github.com/huggingface/xet-core
+xn 0.2.13  MIT/Apache-2.0  (used under MIT)
+    https://github.com/LaurentMazare/xn
+xn-gemm 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-c32 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-c64 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-common 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-f16 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-f32 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+xn-gemm-f64 0.20.2  MIT
+    https://github.com/gradium-ai/gemm/
+    Copyright (c) 2021 sarah
+yoke 0.8.2  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+yoke-derive 0.8.2  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zerocopy 0.8.48  BSD-2-Clause OR Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/google/zerocopy
+    Copyright 2019 The Fuchsia Authors.
+    Copyright 2023 The Fuchsia Authors
 zerocopy 0.8.59  BSD-2-Clause OR Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/google/zerocopy
+    Copyright 2019 The Fuchsia Authors.
+    Copyright 2023 The Fuchsia Authors
+zerocopy-derive 0.8.48  BSD-2-Clause OR Apache-2.0 OR MIT  (used under MIT)
     https://github.com/google/zerocopy
     Copyright 2019 The Fuchsia Authors.
     Copyright 2023 The Fuchsia Authors
@@ -782,6 +1500,27 @@ zerocopy-derive 0.8.59  BSD-2-Clause OR Apache-2.0 OR MIT  (used under MIT)
     https://github.com/google/zerocopy
     Copyright 2019 The Fuchsia Authors.
     Copyright 2023 The Fuchsia Authors
+zerofrom 0.1.7  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zerofrom-derive 0.1.7  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zeroize 1.8.2  Apache-2.0 OR MIT  (used under MIT)
+    https://github.com/RustCrypto/utils
+    Copyright (c) 2018-2021 The RustCrypto Project Developers
+zerotrie 0.2.4  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zerovec 0.11.6  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zerovec-derive 0.11.3  Unicode-3.0
+    https://github.com/unicode-org/icu4x
+    Copyright © 2020-2024 Unicode, Inc.
+zmij 1.0.21  MIT
+    https://github.com/dtolnay/zmij
+    Authors: David Tolnay <dtolnay@gmail.com>
 zmij 1.0.23  MIT
     https://github.com/dtolnay/zmij
     Authors: David Tolnay <dtolnay@gmail.com>
@@ -1065,25 +1804,42 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ------------------------------------------------------------------------
+BSD-2-Clause
+The copyright line of each project is listed above. This is the license body they share.
+------------------------------------------------------------------------
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+------------------------------------------------------------------------
 Zlib
 The copyright line of each project is listed above. This is the license body they share.
 ------------------------------------------------------------------------
 
-This software is provided 'as-is', without any express or implied warranty. In
-no event will the authors be held liable for any damages arising from the use of
-this software.
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
-Permission is granted to anyone to use this software for any purpose, including
-commercial applications, and to alter it and redistribute it freely, subject to
-the following restrictions:
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
 
-1. The origin of this software must not be misrepresented; you must not claim
-    that you wrote the original software. If you use this software in a product,
-    an acknowledgment in the product documentation would be appreciated but is
-    not required.
+1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
 
-2. Altered source versions must be plainly marked as such, and must not be
-    misrepresented as being the original software.
+2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source distribution.
 
@@ -1466,7 +2222,7 @@ Exhibit A - Source Code Form License Notice
 
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 If it is not possible or desirable to put the notice in a particular
 file, then You may include the notice in a location (such as a LICENSE
@@ -1489,7 +2245,7 @@ UNICODE LICENSE V3
 
 COPYRIGHT AND PERMISSION NOTICE
 
-Copyright © 1991-2023 Unicode, Inc.
+Copyright © 2020-2024 Unicode, Inc.
 
 NOTICE TO USER: Carefully read the following legal agreement. BY
 DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
@@ -1524,6 +2280,13 @@ Except as contained in this notice, the name of a copyright holder shall
 not be used in advertising or otherwise to promote the sale, use or other
 dealings in these Data Files or Software without prior written
 authorization of the copyright holder.
+
+SPDX-License-Identifier: Unicode-3.0
+
+—
+
+Portions of ICU4X may have been adapted from ICU4C and/or ICU4J.
+ICU 1.8.1 to ICU 57.1 © 1995-2016 International Business Machines Corporation and others.
 
 ------------------------------------------------------------------------
 CC0-1.0

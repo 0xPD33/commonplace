@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Write android/app/src/main/assets/third_party_licenses.txt: the open-source licenses of the app.
 
-Run inside `nix develop` (needs cargo and the cargo registry sources on disk):  python3 scripts/licenses.py
-Sources: cargo metadata of commonplace-ffi (both Android targets), the dependencies in
-android/app/build.gradle.kts, native code, bundled models, and the Literata font. License texts are copied
-from files on disk: third_party/, the repository LICENSE and the crate sources.
+Run inside `nix develop` (needs cargo and the cargo registry sources on disk):  PTTS_SRC=<dir> python3 scripts/licenses.py
+PTTS_SRC is a checkout of https://github.com/gradium-ai/xn-ptts at the commit of libptts_ffi.so (docs/MODELS.md); run
+`cargo fetch` in it once. Sources: cargo metadata of commonplace-ffi (both Android targets) and of ptts-ffi (arm64), the
+dependencies in android/app/build.gradle.kts, native code, bundled models, and the Literata font. License texts are
+copied from files on disk: third_party/, the repository LICENSE and the crate sources.
 """
 import glob
 import json
@@ -40,15 +41,14 @@ def elect(expr):
     return out
 
 
-def rust_crates():
-    seen = {}
-    for target in TARGETS:
+def rust_crates(manifest, crate, targets, seen):
+    for target in targets:
         meta = json.loads(subprocess.check_output(
-            ["cargo", "metadata", "--format-version", "1", "--locked", "--offline", "--manifest-path", os.path.join(ROOT, "core/Cargo.toml"), "--filter-platform", target],
+            ["cargo", "metadata", "--format-version", "1", "--locked", "--offline", "--manifest-path", manifest, "--filter-platform", target],
             text=True))
         pk = {p["id"]: p for p in meta["packages"]}
         nodes = {n["id"]: n for n in meta["resolve"]["nodes"]}
-        root = next(i for i, p in pk.items() if p["name"] == "commonplace-ffi")
+        root = next(i for i, p in pk.items() if p["name"] == crate)
         stack, done = [root], set()
         while stack:
             i = stack.pop()
@@ -59,9 +59,9 @@ def rust_crates():
             stack += [d["pkg"] for d in nodes[i]["deps"] if any(k["kind"] is None for k in d["dep_kinds"])]
         for i in done:
             p = pk[i]
-            if p["source"]:  # workspace crates have no source: they are the app itself
+            if p["source"]:  # workspace crates have no source: the app itself, or the Phonon runtime (listed under native code)
                 seen[(p["name"], p["version"])] = p
-    return [seen[k] for k in sorted(seen)]
+    return seen
 
 
 def license_files(crate_dir):
@@ -125,8 +125,6 @@ ANDROID_LICENSE = {  # checked against each artifact's POM
     # The POM offers LGPL-2.1-or-later or Apache-2.0 at the user's choice.
     "net.java.dev.jna": ("Apache-2.0", "JNA contributors (https://github.com/java-native-access/jna); also offered under LGPL-2.1-or-later"),
     "ai.moonshine": ("MIT", "Moonshine AI (https://github.com/moonshine-ai/moonshine)"),
-    # A GitHub release file, not a Maven artifact: checked against the LICENSE of the repository at tag v2.0.1.
-    "k2-fsa": ("Apache-2.0", "Xiaomi Corporation and the k2-fsa authors (https://github.com/k2-fsa/sherpa-onnx)"),
 }
 
 
@@ -141,7 +139,6 @@ def android_section():
     out += [
         "Their own dependencies (AndroidX, the Kotlin standard library, Kotlin coroutines) are Apache-2.0.",
         "The Moonshine library bundles its own ONNX Runtime 1.23.2 (MIT, Microsoft Corporation).",
-        "The sherpa-onnx library links its own ONNX Runtime 1.28.2 (MIT, Microsoft Corporation) statically.",
     ]
     return out
 
@@ -205,7 +202,11 @@ def license_texts(crates, used):
 
 
 def main():
-    crates = rust_crates()
+    ptts = os.environ.get("PTTS_SRC") or sys.exit("set PTTS_SRC to a checkout of gradium-ai/xn-ptts (see the top of this file)")
+    seen = rust_crates(os.path.join(ROOT, "core/Cargo.toml"), "commonplace-ffi", TARGETS, {})
+    # Only the arm64 build ships libptts_ffi.so.
+    rust_crates(os.path.join(ptts, "Cargo.toml"), "ptts-ffi", ["aarch64-linux-android"], seen)
+    crates = [seen[k] for k in sorted(seen)]
     crate_lines, notices = crate_section(crates)
     used = {"MIT", "Apache-2.0", "OFL-1.1"}
     for p in crates:
@@ -237,6 +238,9 @@ def main():
     w("LiteRT Google Tensor dispatch library (libLiteRtDispatch_GoogleTensor.so)  Apache-2.0")
     w("    Copyright Google LLC (https://github.com/google-ai-edge/LiteRT). Built for this app from commit")
     w("    ca21dc99de51c76bdcc572afeea1dd937d3c9e5c without the Google-internal hooks target (docs/MODELS.md).")
+    w("Phonon runtime (libptts_ffi.so, arm64 only)  MIT OR Apache-2.0  (used under MIT)")
+    w("    Gradium (https://github.com/gradium-ai/xn-ptts), the crates ptts and ptts-ffi, built for this app from commit")
+    w("    31e4e9f (docs/MODELS.md). Its Rust dependencies are in section 6.")
     w("")
     w("3. MODELS IN THE APP")
     w("-" * 20)
@@ -252,6 +256,10 @@ def main():
     w("Moonshine Medium Streaming (English)  MIT")
     w("    Voice input model by Moonshine AI. It is not in the app file: you install it as the optional voice-en pack.")
     w("    (https://github.com/moonshine-ai/moonshine)")
+    w("Phonon 31m English  Apache-2.0")
+    w("    Read-aloud model by Gradium, built on Pocket TTS and the Mimi codec by Kyutai")
+    w("    (https://huggingface.co/gradium/phonon-31m-en). It is not in the app file: you install it as the optional tts-en")
+    w("    pack, which holds the license text.")
     w("")
     w("4. FONT")
     w("-" * 7)
@@ -264,6 +272,7 @@ def main():
     w("")
     w(f"6. RUST CRATES ({len(crates)})")
     w("-" * 18)
+    w("Linked into libcommonplace_ffi.so and, on arm64, into the Phonon runtime libptts_ffi.so.")
     out += crate_lines
     if notices:
         w("")

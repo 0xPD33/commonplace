@@ -1,0 +1,22 @@
+:8080 {
+	@www host www.askcommonplace.app
+	redir @www https://askcommonplace.app{uri} permanent
+
+	root * /srv
+	encode zstd gzip
+	file_server
+
+	# The page loads nothing from other origins, so the policy can stay strict.
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	@html path / /index.html
+	header @html Cache-Control "no-cache"
+	@assets path /fonts/* /img/*
+	header @assets Cache-Control "public, max-age=604800"
+}

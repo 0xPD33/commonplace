@@ -5,7 +5,7 @@
 #        scripts/dev-push.sh stt            (voice-input model from data/models/stt/ for developer builds; users install the voice-en pack. Run scripts/fetch-models.sh stt first)
 set -euo pipefail
 cd "$(dirname "$0")/.."
-PKG=app.commonplace
+PKG=${PKG:-app.commonplace}   # PKG=app.commonplace.spike for a test build (appIdSuffix)
 LIBRARY=${LIBRARY:-data/library}   # e.g. LIBRARY=data/library-dev for the simplewiki dev pack
 TMP=/data/local/tmp/commonplace
 [[ $# -gt 0 ]] || { echo "usage: $0 <pack_id>..." >&2; exit 2; }

@@ -43,7 +43,7 @@ Acceptance limits: card ≤ 1.5 s and first word ≤ 10 s at the median. Both pa
 
 ### Clean install of the 0.2.3 release (2026-10-20 to 2026-10-21)
 
-The signed 0.2.3 APK (`4d29fbe`) on a phone with no earlier install. Paddy followed README "Install on a phone" by hand. The phone was on USB power and in airplane mode.
+The signed 0.2.3 APK (`4d29fbe`) on a phone with no earlier install. A person followed README "Install on a phone" by hand. The phone was on USB power and in airplane mode.
 
 | | Starter set | Starter set and Reference shelf |
 |---|---|---|

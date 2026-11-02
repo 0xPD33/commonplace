@@ -16,3 +16,8 @@ result
 /android/app/src/main/assets/encoders
 /dist
 /eval/runs/
+# Signing keys and secrets never belong in the repo (release keys live in ~/keys).
+*.jks
+*.keystore
+.env
+.env.*

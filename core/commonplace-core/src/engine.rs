@@ -1128,7 +1128,8 @@ impl Engine {
         rec.evidence = rendered.clone();
         rec.evidence_tokens = crate::text::approx_tokens(&rendered);
         ev.numbers.extend(crate::text::numbers(&lib.snapshot_date()));
-        let how_to = s.how_to_steps && req.history.is_empty() && is_how_to(&req.query);
+        // A new how-to question in a running chat counts; a follow-up of the last answer keeps the general prompt.
+        let how_to = s.how_to_steps && !route.needs_rewrite && !inherit && is_how_to(&req.query);
         let system = if how_to { prompts::HOW_TO_SYSTEM.to_string() } else { prompts::synthesis_system(&lib.snapshot_date()) };
         // Keep the user's own words in front of the model; a rewritten question can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };

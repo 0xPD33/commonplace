@@ -177,9 +177,10 @@ class ReadAloud(context: Context) {
                     true
                 }
                 Log.i(TAG, "first audio after ${r.ttfaMs.toLong()} ms, ${r.samples} samples in ${r.totalMs.toLong()} ms")
-                t.stop() // plays out what is queued
-                val end = System.currentTimeMillis() + 1000L * (frames - t.playbackHeadPosition) / RATE + 1000
-                while (current(id) && t.playbackHeadPosition < frames && System.currentTimeMillis() < end) Thread.sleep(50)
+                // stop() plays out what is queued, but resets the head position, so the wait is measured before it.
+                val end = System.currentTimeMillis() + 1000L * (frames - t.playbackHeadPosition) / RATE + 200
+                t.stop()
+                while (current(id) && System.currentTimeMillis() < end) Thread.sleep(50)
             } finally {
                 synchronized(lock) { if (track === t) track = null }
                 t.release()

@@ -37,6 +37,9 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `v2-rewrite-robust` | `robust.jsonl` with `--rewrite` (the model rewrites the question before search): 5.78 against 5.22 without | 0.579 |
 | `v2-prac-ling` | `practical.jsonl` with the reference settings: 4.17 of 10 on average | – |
 | `v2-prac-closed` | `practical.jsonl` with `--closed-book`: 5.85, better than the library on 15 of 20 | – |
+| `v2-A-ref` | The reference set with the how-to prompt (now the default) and the `wikibooks-en` pack without its alternative-medicine books. 127 of 142 answers match `v2-ref-ling`; how-to rose from 4.18 to 4.90 of 10 over 34 questions (with `v2-A-howto`). The gate failed only on unverified sentences, 11.4% against 9.6%: the model's own steps in how-to answers | 0.65 |
+| `v2-A-howto` | The how-to questions of `dev.jsonl` and `practical.jsonl` with the same settings | – |
+| `v2-B-ref` | `v2-A-ref` plus the `stackexchange` pack: how-to rose to 5.19, but other questions lost (pairwise 12 better, 23 worse), so the pack stays optional | 0.62 |
 | `x-032-phone-full` | The 63 seeds in the 0.3.2 test app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (2026-10-24). The same answers as `x-gemma4-phone-shelf`, so not judged | – |
 | `x-032-phone-cv` | The 30 locked test threads in the same app; the app wrote the earlier turns (2026-10-24) | 0.605 |
 | `x-gemma4-phone-shelf` | Seeds asked in the app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (debug build with the number changes, 2026-10-23) | 0.511 |
@@ -68,7 +71,7 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `cv2-dev-intent` | The 60 tuning threads with the question-intent head | 0.615 |
 | `cv2-test-base` | The 30 locked test threads (2026-09-30) | 0.614 |
 
-The `cv2` conversation runs used `--live-history` and the 2023 library. The `cv3` runs used `--live-history`, `--phone` and the Starter set. Noise, measured on 2026-11-02: on the desktop the same build gives the same answers (`v2-ref-ling-r2` matches `v2-ref-ling` on all 122). The judge, run twice on the same 80 answers, moved the score ratio by 0.002 and 4 to 7 queries by a point or more (`v2-ref-ling-rejudge`). So the bootstrap interval in the report, about ±0.05 on 80 questions, is the uncertainty that counts: it comes from the choice of questions. The Sonnet abstention judge flipped 2 of 30 verdicts on identical answers; the Opus judge flipped none, so `abstain.py` uses Opus.
+Runs before `v2-A-ref` used the general prompt for how-to questions; pass `--cli=--no-how-to-steps` to reproduce them. The `cv2` conversation runs used `--live-history` and the 2023 library. The `cv3` runs used `--live-history`, `--phone` and the Starter set. Noise, measured on 2026-11-02: on the desktop the same build gives the same answers (`v2-ref-ling-r2` matches `v2-ref-ling` on all 122). The judge, run twice on the same 80 answers, moved the score ratio by 0.002 and 4 to 7 queries by a point or more (`v2-ref-ling-rejudge`). So the bootstrap interval in the report, about ±0.05 on 80 questions, is the uncertainty that counts: it comes from the choice of questions. The Sonnet abstention judge flipped 2 of 30 verdicts on identical answers; the Opus judge flipped none, so `abstain.py` uses Opus.
 
 ## Query schema
 

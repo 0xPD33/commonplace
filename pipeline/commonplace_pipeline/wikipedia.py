@@ -49,8 +49,16 @@ RANGE = {"to", "-", "–", "and", "or", "by", "x", "×", "+/-", "±", "and(-)", 
 FIRST_ARG = {"nowrap", "nobr", "small", "smaller", "big", "large", "em", "strong", "sic", "math", "mvar", "sub", "sup",
              "abbr", "keypress", "code", "var", "ill", "interlanguage link", "lang-rtl", "linktext", "not a typo", "flag",
              "flagcountry", "flagu", "country", "tooltip", "visible anchor", "vanchor", "anchor+", "title case", "gaps",
-             "ship", "sclass", "ussc", "wikt", "pslink", "esc", "esccnty", "escyr", "nihongo foot", "nihongo2"}
-SECOND_ARG = {"lang", "langr", "transl", "transliteration"}
+             "ship", "sclass", "ussc", "wikt", "pslink", "esc", "esccnty", "escyr", "nihongo foot", "nihongo2", "gloss",
+             "tmath", "chem2", "mono", "nobold", "iast", "script/hebrew", "f1", "mlby", "nfl year", "viccity",
+             "medalcompetition", "medalcountry", "medalsport"}
+SECOND_ARG = {"lang", "langr", "langx", "transl", "transliteration", "tlit", "translit", "wikt-lang", "native name", "script",
+              "color", "sort", "legend", "legend0"}
+SHIPS = {"uss", "hms", "hmas", "hmcs", "hmnzs", "sms", "ss", "rms", "usns", "ins", "hnlms", "fs"}
+MEDALS = {"medalgold": "Gold", "medalsilver": "Silver", "medalbronze": "Bronze"}
+SYMBOLS = {"pi": "π", "co2": "CO2", "'s": "'s", "'\"": "'\"", "\"'": "\"'", "aka": "a.k.a.", "reign": "r. ", "spaces": " ",
+           "br": " ", "yes": "Yes", "no": "No", "n/a": "N/A"}
+MUSIC = {"flat": "♭", "b": "♭", "sharp": "♯", "#": "♯", "natural": "♮"}
 LISTS = {"ubl", "unbulleted list", "plainlist", "flatlist", "hlist", "bulleted list", "bull list", "ordered list",
          "collapsible list", "cslist", "enum"}
 DATES = {"birth date", "death date", "birth date and age", "death date and age", "start date", "end date", "dob",
@@ -69,7 +77,21 @@ def plain(s: str) -> str:
 
 
 def pos_args(t: wtp.Template) -> list[str]:
-    return [plain(a.value) for a in t.arguments if a.positional]
+    # "1=" names a positional argument; it is needed when the value holds "=" ({{math|1=I = P/V}}). A numbered
+    # argument keeps its slot: {{convert|25|to|50|cm|6=0}} sets the 6th, not the 5th.
+    by_num: dict[int, str] = {}
+    k = 0
+    for a in t.arguments:
+        if a.positional:
+            k += 1
+            by_num[k] = plain(a.value)
+        elif a.name.strip().isdigit():
+            by_num[int(a.name.strip())] = plain(a.value)
+    return [by_num.get(i, "") for i in range(1, max(by_num, default=0) + 1)]
+
+
+def named(t: wtp.Template, *names: str) -> str:
+    return next((plain(a.value) for n in names if (a := t.get_arg(n))), "")
 
 
 def date(y: str, m: str = "", d: str = "") -> str:
@@ -134,18 +156,59 @@ def render_template(t: wtp.Template) -> str:
         return date(*dp[:2]) if dp else ""
     if n in DASH:
         return DASH[n]
+    if n in SYMBOLS:
+        return SYMBOLS[n]
     if n in FIRST_ARG:
         return first
     if n in SECOND_ARG or n == "nihongo":
         return p[1] if n in SECOND_ARG and len(p) > 1 else (f"{first} ({p[1]})" if len(p) > 1 and first else first)
     if n.startswith("lang-") or n.startswith("in lang"):
-        return first if n.startswith("lang-") else ""
+        return (first or named(t, "c", "t", "s")) if n.startswith("lang-") else ""
     if n in LISTS:
         return ", ".join(x for x in p if x)
     if n in ("frac", "sfrac", "fraction") and p:
         return f"1/{p[0]}" if len(p) == 1 else f"{p[0]}/{p[1]}" if len(p) == 2 else f"{p[0]} {p[1]}/{p[2]}"
     if n == "f1 gp" and len(p) >= 2:
         return f"{p[0]} {p[1]} Grand Prix"
+    if n in SHIPS and p:
+        return f"{n.upper()} {first}" + (f" ({p[1]})" if len(p) > 1 and p[1] else "")
+    if n in MEDALS:
+        return f"{MEDALS[n]}: " + ", ".join(x for x in p if x)
+    if n == "medal":
+        return ", ".join(x for x in p[1:] if x)
+    if n == "marriage" and p:
+        years = "–".join(x for x in p[1:3] if x)
+        return f"{first} (m. {years})" if years else first
+    if n in ("sortname", "bibleverse") and len(p) >= 2:
+        return f"{p[0]} {p[1]}"
+    if n in ("flagathlete", "flagcgfathlete") and len(p) >= 2:
+        return f"{p[0]} ({p[1]})"
+    if n in ("flaglinkteam", "flagcgf") and p:
+        return first
+    if n == "panamericangames" and p:
+        return f"{first} Pan American Games"
+    if n in ("chem", "nuclide") and p:
+        return "".join(p) if n == "chem" else f"{first}-{p[1]}" if len(p) > 1 else first
+    if n == "isbn" and p:
+        return f"ISBN {first}"
+    if n == "music" and p:
+        return MUSIC.get(first, "")
+    if n == "lit" and p:
+        return f"lit. '{first}'"
+    if n in ("angbr", "angle bracket", "angbr ipa") and p:
+        return f"⟨{first}⟩"
+    if n == "csb link":
+        return named(t, "title", "team")
+    if n == "duration":
+        h, m, sec = (named(t, k) for k in ("h", "m", "s"))
+        return ":".join(x.zfill(2) if i else x for i, x in enumerate(y for y in (h, m, sec) if y))
+    if n == "percentage" and len(p) >= 2:
+        try:
+            return f"{float(p[0]) / float(p[1]) * 100:.{int(p[2]) if len(p) > 2 and p[2].isdigit() else 0}f}%"
+        except (ValueError, ZeroDivisionError):
+            return ""
+    if n in ("zh", "zhi"):
+        return first or named(t, "c", "t", "s")
     if n in ("circa", "c.", "ca"):
         return f"c. {first}".strip()
     if n in ("as of", "asof"):
@@ -166,6 +229,9 @@ def render_template(t: wtp.Template) -> str:
     # Currency templates named by code ({{GBP|5}}, {{EUR|5}}); single-letter names ({{c|…}}) are not currency.
     if len(n) == 3 and n.isalpha() and first[:1].isdigit():
         return f"{first} {n.upper()}"
+    # A bare upper-case code is a country flag with its code ({{USA}}, {{ITA}} in result tables).
+    if not p and len(n) == 3 and n.isalpha() and t.name.strip().isupper():
+        return n.upper()
     return ""
 
 

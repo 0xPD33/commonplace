@@ -1,0 +1,59 @@
+{
+  "id": "seed-lt-11",
+  "query": "What happened in the Emu War in Australia?",
+  "answer": "The Emu War was a 1932 Australian Army operation to cull emus in the Campion district of Western Australia. It ran from 2 November to 10 December 1932 and was led by Major G. P. W. Meredith of the Royal Australian Artillery [1][2]. After World War I, many veterans had been given land in the area to farm wheat. Then drought pushed an estimated 20,000 emus inland, where they ate and trampled the crops [1][3]. The farmers asked for help, and the government sent a few soldiers with two Lewis machine guns.\n\nThe emus were hard to hit. They scattered into small groups when shot at, and the guns sometimes jammed. After bad press, the soldiers were pulled out within about a week. They went back in mid-November because farmers pressed for it [1][4]. Meredith reported 986 emus killed, which historians still count as a failure because the population barely dropped [1][2]. Bounty schemes later worked much better: Western Australia paid out on 284,704 emus between 1945 and 1960 [5]. Today the episode is mostly remembered as a joke about the time Australia \"lost\" a war to birds [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Emu_War",
+      "title": "Emu War – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.britannica.com/topic/Emu-War",
+      "title": "Emu War – Britannica"
+    },
+    {
+      "n": 3,
+      "url": "https://www.mentalfloss.com/history/when-australia-went-war-its-emus",
+      "title": "When Australia Went to War With Its Emus – Mental Floss"
+    },
+    {
+      "n": 4,
+      "url": "https://daxe.substack.com/p/australia-once-lost-a-war-with-the",
+      "title": "Australia Once Lost a War With the Mighty Emu"
+    },
+    {
+      "n": 5,
+      "url": "https://themeateater.com/conservation/wildlife-management/the-great-emu-war-of-1932",
+      "title": "The Great Emu War of 1932 – MeatEater"
+    }
+  ],
+  "wikipedia_articles": [
+    "Emu War",
+    "Emu",
+    "G. P. W. Meredith",
+    "Lewis gun",
+    "Soldier settlement (Australia)"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Emu_War",
+    "https://www.britannica.com/topic/Emu-War",
+    "https://www.mentalfloss.com/history/when-australia-went-war-its-emus",
+    "https://daxe.substack.com/p/australia-once-lost-a-war-with-the",
+    "https://themeateater.com/conservation/wildlife-management/the-great-emu-war-of-1932"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0629778,
+  "duration_ms": 21394,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:32+00:00"
+}

@@ -1,0 +1,40 @@
+{
+  "id": "prac-06",
+  "query": "How do I bleed a radiator?",
+  "answer": "First turn the heating off and wait for the radiators to cool, because the water and air inside can be hot enough to scald you [1]. You'll need a radiator key (a flat-head screwdriver works on some valves), a cloth, and a towel or container to catch drips [1]. The bleed valve is usually at the top corner of the radiator, on the side opposite the main control valve [2]. Hold the cloth under it and turn the key anticlockwise about a quarter to half a turn. Don't open it all the way [1][2]. You'll hear air hissing out. When the hissing stops and water starts coming out steadily, close the valve firmly without overtightening it [1][2].\n\nIf several radiators need bleeding, a common tip is to start downstairs with the one farthest from the boiler [2]. If you have a sealed system, such as a combi boiler, check the boiler pressure gauge afterwards. A small drop is normal, and British Gas says about 1 to 1.5 bar is typical with the heating off. If it's too low, top up the pressure following your boiler's instructions [1]. Then turn the heating back on and check that every radiator heats evenly from top to bottom. If one keeps going cold at the top, call a heating engineer [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://britishgas.co.uk/the-source/fix-it-yourself/how-to-bleed-a-radiator.html",
+      "title": "How to bleed a radiator – your step-by-step guide (British Gas)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.realhomes.com/us/advice/how-to-bleed-a-radiator",
+      "title": "How to bleed a radiator in 5 simple steps (Real Homes)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Radiator (heating)",
+    "Bleed screw",
+    "Central heating",
+    "Combi boiler"
+  ],
+  "urls": [
+    "https://britishgas.co.uk/the-source/fix-it-yourself/how-to-bleed-a-radiator.html",
+    "https://www.realhomes.com/us/advice/how-to-bleed-a-radiator"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0628053,
+  "duration_ms": 27477,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:07+00:00"
+}

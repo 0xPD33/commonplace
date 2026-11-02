@@ -1,0 +1,38 @@
+{
+  "id": "seed-cmp-12",
+  "query": "What is the difference between DNA and RNA?",
+  "answer": "DNA and RNA are both nucleic acids built from nucleotides, but they differ in four main ways.\n\n1. **The sugar.** DNA uses deoxyribose and RNA uses ribose. The two sugars differ at the 2' carbon: ribose carries a hydroxyl (–OH) group there, and deoxyribose has only a hydrogen [1].\n2. **The bases.** Both use adenine, guanine and cytosine. DNA uses thymine as its fourth base, while RNA uses uracil, which is thymine without one methyl group [1].\n3. **The structure.** DNA is usually a double-stranded helix. RNA is usually single-stranded and can fold into complex shapes. Some viruses are exceptions, with single-stranded DNA or double-stranded RNA [1].\n4. **Stability and job.** That missing 2' hydroxyl makes DNA more chemically stable [1], which suits its role as the cell's long-term store of genetic information. RNA is more reactive and short-lived. It works as a messenger (mRNA), as part of the ribosome's machinery (rRNA, tRNA), and sometimes as a catalyst or regulator.\n\nIn short, DNA keeps the genetic instructions and RNA carries them out.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.tutorchase.com/notes/ap/biology/1-6-5-structural-differences-between-dna-and-rna",
+      "title": "Structural differences between DNA and RNA – TutorChase AP Biology notes"
+    }
+  ],
+  "wikipedia_articles": [
+    "DNA",
+    "RNA",
+    "Nucleic acid",
+    "Ribose",
+    "Deoxyribose",
+    "Uracil",
+    "Thymine",
+    "Messenger RNA"
+  ],
+  "urls": [
+    "https://www.tutorchase.com/notes/ap/biology/1-6-5-structural-differences-between-dna-and-rna"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0436068,
+  "duration_ms": 23957,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:10+00:00"
+}

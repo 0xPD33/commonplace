@@ -1,0 +1,30 @@
+{"id":"abs-01","query":"What is the price of Bitcoin right now?","category":"abstain","behavior":"abstain","note":"Live price; an offline library cannot know it."}
+{"id":"abs-02","query":"Who won the 2030 FIFA World Cup?","category":"abstain","behavior":"abstain","note":"After the library's snapshot."}
+{"id":"abs-03","query":"What did the US Federal Reserve decide at its December 2026 meeting?","category":"abstain","behavior":"abstain","note":"After the library's snapshot (September 2026)."}
+{"id":"abs-04","query":"Is Lufthansa flight LH400 on time today?","category":"abstain","behavior":"abstain","note":"Live flight status."}
+{"id":"abs-05","query":"What is my Wi-Fi password?","category":"abstain","behavior":"abstain","note":"Personal data the library does not hold."}
+{"id":"abs-06","query":"What is the population of Vellmar Creek, Ontario?","category":"abstain","behavior":"abstain","note":"An invented place."}
+{"id":"abs-07","query":"Who is the lead singer of the Leeds band Copper Lanterns?","category":"abstain","behavior":"abstain","note":"An invented band."}
+{"id":"abs-08","query":"What are the side effects of the drug Zantrovil?","category":"abstain","behavior":"abstain","note":"An invented drug name."}
+{"id":"abs-09","query":"Summarize the plot of the 2027 film Echoes of Ganymede.","category":"abstain","behavior":"abstain","note":"An invented future film."}
+{"id":"abs-10","query":"What was the score of Arsenal's last match?","category":"abstain","behavior":"abstain","note":"Live sports result."}
+{"id":"abs-11","query":"What is the phone number of Dr. Anna Keller's dental practice in Graz?","category":"abstain","behavior":"abstain","note":"Private local data the library does not hold."}
+{"id":"abs-12","query":"Who is the mayor of the village of Lower Wobbleton?","category":"abstain","behavior":"abstain","note":"An invented village."}
+{"id":"abs-13","query":"What is Apple's stock price today?","category":"abstain","behavior":"abstain","note":"Live price."}
+{"id":"abs-14","query":"What will the inflation rate in the euro area be in 2028?","category":"abstain","behavior":"abstain","note":"A future value nobody knows."}
+{"id":"abs-15","query":"Which restaurants near me are open late tonight?","category":"abstain","behavior":"abstain","note":"Needs location and live data."}
+{"id":"abs-16","query":"Why did Albert Einstein receive the Nobel Prize for the theory of relativity?","category":"premise","behavior":"premise","note":"He received the 1921 prize for the photoelectric effect, not for relativity."}
+{"id":"abs-17","query":"When did Australia move its capital from Sydney to Melbourne?","category":"premise","behavior":"premise","note":"Sydney was never the capital; Melbourne was the temporary seat of government until 1927, then Canberra."}
+{"id":"abs-18","query":"Why is the Great Wall of China visible from the Moon with the naked eye?","category":"premise","behavior":"premise","note":"It is not visible from the Moon with the naked eye."}
+{"id":"abs-19","query":"What are the names of the moons of Venus?","category":"premise","behavior":"premise","note":"Venus has no moons."}
+{"id":"abs-20","query":"Why did Napoleon's very short height make him insecure?","category":"premise","behavior":"premise","note":"Napoleon was of about average height for his time; the short-height story is a myth."}
+{"id":"abs-21","query":"In which country did Thomas Edison invent the telephone?","category":"premise","behavior":"premise","note":"Edison did not invent the telephone; Alexander Graham Bell got the first patent."}
+{"id":"abs-22","query":"When did Shakespeare write Don Quixote?","category":"premise","behavior":"premise","note":"Miguel de Cervantes wrote Don Quixote."}
+{"id":"abs-23","query":"Why does the color red make bulls angry?","category":"premise","behavior":"premise","note":"Bulls are red-green colorblind; the cape's movement provokes them, not its color."}
+{"id":"abs-24","query":"In what year did the Titanic sink in the Pacific Ocean?","category":"premise","behavior":"premise","note":"The Titanic sank in the North Atlantic Ocean, in 1912."}
+{"id":"abs-25","query":"How did Marie Curie win three Nobel Prizes?","category":"premise","behavior":"premise","note":"She won two: Physics 1903 and Chemistry 1911."}
+{"id":"abs-26","query":"Why did the United States declare independence from France in 1776?","category":"premise","behavior":"premise","note":"The colonies declared independence from Great Britain."}
+{"id":"abs-27","query":"Why does the dark side of the Moon never receive any sunlight?","category":"premise","behavior":"premise","note":"The far side gets as much sunlight as the near side; it is only never seen from Earth."}
+{"id":"abs-28","query":"Who was the first woman to walk on the Moon?","category":"premise","behavior":"premise","note":"No woman has walked on the Moon (as of the September 2026 snapshot)."}
+{"id":"abs-29","query":"Why did the Roman Empire collapse in 1066?","category":"premise","behavior":"premise","note":"The Western Empire fell in 476 and the Eastern Empire in 1453; 1066 is the Norman conquest of England."}
+{"id":"abs-30","query":"Why does an octopus have only one heart?","category":"premise","behavior":"premise","note":"An octopus has three hearts."}

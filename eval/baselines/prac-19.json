@@ -1,0 +1,54 @@
+{
+  "id": "prac-19",
+  "query": "How do I hang a heavy picture on a plasterboard wall?",
+  "answer": "If you can, screw into the timber studs behind the plasterboard. That's the strongest option. If the picture can't go over a stud, use heavy-duty cavity fixings such as metal hollow-wall anchors or spring toggles, and spread the weight over at least two of them.\n\n1. **Find the studs.** Use a stud finder, tap the wall and listen for a solid sound, or run a magnet along it to find the screw or nail heads [1]. In the UK, studs are usually 400 mm or 600 mm apart, so once you've found one the next is easy to locate [2]. For a heavy frame, put a screw into each of two neighbouring studs at the same height and hang the picture from both [3]. If the studs aren't where you need them, you can screw a timber batten across them and hang the picture from that.\n2. **If there's no stud, use proper cavity fixings rather than ordinary plastic plugs.** Metal hollow-wall anchors (often sold as \"Molly\" bolts) are commonly rated at about 20–50 kg each. Once fitted they stay in the wall, so you can take the screw out and put it back [4]. Spring toggles grip well, but they need a large hole, and if you ever unscrew them the wings drop into the cavity, so you'd need a new toggle [4].\n3. **Don't overload the board.** One manufacturer suggests a single layer of plasterboard can carry about 15 kg per square metre, double board 25 kg and triple board 35 kg. Add the weight of the picture and its fixings together, and spread the anchors out, for example on both sides of a stud [1].\n\nThe per-fixing ratings vary a lot between products and sources, so check the load and board thickness printed on the packet before you buy. If the picture is very heavy, say over about 20–25 kg, or you can't find a stud, go for the stud or batten method. Before drilling, check the spot with a detector for pipes and cables.\n\nSources:\n[1] Rapid – How to hang heavy objects on plasterboard: https://www.rapid.com/en-gb/guides/plasterboard-fixings/how-to-hang-heavy-objects-on-plasterboard/\n[2] Overclockers forum – Hanging a heavy mirror on plasterboard: https://forums.overclockers.co.uk/threads/hanging-a-heavy-mirror-on-plasterboard.18695755\n[3] Ron Hazelton – How to hang a heavy object on a wall using toggle bolts: https://ronhazelton.com/tips/how_to_hang_a_heavy_object_on_a_wall_using_toggle_bolts\n[4] Data Power Tools – What are the best cavity wall fixings?: https://www.datapowertools.co.uk/blog/best-plasterboard-and-cavity-wall-fixings/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.rapid.com/en-gb/guides/plasterboard-fixings/how-to-hang-heavy-objects-on-plasterboard/",
+      "title": "How to hang heavy objects on plasterboard – Rapid"
+    },
+    {
+      "n": 2,
+      "url": "https://forums.overclockers.co.uk/threads/hanging-a-heavy-mirror-on-plasterboard.18695755",
+      "title": "Hanging a heavy mirror on plasterboard – Overclockers UK forum"
+    },
+    {
+      "n": 3,
+      "url": "https://ronhazelton.com/tips/how_to_hang_a_heavy_object_on_a_wall_using_toggle_bolts",
+      "title": "How to hang a heavy object on a wall using toggle bolts – Ron Hazelton"
+    },
+    {
+      "n": 4,
+      "url": "https://www.datapowertools.co.uk/blog/best-plasterboard-and-cavity-wall-fixings/",
+      "title": "What are the Best Cavity Wall Fixings? – Data Power Tools"
+    }
+  ],
+  "wikipedia_articles": [
+    "Drywall",
+    "Wall stud",
+    "Molly bolt",
+    "Toggle bolt",
+    "Stud finder",
+    "Wall plug"
+  ],
+  "urls": [
+    "https://www.rapid.com/en-gb/guides/plasterboard-fixings/how-to-hang-heavy-objects-on-plasterboard/",
+    "https://forums.overclockers.co.uk/threads/hanging-a-heavy-mirror-on-plasterboard.18695755",
+    "https://ronhazelton.com/tips/how_to_hang_a_heavy_object_on_a_wall_using_toggle_bolts",
+    "https://www.datapowertools.co.uk/blog/best-plasterboard-and-cavity-wall-fixings/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.135295,
+  "duration_ms": 44028,
+  "num_turns": 7,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:46+00:00"
+}

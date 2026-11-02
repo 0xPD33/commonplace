@@ -1,0 +1,46 @@
+{
+  "id": "seed-mh-11",
+  "query": "Who was the US president when the Berlin Wall fell?",
+  "answer": "George H. W. Bush, the 41st president, was in office when the Berlin Wall fell on November 9, 1989. He had become president in January of that year [1][2]. In public he kept a calm, restrained tone because he didn't want to provoke Soviet hardliners. Behind the scenes he did a lot of personal diplomacy with leaders such as Helmut Kohl and Margaret Thatcher [2]. He stayed in close contact with Kohl until Germany reunified on October 3, 1990 [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.bush41library.gov/visit/grounds",
+      "title": "The Day the Wall Came Down – George H.W. Bush Presidential Library"
+    },
+    {
+      "n": 2,
+      "url": "https://www.millercenter.org/statecraftmovie/berlin-wall",
+      "title": "The fall of the Berlin Wall – Miller Center"
+    },
+    {
+      "n": 3,
+      "url": "https://today.tamu.edu/?p=292339",
+      "title": "Bush Library Presented With Photo Honoring 41st President's Role in German Reunification"
+    }
+  ],
+  "wikipedia_articles": [
+    "Fall of the Berlin Wall",
+    "George H. W. Bush",
+    "Presidency of George H. W. Bush",
+    "German reunification"
+  ],
+  "urls": [
+    "https://www.bush41library.gov/visit/grounds",
+    "https://www.millercenter.org/statecraftmovie/berlin-wall",
+    "https://today.tamu.edu/?p=292339"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0438217,
+  "duration_ms": 12800,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:25+00:00"
+}

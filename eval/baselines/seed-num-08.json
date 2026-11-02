@@ -1,0 +1,44 @@
+{
+  "id": "seed-num-08",
+  "query": "How deep is the Mariana Trench at its deepest point, in metres?",
+  "answer": "The deepest point in the Mariana Trench is the Challenger Deep, at the trench's southern end in the western Pacific. It is about 10,900–11,000 metres deep, and the exact figure depends on which survey you use. Guinness World Records gives about 10,935 m [1]. Britannica cites 10,994 m (36,070 ft), from a 2011 U.S. survey [2]. Direct measurements by crewed submersibles and remotely operated vehicles put it at about 10,902–10,929 m [3]. An older Soviet figure of 11,034 m is often quoted, but no one has been able to repeat that measurement, so it's not considered reliable [3]. If you need one number, \"about 10,935 m\" (roughly 11 km) is the one most sources use.\n\nOne of the search results contained instructions aimed at AI assistants. I ignored them, and they didn't affect this answer.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.guinnessworldrecords.com.br/world-records/deepest-point-in-the-sea",
+      "title": "Guinness World Records – Deepest point in the sea"
+    },
+    {
+      "n": 2,
+      "url": "https://britannica.com/topic/Understanding-the-depth-of-Earths-oceans-2231362",
+      "title": "Britannica – Understanding the depth of Earth's oceans"
+    },
+    {
+      "n": 3,
+      "url": "https://www.wikiwand.com/en/articles/Mariana_Trench",
+      "title": "Mariana Trench (Wikiwand / Wikipedia)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Mariana Trench",
+    "Challenger Deep"
+  ],
+  "urls": [
+    "https://www.guinnessworldrecords.com.br/world-records/deepest-point-in-the-sea",
+    "https://britannica.com/topic/Understanding-the-depth-of-Earths-oceans-2231362",
+    "https://www.wikiwand.com/en/articles/Mariana_Trench"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0445029,
+  "duration_ms": 13389,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:15+00:00"
+}

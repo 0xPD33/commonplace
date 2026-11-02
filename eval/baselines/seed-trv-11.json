@@ -1,0 +1,61 @@
+{
+  "id": "seed-trv-11",
+  "query": "What should I know before visiting Machu Picchu?",
+  "answer": "Here's what to know before you go. Peru's rules have changed a lot since 2024, so check the official sites (machupicchu.gob.pe and the TuBoleto portal) before you book or travel.\n\n**Tickets.** Book early, especially for dates from late June through early November, when the daily cap goes up to about 5,600 visitors. On other days it's about 4,500 [1][3]. Ticket sales are split into three circuits with ten routes [3]:\n- **Circuit 1 (Panorámico):** the upper terraces, with the classic postcard view.\n- **Circuit 2 (Clásico):** the most complete tour of the site, and usually the best pick for a first visit.\n- **Circuit 3 (Realeza):** includes options like Huayna Picchu.\n\nHuayna Picchu (about 400 climbers a day) and Machu Picchu Mountain (about 800) sell out first [1]. Some sites report that online purchase changed in September 2026 to pay-first, with a 15-minute window to pay. I couldn't confirm that from a second source, so expect to pay as soon as you book [1]. A limited number of next-day tickets are sold in person in Aguas Calientes, but you shouldn't count on getting one [1].\n\n**On the day.** Your ticket has an hourly entry time between 6:00 and 15:00. You get about a 30-minute grace period, and staff can turn away later arrivals [3]. You can't leave and come back in, and the restrooms are outside the gate, so go before you enter [3]. A standard visit takes up to about four hours [3]. Bring the passport your ticket was booked with. Don't bring:\n- bags larger than about 40×35×20 cm\n- food\n- tripods or selfie sticks\n- drones\n\nDon't touch or climb on the walls [3]. A licensed guide is officially expected and often useful, but enforcement inside the site has been inconsistent [3]. Guides are mandatory on the Inca Trail.\n\n**Getting there.** Most people take the train (PeruRail or Inca Rail) to Aguas Calientes, then the shuttle bus up, which takes about 25–30 minutes [2][3]. Train, bus and entry tickets are all bought separately [4]. The bus concession was disputed in late 2025, and at one point hundreds of tourists were stranded [5]. A February 2026 agreement let two operators share the route [4], but check the bus status and allow extra time.\n\n**Other tips.** Spend a day or two getting used to the altitude in Cusco (about 3,400 m) first. The ruins are lower, at about 2,430 m. The rainy season runs from about November to March, so bring rain gear. The Inca Trail closes every February for maintenance.\n\nSources:\n[1] Voyagers Travel, \"Machu Picchu 2026: Daily Cap, Circuits & Ticket Rules\": https://www.voyagers.travel/news/machu-picchu-top-peruvian-tourist-destination-sets-a-visitor-limit\n[2] PeruRail, \"Tickets to Machu Picchu and New Visit Circuits 2026\": https://www.perurail.com/tickets-to-machu-picchu/\n[3] How to Peru, \"Machu Picchu Entry Rules (2026)\": https://howtoperu.com/answers/machu-picchu-entry-rules-circuits-entry-windows-guide-rules-common-mistakes/\n[4] Gestión, Consettur news: https://gestion.pe/noticias/consettur/\n[5] Capital FM, \"Machu Picchu hit by a row over tourist buses\": https://capitalfm.africa/machu-picchu-hit-by-a-row-over-tourist-buses/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.voyagers.travel/news/machu-picchu-top-peruvian-tourist-destination-sets-a-visitor-limit",
+      "title": "Machu Picchu 2026: Daily Cap, Circuits & Ticket Rules"
+    },
+    {
+      "n": 2,
+      "url": "https://www.perurail.com/tickets-to-machu-picchu/",
+      "title": "Tickets to Machu Picchu and New Visit Circuits 2026"
+    },
+    {
+      "n": 3,
+      "url": "https://howtoperu.com/answers/machu-picchu-entry-rules-circuits-entry-windows-guide-rules-common-mistakes/",
+      "title": "Machu Picchu Entry Rules (2026): Circuits, Entry Windows, Guide Rules, and Common Mistakes"
+    },
+    {
+      "n": 4,
+      "url": "https://gestion.pe/noticias/consettur/",
+      "title": "Gestión – Consettur news"
+    },
+    {
+      "n": 5,
+      "url": "https://capitalfm.africa/machu-picchu-hit-by-a-row-over-tourist-buses/",
+      "title": "Machu Picchu hit by a row over tourist buses"
+    }
+  ],
+  "wikipedia_articles": [
+    "Machu Picchu",
+    "Huayna Picchu",
+    "Aguas Calientes, Peru",
+    "Inca Trail to Machu Picchu",
+    "Cusco",
+    "Altitude sickness",
+    "PeruRail"
+  ],
+  "urls": [
+    "https://www.voyagers.travel/news/machu-picchu-top-peruvian-tourist-destination-sets-a-visitor-limit",
+    "https://www.perurail.com/tickets-to-machu-picchu/",
+    "https://howtoperu.com/answers/machu-picchu-entry-rules-circuits-entry-windows-guide-rules-common-mistakes/",
+    "https://gestion.pe/noticias/consettur/",
+    "https://capitalfm.africa/machu-picchu-hit-by-a-row-over-tourist-buses/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.1460478,
+  "duration_ms": 51969,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:12+00:00"
+}

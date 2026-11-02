@@ -1,0 +1,47 @@
+{
+  "id": "rec-02",
+  "query": "Who became Chancellor of Germany after the February 2025 federal election?",
+  "answer": "Friedrich Merz, leader of the CDU, became Chancellor of Germany after the February 2025 federal election. The Bundestag elected him on 6 May 2025, and it took two ballots. In the first ballot he got only 310 votes, short of the 316 needed for an absolute majority of the 630 members. That made him the first chancellor candidate in post-war Germany to lose a first-round vote. Later the same day he won the second ballot with 325 votes [1][2]. He took over from Olaf Scholz and leads a coalition of the CDU/CSU and the SPD [2][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.thenationalnews.com/news/europe/2025/05/06/friedrich-merz-elected-chancellor-by-german-parliament-at-second-attempt",
+      "title": "Friedrich Merz elected chancellor by German parliament at second attempt"
+    },
+    {
+      "n": 2,
+      "url": "https://www.yahoo.com/news/friedrich-merz-fails-bid-become-133604897.html",
+      "title": "Friedrich Merz elected German chancellor in second round of voting"
+    },
+    {
+      "n": 3,
+      "url": "https://www.deutschland.de/en/news/friedrich-merz-federal-chancellor-of-germany",
+      "title": "Friedrich Merz federal chancellor of Germany"
+    }
+  ],
+  "wikipedia_articles": [
+    "Friedrich Merz",
+    "2025 German federal election",
+    "Merz cabinet",
+    "Chancellor of Germany",
+    "2025 election of the Chancellor of Germany"
+  ],
+  "urls": [
+    "https://www.thenationalnews.com/news/europe/2025/05/06/friedrich-merz-elected-chancellor-by-german-parliament-at-second-attempt",
+    "https://www.yahoo.com/news/friedrich-merz-fails-bid-become-133604897.html",
+    "https://www.deutschland.de/en/news/friedrich-merz-federal-chancellor-of-germany"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.06271360000000001,
+  "duration_ms": 13712,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:26+00:00"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "rec-07",
+  "query": "Which club won the 2024–25 UEFA Champions League?",
+  "answer": "Paris Saint-Germain won the 2024–25 UEFA Champions League. They beat Inter Milan 5–0 in the final on 31 May 2025 at the Allianz Arena in Munich [1]. It was PSG's first European Cup or Champions League title [1][2]. No team had ever won a final in the competition by a bigger margin [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/2025_UEFA_Champions_League_final",
+      "title": "2025 UEFA Champions League final - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://bleacherreport.com/articles/25200852-psg-beats-inter-win-2025-champions-league-final-fans-hail-historic-performance",
+      "title": "PSG beats Inter, wins 2025 Champions League final - Bleacher Report"
+    },
+    {
+      "n": 3,
+      "url": "https://www.si.com/soccer/psg-set-new-champions-league-final-record-vs-inter-milan",
+      "title": "PSG set new Champions League final record vs Inter Milan - Sports Illustrated"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 UEFA Champions League final",
+    "2024–25 UEFA Champions League",
+    "Paris Saint-Germain FC"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/2025_UEFA_Champions_League_final",
+    "https://bleacherreport.com/articles/25200852-psg-beats-inter-win-2025-champions-league-final-fans-hail-historic-performance",
+    "https://www.si.com/soccer/psg-set-new-champions-league-final-record-vs-inter-milan"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0431234,
+  "duration_ms": 12569,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:40+00:00"
+}

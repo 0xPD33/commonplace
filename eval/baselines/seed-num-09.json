@@ -1,0 +1,38 @@
+{
+  "id": "seed-num-09",
+  "query": "How long is a marathon in kilometres?",
+  "answer": "A marathon is 42.195 km long, which is about 26.2 miles (26 miles 385 yards) [1][2]. That exact figure comes from the 1908 London Olympics. The course there started at Windsor Castle, and an extra 385 yards (352 m) were added so the race would finish in front of the royal box in the stadium [1]. The international athletics federation (IAAF, now World Athletics) made 42.195 km the official standard in 1921 [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://webarchive.library.unt.edu/web/20090305044909/http://en.wikipedia.org/wiki/Marathon",
+      "title": "Marathon – Wikipedia (archived snapshot)"
+    },
+    {
+      "n": 2,
+      "url": "https://bmw-berlin-marathon.com/en/news-media/news-blog/detail/jubinews-everything-you-need-to-know",
+      "title": "BMW Berlin Marathon – Jubinews: everything you need to know"
+    }
+  ],
+  "wikipedia_articles": [
+    "Marathon",
+    "Athletics at the 1908 Summer Olympics – Men's marathon"
+  ],
+  "urls": [
+    "https://webarchive.library.unt.edu/web/20090305044909/http://en.wikipedia.org/wiki/Marathon",
+    "https://bmw-berlin-marathon.com/en/news-media/news-blog/detail/jubinews-everything-you-need-to-know"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.044505,
+  "duration_ms": 10974,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:16+00:00"
+}

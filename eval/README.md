@@ -6,8 +6,13 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 
 | Path | What it holds |
 |---|---|
-| `queries.jsonl` | The 63 seed questions, in nine categories. I wrote 16 and Claude drafted 47. |
-| `dev.jsonl`, `test.jsonl` | The splits that `split.py` makes. They do not exist yet: `split.py` needs more than 100 questions. `run.py` and `baseline.py` default to `dev.jsonl`, so pass `--queries eval/queries.jsonl`. |
+| `queries.jsonl` | The 120 seed questions, in nine categories. I wrote 16; Claude drafted 47 and, on 2026-11-01, 57 more in the weak categories (factual, numeric, long tail). |
+| `dev.jsonl`, `test.jsonl` | The seed splits that `split.py` makes (`--test-size 60`). `test.jsonl` is locked: run it to report, never to tune. `run.py` and `baseline.py` default to `dev.jsonl`. |
+| `canary.jsonl` | 12 questions with an `expect` answer. Every one must pass on every backend: the release gate. |
+| `abstention.jsonl` | 30 questions: 15 that the library cannot answer (`behavior: abstain`) and 15 with a false premise (`behavior: premise`). `abstain.py` grades them. |
+| `robust.jsonl` | 20 misspelled, spoken or misheard versions of seeds. Each borrows the baseline of its clean seed (`baseline`). |
+| `recent.jsonl` | 20 questions on events from 2025 and 2026 that the September 2026 snapshot covers and the models do not know, each with an `expect` answer. The closed-book run gets none right: this set measures what the library adds. |
+| `practical.jsonl` | 20 "how do I" questions (household fixes, first aid, cooking). The library is weakest here: the closed-book run beats it on 15 of 20. |
 | `smoke.jsonl` | Three plumbing questions. They are not part of the eval. |
 | `conversation.jsonl` | 92 multi-turn threads for tuning: follow-ups, requests for more, compare follow-ups, topic switches, reformat requests ("make it shorter") and small talk. The first 60 have the 2026-09-30 and 2026-10-10 "before" runs. The judge sees the earlier turns. |
 | `conversation-test.jsonl` | 30 more threads of the same kinds. Locked: run it to report, never to tune. |
@@ -16,11 +21,22 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `runs/<run-id>/` | `meta.json`, `answers.jsonl`, `recall.jsonl`, `judgments.jsonl`, `pairwise-vs-<run>.jsonl`, `per_query.jsonl`, `stderr.log`. Git ignores `runs/`. Only the runs that the docs cite are in the repository (see below). Set `EVAL_RUNS=<dir>` to keep the runs elsewhere; every script reads it. |
 | `history.csv` | One row per reported run. |
 | `common.py` | Shared paths and the `claude -p` wrapper. |
+| `abstain.py` | The abstention judge: `abstain.jsonl` in the run directory. |
+| `import.py` | Turns answers from any other system (an app, a model, a phone run) into a run: JSONL with `id` and `answer`, optionally `record` timings and citation `segments`. Then the judge and the report work as for our runs. |
+| `human.py` | A person checks the judge: `make` writes a sheet of 30 of our answers to mark as correct (yes, partly or no); `score` compares the marks with the judge's correctness points. |
 
 ## Cited runs
 
 | Run | What it is | Score ratio |
 |---|---|---|
+| `v2-ref-ling` | The reference run and the gate's baseline: Ling with the phone's settings, the Starter set and the Reference shelf, on test, canary, abstention, robust and recent (142 questions, 2026-11-02). The source of `docs/EVAL.md` | 0.64 |
+| `v2-gemma-e2b` | The same with the Gemma 4 E2B Q4_0 GGUF (`ggml-org/gemma-4-E2B-it-GGUF`), a desktop stand-in for the NPU file | 0.60 |
+| `v2-closed-ling` | The same Ling with `--closed-book`: no library | 0.47 |
+| `v2-ref-ling-r2` | A second run of the reference build on the first 122 questions: identical answers, judged again | 0.591 |
+| `v2-ref-ling-rejudge` | The reference answers on the first 122 questions, judged a second time | 0.592 |
+| `v2-rewrite-robust` | `robust.jsonl` with `--rewrite` (the model rewrites the question before search): 5.78 against 5.22 without | 0.579 |
+| `v2-prac-ling` | `practical.jsonl` with the reference settings: 4.17 of 10 on average | – |
+| `v2-prac-closed` | `practical.jsonl` with `--closed-book`: 5.85, better than the library on 15 of 20 | – |
 | `x-032-phone-full` | The 63 seeds in the 0.3.2 test app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (2026-10-24). The same answers as `x-gemma4-phone-shelf`, so not judged | – |
 | `x-032-phone-cv` | The 30 locked test threads in the same app; the app wrote the earlier turns (2026-10-24) | 0.605 |
 | `x-gemma4-phone-shelf` | Seeds asked in the app on the Pixel 10 with Gemma, the Starter set and the Reference shelf (debug build with the number changes, 2026-10-23) | 0.511 |
@@ -52,7 +68,7 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | `cv2-dev-intent` | The 60 tuning threads with the question-intent head | 0.615 |
 | `cv2-test-base` | The 30 locked test threads (2026-09-30) | 0.614 |
 
-The `cv2` conversation runs used `--live-history` and the 2023 library. The `cv3` runs used `--live-history`, `--phone` and the Starter set. Judge noise is about +-0.05 on 63 questions.
+The `cv2` conversation runs used `--live-history` and the 2023 library. The `cv3` runs used `--live-history`, `--phone` and the Starter set. Noise, measured on 2026-11-02: on the desktop the same build gives the same answers (`v2-ref-ling-r2` matches `v2-ref-ling` on all 122). The judge, run twice on the same 80 answers, moved the score ratio by 0.002 and 4 to 7 queries by a point or more (`v2-ref-ling-rejudge`). So the bootstrap interval in the report, about ±0.05 on 80 questions, is the uncertainty that counts: it comes from the choice of questions. The Sonnet abstention judge flipped 2 of 30 verdicts on identical answers; the Opus judge flipped none, so `abstain.py` uses Opus.
 
 ## Query schema
 
@@ -70,6 +86,13 @@ One JSON object per line:
 - `expected_sources`: Wikipedia article titles. When the list is empty, the gold set comes
   from the baseline.
 - `history` (optional): earlier turns as `{"query", "answer"}` for follow-up questions.
+- `expect` (optional): a deterministic check. A list of strings passes when the first sentence of the
+  answer contains one (case-insensitive). `{"text": [...], "sentences": 2}` searches the first two
+  sentences, for multi-hop answers that name the last hop second. `{"number": x, "tol": 0.02}` passes
+  when a number anywhere in the answer is within the relative tolerance; `number` can be a list for
+  questions with two common readings.
+- `behavior` and `note` (abstention set): what the answer must do, and the facts for the judge.
+- `baseline` (robustness set): the id whose baseline the judge uses.
 
 ## Commands
 
@@ -84,7 +107,37 @@ nix develop -c python3 eval/judge.py --run <run-id>
 nix develop -c python3 eval/report.py --run <run-id>     # writes docs/EVAL.md and a row in history.csv
 nix develop -c python3 eval/evidence.py --run <run-id>   # optional: retrieval or generator failure?
 nix develop -c python3 eval/pairwise.py --a <run-id> --b <other-run-id>
+nix develop -c python3 eval/abstain.py --run <run-id>    # the abstention set
+nix develop -c python3 eval/run.py --queries <files> --phone --cli=--closed-book --run-id <run-id>   # the model alone, no library
+nix develop -c python3 eval/human.py make --run <run-id>  # then fill in the sheet and run `score`
+nix develop -c python3 eval/import.py --answers <file> --queries <files> --run-id <id> --system "<what>" --model "<name>"
+nix develop -c python3 eval/report.py --run <run-id> --systems <run>,<run>   # adds a table of runs on their shared questions
 ```
+
+## Release check
+
+A release candidate answers every gated file in one run. Then it is compared with the reference run of the last release:
+
+```sh
+Q=eval/test.jsonl,eval/canary.jsonl,eval/abstention.jsonl,eval/robust.jsonl,eval/recent.jsonl
+nix develop -c python3 eval/run.py --queries $Q --phone --run-id <candidate>
+nix develop -c python3 eval/abstain.py --run <candidate>
+nix develop -c python3 eval/pairwise.py --a <candidate> --b <reference>
+nix develop -c python3 eval/report.py --run <candidate> --gate <reference>   # exit 1 on fail
+```
+
+The gate fails on any error, any failed canary, an Unverified-sentence rate more than 1 point above the
+reference, fewer `expect` passes, more than one lost abstention, or a significant pairwise loss
+(more losses than wins, sign test p < 0.05) on the locked test split. The report puts the gate table
+above the results. The citation columns (Unverified, uncited, sources cited) need no LLM; they come
+from the answer segments that the core's citation check writes. The report also gives a bootstrap 95%
+interval for each score ratio, the judge points per rubric item ("Where the points go"), and "Answers to
+look at": failed checks, then the 10 lowest scores with the judge's reason and, after `evidence.py`, whether
+retrieval or the generator failed. With `--gate`, a table lists what changed against the reference:
+flipped checks, flipped abstention verdicts and pairwise losses. A "Summary" block at the top of the
+results computes the main points: the largest rubric gap, the weakest category, the retrieval and
+generator failure counts, misspelled against clean wording, answer length, judge order agreement and
+the grading cost.
 
 - `run.py --phone` runs what the phone ships: `--fuse-keep=24`, the quantized encoders
   (`--leaf-model=onnx/model_quantized.onnx`, `--ettin-model=onnx/model_sel8.onnx`) and the GGUF of the

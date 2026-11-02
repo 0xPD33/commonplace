@@ -1,0 +1,45 @@
+{
+  "id": "seed-lt-05",
+  "query": "What was the Great Molasses Flood?",
+  "answer": "The Great Molasses Flood was a disaster in Boston's North End on January 15, 1919. A huge storage tank at the Purity Distilling Company burst and released about 2.3 million gallons of molasses, which the company used to make alcohol [1][2]. The wave was 15 to 40 feet high by different estimates, with about 25 feet often given as its peak. It moved at around 35 mph, crushing buildings, killing 21 people and injuring about 150 [1][3]. The thick, sticky molasses made rescue work very hard, and people said the area smelled of it for decades [2][3]. Investigators blamed a structural failure of a badly built and poorly tested tank. A class-action lawsuit followed and dragged on for about three years [1][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://britannica.com/topic/Great-Molasses-Flood",
+      "title": "Great Molasses Flood | Britannica"
+    },
+    {
+      "n": 2,
+      "url": "https://www.history.com/news/the-great-molasses-flood-of-1919",
+      "title": "The Great Molasses Flood of 1919 | History.com"
+    },
+    {
+      "n": 3,
+      "url": "https://wikipedia.com/wiki/Great_Molasses_Flood",
+      "title": "Great Molasses Flood - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Great Molasses Flood",
+    "North End, Boston",
+    "Molasses"
+  ],
+  "urls": [
+    "https://britannica.com/topic/Great-Molasses-Flood",
+    "https://www.history.com/news/the-great-molasses-flood-of-1919",
+    "https://wikipedia.com/wiki/Great_Molasses_Flood"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0543666,
+  "duration_ms": 20688,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:00+00:00"
+}

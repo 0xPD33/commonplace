@@ -1,0 +1,48 @@
+{
+  "id": "seed-exp-13",
+  "query": "What causes earthquakes?",
+  "answer": "Most earthquakes happen when rock along a fault suddenly slips. Earth's tectonic plates move slowly, but friction keeps the fault locked. The rock on either side bends and stores strain, like a stretched spring. When the stress finally beats the friction, the fault slips all at once. The rock snaps back toward an unstrained shape and releases the stored energy as seismic waves, which are the shaking we feel [1][2]. This is called the \"elastic rebound theory.\" Harry F. Reid proposed it after studying the 1906 San Francisco earthquake. In that quake, fences built across the San Andreas Fault were offset by as much as about 8.5 feet [1]. The strain usually builds over a wide area and so gradually that it can only be measured with precise tools like GPS [3]. So most earthquakes happen at or near plate boundaries. Smaller numbers come from other causes, such as volcanic activity or human activities like injecting fluids deep underground.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://earthquake.usgs.gov/earthquakes/events/1906calif/18april/reid.php",
+      "title": "USGS – The 1906 San Francisco Earthquake: Reid's Elastic Rebound Theory"
+    },
+    {
+      "n": 2,
+      "url": "https://www.usgs.gov/index.php/media/videos/elastic-rebound",
+      "title": "USGS – Elastic rebound (video)"
+    },
+    {
+      "n": 3,
+      "url": "https://open.oregonstate.education/earthquakes/chapter/earthquake-basics/",
+      "title": "Earthquake Basics – Oregon State University open textbook"
+    }
+  ],
+  "wikipedia_articles": [
+    "Earthquake",
+    "Elastic-rebound theory",
+    "Fault (geology)",
+    "Plate tectonics",
+    "1906 San Francisco earthquake",
+    "Induced seismicity"
+  ],
+  "urls": [
+    "https://earthquake.usgs.gov/earthquakes/events/1906calif/18april/reid.php",
+    "https://www.usgs.gov/index.php/media/videos/elastic-rebound",
+    "https://open.oregonstate.education/earthquakes/chapter/earthquake-basics/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.042496599999999995,
+  "duration_ms": 15304,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:14+00:00"
+}

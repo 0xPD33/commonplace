@@ -1,0 +1,40 @@
+{
+  "id": "seed-num-13",
+  "query": "How many countries are members of the United Nations?",
+  "answer": "The United Nations has 193 member states [1][2]. The last country to join was South Sudan in 2011. Two non-member observer states, the Holy See (Vatican City) and Palestine, can take part in the General Assembly but can't vote [2]. The UN started in 1945 with 51 founding members [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.un.org/en/library/unms?page=9",
+      "title": "UN Member States on the Record"
+    },
+    {
+      "n": 2,
+      "url": "https://www.worldometers.info/united-nations/",
+      "title": "Countries in the UN - Worldometers"
+    }
+  ],
+  "wikipedia_articles": [
+    "Member states of the United Nations",
+    "Enlargement of the United Nations",
+    "United Nations General Assembly observers",
+    "South Sudan and the United Nations"
+  ],
+  "urls": [
+    "https://www.un.org/en/library/unms?page=9",
+    "https://www.worldometers.info/united-nations/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.037756700000000004,
+  "duration_ms": 8871,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:26+00:00"
+}

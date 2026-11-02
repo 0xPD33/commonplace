@@ -1,0 +1,37 @@
+{
+  "id": "seed-num-17",
+  "query": "How tall is the Eiffel Tower in metres?",
+  "answer": "The Eiffel Tower is 330 metres (about 1,083 ft) tall, measured to the top of its antennas [1][2]. It reached that height on 15 March 2022, when a helicopter installed a new DAB+ radio antenna. That added about 6 metres to the previous height of 324 metres [1]. The iron structure without antennas is about 300 metres, which was its height when it opened for the 1889 World's Fair [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://lenz.io/c/eiffel-tower-height-330-meters-5c8ef639",
+      "title": "Claim analyzed: Eiffel Tower height 330 meters (Lenz)"
+    },
+    {
+      "n": 2,
+      "url": "https://kiwix.lema.org/wikipedia_en_all_mini_2024-02/A/Tour_Eiffel",
+      "title": "Eiffel Tower (Wikipedia mirror)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Eiffel Tower"
+  ],
+  "urls": [
+    "https://lenz.io/c/eiffel-tower-height-330-meters-5c8ef639",
+    "https://kiwix.lema.org/wikipedia_en_all_mini_2024-02/A/Tour_Eiffel"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0404616,
+  "duration_ms": 11306,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:42+00:00"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "seed-num-10",
+  "query": "How many times heavier is Jupiter than Earth?",
+  "answer": "Jupiter is about 318 times as massive as Earth. NASA's Jupiter fact sheet gives Jupiter's mass as 1,898.13 × 10^24 kg, compared with Earth's 5.9722 × 10^24 kg, a ratio of 317.83 [1]. Wikipedia's article on Jupiter mass, the unit astronomers use for giant planets and exoplanets, gives the same figure of roughly 317.8 Earth masses [2]. Jupiter also has about 2.5 times the mass of all the other planets put together.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html",
+      "title": "Jupiter Fact Sheet (NASA NSSDC)"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Jupiter_mass",
+      "title": "Jupiter mass - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Jupiter",
+    "Jupiter mass",
+    "Earth mass"
+  ],
+  "urls": [
+    "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html",
+    "https://en.wikipedia.org/wiki/Jupiter_mass"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.041848399999999994,
+  "duration_ms": 12520,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:21+00:00"
+}

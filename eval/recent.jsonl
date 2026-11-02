@@ -1,0 +1,20 @@
+{"id":"rec-01","query":"Who was elected pope in 2025, and what name did he take?","category":"recent","expect":["Leo"]}
+{"id":"rec-02","query":"Who became Chancellor of Germany after the February 2025 federal election?","category":"recent","expect":["Merz"]}
+{"id":"rec-03","query":"Which party won the most seats in the April 2025 Canadian federal election, and who led it?","category":"recent","expect":["Liberal","Carney"]}
+{"id":"rec-04","query":"Who won the June 2025 South Korean presidential election?","category":"recent","expect":["Lee Jae-myung","Lee Jae myung"]}
+{"id":"rec-05","query":"Which team won Super Bowl LIX?","category":"recent","expect":["Eagles"]}
+{"id":"rec-06","query":"Who became Prime Minister of Japan in October 2025?","category":"recent","expect":["Takaichi"]}
+{"id":"rec-07","query":"Which club won the 2024–25 UEFA Champions League?","category":"recent","expect":["Paris Saint-Germain","PSG","Paris"]}
+{"id":"rec-08","query":"Who won the 2025 Polish presidential election?","category":"recent","expect":["Nawrocki"]}
+{"id":"rec-09","query":"Who won the 2025 Nobel Prize in Literature?","category":"recent","expect":["Krasznahorkai"]}
+{"id":"rec-10","query":"Who won the 2025 Nobel Peace Prize?","category":"recent","expect":["Machado"]}
+{"id":"rec-11","query":"Who won the November 2025 New York City mayoral election?","category":"recent","expect":["Mamdani"]}
+{"id":"rec-12","query":"Which country won the Eurovision Song Contest 2025, and with which song?","category":"recent","expect":["Austria"]}
+{"id":"rec-13","query":"Who won the 2025 Romanian presidential election?","category":"recent","expect":["Nicușor Dan","Nicusor Dan"]}
+{"id":"rec-14","query":"Which club won the 2025 FIFA Club World Cup in the United States?","category":"recent","expect":{"text":["Chelsea"],"sentences":2}}
+{"id":"rec-15","query":"Who won the 2025 Chilean presidential election?","category":"recent","expect":["Kast"]}
+{"id":"rec-16","query":"Which team won Super Bowl LX?","category":"recent","expect":["Seahawks"]}
+{"id":"rec-17","query":"Which country won the most gold medals at the 2026 Winter Olympics in Milan and Cortina?","category":"recent","expect":["Norway"]}
+{"id":"rec-18","query":"Who won the 2025 Formula One World Drivers' Championship?","category":"recent","expect":["Norris"]}
+{"id":"rec-19","query":"Which country won the Eurovision Song Contest 2026?","category":"recent","expect":["Bulgaria"]}
+{"id":"rec-20","query":"Who won the 2026 Australian Open men's singles title?","category":"recent","expect":["Alcaraz"]}

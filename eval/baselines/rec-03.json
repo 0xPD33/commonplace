@@ -1,0 +1,47 @@
+{
+  "id": "rec-03",
+  "query": "Which party won the most seats in the April 2025 Canadian federal election, and who led it?",
+  "answer": "The Liberal Party, led by Prime Minister Mark Carney, won the most seats in the April 28, 2025 Canadian federal election [1][2]. It took 169 of the 343 seats, three short of the 172 needed for a majority, so Carney formed a minority government [2][3]. Pierre Poilievre's Conservatives came second with 144 seats, and Poilievre lost his own riding. Carney won the Ottawa riding of Nepean [1][2]. Some early counts on election night gave the Liberals 168 seats. The final official result was 169 [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/2025_Canadian_federal_election",
+      "title": "2025 Canadian federal election - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.ca.emb-japan.go.jp/2025_shared_images/Canadian-federal-election.pdf",
+      "title": "Canadian federal election (Embassy of Japan in Canada)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.stephentaylor.ca/2025/12/09/mapping-the-results-of-the-2025-federal-election/",
+      "title": "Mapping the results of the 2025 Canadian Federal Election"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 Canadian federal election",
+    "Liberal Party of Canada",
+    "Mark Carney",
+    "45th Canadian Parliament",
+    "Nepean (federal electoral district)"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/2025_Canadian_federal_election",
+    "https://www.ca.emb-japan.go.jp/2025_shared_images/Canadian-federal-election.pdf",
+    "https://www.stephentaylor.ca/2025/12/09/mapping-the-results-of-the-2025-federal-election/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0590378,
+  "duration_ms": 11832,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:24+00:00"
+}

@@ -1,4 +1,4 @@
-{"id":"seed-fac-01","query":"When was the US created?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-fac-01", "query": "When was the US created?", "category": "factual", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"number": 1776, "tol": 0}}
 {"id":"seed-fac-02","query":"Who was the US president in 2016?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-fac-03","query":"How long did the Roman Empire last?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-fac-04","query":"Who designed the Golden Gate Bridge?","category":"factual","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
@@ -16,26 +16,26 @@
 {"id":"seed-cmp-02","query":"How can you tell a leopard, a jaguar and a cheetah apart?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-cmp-03","query":"How is Buddhism different from Hinduism?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-cmp-04","query":"What's the difference between baking soda and baking powder?","category":"comparison","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-cmp-05","query":"Which was bigger, the Roman Empire or the Mongol Empire?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-cmp-05", "query": "Which was bigger, the Roman Empire or the Mongol Empire?", "category": "comparison", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["Mongol"]}
 {"id":"seed-cmp-06","query":"Does espresso or drip coffee have more caffeine?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-cmp-07","query":"What's the difference between a virus and a bacterium, and why don't antibiotics work on viruses?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-cmp-08","query":"How do Linux and Windows handle file permissions differently?","category":"comparison","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-mh-01","query":"What was the goal of Martin Luther and what happened to Christianity through his works?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-mh-02","query":"What technology is attributed to the foundation of AI and where did it start?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-mh-03","query":"Which river flows through the capital of Hungary, and into which sea does it flow?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-mh-03", "query": "Which river flows through the capital of Hungary, and into which sea does it flow?", "category": "multihop", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["Danube"], "sentences": 2}}
 {"id":"seed-mh-04","query":"What language is spoken today in the country where the Inca Empire had its capital?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-mh-05","query":"Who was the British monarch when the Eiffel Tower was finished?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-mh-06","query":"Which university did the inventor of the World Wide Web study at?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-mh-07","query":"What is the tallest mountain in the country that hosted the 1964 Summer Olympics?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-mh-06", "query": "Which university did the inventor of the World Wide Web study at?", "category": "multihop", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["Oxford"], "sentences": 2}}
+{"id": "seed-mh-07", "query": "What is the tallest mountain in the country that hosted the 1964 Summer Olympics?", "category": "multihop", "difficulty": 3, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["Fuji"], "sentences": 2}}
 {"id":"seed-mh-08","query":"What currency do they use in the country where Angkor Wat is?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-mh-09","query":"How did the printing press help the Protestant Reformation spread?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-mh-10","query":"Beethoven went deaf — how did he keep composing, and which famous works came after?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-num-01","query":"How many times larger is Russia than France?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-01","query":"How many times larger is Russia than France?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":[31.0,26.6],"tol":0.05}}
 {"id":"seed-num-02","query":"Is the Netherlands more densely populated than Germany, and by how much?","category":"numeric","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-num-03","query":"How many Earths would fit inside the Sun?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-num-03","query":"How many Earths would fit inside the Sun?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":1300000.0,"tol":0.05}}
 {"id":"seed-num-04","query":"Walking 5 km an hour, how long would it take to walk the length of the Great Wall of China?","category":"numeric","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-num-05","query":"How much taller is Mount Everest than Mont Blanc, in metres?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-trv-01","query":"Is it safe to drink tap water in Mexico City?","category":"travel","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-num-05","query":"How much taller is Mount Everest than Mont Blanc, in metres?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":4043,"tol":0.002}}
+{"id": "seed-trv-01", "query": "Is it safe to drink tap water in Mexico City?", "category": "travel", "difficulty": 1, "time_sensitive": true, "expected_sources": [], "seed": true, "expect": ["not safe", "bottled", "avoid", "shouldn't", "should not", "not recommended", "don't", "do not", "unsafe"]}
 {"id":"seed-trv-02","query":"Do you tip in restaurants in Japan?","category":"travel","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-trv-03","query":"What should I do if I get stung by a jellyfish?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-trv-04","query":"How do I say \"thank you\" and \"excuse me\" in Thai?","category":"travel","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
@@ -45,7 +45,7 @@
 {"id":"seed-trv-08","query":"What vaccinations do I need for a trip to Kenya?","category":"travel","difficulty":2,"time_sensitive":true,"expected_sources":[],"seed":true}
 {"id":"seed-trv-09","query":"What do I have to keep in mind while camping in the wild?","category":"travel","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-how-01","query":"What can you feed a bird? What should you not feed a bird?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-how-02","query":"How do I fix a squeaky door hinge?","category":"howto","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-how-02", "query": "How do I fix a squeaky door hinge?", "category": "howto", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["lubric", "oil", "WD-40", "grease", "petroleum jelly", "silicone", "graphite"], "sentences": 2}}
 {"id":"seed-how-03","query":"How do I make a sourdough starter from scratch?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-how-04","query":"How do I find out which process is using a port on Linux?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-how-05","query":"How do I fix a flat bike tyre when I'm out on a ride?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
@@ -55,9 +55,66 @@
 {"id":"seed-ooc-02","query":"What is the euro to US dollar exchange rate right now?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
 {"id":"seed-ooc-03","query":"What will the weather be like in Lisbon this weekend?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
 {"id":"seed-ooc-04","query":"What new features does the latest iPhone have?","category":"out_of_corpus","difficulty":2,"time_sensitive":true,"expected_sources":[],"seed":true}
-{"id":"seed-lt-01","query":"What is surströmming, and why does it smell so bad?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
-{"id":"seed-lt-02","query":"What happened during the dancing plague of 1518?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-lt-01", "query": "What is surströmming, and why does it smell so bad?", "category": "long_tail", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["herring"]}
+{"id": "seed-lt-02", "query": "What happened during the dancing plague of 1518?", "category": "long_tail", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["Strasbourg"]}
 {"id":"seed-lt-03","query":"What was the Antikythera mechanism used for?","category":"long_tail","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true}
 {"id":"seed-fu-01","query":"Why did he build it?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"Who built the Taj Mahal?","answer":"The Taj Mahal in Agra, India, was commissioned by the Mughal emperor Shah Jahan and completed around 1653."}]}
 {"id":"seed-fu-02","query":"Why isn't it Sydney?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"What is the capital of Australia?","answer":"The capital of Australia is Canberra."}]}
 {"id":"seed-fu-03","query":"And what went wrong at Chernobyl?","category":"multihop","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true,"history":[{"query":"How does a nuclear reactor make electricity?","answer":"A nuclear reactor uses heat from uranium fission to boil water; the steam turns a turbine connected to a generator."}]}
+{"id":"seed-fac-06","query":"Who discovered penicillin?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Fleming"]}
+{"id":"seed-fac-07","query":"What is the longest river in South America?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Amazon"]}
+{"id":"seed-fac-08","query":"Who was the first person to walk on the Moon?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Armstrong"]}
+{"id":"seed-fac-09","query":"What is the official language of Brazil?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Portuguese"]}
+{"id":"seed-fac-10","query":"Who composed The Four Seasons?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Vivaldi"]}
+{"id":"seed-fac-11","query":"In which city is the Taj Mahal?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Agra"]}
+{"id":"seed-fac-12","query":"Which element has the chemical symbol Fe?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["iron"]}
+{"id":"seed-fac-13","query":"Who wrote One Hundred Years of Solitude?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["García Márquez","Garcia Marquez"]}
+{"id":"seed-fac-14","query":"When did the Chernobyl disaster happen?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["1986"]}
+{"id":"seed-fac-15","query":"Which country has the largest population?","category":"factual","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true,"expect":["India"]}
+{"id":"seed-fac-16","query":"Who founded Microsoft?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Gates"]}
+{"id":"seed-fac-17","query":"What is the hardest natural mineral?","category":"factual","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["diamond"]}
+{"id":"seed-num-06","query":"How far is the Moon from Earth on average, in kilometres?","category":"numeric","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":384400,"tol":0.01}}
+{"id":"seed-num-07","query":"How many bones are in the adult human body?","category":"numeric","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":206,"tol":0.001}}
+{"id":"seed-num-08","query":"How deep is the Mariana Trench at its deepest point, in metres?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":[10935,10984,10994],"tol":0.003}}
+{"id":"seed-num-09","query":"How long is a marathon in kilometres?","category":"numeric","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":42.195,"tol":0.001}}
+{"id":"seed-num-10","query":"How many times heavier is Jupiter than Earth?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":318,"tol":0.01}}
+{"id":"seed-num-11","query":"Roughly how many years older is the Great Pyramid of Giza than the Colosseum?","category":"numeric","difficulty":3,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":2640,"tol":0.03}}
+{"id":"seed-num-12","query":"What is the speed of sound in air at 20 °C, in metres per second?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":343,"tol":0.01}}
+{"id":"seed-num-13","query":"How many countries are members of the United Nations?","category":"numeric","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true,"expect":{"number":193,"tol":0.001}}
+{"id":"seed-num-14","query":"What is the area of Germany in square kilometres?","category":"numeric","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":357592,"tol":0.01}}
+{"id":"seed-num-15","query":"If I drive 600 km at 80 km/h, how long will it take?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["7.5","7 hours 30","7 h 30","7½"]}
+{"id":"seed-num-16","query":"How many kilometres are in one light-year?","category":"numeric","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":9460000000000.0,"tol":0.01}}
+{"id":"seed-num-17","query":"How tall is the Eiffel Tower in metres?","category":"numeric","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":{"number":[330,324,300],"tol":0.01}}
+{"id":"seed-lt-04","query":"What is the Voynich manuscript?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-05","query":"What was the Great Molasses Flood?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-06","query":"What is the Baghdad Battery?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-07","query":"What caused the Tunguska event?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-lt-08","query":"What is a tardigrade, and why is it so hard to kill?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-lt-09", "query": "What was the Year Without a Summer?", "category": "long_tail", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"number": 1816, "tol": 0}}
+{"id": "seed-lt-10", "query": "What is the Mpemba effect?", "category": "long_tail", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["freez"]}
+{"id": "seed-lt-11", "query": "What happened in the Emu War in Australia?", "category": "long_tail", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"number": 1932, "tol": 0}}
+{"id":"seed-lt-12","query":"Who was Phineas Gage, and why is he famous?","category":"long_tail","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-09","query":"What's the difference between weather and climate?","category":"comparison","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-10","query":"How do a tortoise and a turtle differ?","category":"comparison","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-11","query":"Which is larger by area, Canada or the United States?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-cmp-12","query":"What is the difference between DNA and RNA?","category":"comparison","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-08","query":"How do I get a red wine stain out of a carpet?","category":"howto","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-how-09", "query": "How do I perform CPR on an adult?", "category": "howto", "difficulty": 2, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["compression", "911", "emergency"], "sentences": 2}}
+{"id":"seed-how-10","query":"How do I set up an SSH key on Linux?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-how-11","query":"How do I propagate a pothos plant from cuttings?","category":"howto","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-how-12", "query": "How do I treat a minor burn at home?", "category": "howto", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["cool"], "sentences": 2}}
+{"id": "seed-trv-10", "query": "What currency do they use in Vietnam, and should I bring cash?", "category": "travel", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["đồng", "dong"]}
+{"id":"seed-trv-11","query":"What should I know before visiting Machu Picchu?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-12","query":"What plugs and voltage do they use in the UK?","category":"travel","difficulty":1,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-trv-13","query":"How do I get around Tokyo by public transport?","category":"travel","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id":"seed-exp-10","query":"How do vaccines train the immune system?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-exp-11", "query": "Why do we have seasons?", "category": "explanation", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["tilt"]}
+{"id":"seed-exp-12","query":"How does a refrigerator keep food cold?","category":"explanation","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true}
+{"id": "seed-exp-13", "query": "What causes earthquakes?", "category": "explanation", "difficulty": 1, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": ["plate", "fault", "energy", "stress", "strain"]}
+{"id":"seed-mh-11","query":"Who was the US president when the Berlin Wall fell?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Bush"]}
+{"id":"seed-mh-12","query":"What is the capital of the country where the Amazon River reaches the sea?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Brasília","Brasilia"]}
+{"id": "seed-mh-13", "query": "In which city was the composer of The Four Seasons born, and what is it famous for?", "category": "multihop", "difficulty": 3, "time_sensitive": false, "expected_sources": [], "seed": true, "expect": {"text": ["Venice"], "sentences": 2}}
+{"id":"seed-mh-14","query":"What is the official language of the country where Machu Picchu is?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Spanish"]}
+{"id":"seed-mh-15","query":"Which ocean borders the country whose capital is Lisbon?","category":"multihop","difficulty":2,"time_sensitive":false,"expected_sources":[],"seed":true,"expect":["Atlantic"]}
+{"id":"seed-ooc-05","query":"What's on TV tonight?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}
+{"id":"seed-ooc-06","query":"How much does a Big Mac cost in Zurich today?","category":"out_of_corpus","difficulty":1,"time_sensitive":true,"expected_sources":[],"seed":true}

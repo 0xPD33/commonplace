@@ -119,8 +119,9 @@ def split_evidence(rendered, sources):
 
 
 def load_queries(path, subset=None):
-    """`subset` is a comma list; each token matches a query id or a category."""
-    qs = read_jsonl(path)
+    """`path` may join several files with commas (eval/test.jsonl,eval/canary.jsonl); the later ones
+    resolve against the repo. `subset` is a comma list; each token matches a query id or a category."""
+    qs = [q for p in str(path).split(",") for q in read_jsonl(p if Path(p).is_absolute() else REPO / p)]
     if subset:
         keys = {t.strip() for t in subset.split(",") if t.strip()}
         qs = [q for q in qs if q["id"] in keys or q.get("category") in keys]

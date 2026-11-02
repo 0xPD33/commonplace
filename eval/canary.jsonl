@@ -1,0 +1,12 @@
+{"id":"can-01","query":"What is the capital of Australia?","category":"canary","expect":["Canberra"]}
+{"id":"can-02","query":"How tall is Mount Everest in metres?","category":"canary","expect":{"number":8849,"tol":0.001}}
+{"id":"can-03","query":"Who wrote Pride and Prejudice?","category":"canary","expect":["Austen"]}
+{"id":"can-04","query":"Who painted the Mona Lisa?","category":"canary","expect":["Leonardo"]}
+{"id":"can-05","query":"In which year did the Berlin Wall fall?","category":"canary","expect":["1989"]}
+{"id":"can-06","query":"What is the largest planet in the Solar System?","category":"canary","expect":["Jupiter"]}
+{"id":"can-07","query":"Who developed the theory of general relativity?","category":"canary","expect":["Einstein"]}
+{"id":"can-08","query":"What is the currency of Japan?","category":"canary","expect":["yen"]}
+{"id":"can-09","query":"How many kilometres is 10 miles?","category":"canary","expect":{"number":16.09,"tol":0.01}}
+{"id":"can-10","query":"What is 15 percent of 240?","category":"canary","expect":{"number":36,"tol":0.001}}
+{"id":"can-11","query":"Which planet is closest to the Sun?","category":"canary","expect":["Mercury"]}
+{"id":"can-12","query":"What is the boiling point of water at sea level in degrees Celsius?","category":"canary","expect":{"number":100,"tol":0.001}}

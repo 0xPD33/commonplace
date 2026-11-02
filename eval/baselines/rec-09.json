@@ -1,0 +1,40 @@
+{
+  "id": "rec-09",
+  "query": "Who won the 2025 Nobel Prize in Literature?",
+  "answer": "Hungarian writer László Krasznahorkai won the 2025 Nobel Prize in Literature. The Swedish Academy announced it on October 9, 2025. The citation praised \"his compelling and visionary oeuvre that, in the midst of apocalyptic terror, reaffirms the power of art\" [1][2]. His best-known works include his debut novel Satantango (1985). He is the second Hungarian to win the prize, after Imre Kertész in 2002 [2].\n\nSources:\n[1] Nobel Prize in Literature 2025 – https://www.nobelprize.org/prizes/literature/2025/summary/\n[2] Hungarian writer Krasznahorkai wins 2025 Nobel Prize in Literature (Dawn) – https://www.dawn.com/news/1947682",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nobelprize.org/prizes/literature/2025/summary/",
+      "title": "Nobel Prize in Literature 2025"
+    },
+    {
+      "n": 2,
+      "url": "https://www.dawn.com/news/1947682",
+      "title": "Hungarian writer Krasznahorkai wins 2025 Nobel Prize in Literature"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 Nobel Prize in Literature",
+    "László Krasznahorkai",
+    "Sátántangó",
+    "Imre Kertész"
+  ],
+  "urls": [
+    "https://www.nobelprize.org/prizes/literature/2025/summary/",
+    "https://www.dawn.com/news/1947682"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0442762,
+  "duration_ms": 11883,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:49+00:00"
+}

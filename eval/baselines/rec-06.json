@@ -1,0 +1,48 @@
+{
+  "id": "rec-06",
+  "query": "Who became Prime Minister of Japan in October 2025?",
+  "answer": "Sanae Takaichi became Prime Minister of Japan on October 21, 2025, the first woman to hold the job [1][2]. In the lower house she got 237 votes, four more than a majority, against 149 for the main opposition leader, Yoshihiko Noda [1]. She took over from Shigeru Ishiba [1]. Her win was secured the day before, when the Liberal Democratic Party (LDP) agreed to a coalition with the Japan Innovation Party (Ishin no Kai) [2][3]. She had been elected LDP leader earlier that month [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.npr.org/2025/10/21/nx-s1-5581178/japan-sanae-takaichi-female-prime-minister",
+      "title": "Japan's parliament elects Sanae Takaichi as nation's first female prime minister (NPR)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.japantimes.co.jp/news/2025/10/21/japan/politics/sanae-takaichi-elected-japan-prime-minister",
+      "title": "Sanae Takaichi elected Japan prime minister (The Japan Times)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.scmp.com/news/asia/east-asia/article/3329748/sanae-takaichi-becomes-japans-first-female-pm-ending-political-crisis",
+      "title": "Sanae Takaichi becomes Japan's first female PM, ending political crisis (SCMP)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Sanae Takaichi",
+    "Prime Minister of Japan",
+    "Shigeru Ishiba",
+    "Takaichi Cabinet",
+    "2025 Liberal Democratic Party presidential election",
+    "Japan Innovation Party"
+  ],
+  "urls": [
+    "https://www.npr.org/2025/10/21/nx-s1-5581178/japan-sanae-takaichi-female-prime-minister",
+    "https://www.japantimes.co.jp/news/2025/10/21/japan/politics/sanae-takaichi-elected-japan-prime-minister",
+    "https://www.scmp.com/news/asia/east-asia/article/3329748/sanae-takaichi-becomes-japans-first-female-pm-ending-political-crisis"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.051692199999999994,
+  "duration_ms": 17965,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:44+00:00"
+}

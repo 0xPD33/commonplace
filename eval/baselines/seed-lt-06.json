@@ -1,0 +1,44 @@
+{
+  "id": "seed-lt-06",
+  "query": "What is the Baghdad Battery?",
+  "answer": "The Baghdad Battery, also called the Parthian Battery, is an ancient ceramic jar that holds a copper cylinder and an iron rod, sealed together with bitumen. It was found in 1936 at Khujut Rabu, near Ctesiphon outside Baghdad, Iraq [1]. In 1938 Wilhelm König, who ran the lab at the National Museum of Iraq, suggested it was a galvanic cell, possibly used for electroplating [1]. Modern replicas filled with an acidic liquid such as vinegar can produce about half a volt. But that only shows people today can make something like it work as a battery. It doesn't show anyone in ancient times used it that way [2].\n\nMost archaeologists reject the battery idea. There are no wires or other electrical equipment from the period. The usual explanation is that it was a storage vessel, for example for sacred scrolls, or a container for ritual or magical purposes [1][2]. Its age is also uncertain. König dated it to the Parthian period (about 250 BCE to 225 CE), but the excavation records are poor, and the pottery style suggests the later Sasanian era [1]. Most of the artifacts have been missing since the 2003 invasion of Iraq [1].\n\nSources:\n[1] Baghdad Battery – Wikipedia: https://en.wikipedia.org/wiki/Baghdad_Battery\n[2] Was the Baghdad Battery really a battery? – BBC Science Focus: https://www.sciencefocus.com/science/was-the-baghdad-battery-really-a-battery/",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Baghdad_Battery",
+      "title": "Baghdad Battery – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.sciencefocus.com/science/was-the-baghdad-battery-really-a-battery/",
+      "title": "Was the Baghdad Battery really a battery? – BBC Science Focus"
+    }
+  ],
+  "wikipedia_articles": [
+    "Baghdad Battery",
+    "Wilhelm König",
+    "Khujut Rabu",
+    "Parthian Empire",
+    "Sasanian Empire",
+    "Galvanic cell",
+    "Electroplating",
+    "National Museum of Iraq"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Baghdad_Battery",
+    "https://www.sciencefocus.com/science/was-the-baghdad-battery-really-a-battery/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08019949999999999,
+  "duration_ms": 28996,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:10+00:00"
+}

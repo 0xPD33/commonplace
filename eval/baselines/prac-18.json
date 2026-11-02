@@ -1,0 +1,51 @@
+{
+  "id": "prac-18",
+  "query": "How do I start a compost heap at home?",
+  "answer": "Find a level spot that gets some shade and drains well, then either make a simple pile about 3 feet (1 m) across or use a bin. Start with a 4–6 inch layer of \"browns\" (dry leaves, twigs, straw, shredded cardboard) on the bottom. Then keep adding layers, roughly 2–3 parts browns to 1 part \"greens\" by volume. Greens are things like vegetable and fruit scraps, coffee grounds and fresh grass clippings [1][2][3]. A good way to keep the mix about right is to measure both with the same bucket [4]. Leave out meat, dairy, fats and pet waste, because they smell and draw pests [1][3].\n\nKeep the pile about as damp as a wrung-out sponge, and turn it with a fork every week or two to let air in. If it dries out, it stops breaking down [1][3]. If it smells bad, it's usually too wet or not getting enough air, so turn it and mix in more browns [1]. When it's dark and crumbly and smells like earth, which takes anywhere from a couple of months to about a year depending on how often you turn it, it's ready to spread on your garden.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.thisoldhouse.com/gardening/composting-at-home",
+      "title": "Composting at Home – This Old House"
+    },
+    {
+      "n": 2,
+      "url": "https://www.daytondailynews.com/lifestyles/how-to-create-a-compost-pile-at-home/IHQQP2GPD5GOXMR6VZOD3CYGJQ",
+      "title": "How to create a compost pile at home – Dayton Daily News"
+    },
+    {
+      "n": 3,
+      "url": "https://www.boston.gov/sites/default/files/file/2022/11/Composting%20Basics-%20English.pdf",
+      "title": "Composting Basics – City of Boston"
+    },
+    {
+      "n": 4,
+      "url": "https://www.uvm.edu/extension/news/three-ways-compost",
+      "title": "Three ways to compost – University of Vermont Extension"
+    }
+  ],
+  "wikipedia_articles": [
+    "Compost",
+    "Home composting",
+    "Carbon-to-nitrogen ratio"
+  ],
+  "urls": [
+    "https://www.thisoldhouse.com/gardening/composting-at-home",
+    "https://www.daytondailynews.com/lifestyles/how-to-create-a-compost-pile-at-home/IHQQP2GPD5GOXMR6VZOD3CYGJQ",
+    "https://www.boston.gov/sites/default/files/file/2022/11/Composting%20Basics-%20English.pdf",
+    "https://www.uvm.edu/extension/news/three-ways-compost"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.049451499999999995,
+  "duration_ms": 16049,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:03+00:00"
+}

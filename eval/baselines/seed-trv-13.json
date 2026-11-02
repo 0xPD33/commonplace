@@ -1,0 +1,43 @@
+{
+  "id": "seed-trv-13",
+  "query": "How do I get around Tokyo by public transport?",
+  "answer": "The easiest way to get around Tokyo is by train and subway, paying with a rechargeable IC card such as Suica or PASMO. You tap it at the ticket gate on the way in and out, and the fare is deducted automatically. The same card works on JR trains, both subway networks (Tokyo Metro and Toei), most private railways and buses, and even in many shops [1].\n\nShort-term visitors can get a Welcome Suica or Tourist PASMO. Neither needs a deposit and both are valid for 28 days. On an iPhone or Android phone, you can also set up Welcome Suica Mobile or the regular Suica or PASMO app, before or after you arrive, and top it up in the app [1]. Contactless credit cards now work at the gates on many Tokyo lines, but not on JR, the Keisei line or the Tokyo Monorail [1].\n\nIf you'll ride the subway a lot, the Tokyo Subway Ticket gives unlimited rides on all Tokyo Metro and Toei subway lines for 24, 48 or 72 hours. It costs ¥1,000, ¥1,500 or ¥2,000 for an adult [1]. It doesn't cover JR lines, including the Yamanote loop line [2]. The Tokyo One-Day Ticket (¥1,720) adds JR within Tokyo's 23 wards, plus buses and trams [1]. Roughly speaking, the subway pass pays off if you take about four or more subway rides a day; otherwise just use the IC card [2].\n\nFor route planning, Google Maps works well and gives you the line, platform and exit. Avoid the weekday rush hours, about 7:30–9:30 am and in the early evening. Note that most trains stop running around midnight to 1 am.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.gotokyo.org/en/plan/getting-around/ic-card/index.html",
+      "title": "Go Tokyo (official Tokyo tourism site) – IC Cards"
+    },
+    {
+      "n": 2,
+      "url": "https://www.japan-travel-kit.com/guides/transport/tokyo-subway-ticket",
+      "title": "Japan Travel Kit – Tokyo Subway Ticket"
+    }
+  ],
+  "wikipedia_articles": [
+    "Transport in Greater Tokyo",
+    "Suica",
+    "Pasmo",
+    "Tokyo subway",
+    "Tokyo Metro",
+    "Toei Subway",
+    "Yamanote Line"
+  ],
+  "urls": [
+    "https://www.gotokyo.org/en/plan/getting-around/ic-card/index.html",
+    "https://www.japan-travel-kit.com/guides/transport/tokyo-subway-ticket"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08623630000000002,
+  "duration_ms": 40549,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:15+00:00"
+}

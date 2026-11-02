@@ -1,0 +1,49 @@
+{
+  "id": "seed-mh-13",
+  "query": "In which city was the composer of The Four Seasons born, and what is it famous for?",
+  "answer": "Antonio Vivaldi wrote The Four Seasons, and he was born in Venice, Italy, on 4 March 1678. His father, a violinist, gave him his first lessons. He later spent much of his career teaching at the Ospedale della Pietà, a Venetian orphanage known for its music [1]. The Four Seasons is a set of four violin concertos, one for each season. They were published in 1725 in his Op. 8 collection, Il cimento dell'armonia e dell'inventione [1].\n\nVenice is best known for being built on water. It covers about 118 small islands in the shallow Venetian Lagoon, which are separated by canals and joined by bridges. That's where its nicknames \"City of Canals\" and \"Floating City\" come from [2]. The city and its lagoon became a UNESCO World Heritage Site in 1987. UNESCO calls Venice a unique artistic achievement and says it meets all six of its criteria for cultural sites [2][3]. It's also famous for its gondolas, its art and architecture, and its centuries as a powerful maritime republic.\n\nIf you meant Piazzolla's Four Seasons of Buenos Aires instead, he was born in Mar del Plata, Argentina.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://theviolinchannel.com/composer-antonio-vivaldi-born-on-this-day-in-1678/",
+      "title": "Composer Antonio Vivaldi Born On This Day in 1678"
+    },
+    {
+      "n": 2,
+      "url": "https://everything-everywhere.com/unesco-world-heritage-site-venice-and-its-lagoon/",
+      "title": "Venice and its Lagoon"
+    },
+    {
+      "n": 3,
+      "url": "https://whc.unesco.org/en/list/394/",
+      "title": "Venice and its Lagoon – UNESCO World Heritage Centre"
+    }
+  ],
+  "wikipedia_articles": [
+    "Antonio Vivaldi",
+    "The Four Seasons (Vivaldi)",
+    "Venice",
+    "Venetian Lagoon",
+    "Ospedale della Pietà",
+    "Republic of Venice",
+    "Astor Piazzolla"
+  ],
+  "urls": [
+    "https://theviolinchannel.com/composer-antonio-vivaldi-born-on-this-day-in-1678/",
+    "https://everything-everywhere.com/unesco-world-heritage-site-venice-and-its-lagoon/",
+    "https://whc.unesco.org/en/list/394/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0912333,
+  "duration_ms": 19090,
+  "num_turns": 5,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:34+00:00"
+}

@@ -1,0 +1,42 @@
+{
+  "id": "prac-09",
+  "query": "How do I descale a kettle?",
+  "answer": "The easiest way is to dissolve the limescale with a mild acid. Use white vinegar mixed with water (one guide suggests about 1 part vinegar to 3 parts water) or 1 to 2 tablespoons of citric acid dissolved in water [1][2]. Pour in enough to cover the scale, bring it to a boil, then switch the kettle off. Let it sit for 30 to 60 minutes, or longer if the buildup is heavy. Empty it, scrub off anything that's still loose, and rinse well. If you used vinegar, boil and throw away a kettle of fresh water once or twice to get rid of the smell. Citric acid leaves no aftertaste, so it's the better choice for plastic kettles that tend to hold odours [1][2]. Always unplug the kettle before cleaning it, and never mix these acids with bleach. In hard-water areas you may need to do this every month or two, while in soft-water areas once a year is usually enough [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://moralfibres.co.uk/how-to-descale-a-kettle-with-vinegar-or-citric-acid/",
+      "title": "How To Descale A Kettle With Vinegar Or Citric Acid"
+    },
+    {
+      "n": 2,
+      "url": "https://simplymaid.com.au/cleaning-101/how-to-descale-a-kettle",
+      "title": "How to Descale a Kettle (and Clean the Rest of It)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Limescale",
+    "Kettle",
+    "Descaling agent",
+    "Citric acid",
+    "Vinegar",
+    "Hard water"
+  ],
+  "urls": [
+    "https://moralfibres.co.uk/how-to-descale-a-kettle-with-vinegar-or-citric-acid/",
+    "https://simplymaid.com.au/cleaning-101/how-to-descale-a-kettle"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0553337,
+  "duration_ms": 18444,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:01+00:00"
+}

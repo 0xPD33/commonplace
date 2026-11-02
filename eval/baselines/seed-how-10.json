@@ -1,0 +1,53 @@
+{
+  "id": "seed-how-10",
+  "query": "How do I set up an SSH key on Linux?",
+  "answer": "Start by creating a key pair with `ssh-keygen -t ed25519 -C \"you@example.com\"`. Ed25519 is the modern recommended key type. If a legacy system doesn't support it, use `ssh-keygen -t rsa -b 4096` instead [1][2]. Press Enter to accept the default location (`~/.ssh/id_ed25519`), and set a passphrase when asked. That creates a private key, `id_ed25519`, which you should never share, and a public key, `id_ed25519.pub`, which is the one you give to servers and services like GitHub [3]. Make sure only you can read the private key with `chmod 600 ~/.ssh/id_ed25519` [4].\n\nTo log in to a server with the key, run `ssh-copy-id user@host`. It asks for your password one last time and adds your public key to the server's `~/.ssh/authorized_keys`. If the server uses a non-standard port, add `-p 2222` (or whatever the port is) [3][2]. After that, `ssh user@host` should log you in with the key. To avoid typing your passphrase every time, load the key into the agent with `ssh-add ~/.ssh/id_ed25519`. For GitHub, paste the contents of the `.pub` file into your account's SSH keys settings, then test the connection with `ssh -T git@github.com` [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://linuxize.com/post/how-to-generate-ssh-keys-on-linux/",
+      "title": "How to Generate SSH Keys on Linux with ssh-keygen"
+    },
+    {
+      "n": 2,
+      "url": "https://oneuptime.com/blog/post/2026-01-15-generate-use-ssh-keys-ubuntu/view",
+      "title": "How to Generate and Use SSH Keys on Ubuntu (OneUptime)"
+    },
+    {
+      "n": 3,
+      "url": "https://rocketee.rs/generate-ssh-keys-ssh-keygen",
+      "title": "generate ssh keys ssh keygen"
+    },
+    {
+      "n": 4,
+      "url": "https://ssojet.com/dev-guides/generate-keypair-using-ed25519-in-shell",
+      "title": "Generate Keypair using Ed25519 in Shell"
+    }
+  ],
+  "wikipedia_articles": [
+    "Secure Shell",
+    "Ssh-keygen",
+    "EdDSA",
+    "Ssh-agent",
+    "Public-key cryptography"
+  ],
+  "urls": [
+    "https://linuxize.com/post/how-to-generate-ssh-keys-on-linux/",
+    "https://oneuptime.com/blog/post/2026-01-15-generate-use-ssh-keys-ubuntu/view",
+    "https://rocketee.rs/generate-ssh-keys-ssh-keygen",
+    "https://ssojet.com/dev-guides/generate-keypair-using-ed25519-in-shell"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0487999,
+  "duration_ms": 24260,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:19+00:00"
+}

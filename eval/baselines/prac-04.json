@@ -1,0 +1,45 @@
+{
+  "id": "prac-04",
+  "query": "How do I jump-start a car with a flat battery?",
+  "answer": "You'll need jumper cables and a second car with a good battery. Park the two cars close together without touching, turn both off, and check your owner's manual first. Some hybrids and newer cars have their own jump points or special rules [1][3].\n\n1. Connect the cables in this order: red clamp to the dead battery's positive (+) terminal, the other red clamp to the good battery's positive, then black clamp to the good battery's negative (−) [1][2].\n2. Ground the last black clamp: attach it to bare, unpainted metal on the dead car, away from the battery, such as a bolt on the engine block or a strut bracket. Don't attach it to the dead battery's negative post, because a spark there can ignite battery gases [1][3].\n3. Start the cars: start the good car and let it run for a few minutes, then try the dead car [1][2].\n4. Remove the cables: once the dead car starts, take the cables off in reverse order and keep the clamps from touching each other or the car. Then drive for at least 20 to 30 minutes, because driving recharges the battery faster than idling [1][2].\n\nIf the car still won't start after a couple of tries, the battery or alternator may be faulty and need testing.\n\nSafety: wear eye protection if you have it. Don't jump a battery that is cracked, leaking or frozen.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.edmunds.com/how-to/jump-start.html",
+      "title": "How to Jump Start a Car - Edmunds"
+    },
+    {
+      "n": 2,
+      "url": "https://www.cargurus.com/Cars/articles/how-to-jump-start-a-car",
+      "title": "How to Jump Start a Car - CarGurus"
+    },
+    {
+      "n": 3,
+      "url": "https://www.dummies.com/article/how-to-jump-start-a-car-138084",
+      "title": "How to Jump Start a Car - Auto Repair For Dummies"
+    }
+  ],
+  "wikipedia_articles": [
+    "Jump start (vehicle)",
+    "Jumper cable",
+    "Automotive battery"
+  ],
+  "urls": [
+    "https://www.edmunds.com/how-to/jump-start.html",
+    "https://www.cargurus.com/Cars/articles/how-to-jump-start-a-car",
+    "https://www.dummies.com/article/how-to-jump-start-a-car-138084"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0743212,
+  "duration_ms": 20874,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:33:41+00:00"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "seed-lt-08",
+  "query": "What is a tardigrade, and why is it so hard to kill?",
+  "answer": "Tardigrades, also called \"water bears,\" are tiny eight-legged animals, usually under about half a millimetre long. Over a thousand species are known, and they live almost everywhere: in moss, lichen, soil, fresh water and the ocean. They're hard to kill mainly because many species can survive drying out. They pull in their legs, shed almost all their body water, and curl into a dry, barrel-shaped form called a \"tun.\" In that state their metabolism stops almost completely, and they can then survive extreme cold, heat, radiation and even the vacuum of space, some for years, before water brings them back [1][2].\n\nSeveral protective chemicals help them do this. Sugars and special tardigrade proteins turn the inside of their cells into a glass-like solid that holds membranes and proteins in place while they're dry [3]. A protein found only in tardigrades, called Dsup (\"damage suppressor\"), attaches to their DNA and shields it from radiation damage. When researchers put Dsup into human cells, the cells had about 40% less DNA damage after X-ray exposure [4].\n\nThey aren't actually indestructible, though. Most of this toughness only works in the dried tun state, and they need time to dry out slowly to get into it properly. An active, wet tardigrade is much more fragile, and fewer of them revive the longer a tun stays dry [3]. Some websites list specific records, such as exact radiation doses or a 2019 crash on the Moon, often without saying where the figures come from, so treat those numbers with caution.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://wiki.riteme.site/wiki/Environmental_tolerance_in_tardigrades",
+      "title": "Environmental tolerance in tardigrades (Wikipedia mirror)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.worldatlas.com/animals/tardigrades-the-ultimate-micro-animal-survivors.html",
+      "title": "Tardigrades: The Ultimate Micro Animal Survivors - WorldAtlas"
+    },
+    {
+      "n": 3,
+      "url": "https://siliconcanals.com/sc-c-tardigrades-can-survive-being-boiled-frozen-to-near-absolute-zero-and-shot-into-the-vacuum-of-space-and-they-do-it-by-replacing-the-water-in-their-cells-with-a-glass-like-sugar-that-suspends-thei/",
+      "title": "Tardigrades can survive being boiled, frozen... - Silicon Canals"
+    },
+    {
+      "n": 4,
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6952461",
+      "title": "Dsup protein study (PMC)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Tardigrade",
+    "Environmental tolerance in tardigrades",
+    "Cryptobiosis",
+    "Anhydrobiosis",
+    "Damage suppressor protein"
+  ],
+  "urls": [
+    "https://wiki.riteme.site/wiki/Environmental_tolerance_in_tardigrades",
+    "https://www.worldatlas.com/animals/tardigrades-the-ultimate-micro-animal-survivors.html",
+    "https://siliconcanals.com/sc-c-tardigrades-can-survive-being-boiled-frozen-to-near-absolute-zero-and-shot-into-the-vacuum-of-space-and-they-do-it-by-replacing-the-water-in-their-cells-with-a-glass-like-sugar-that-suspends-thei/",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC6952461"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.07009789999999999,
+  "duration_ms": 27207,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:28+00:00"
+}

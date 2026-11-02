@@ -1,0 +1,45 @@
+{
+  "id": "seed-trv-10",
+  "query": "What currency do they use in Vietnam, and should I bring cash?",
+  "answer": "Vietnam uses the Vietnamese đồng (VND, ₫). It's roughly 26,000 đồng to one US dollar, but sources quote slightly different figures, so check a live rate before you go [1]. You should carry some cash. Street food, markets, small shops, taxis and rural areas mostly take cash only. Cards work well at hotels, bigger restaurants and tourist businesses in the cities [1][2][3].\n\nYou don't need to bring much currency from home. ATMs are easy to find in towns and cities, and withdrawing đồng there usually gets you a better rate than exchanging at home. Watch for fees: some Vietnamese banks charge foreign cards per withdrawal, and your own bank may add a fee on top [1][2]. Bring a backup card and tell your bank you're travelling.\n\nThe notes run from small amounts up to 500,000₫ and some look alike. Travellers often hand over a 500,000₫ note when they meant to pay 50,000₫, so check each note before you pay [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.exiap.com/guides/currency-in-vietnam",
+      "title": "Currency in Vietnam - A Full Guide 2026"
+    },
+    {
+      "n": 2,
+      "url": "https://bambootravel.co.uk/holidays-to-vietnam/travel-tips/money-matters-in-vietnam",
+      "title": "Currency, Credit Cards and Changing Money in Vietnam"
+    },
+    {
+      "n": 3,
+      "url": "https://localvietnam.com/vietnam-tips/vietnam-currency-money/",
+      "title": "Vietnam Currency: Payments & Getting Vietnamese Dong"
+    }
+  ],
+  "wikipedia_articles": [
+    "Vietnamese đồng",
+    "Economy of Vietnam",
+    "Tourism in Vietnam"
+  ],
+  "urls": [
+    "https://www.exiap.com/guides/currency-in-vietnam",
+    "https://bambootravel.co.uk/holidays-to-vietnam/travel-tips/money-matters-in-vietnam",
+    "https://localvietnam.com/vietnam-tips/vietnam-currency-money/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0555394,
+  "duration_ms": 22844,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:41+00:00"
+}

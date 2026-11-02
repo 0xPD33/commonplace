@@ -1,0 +1,41 @@
+{
+  "id": "prac-11",
+  "query": "How do I sharpen a kitchen knife with a whetstone?",
+  "answer": "Start by soaking a water stone until it stops releasing bubbles. That takes about 5 to 15 minutes, though some ceramic \"splash-and-go\" stones only need water on the surface, so check what the maker says [1][2]. Set the stone on a holder or a damp towel so it can't slide, and keep water nearby so the surface stays wet [2].\n\nHold the blade at a steady angle: about 15–17° per side for Japanese knives and 20–25° for Western ones. Two stacked coins under the spine gives you roughly 15°, or you can just match the bevel already on the knife [1]. With your fingertips on the flat of the blade, sweep the edge across the stone so the whole length from heel to tip makes contact. Press lightly to moderately and ease off on the return stroke [1].\n\nKeep working one side until you can feel a burr, a thin wire-like lip, along the full length of the opposite side of the edge. Then flip the knife and repeat until the burr moves back to the first side [1][2]. A 1000-grit stone handles routine sharpening. Start at 200–400 grit only if the knife is chipped or very dull, then finish at 3000–6000 grit or higher with a lighter touch [1][2].\n\nTo remove the burr, alternate sides with fewer strokes each round (about 10, 8, 6, 4, 2, 1 per side). You can then strop with the edge trailing, about 5–10 light strokes per side [1]. Test by slicing printer paper or a ripe tomato. A sharp knife cuts cleanly with little effort [1]. The most common mistake is letting the angle drift, so focus on holding it steady instead of pressing harder.\n\nSources:\n[1] Chef Knives To Go, \"How to Sharpen a Knife on a Whetstone\" – https://www.chefknivestogo.com/how-to-sharpen-a-knife-on-a-whetstone.html\n[2] Work Sharp, \"How to sharpen with a whetstone\" – https://worksharptools.com/blogs/education-hub/how-to-sharpen-on-a-whetstone",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.chefknivestogo.com/how-to-sharpen-a-knife-on-a-whetstone.html",
+      "title": "How to Sharpen a Knife on a Whetstone – Chef Knives To Go"
+    },
+    {
+      "n": 2,
+      "url": "https://worksharptools.com/blogs/education-hub/how-to-sharpen-on-a-whetstone",
+      "title": "How to sharpen with a whetstone – Work Sharp"
+    }
+  ],
+  "wikipedia_articles": [
+    "Sharpening stone",
+    "Sharpening",
+    "Burr (edge)",
+    "Kitchen knife",
+    "Strop"
+  ],
+  "urls": [
+    "https://www.chefknivestogo.com/how-to-sharpen-a-knife-on-a-whetstone.html",
+    "https://worksharptools.com/blogs/education-hub/how-to-sharpen-on-a-whetstone"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.095468,
+  "duration_ms": 34173,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:35+00:00"
+}

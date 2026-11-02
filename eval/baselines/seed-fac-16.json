@@ -1,0 +1,48 @@
+{
+  "id": "seed-fac-16",
+  "query": "Who founded Microsoft?",
+  "answer": "Bill Gates and Paul Allen founded Microsoft. The two childhood friends from Seattle started it as a partnership on April 4, 1975, in Albuquerque, New Mexico [1][2]. They set up there to be near MITS, the company that made the Altair 8800 microcomputer, because they were writing a BASIC interpreter for that machine. Gates left Harvard to join Allen on the project [1][3]. Allen came up with the original name, \"Micro-Soft.\" In 1979 the company moved to the Seattle area, where it is still based in Redmond, Washington [1][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/History_of_Microsoft",
+      "title": "History of Microsoft - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.windowscentral.com/microsoft-founded-april-4-1975-bill-gates-paul-allen",
+      "title": "Bill Gates and Paul Allen founded Microsoft on this day, April 4, in 1975 - Windows Central"
+    },
+    {
+      "n": 3,
+      "url": "https://www.history.com/this-day-in-history/april-4/microsoft-founded",
+      "title": "Microsoft founded - HISTORY.com"
+    }
+  ],
+  "wikipedia_articles": [
+    "Microsoft",
+    "History of Microsoft",
+    "Bill Gates",
+    "Paul Allen",
+    "Altair 8800",
+    "Altair BASIC"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/History_of_Microsoft",
+    "https://www.windowscentral.com/microsoft-founded-april-4-1975-bill-gates-paul-allen",
+    "https://www.history.com/this-day-in-history/april-4/microsoft-founded"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0443671,
+  "duration_ms": 12974,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:00+00:00"
+}

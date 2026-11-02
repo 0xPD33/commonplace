@@ -1,0 +1,46 @@
+{
+  "id": "rec-14",
+  "query": "Which club won the 2025 FIFA Club World Cup in the United States?",
+  "answer": "Chelsea won the 2025 FIFA Club World Cup. They beat Paris Saint-Germain 3–0 in the final on July 13, 2025, at MetLife Stadium in East Rutherford, New Jersey [1][2]. Cole Palmer scored twice and set up the third goal, and Chelsea became the first winners of the expanded 32-team tournament [1][3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://wiki.krisyotam.com/content/wikipedia_en_all_nopic_2026-03/2025_FIFA_Club_World_Cup_final",
+      "title": "2025 FIFA Club World Cup final (Wikipedia mirror)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.wam.ae/en/article/bkogr12-chelsea-crowned-2025-club-world-cup-champions",
+      "title": "Chelsea crowned 2025 Club World Cup champions – WAM"
+    },
+    {
+      "n": 3,
+      "url": "https://www.goal.com/en/lists/more-important-than-the-champions-league-how-the-2025-club-world-cup-won-by-chelsea-in-a-steamy-summer-in-america-epitomized-not-letting-perfect-be-the-enemy-of-good/blt27306f72bf03fac8",
+      "title": "How the 2025 Club World Cup won by Chelsea... – GOAL"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 FIFA Club World Cup final",
+    "2025 FIFA Club World Cup",
+    "Chelsea F.C.",
+    "Cole Palmer"
+  ],
+  "urls": [
+    "https://wiki.krisyotam.com/content/wikipedia_en_all_nopic_2026-03/2025_FIFA_Club_World_Cup_final",
+    "https://www.wam.ae/en/article/bkogr12-chelsea-crowned-2025-club-world-cup-champions",
+    "https://www.goal.com/en/lists/more-important-than-the-champions-league-how-the-2025-club-world-cup-won-by-chelsea-in-a-steamy-summer-in-america-epitomized-not-letting-perfect-be-the-enemy-of-good/blt27306f72bf03fac8"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0486344,
+  "duration_ms": 14806,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:36:08+00:00"
+}

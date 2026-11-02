@@ -1,0 +1,48 @@
+{
+  "id": "rec-05",
+  "query": "Which team won Super Bowl LIX?",
+  "answer": "The Philadelphia Eagles won Super Bowl LIX. They beat the Kansas City Chiefs 40–22 on February 9, 2025, at the Caesars Superdome in New Orleans [1][2]. The win ended the Chiefs' attempt to win three Super Bowls in a row and was the Eagles' second Super Bowl title [1][3]. Eagles quarterback Jalen Hurts was named Super Bowl MVP [1][2]. It was also a rematch of Super Bowl LVII in February 2023, which the Chiefs won.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://fansided.com/nfl/who-won-the-super-bowl-in-2025-final-score-mvp-and-how-it-played-out",
+      "title": "Who won the Super Bowl in 2025? Final score, MVP and how it played out (FanSided)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.goodmorningamerica.com/culture/story/philadelphia-eagles-win-super-bowl-lix-commanding-performance-118639636",
+      "title": "Philadelphia Eagles win Super Bowl LIX with commanding performance (Good Morning America)"
+    },
+    {
+      "n": 3,
+      "url": "https://uk.sports.yahoo.com/news/philadelphia-eagles-beat-kansas-city-031813388.html",
+      "title": "Philadelphia Eagles Beat Kansas City Chiefs to Win Super Bowl LIX (Yahoo Sports)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Super Bowl LIX",
+    "Philadelphia Eagles",
+    "Kansas City Chiefs",
+    "Jalen Hurts",
+    "Super Bowl LVII",
+    "Caesars Superdome"
+  ],
+  "urls": [
+    "https://fansided.com/nfl/who-won-the-super-bowl-in-2025-final-score-mvp-and-how-it-played-out",
+    "https://www.goodmorningamerica.com/culture/story/philadelphia-eagles-win-super-bowl-lix-commanding-performance-118639636",
+    "https://uk.sports.yahoo.com/news/philadelphia-eagles-beat-kansas-city-031813388.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0501057,
+  "duration_ms": 11457,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:36+00:00"
+}

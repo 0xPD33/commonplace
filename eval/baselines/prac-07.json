@@ -1,0 +1,38 @@
+{
+  "id": "prac-07",
+  "query": "How do I stop a nosebleed?",
+  "answer": "Sit up and lean slightly forward, not back. Leaning back sends blood down your throat, which can make you choke or feel sick [1][2]. Pinch the soft part of your nose just below the bony bridge, breathe through your mouth and spit out any blood. Hold the pinch for 10 to 15 minutes without letting go to check, because checking can restart the bleeding [1][2]. A cold pack across the bridge of your nose may also help. Afterwards, don't pick or blow your nose for a while, so the clot doesn't come loose [1].\n\nIf it's still bleeding, pinch again for up to another 15 minutes. If it doesn't stop after that second try, or lasts more than about 20 to 30 minutes, get medical help [1][2]. Go straight to emergency care if the bleed came from a hard blow to the head or face, if it's very heavy, or if it makes it hard to breathe. Nosebleeds that keep coming back, especially if you take blood thinners, are worth getting checked by a doctor.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.mayoclinic.org/first-aid/first-aid-sprains/basics/art-20056683",
+      "title": "Nosebleeds: First aid – Mayo Clinic"
+    },
+    {
+      "n": 2,
+      "url": "https://www.redcross.org.uk/first-aid/learn-first-aid-for-babies-and-children/nosebleed",
+      "title": "Nosebleed – British Red Cross first aid"
+    }
+  ],
+  "wikipedia_articles": [
+    "Nosebleed",
+    "First aid"
+  ],
+  "urls": [
+    "https://www.mayoclinic.org/first-aid/first-aid-sprains/basics/art-20056683",
+    "https://www.redcross.org.uk/first-aid/learn-first-aid-for-babies-and-children/nosebleed"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0625193,
+  "duration_ms": 18921,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:00+00:00"
+}

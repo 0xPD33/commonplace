@@ -1,0 +1,32 @@
+{
+  "id": "seed-fac-12",
+  "query": "Which element has the chemical symbol Fe?",
+  "answer": "Fe is the symbol for iron. The symbol comes from iron's Latin name, *ferrum* [1]. Iron is element number 26 and is a metal in Group 8 of the periodic table [1].\n\nSources:\n[1] Britannica, \"Iron | Element, Occurrence, Uses, Properties, & Facts\": https://britannica.com/science/iron-chemical-element",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://britannica.com/science/iron-chemical-element",
+      "title": "Iron | Element, Occurrence, Uses, Properties, & Facts - Britannica"
+    }
+  ],
+  "wikipedia_articles": [
+    "Iron",
+    "Chemical symbol"
+  ],
+  "urls": [
+    "https://britannica.com/science/iron-chemical-element"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0370224,
+  "duration_ms": 9864,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:36:43+00:00"
+}

@@ -1,0 +1,51 @@
+{
+  "id": "prac-16",
+  "query": "How do I clean and season a cast iron pan?",
+  "answer": "For everyday cleaning, wash the pan while it's still warm in hot, soapy water with a stiff brush or scrub pad. Lodge, the US cast-iron maker, says mild dish soap is fine because today's soaps don't strip seasoning [1]. If food is stuck on, work it loose with a nylon brush or pan scraper and rinse. Then dry the pan completely right away and wipe a very thin layer of oil over the surface with a paper towel [1]. Don't soak it, don't put it in the dishwasher, and keep steel wool for rust only [1].\n\nTo season it (or re-season it), start with a clean, fully dry pan. Rub a very thin coat of oil over every surface, inside and out, then wipe off the excess. You want so little that nothing runs when you tilt the pan, because too much oil leaves it sticky [2]. Lodge recommends a neutral oil that can take high heat, like vegetable or canola [3]. Heat the oven to 450–500°F (about 230–260°C) and put foil on the bottom rack to catch drips. Set the pan upside down on the middle rack, bake it for an hour, then turn the oven off and let it cool inside [2]. Repeat this two or three times if you want a tougher base layer.\n\nIf the pan is rusty, scrub the rust off with steel wool, wash and dry it, then season it as above [4]. Enameled cast iron like Le Creuset doesn't need seasoning [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.lodgecastiron.com/pages/how-to-clean",
+      "title": "Lodge – How to Clean"
+    },
+    {
+      "n": 2,
+      "url": "https://www.lodgecastiron.com/pages/how-to-season",
+      "title": "Lodge – How to Season"
+    },
+    {
+      "n": 3,
+      "url": "https://www.lodgecastiron.com/pages/cleaning-and-care-cast-iron-oils-cast-iron-cooking-and-seasoning",
+      "title": "Lodge – What oils should you use for cast iron cooking and seasoning?"
+    },
+    {
+      "n": 4,
+      "url": "https://www.lodgecastiron.com/pages/cleaning-and-care-cast-iron-restore-and-season-rusty-cast-iron",
+      "title": "Lodge – How to Restore and Season a Rusty Cast Iron Skillet"
+    }
+  ],
+  "wikipedia_articles": [
+    "Seasoning (cookware)",
+    "Cast-iron cookware",
+    "Lodge Manufacturing Company"
+  ],
+  "urls": [
+    "https://www.lodgecastiron.com/pages/how-to-clean",
+    "https://www.lodgecastiron.com/pages/how-to-season",
+    "https://www.lodgecastiron.com/pages/cleaning-and-care-cast-iron-oils-cast-iron-cooking-and-seasoning",
+    "https://www.lodgecastiron.com/pages/cleaning-and-care-cast-iron-restore-and-season-rusty-cast-iron"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.11536000000000002,
+  "duration_ms": 43266,
+  "num_turns": 7,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:19+00:00"
+}

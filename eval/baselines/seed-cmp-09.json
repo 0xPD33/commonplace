@@ -1,0 +1,52 @@
+{
+  "id": "seed-cmp-09",
+  "query": "What's the difference between weather and climate?",
+  "answer": "The main difference is time scale. Weather is what the atmosphere is doing over short periods, from minutes to hours to days: today's temperature, rain, wind, humidity and so on [2][3]. Climate is the long-term average of those weather patterns in a place, usually taken over 30 years or more [1][2]. NOAA calls these 30-year averages \"climate normals,\" and it updates them every so often; the current set covers 1991–2020 [1][4]. A common way to put it: climate is what you expect, and weather is what you get. One cold snap is weather and doesn't disprove a warming climate, but a steady rise in average temperatures over decades is a change in climate [2][4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://noaa.gov/node/248",
+      "title": "What's the difference between climate and weather? (NOAA)"
+    },
+    {
+      "n": 2,
+      "url": "https://climatekids.nasa.gov/weather-climate/weather-climate_poster.pdf",
+      "title": "Weather vs. Climate poster (NASA Climate Kids)"
+    },
+    {
+      "n": 3,
+      "url": "https://scijinks.gov/about/k-12-education/understanding-our-planet/whats-the-difference-between-weather-and-climate",
+      "title": "What's the difference between weather and climate? (NOAA SciJinks)"
+    },
+    {
+      "n": 4,
+      "url": "https://science.howstuffworks.com/nature/climate-weather/atmospheric/weather-and-climate-whats-difference.htm",
+      "title": "Weather and Climate: What's the Difference? (HowStuffWorks)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Weather",
+    "Climate",
+    "Climatological normal",
+    "Climate change"
+  ],
+  "urls": [
+    "https://noaa.gov/node/248",
+    "https://climatekids.nasa.gov/weather-climate/weather-climate_poster.pdf",
+    "https://scijinks.gov/about/k-12-education/understanding-our-planet/whats-the-difference-between-weather-and-climate",
+    "https://science.howstuffworks.com/nature/climate-weather/atmospheric/weather-and-climate-whats-difference.htm"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0469307,
+  "duration_ms": 16384,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:45+00:00"
+}

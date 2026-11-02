@@ -1,0 +1,46 @@
+{
+  "id": "prac-20",
+  "query": "How do I reset a tripped circuit breaker?",
+  "answer": "First, find the tripped breaker in your panel. It's usually stuck in the middle between ON and OFF, or flipped the opposite way from the others [1][2]. Next, unplug or turn off the things on that circuit so the breaker isn't reset under load [1]. Then push the switch all the way to OFF until it clicks, and flip it back to ON. A breaker won't reset if you just push it from the middle straight to ON [1][2]. After that, plug things back in one at a time. If it trips again as you add devices, the circuit is probably overloaded and you should move something to a different circuit [2]. If it trips again right away with nothing plugged in, don't keep resetting it. That points to a fault such as a short, not an overload [3]. Call an electrician, and call right away if you smell burning or see sparks or scorch marks [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://angi.com/articles/how-to-fix-blown-fuse-or-reset-circuit-breaker.htm",
+      "title": "How to Reset a Circuit Breaker in 5 Steps (Angi)"
+    },
+    {
+      "n": 2,
+      "url": "https://happyhiller.com/diy/how-to-check-and-reset-a-tripped-breaker/",
+      "title": "How to Check and Reset a Tripped Breaker (Happy Hiller)"
+    },
+    {
+      "n": 3,
+      "url": "https://intranet.ehs.washington.edu/system/files/resources/electrical-circuit-breaker-reset-procedure.pdf",
+      "title": "Electrical Circuit Breaker Reset Procedure (University of Washington EHS)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Circuit breaker",
+    "Distribution board",
+    "Electrical overload",
+    "Short circuit"
+  ],
+  "urls": [
+    "https://angi.com/articles/how-to-fix-blown-fuse-or-reset-circuit-breaker.htm",
+    "https://happyhiller.com/diy/how-to-check-and-reset-a-tripped-breaker/",
+    "https://intranet.ehs.washington.edu/system/files/resources/electrical-circuit-breaker-reset-procedure.pdf"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0478461,
+  "duration_ms": 16461,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:20+00:00"
+}

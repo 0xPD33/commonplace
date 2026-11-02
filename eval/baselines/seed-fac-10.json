@@ -1,0 +1,39 @@
+{
+  "id": "seed-fac-10",
+  "query": "Who composed The Four Seasons?",
+  "answer": "The Four Seasons (Le quattro stagioni) was composed by the Italian Baroque composer Antonio Vivaldi [1][2]. It's a set of four violin concertos, one for each season, and each has three movements in a fast-slow-fast pattern [1][2]. Vivaldi published them in 1725 in Amsterdam, as the first four concertos of his Op. 8 collection, Il cimento dell'armonia e dell'inventione [1][2]. He probably wrote them a few years earlier, around 1718–1723, while he was working at the court in Mantua [2]. Each concerto comes with a sonnet describing the scene the music paints. Nobody knows who wrote the sonnets, though Vivaldi himself may have [2]. The name \"The Four Seasons\" is also used by other works, such as Astor Piazzolla's Four Seasons of Buenos Aires and Max Richter's recomposition, but it usually means Vivaldi's piece.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.udiscovermusic.com/classical-features/vivaldi-four-seasons/",
+      "title": "'The Four Seasons': A Guide To Vivaldi's Radical Violin Concertos"
+    },
+    {
+      "n": 2,
+      "url": "https://wikipedia.com/wiki/Winter_(Vivaldi)",
+      "title": "The Four Seasons (Vivaldi) - Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "The Four Seasons (Vivaldi)",
+    "Antonio Vivaldi",
+    "Il cimento dell'armonia e dell'inventione"
+  ],
+  "urls": [
+    "https://www.udiscovermusic.com/classical-features/vivaldi-four-seasons/",
+    "https://wikipedia.com/wiki/Winter_(Vivaldi)"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0528601,
+  "duration_ms": 17318,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:36:47+00:00"
+}

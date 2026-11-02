@@ -1,0 +1,23 @@
+{
+  "id": "seed-num-15",
+  "query": "If I drive 600 km at 80 km/h, how long will it take?",
+  "answer": "It will take 7.5 hours, which is 7 hours and 30 minutes. Time is distance divided by speed, so 600 km ÷ 80 km/h = 7.5 h. That assumes you hold 80 km/h the whole way. Stops for fuel, food or rest, plus any traffic, will make the trip longer.",
+  "sources": [],
+  "wikipedia_articles": [
+    "Speed",
+    "Time"
+  ],
+  "urls": [],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.009803,
+  "duration_ms": 2649,
+  "num_turns": 2,
+  "web_search_requests": 0,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:30+00:00"
+}

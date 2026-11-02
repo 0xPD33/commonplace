@@ -1,0 +1,54 @@
+{
+  "id": "rec-18",
+  "query": "Who won the 2025 Formula One World Drivers' Championship?",
+  "answer": "McLaren's Lando Norris won the 2025 Formula One World Drivers' Championship, his first title. He clinched it by finishing third at the season-ending Abu Dhabi Grand Prix [1][2]. He beat Max Verstappen by just two points, 423 to 421, and his teammate Oscar Piastri was also still in the title fight going into that last race [3][1]. The win ended Verstappen's run of four straight titles. Norris became the eleventh British champion and McLaren's first drivers' champion since Lewis Hamilton in 2008 [1][4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/2025_Formula_One_World_Championship",
+      "title": "2025 Formula One World Championship - Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://bleacherreport.com/articles/25318886-lando-norris-makes-history-winning-2025-f1-world-drivers-championship-abu-dhabi",
+      "title": "Lando Norris makes history winning 2025 F1 World Drivers' Championship in Abu Dhabi - Bleacher Report"
+    },
+    {
+      "n": 3,
+      "url": "https://www.crash.net/f1/news/1088078/1/final-f1-world-championship-points-standings-after-2025-abu-dhabi-grand-prix",
+      "title": "Final F1 world championship points standings after 2025 Abu Dhabi Grand Prix - Crash.net"
+    },
+    {
+      "n": 4,
+      "url": "https://www.dailysabah.com/sports/motorsports/norris-breaks-verstappens-grip-as-f1-braces-for-bold-new-era/amp",
+      "title": "Norris breaks Verstappen's grip as F1 braces for bold new era - Daily Sabah"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 Formula One World Championship",
+    "Lando Norris",
+    "2025 Abu Dhabi Grand Prix",
+    "Max Verstappen",
+    "McLaren",
+    "List of Formula One World Drivers' Champions"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/2025_Formula_One_World_Championship",
+    "https://bleacherreport.com/articles/25318886-lando-norris-makes-history-winning-2025-f1-world-drivers-championship-abu-dhabi",
+    "https://www.crash.net/f1/news/1088078/1/final-f1-world-championship-points-standings-after-2025-abu-dhabi-grand-prix",
+    "https://www.dailysabah.com/sports/motorsports/norris-breaks-verstappens-grip-as-f1-braces-for-bold-new-era/amp"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.05072,
+  "duration_ms": 15767,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:36:25+00:00"
+}

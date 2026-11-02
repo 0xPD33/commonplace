@@ -1,0 +1,53 @@
+{
+  "id": "rec-13",
+  "query": "Who won the 2025 Romanian presidential election?",
+  "answer": "Nicușor Dan won the 2025 Romanian presidential election. Dan is a pro-European independent and was then mayor of Bucharest. He beat George Simion, the hard-right leader of the AUR party, in the runoff on 18 May 2025, taking about 54% of the vote [1][2]. The official final count was about 53.6% to 46.4%, though some early reports gave slightly higher numbers for Dan. Simion conceded, the Constitutional Court confirmed the result, and Dan was sworn in on 26 May 2025 [3][4]. The 2025 vote was a rerun, held because the 2024 election was annulled over campaign irregularities and alleged foreign interference [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.bta.bg/en/news/893409-pro-european-candidate-nicusor-dan-wins-romania-s-presidential-election-in-tight",
+      "title": "Pro-European Candidate Nicusor Dan Wins Romania's Presidential Election in Tight Race (BTA)"
+    },
+    {
+      "n": 2,
+      "url": "https://tribune.com.pk/story/2546637/nicusor-dan-becomes-romanias-new-president-with-54-of-vote",
+      "title": "Nicusor Dan becomes Romania's new president with 54% of vote (Express Tribune)"
+    },
+    {
+      "n": 3,
+      "url": "https://stirileprotv.ro/stiri/news-in-english/nicusor-dan-independent-candidate-becomes-romania-s-new-president-constitutional-court-confirms-election-results.html",
+      "title": "Nicușor Dan, Independent Candidate, Becomes Romania's New President. Constitutional Court Confirms Election Results (Știrile ProTV)"
+    },
+    {
+      "n": 4,
+      "url": "https://www.romania-insider.com/nicusor-dan-sworn-in-ceremony-president-may-2025",
+      "title": "Nicușor Dan to be sworn in as Romania's president on Monday (Romania Insider)"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 Romanian presidential election",
+    "Nicușor Dan",
+    "George Simion",
+    "2024 Romanian presidential election",
+    "President of Romania"
+  ],
+  "urls": [
+    "https://www.bta.bg/en/news/893409-pro-european-candidate-nicusor-dan-wins-romania-s-presidential-election-in-tight",
+    "https://tribune.com.pk/story/2546637/nicusor-dan-becomes-romanias-new-president-with-54-of-vote",
+    "https://stirileprotv.ro/stiri/news-in-english/nicusor-dan-independent-candidate-becomes-romania-s-new-president-constitutional-court-confirms-election-results.html",
+    "https://www.romania-insider.com/nicusor-dan-sworn-in-ceremony-president-may-2025"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0610415,
+  "duration_ms": 18655,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:36:08+00:00"
+}

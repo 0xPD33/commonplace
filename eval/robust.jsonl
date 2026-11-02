@@ -1,0 +1,20 @@
+{"id":"rob-fac-02","query":"who was us presdent in 2016","category":"robust","baseline":"seed-fac-02","variant":"typo"}
+{"id":"rob-fac-04","query":"who desinged the golden gate brige","category":"robust","baseline":"seed-fac-04","variant":"typo"}
+{"id":"rob-exp-03","query":"so um why is the sky like blue and not green","category":"robust","baseline":"seed-exp-03","variant":"spoken"}
+{"id":"rob-exp-04","query":"how dose a motor work","category":"robust","baseline":"seed-exp-04","variant":"typo"}
+{"id":"rob-exp-05","query":"can you tell me how 3d printing works","category":"robust","baseline":"seed-exp-05","variant":"spoken"}
+{"id":"rob-cmp-01","query":"whats the diffrence between a crocodile and an aligator","category":"robust","baseline":"seed-cmp-01","variant":"typo"}
+{"id":"rob-cmp-04","query":"baking soda versus baking powder what's the difference","category":"robust","baseline":"seed-cmp-04","variant":"spoken"}
+{"id":"rob-cmp-06","query":"does expresso or drip coffee have more caffiene","category":"robust","baseline":"seed-cmp-06","variant":"typo"}
+{"id":"rob-mh-03","query":"which river goes through the capital of hungry and what sea does it end up in","category":"robust","baseline":"seed-mh-03","variant":"homophone"}
+{"id":"rob-mh-05","query":"who was the british monarch when the eifel tower got finished","category":"robust","baseline":"seed-mh-05","variant":"typo"}
+{"id":"rob-mh-06","query":"what university did the guy who invented the world wide web go to","category":"robust","baseline":"seed-mh-06","variant":"spoken"}
+{"id":"rob-mh-08","query":"what money do they use in the country with angkor what","category":"robust","baseline":"seed-mh-08","variant":"homophone"}
+{"id":"rob-num-03","query":"how many earths could fit in the sun","category":"robust","baseline":"seed-num-03","variant":"spoken","expect":{"number":1300000,"tol":0.05}}
+{"id":"rob-num-05","query":"how much taller is everest then mont blanc in meters","category":"robust","baseline":"seed-num-05","variant":"homophone","expect":{"number":4043,"tol":0.002}}
+{"id":"rob-trv-02","query":"do people tip at restaurants in japan","category":"robust","baseline":"seed-trv-02","variant":"spoken"}
+{"id":"rob-trv-03","query":"i got stung by a jelly fish what do i do","category":"robust","baseline":"seed-trv-03","variant":"spoken"}
+{"id":"rob-trv-06","query":"best time to go to iceland for the nothern lights","category":"robust","baseline":"seed-trv-06","variant":"typo"}
+{"id":"rob-how-02","query":"how to fix a squeeky door hinge","category":"robust","baseline":"seed-how-02","variant":"typo"}
+{"id":"rob-how-04","query":"how do i see which process is using a port on linux","category":"robust","baseline":"seed-how-04","variant":"spoken"}
+{"id":"rob-lt-03","query":"what was the anti kythera mechanism for","category":"robust","baseline":"seed-lt-03","variant":"homophone"}

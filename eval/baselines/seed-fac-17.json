@@ -1,0 +1,41 @@
+{
+  "id": "seed-fac-17",
+  "query": "What is the hardest natural mineral?",
+  "answer": "Diamond is the hardest natural mineral. It sits at 10, the top of the Mohs scale, and it also has the highest Vickers hardness of any mineral, around 10,000 HV [1][2]. The Mohs scale isn't linear: corundum is 9, but diamond is roughly four times harder [1]. Hardness here means how well something resists scratching. Diamond can still chip or split if it's hit along its cleavage planes [1].\n\nOne caveat: lonsdaleite, a rare hexagonal form of carbon found in meteorite impact sites, is predicted to be slightly harder than diamond. The search results I found disagree on whether that has been confirmed, and I couldn't check it from a strong source. Because of that, and because lonsdaleite is so rare, diamond is still the standard answer.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.worldatlas.com/articles/what-mineral-is-the-hardest.html",
+      "title": "The World's Hardest Minerals - WorldAtlas"
+    },
+    {
+      "n": 2,
+      "url": "https://www.newworldencyclopedia.org/entry/Mohs_scale_of_mineral_hardness",
+      "title": "Mohs scale of mineral hardness - New World Encyclopedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Diamond",
+    "Mohs scale",
+    "Vickers hardness test",
+    "Lonsdaleite",
+    "Corundum"
+  ],
+  "urls": [
+    "https://www.worldatlas.com/articles/what-mineral-is-the-hardest.html",
+    "https://www.newworldencyclopedia.org/entry/Mohs_scale_of_mineral_hardness"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0494787,
+  "duration_ms": 16939,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:05+00:00"
+}

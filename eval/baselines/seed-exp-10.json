@@ -1,0 +1,46 @@
+{
+  "id": "seed-exp-10",
+  "query": "How do vaccines train the immune system?",
+  "answer": "Vaccines work like a practice run. They show your immune system a harmless version or piece of a germ, called an antigen, so it can learn to recognize that germ without you getting sick. The antigen might be a killed or weakened microbe, a purified protein, or genetic instructions (as in mRNA vaccines) that get your own cells to make the protein [1][2].\n\nFirst, antigen-presenting cells take up the antigen, break it down, and display fragments on their surface. Helper T cells recognize those fragments and then signal B cells to make antibodies and killer T cells to multiply [1]. After the antigen is cleared, most of these activated cells die off. Some, though, become long-lived memory B and T cells [1].\n\nIf you later meet the real pathogen, those memory cells recognize it and respond much faster and more strongly than they would the first time. That often stops the infection before it causes serious illness [1][2]. How long protection lasts depends on the vaccine, which is why some need booster doses to keep immunity strong [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://nlm.nih.gov/exhibition/againsttheodds/exhibit/desc/OB0713.html",
+      "title": "How Vaccines Work – U.S. National Library of Medicine (NIH)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.snexplores.org/article/explainer-what-vaccine",
+      "title": "Explainer: What is a vaccine? – Science News Explores"
+    }
+  ],
+  "wikipedia_articles": [
+    "Vaccine",
+    "Vaccination",
+    "Antigen",
+    "Antigen-presenting cell",
+    "Immunological memory",
+    "Memory B cell",
+    "Memory T cell",
+    "Adaptive immune system",
+    "Booster dose",
+    "mRNA vaccine"
+  ],
+  "urls": [
+    "https://nlm.nih.gov/exhibition/againsttheodds/exhibit/desc/OB0713.html",
+    "https://www.snexplores.org/article/explainer-what-vaccine"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.042468900000000004,
+  "duration_ms": 15604,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:55+00:00"
+}

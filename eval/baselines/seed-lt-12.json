@@ -1,0 +1,47 @@
+{
+  "id": "seed-lt-12",
+  "query": "Who was Phineas Gage, and why is he famous?",
+  "answer": "Phineas Gage (1823–1860) was an American railroad construction foreman. He became famous for living through an accident on September 13, 1848, near Cavendish, Vermont [1]. He was tamping blasting powder into a rock hole for the Rutland and Burlington Rail Road when his iron rod struck a spark and set off the charge. The blast drove the 13¼-pound rod, about 3 feet 7 inches long, in under his left cheekbone and out the top of his head [1][2]. The rod largely destroyed his left frontal lobe, yet he could talk and walk soon afterward. His doctor, John Harlow, said his personality changed so much that friends called him \"no longer Gage\" [1]. That made him one of the earliest and most-cited cases showing that damage to particular parts of the brain can change personality and behavior, and he is still a standard example in neuroscience and psychology courses [1].\n\nThe popular version of his story is often exaggerated, and the actual record is thin [1][3]. Gage later spent about ten years driving stagecoaches in Chile. Psychologist Malcolm Macmillan argues that he made a substantial \"social recovery\" during those years [1][3]. Gage moved to California, developed epilepsy, and died of seizures in 1860. His skull and the tamping iron are now at Harvard's Warren Anatomical Museum [1][2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://en.wikipedia.org/wiki/Phineas_Gage",
+      "title": "Phineas Gage – Wikipedia"
+    },
+    {
+      "n": 2,
+      "url": "https://www.HMdb.org/m.asp?m=44099",
+      "title": "The Gage Accident – Historical Marker Database"
+    },
+    {
+      "n": 3,
+      "url": "https://bps.org.uk/psychologist/phineas-gage-unravelling-myth",
+      "title": "Phineas Gage – Unravelling the myth (The Psychologist, BPS)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Phineas Gage",
+    "Frontal lobe",
+    "Warren Anatomical Museum",
+    "Rutland and Burlington Railroad",
+    "Frontal lobe injury"
+  ],
+  "urls": [
+    "https://en.wikipedia.org/wiki/Phineas_Gage",
+    "https://www.HMdb.org/m.asp?m=44099",
+    "https://bps.org.uk/psychologist/phineas-gage-unravelling-myth"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0672008,
+  "duration_ms": 28022,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:54+00:00"
+}

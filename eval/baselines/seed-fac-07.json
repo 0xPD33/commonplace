@@ -1,0 +1,46 @@
+{
+  "id": "seed-fac-07",
+  "query": "What is the longest river in South America?",
+  "answer": "South America's longest river is the Amazon. Its exact length depends on where you put its source and its mouth. Most scientists put it at about 6,400 km (4,000 miles) or more. One later measurement placed the mouth on the south side of Marajó Island and got about 6,992 km (4,345 miles) [1][2]. Under that measurement the Amazon would be longer than the Nile. The Nile is still usually listed as the world's longest river, so the global ranking is disputed [1]. What isn't disputed is that the Amazon carries more water than any other river on Earth [2]. The Paraná is the continent's second-longest river, at roughly 4,880 km (3,030 miles) [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.britannica.com/story/how-long-is-the-amazon-river",
+      "title": "How Long Is the Amazon River? – Britannica"
+    },
+    {
+      "n": 2,
+      "url": "https://www.britannica.com/place/Amazon-River",
+      "title": "Amazon River – Britannica"
+    },
+    {
+      "n": 3,
+      "url": "https://www.discoveryuk.com/travel-and-exploration/the-longest-rivers-in-south-america/",
+      "title": "The Longest Rivers in South America – Discovery UK"
+    }
+  ],
+  "wikipedia_articles": [
+    "Amazon River",
+    "List of rivers by length",
+    "Nile",
+    "Paraná River"
+  ],
+  "urls": [
+    "https://www.britannica.com/story/how-long-is-the-amazon-river",
+    "https://www.britannica.com/place/Amazon-River",
+    "https://www.discoveryuk.com/travel-and-exploration/the-longest-rivers-in-south-america/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0544473,
+  "duration_ms": 16485,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:36:34+00:00"
+}

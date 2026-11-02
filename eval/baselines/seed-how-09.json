@@ -1,0 +1,58 @@
+{
+  "id": "seed-how-09",
+  "query": "How do I perform CPR on an adult?",
+  "answer": "If an adult collapses, isn't responding and isn't breathing normally (gasping doesn't count), call 911 straight away or have someone else call. Put the phone on speaker so the dispatcher can talk you through it, and send someone to get an AED (the portable defibrillator found in many public places) if one is nearby [1][2]. Lay the person on their back on a firm surface. Put the heel of one hand on the center of the chest, on the lower half of the breastbone, with your other hand on top. Keep your arms straight and your shoulders right over your hands.\n\nPush hard and fast: at least 2 inches (5 cm) deep but no more than about 2.4 inches (6 cm), at 100 to 120 pushes a minute. The beat of \"Stayin' Alive\" is about the right speed. Let the chest come all the way back up after each push, and don't stop for more than about 10 seconds [3][4][5]. If you haven't been trained, or you'd rather not give breaths, hands-only CPR (just the chest pushes) is what the American Heart Association recommends for adults who collapse suddenly [2][5]. If you have been trained, give 30 pushes, then 2 rescue breaths, and repeat.\n\nWhen the AED arrives, turn it on and do what its voice prompts tell you. Keep going until paramedics take over or the person starts breathing normally, and switch with someone else if you get tired [1][5]. A short hands-on class from the AHA or Red Cross will make you much more confident.\n\nThese numbers are the standard AHA adult figures. My sources say the 2025 guideline update didn't change them, but I couldn't check the AHA document itself [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.med.umich.edu/1libr/CVC/HandsOnlyCPR.pdf",
+      "title": "Hands-Only CPR (University of Michigan Health)"
+    },
+    {
+      "n": 2,
+      "url": "https://cpr.heart.org/-/media/cpr-files/courses-and-kits/hands-only-cpr/handsonly-cpr-2-steps-ucm_502251.pdf",
+      "title": "Hands-Only CPR: 2 Steps (American Heart Association)"
+    },
+    {
+      "n": 3,
+      "url": "https://cpr-savers.com/cpr-ecc-2025-guidelines",
+      "title": "What's New in the 2025 AHA CPR & ECC Guidelines: A Clinical Overview"
+    },
+    {
+      "n": 4,
+      "url": "https://open-exam-prep.com/study-guides/aha-bls/adult-bls-high-quality-cpr/adult-compression-mechanics-metrics",
+      "title": "Adult Chest Compressions: Position, Rate, Depth & Recoil"
+    },
+    {
+      "n": 5,
+      "url": "https://johnstonhealth.org/care-treatment/heart-vascular/hands-only-cpr",
+      "title": "Hands-Only CPR (Johnston Health)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Cardiopulmonary resuscitation",
+    "Automated external defibrillator",
+    "Cardiac arrest",
+    "Rescue breathing"
+  ],
+  "urls": [
+    "https://www.med.umich.edu/1libr/CVC/HandsOnlyCPR.pdf",
+    "https://cpr.heart.org/-/media/cpr-files/courses-and-kits/hands-only-cpr/handsonly-cpr-2-steps-ucm_502251.pdf",
+    "https://cpr-savers.com/cpr-ecc-2025-guidelines",
+    "https://open-exam-prep.com/study-guides/aha-bls/adult-bls-high-quality-cpr/adult-compression-mechanics-metrics",
+    "https://johnstonhealth.org/care-treatment/heart-vascular/hands-only-cpr"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0931359,
+  "duration_ms": 29398,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:17+00:00"
+}

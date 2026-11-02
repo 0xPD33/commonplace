@@ -1,0 +1,53 @@
+{
+  "id": "rec-08",
+  "query": "Who won the 2025 Polish presidential election?",
+  "answer": "Karol Nawrocki won. He's a conservative historian who ran with the backing of Law and Justice (PiS). In the runoff on 1 June 2025 he got 50.89% of the vote to 49.11% for Warsaw mayor Rafał Trzaskowski, a gap of fewer than 400,000 votes, with turnout at 71.63% [1][2]. Trzaskowski had come first in the first round on 18 May with 31.4% to Nawrocki's 29.5%. He was also ahead in the initial exit poll on runoff night, so Nawrocki's win was an upset [2][3]. Trzaskowski conceded on 2 June [4]. Nawrocki took over from Andrzej Duda when Duda's final term ended on 6 August 2025 [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.polskieradio.pl/395/7784/Artykul/3531809,conservative-nawrocki-elected-polish-president-election-authority",
+      "title": "Polskie Radio: Conservative Nawrocki elected Polish president – election authority"
+    },
+    {
+      "n": 2,
+      "url": "https://m.washingtontimes.com/news/2025/jun/2/karol-nawrocki-conservative-candidate-wins-polands-presidential/",
+      "title": "Washington Times (AP): Karol Nawrocki, conservative candidate, wins Poland's presidential election"
+    },
+    {
+      "n": 3,
+      "url": "https://www.latestly.com/world/poland-presidential-election-result-2025-conservative-karol-nawrocki-wins-50-89-of-votes-in-tight-race-against-liberal-warsaw-mayor-rafal-trzaskowski-6898766.html",
+      "title": "LatestLY: Conservative Karol Nawrocki wins 50.89% of votes in tight race against Rafal Trzaskowski"
+    },
+    {
+      "n": 4,
+      "url": "https://www.polskieradio.pl/395/7784/Artykul/3531985,warsaw-mayor-concedes-defeat-in-polish-presidential-election",
+      "title": "Polskie Radio: Warsaw mayor concedes defeat in Polish presidential election"
+    }
+  ],
+  "wikipedia_articles": [
+    "2025 Polish presidential election",
+    "Karol Nawrocki",
+    "Rafał Trzaskowski",
+    "Andrzej Duda",
+    "President of Poland"
+  ],
+  "urls": [
+    "https://www.polskieradio.pl/395/7784/Artykul/3531809,conservative-nawrocki-elected-polish-president-election-authority",
+    "https://m.washingtontimes.com/news/2025/jun/2/karol-nawrocki-conservative-candidate-wins-polands-presidential/",
+    "https://www.latestly.com/world/poland-presidential-election-result-2025-conservative-karol-nawrocki-wins-50-89-of-votes-in-tight-race-against-liberal-warsaw-mayor-rafal-trzaskowski-6898766.html",
+    "https://www.polskieradio.pl/395/7784/Artykul/3531985,warsaw-mayor-concedes-defeat-in-polish-presidential-election"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0553332,
+  "duration_ms": 17363,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:35:47+00:00"
+}

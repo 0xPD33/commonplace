@@ -1,0 +1,47 @@
+{
+  "id": "prac-10",
+  "query": "How do I help an adult who is choking?",
+  "answer": "If the person can still cough, speak or breathe, tell them to keep coughing hard and stay with them. Act when they can't talk, cough or breathe, or when they clutch their throat.\n\nHave someone call 911 (or your local emergency number), then do the following. Under the American Heart Association's 2025 guidelines, you alternate 5 back blows with 5 abdominal thrusts until the object comes out or the person becomes unresponsive [1][2].\n\n- Back blows: Stand slightly behind them and support their chest with one hand. Lean them forward and hit firmly between the shoulder blades with the heel of your other hand.\n- Abdominal thrusts (the Heimlich maneuver): Stand behind them and wrap your arms around their waist. Put a fist just above the belly button, grab it with your other hand, and pull sharply in and up.\n- Pregnant or larger person: If they're pregnant or you can't get your arms around their waist, give chest thrusts instead [3].\n\nIf they go unresponsive, lower them to the ground and start CPR. Before each set of rescue breaths, look in the mouth and remove any object you can see, but don't sweep blindly with your finger. Anyone who needed thrusts should see a doctor afterward, because the thrusts can cause internal injury.\n\nA hands-on CPR and first-aid class from the Red Cross or AHA is the best way to learn this properly.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://ems1.com/cpr/2025-aha-cpr-guidelines-changes-to-mechanical-cpr-choking-single-chain-of-survival",
+      "title": "2025 AHA CPR guidelines: changes to mechanical CPR, choking, single chain of survival (EMS1)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.protrainings.com/blog/whats-new-in-cpr-and-first-aid-understanding-the-2025-guideline-updates/",
+      "title": "What's New in CPR and First Aid? Understanding the 2025 Guideline Updates (ProTrainings)"
+    },
+    {
+      "n": 3,
+      "url": "https://projectheartbeat.com/2025-aha-guidelines-bls-acls-pals-changes-project-heartbeat/",
+      "title": "2025 AHA Guidelines BLS ACLS PALS Changes (Project Heartbeat)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Choking",
+    "Abdominal thrusts",
+    "Back blows",
+    "Cardiopulmonary resuscitation",
+    "Foreign body aspiration"
+  ],
+  "urls": [
+    "https://ems1.com/cpr/2025-aha-cpr-guidelines-changes-to-mechanical-cpr-choking-single-chain-of-survival",
+    "https://www.protrainings.com/blog/whats-new-in-cpr-and-first-aid-understanding-the-2025-guideline-updates/",
+    "https://projectheartbeat.com/2025-aha-guidelines-bls-acls-pals-changes-project-heartbeat/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0681092,
+  "duration_ms": 20227,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:10+00:00"
+}

@@ -11,8 +11,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
-from common import (BASELINES, RUNS, append_jsonl, claude_json, claude_meta, claude_version,
-                    read_jsonl)
+from common import (BASELINES, REPO, RUNS, append_jsonl, claude_json, claude_meta, claude_version,
+                    load_queries, read_jsonl)
 
 PROMPT_VERSION = 2
 CRITERIA = {"correctness": 4, "completeness": 3, "groundedness": 2, "usefulness": 1}
@@ -107,10 +107,13 @@ def main():
     done = {j["id"] for j in read_jsonl(out)}
     keys = set(a.subset.split(",")) if a.subset else None
     todo, missing = [], []
+    # A query can borrow another query's baseline: eval/robust.jsonl reuses the clean seed's answer.
+    meta = json.loads((RUNS / a.run / "meta.json").read_text())
+    borrow = {q["id"]: q["baseline"] for q in load_queries(REPO / meta["queries"]) if q.get("baseline")}
     for row in read_jsonl(RUNS / a.run / "answers.jsonl"):
         if row["id"] in done or (keys and row["id"] not in keys and row.get("category") not in keys):
             continue
-        path = BASELINES / f"{row['id']}.json"
+        path = BASELINES / f"{borrow.get(row['id'], row['id'])}.json"
         if path.exists():
             todo.append((row, json.loads(path.read_text())))
         else:

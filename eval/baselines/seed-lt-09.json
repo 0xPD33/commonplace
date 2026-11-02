@@ -1,0 +1,47 @@
+{
+  "id": "seed-lt-09",
+  "query": "What was the Year Without a Summer?",
+  "answer": "The Year Without a Summer was 1816, when weather was unusually cold across much of the Northern Hemisphere. The main cause was the April 1815 eruption of Mount Tambora on Sumbawa in Indonesia. That eruption was rated 7 on the Volcanic Explosivity Index, one of the largest in recorded history, and its ash and sulfur in the atmosphere caused a \"volcanic winter.\" The climate was also already in a cool period, which made the effects worse [1][2]. Sources date the eruption to 5 April and 10 April 1815, which reflects that the eruption started on the 5th and peaked around the 10th.\n\nIn North America it snowed in June. On 8 June 1816 snow fell in Albany, New York and in Maine, and the resulting crop failures sent the price of oats from 12¢ a bushel to 92¢ [1][3]. In Europe the harvests failed and famine followed, including a typhus epidemic in Ireland from 1816 to 1819. Brown and red snow, colored by volcanic ash, fell in Hungary and Italy. In China the monsoon was disrupted, causing flooding in the Yangtze Valley [3]. The eruption has been blamed for up to about 71,000 deaths [3].\n\nThe best-known cultural effect is Frankenstein. Mary Shelley began writing it during that cold, rainy summer near Geneva [3].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://ncpedia.org/node/3741",
+      "title": "Year without a Summer (NCpedia)"
+    },
+    {
+      "n": 2,
+      "url": "https://nassrgrads.hcommons.org/?p=5027",
+      "title": "The Year Without Summer; or, What Happened in 1816?"
+    },
+    {
+      "n": 3,
+      "url": "https://www.discoveryuk.com/?p=23581005",
+      "title": "When the Sun Took a Holiday: What was the Year Without a Summer and Why did it Happen?"
+    }
+  ],
+  "wikipedia_articles": [
+    "Year Without a Summer",
+    "1815 eruption of Mount Tambora",
+    "Mount Tambora",
+    "Volcanic winter",
+    "Frankenstein"
+  ],
+  "urls": [
+    "https://ncpedia.org/node/3741",
+    "https://nassrgrads.hcommons.org/?p=5027",
+    "https://www.discoveryuk.com/?p=23581005"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0468808,
+  "duration_ms": 25921,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:29+00:00"
+}

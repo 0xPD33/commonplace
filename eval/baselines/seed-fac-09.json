@@ -1,0 +1,47 @@
+{
+  "id": "seed-fac-09",
+  "query": "What is the official language of Brazil?",
+  "answer": "Brazil's official language is Portuguese. Article 13 of the 1988 Federal Constitution says: \"A língua portuguesa é o idioma oficial da República Federativa do Brasil\" (\"Portuguese is the official language of the Federative Republic of Brazil\") [1][2]. That was the first time a Brazilian constitution named an official language [3]. Brazilian Sign Language (Libras) is also legally recognized as a means of communication. Some towns have made other languages co-official alongside Portuguese, such as the Indigenous languages Nheengatu, Baniwa and Tukano in São Gabriel da Cachoeira [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://axl.cefan.ulaval.ca/amsudant/bresil-2pol-portugais.htm",
+      "title": "République fédérative du Brésil – L'aménagement linguistique dans le monde (Université Laval)"
+    },
+    {
+      "n": 2,
+      "url": "https://superclaude2.pages.dev/research/constitutions/br/title-02/chapter-03",
+      "title": "Constitution of Brazil, Title II, Chapters 3-5 (English translation)"
+    },
+    {
+      "n": 3,
+      "url": "https://revista.abralin.org/index.php/abralin/article/download/1324/1268/908",
+      "title": "Revista da ABRALIN article on language policy in Brazil"
+    }
+  ],
+  "wikipedia_articles": [
+    "Languages of Brazil",
+    "Brazilian Portuguese",
+    "Constitution of Brazil",
+    "Brazilian Sign Language",
+    "Nheengatu language"
+  ],
+  "urls": [
+    "https://axl.cefan.ulaval.ca/amsudant/bresil-2pol-portugais.htm",
+    "https://superclaude2.pages.dev/research/constitutions/br/title-02/chapter-03",
+    "https://revista.abralin.org/index.php/abralin/article/download/1324/1268/908"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0586698,
+  "duration_ms": 13136,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:36:31+00:00"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "rec-12",
+  "query": "Which country won the Eurovision Song Contest 2025, and with which song?",
+  "answer": "Austria won the Eurovision Song Contest 2025 with \"Wasted Love,\" sung by JJ (Johannes Pietsch). The final took place in Basel, Switzerland, in May 2025, and Israel and Estonia came next [1][2]. JJ finished with 436 points: 258 from the juries and 178 from the public vote [3]. It was Austria's third Eurovision win [4], so Austria hosted the 2026 contest.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://au.variety.com/2025/music/news/austria-2025-eurovision-song-contest-jj-wasted-love-22720",
+      "title": "Austria Wins 2025 Eurovision Song Contest; Singer JJ's Emotional 'Wasted Love' Brought Victory Over Israel and Estonia (Variety)"
+    },
+    {
+      "n": 2,
+      "url": "https://thenightly.com.au/culture/music/who-won-the-69th-eurovision-song-contest-2025-where-will-eurovision-be-in-2026-and-full-results-c-18730870",
+      "title": "Who won Eurovision 2025? Where will Eurovision Song Contest be in 2026 and full results (The Nightly)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.musicexport.at/jj-wins-the-eurovision-song-contest-2025-for-austria/",
+      "title": "JJ wins the Eurovision Song Contest 2025 for Austria"
+    },
+    {
+      "n": 4,
+      "url": "https://www.tovima.com/celebrities/austria-wins-eurovision-2025-israel-2nd-greece-6th/amp/",
+      "title": "Austria wins Eurovision 2025; Israel 2nd, Greece 6th (To Vima)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Eurovision Song Contest 2025",
+    "Wasted Love (JJ song)",
+    "JJ (Austrian singer)",
+    "Austria in the Eurovision Song Contest 2025",
+    "Eurovision Song Contest 2026"
+  ],
+  "urls": [
+    "https://au.variety.com/2025/music/news/austria-2025-eurovision-song-contest-jj-wasted-love-22720",
+    "https://thenightly.com.au/culture/music/who-won-the-69th-eurovision-song-contest-2025-where-will-eurovision-be-in-2026-and-full-results-c-18730870",
+    "https://www.musicexport.at/jj-wins-the-eurovision-song-contest-2025-for-austria/",
+    "https://www.tovima.com/celebrities/austria-wins-eurovision-2025-israel-2nd-greece-6th/amp/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0509694,
+  "duration_ms": 20410,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T00:36:08+00:00"
+}

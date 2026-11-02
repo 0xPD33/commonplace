@@ -68,6 +68,9 @@ def main():
         meta = json.loads(meta_path.read_text())
         if meta["flags"] != flags or meta.get("cli", []) != cli or meta["model"]["path"] != model["path"] or meta["library"] != a.library or meta.get("live_history", False) != a.live_history:
             sys.exit(f"{run_id} exists with other settings; pick a new --run-id")
+        # A resume may add query files (the earlier answers stay).
+        meta["queries"] = a.queries
+        meta["queries_sha256"] = ",".join(sha256(REPO / q) for q in a.queries.split(","))
     else:
         meta = {
             "run_id": run_id,
@@ -84,7 +87,7 @@ def main():
             "think": a.think,
             "live_history": a.live_history,
             "queries": a.queries,
-            "queries_sha256": sha256(REPO / a.queries),
+            "queries_sha256": ",".join(sha256(REPO / q) for q in a.queries.split(",")),
             "subset": a.subset,
             "library": a.library,
             "packs": library_packs(a.library),

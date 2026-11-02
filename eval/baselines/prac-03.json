@@ -1,0 +1,35 @@
+{
+  "id": "prac-03",
+  "query": "How do I treat a bee sting?",
+  "answer": "If a stinger is left in the skin, which usually happens with honey bees, scrape it out sideways with a fingernail or the edge of a bank card. Don't squeeze it out with tweezers, because that can push more venom in [1]. Then wash the area with soap and water [1].\n\nTo ease the pain and swelling:\n- Hold a cold pack or a cloth soaked in cold water on the sting for at least 20 minutes, and keep the area raised if you can [1].\n- Take paracetamol (acetaminophen) or ibuprofen for pain [1].\n- Use an antihistamine or hydrocortisone cream for itching and swelling [1].\n- Don't scratch it, since that can lead to infection [1].\n\nMost stings get better on their own. See a doctor if the area looks infected (hot, red, oozing pus), if symptoms get worse, or if you were stung in the mouth, in the throat, near the eyes, or more than once [1].\n\nCall emergency services (911 in the US) right away if the person has swelling of the lips, tongue or throat, trouble breathing or swallowing, pale or blue skin, sudden dizziness or confusion, or faints [1]. These are signs of anaphylaxis, a severe allergic reaction. If the person carries an epinephrine auto-injector (such as an EpiPen), the standard advice is to use it immediately while you wait for help.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nhs.uk/conditions/insect-bites-and-stings/",
+      "title": "Insect bites and stings - NHS"
+    }
+  ],
+  "wikipedia_articles": [
+    "Bee sting",
+    "Stinger",
+    "Anaphylaxis",
+    "Epinephrine autoinjector",
+    "Antihistamine"
+  ],
+  "urls": [
+    "https://www.nhs.uk/conditions/insect-bites-and-stings/"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0924148,
+  "duration_ms": 29101,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:33:49+00:00"
+}

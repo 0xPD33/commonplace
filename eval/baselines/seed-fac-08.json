@@ -1,0 +1,46 @@
+{
+  "id": "seed-fac-08",
+  "query": "Who was the first person to walk on the Moon?",
+  "answer": "The first person to walk on the Moon was Neil Armstrong, the commander of NASA's Apollo 11 mission [1]. He stepped onto the surface on July 20, 1969, US time. In GMT that was 02:56 on July 21 [2]. Buzz Aldrin followed him about 19 minutes later. Michael Collins stayed in lunar orbit aboard the command module [2]. Armstrong died in August 2012 at age 82 [3].\n\nSources:\n[1] Apollo 11 People – Smithsonian National Air and Space Museum: https://airandspace.si.edu/amp-stories/neil-armstrong\n[2] How many people have walked on the Moon? – Royal Museums Greenwich: https://www.rmg.co.uk/stories/space-astronomy/how-many-people-have-walked-on-moon\n[3] Neil Armstrong, First Man to Walk on Moon, Dies at 82 – Live Science: https://livescience.com/22689-neil-armstrong-dead-first-moonwalker-apollo-11.html",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://airandspace.si.edu/amp-stories/neil-armstrong",
+      "title": "Apollo 11 People – Smithsonian National Air and Space Museum"
+    },
+    {
+      "n": 2,
+      "url": "https://www.rmg.co.uk/stories/space-astronomy/how-many-people-have-walked-on-moon",
+      "title": "How many people have walked on the Moon? – Royal Museums Greenwich"
+    },
+    {
+      "n": 3,
+      "url": "https://livescience.com/22689-neil-armstrong-dead-first-moonwalker-apollo-11.html",
+      "title": "Neil Armstrong, First Man to Walk on Moon, Dies at 82 – Live Science"
+    }
+  ],
+  "wikipedia_articles": [
+    "Neil Armstrong",
+    "Apollo 11",
+    "Buzz Aldrin",
+    "Michael Collins (astronaut)"
+  ],
+  "urls": [
+    "https://airandspace.si.edu/amp-stories/neil-armstrong",
+    "https://www.rmg.co.uk/stories/space-astronomy/how-many-people-have-walked-on-moon",
+    "https://livescience.com/22689-neil-armstrong-dead-first-moonwalker-apollo-11.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0617691,
+  "duration_ms": 11525,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:36:29+00:00"
+}

@@ -1,0 +1,45 @@
+{
+  "id": "seed-num-14",
+  "query": "What is the area of Germany in square kilometres?",
+  "answer": "Germany covers about **357,600 km²**. The official figure from Germany's Federal Statistical Office (Destatis) is **357,683 km²** as of 31 December 2024 [1]. You may see slightly different numbers elsewhere. Older references often give about 357,021–357,022 km², with roughly 8,350 km² of that being water [2][3]. The differences come from changes in survey methods and reference dates, not from any real change in the border.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.destatis.de/EN/Themes/Economic-Sectors-Enterprises/Agriculture-Forestry-Fisheries/Land-Use/Tables/areas-laender.html",
+      "title": "Destatis – Länder: Total floor area"
+    },
+    {
+      "n": 2,
+      "url": "https://ipfs.ssi.eecc.de/ipns/en.wikipedia-on-ipfs.org/wiki/Geography_of_Germany",
+      "title": "Geography of Germany (Wikipedia mirror)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.indexmundi.com/germany/area.html",
+      "title": "IndexMundi – Germany Area"
+    }
+  ],
+  "wikipedia_articles": [
+    "Germany",
+    "Geography of Germany",
+    "Federal Statistical Office of Germany"
+  ],
+  "urls": [
+    "https://www.destatis.de/EN/Themes/Economic-Sectors-Enterprises/Agriculture-Forestry-Fisheries/Land-Use/Tables/areas-laender.html",
+    "https://ipfs.ssi.eecc.de/ipns/en.wikipedia-on-ipfs.org/wiki/Geography_of_Germany",
+    "https://www.indexmundi.com/germany/area.html"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.058592500000000006,
+  "duration_ms": 18974,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:37:41+00:00"
+}

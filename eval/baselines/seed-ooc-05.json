@@ -1,0 +1,46 @@
+{
+  "id": "seed-ooc-05",
+  "query": "What's on TV tonight?",
+  "answer": "I can't give you a full listings guide because I don't know your location or TV provider, and schedules vary by region. The main national event in the US tonight (Sunday, November 1, 2026) is Sunday Night Football: the Philadelphia Eagles play the Washington Commanders. Kickoff is 8:20 p.m. ET on NBC, and it also streams on Peacock [1][2]. You won't find World Series games tonight because the 2026 series was scheduled to end by Saturday, October 31 [3]. If you tell me your city and provider (cable, satellite or a streaming service), I can look up your local channel lineup.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nbc.com/nbc-insider/nfl-sunday-night-football-schedule-2026-2027",
+      "title": "Sunday Night Football Full 2026-2027 Schedule of Games: NFL on NBC & Peacock"
+    },
+    {
+      "n": 2,
+      "url": "https://www.nbcsports.com/nfl/snf",
+      "title": "SNF 2026: Event Info, News, Schedule, Standings, Live Stats & More - NBC Sports"
+    },
+    {
+      "n": 3,
+      "url": "https://www.mlb.com/news/2026-mlb-world-series-faq-schedule-times-teams-and-more",
+      "title": "What you need to know about the 2026 World Series"
+    }
+  ],
+  "wikipedia_articles": [
+    "NBC Sunday Night Football",
+    "2026 NFL season",
+    "2026 World Series",
+    "Philadelphia Eagles–Washington Commanders rivalry"
+  ],
+  "urls": [
+    "https://www.nbc.com/nbc-insider/nfl-sunday-night-football-schedule-2026-2027",
+    "https://www.nbcsports.com/nfl/snf",
+    "https://www.mlb.com/news/2026-mlb-world-series-faq-schedule-times-teams-and-more"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0795795,
+  "duration_ms": 22528,
+  "num_turns": 4,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:51+00:00"
+}

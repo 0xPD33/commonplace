@@ -1,0 +1,52 @@
+{
+  "id": "seed-how-11",
+  "query": "How do I propagate a pothos plant from cuttings?",
+  "answer": "To propagate pothos, cut a healthy vine about ¼ inch below a node. A node is the small brown bump where a leaf joins the stem. Roots only grow from nodes, so a leaf with no node won't root. A cutting with a few leaves and nodes works well [1][2]. Strip off any leaves that would sit underwater, then put the cutting in a glass of water so the nodes are submerged and the leaves stay above the waterline. Plain tap water is fine [2][3]. Keep it in bright, indirect light and change the water every 7–10 days to keep it fresh and oxygenated. Cuttings root fastest in spring through late summer [2][3]. If a stem goes soft and mushy, throw it out [3]. When the roots are about an inch long, you can pot the cutting in soil or just leave it growing in water [3]. You can also root cuttings straight in moist potting mix [4].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.bobvila.com/articles/how-to-propagate-pothos.md",
+      "title": "How to Propagate Pothos – Bob Vila"
+    },
+    {
+      "n": 2,
+      "url": "https://soltech.com/blogs/blog/how-to-propagate-pothos-in-water",
+      "title": "How to Propagate Pothos in Water – Soltech"
+    },
+    {
+      "n": 3,
+      "url": "https://www.bybrittanygoldwyn.com/how-to-propagate-golden-pothos-from-cuttings/",
+      "title": "How to Propagate Pothos – By Brittany Goldwyn"
+    },
+    {
+      "n": 4,
+      "url": "https://simplifyplants.com/?p=362",
+      "title": "How To Propagate Pothos? (By Water & Soil)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Epipremnum aureum",
+    "Cutting (plant)",
+    "Plant propagation",
+    "Node (botany)"
+  ],
+  "urls": [
+    "https://www.bobvila.com/articles/how-to-propagate-pothos.md",
+    "https://soltech.com/blogs/blog/how-to-propagate-pothos-in-water",
+    "https://www.bybrittanygoldwyn.com/how-to-propagate-golden-pothos-from-cuttings/",
+    "https://simplifyplants.com/?p=362"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0459527,
+  "duration_ms": 17103,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:39:19+00:00"
+}

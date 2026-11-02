@@ -1,0 +1,39 @@
+{
+  "id": "prac-14",
+  "query": "How do I remove a splinter?",
+  "answer": "Wash your hands and the skin around the splinter with soap and water, then pat it dry. Use a magnifying glass to see how big the splinter is and which way it went in [1]. If one end is sticking out, wipe a pair of tweezers with rubbing alcohol, grab that end and pull it out at the same angle it went in. Don't squeeze the skin, because the splinter can break into smaller pieces [1]. Soaking the area in warm water first softens the skin and can make this easier [2].\n\nIf the whole splinter is under the skin, clean a needle and tweezers with rubbing alcohol. Gently break the skin over one end with the needle to push part of the splinter out, then pull it out with the tweezers. A second person can help [1]. Afterward, wash the spot again, put on some petroleum jelly and cover it with a bandage until it heals [1].\n\nSee a doctor or dermatologist if the splinter is very large or deep, if it's in or near your eye, or if the area gets infected (redness, warmth, swelling or pus) [1]. People also suggest tricks like tape or glue, but dermatology sources don't really back them up.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.aad.org/public/skin-hair-nails/injured-skin/splinters",
+      "title": "How to remove a splinter – American Academy of Dermatology"
+    },
+    {
+      "n": 2,
+      "url": "https://health.clevelandclinic.org/how-to-remove-a-splinter-and-when-to-call-the-doctor",
+      "title": "How to Remove a Splinter and When to Call the Doctor – Cleveland Clinic"
+    }
+  ],
+  "wikipedia_articles": [
+    "Splinter",
+    "Tweezers",
+    "Foreign body"
+  ],
+  "urls": [
+    "https://www.aad.org/public/skin-hair-nails/injured-skin/splinters",
+    "https://health.clevelandclinic.org/how-to-remove-a-splinter-and-when-to-call-the-doctor"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.065789,
+  "duration_ms": 25826,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:34:36+00:00"
+}

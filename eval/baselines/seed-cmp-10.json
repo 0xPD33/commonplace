@@ -1,0 +1,46 @@
+{
+  "id": "seed-cmp-10",
+  "query": "How do a tortoise and a turtle differ?",
+  "answer": "A tortoise is a kind of turtle. All tortoises are turtles, but not all turtles are tortoises. Tortoises make up one land-dwelling family, Testudinidae, within the turtle order, Testudines [1][2].\n\nThe main difference is where they live. Tortoises live entirely on land, while most other turtles spend much of their time in water [1][2]. Their bodies match those habitats:\n\n- Shell: Tortoises usually have heavy, domed shells. Water turtles have flatter, more streamlined shells that help them swim [2][3].\n- Legs: Tortoises have sturdy, elephant-like legs for walking. Water turtles have webbed feet, and sea turtles have flippers [2][3].\n- Diet: Tortoises mostly eat plants. Many other turtles eat both plants and animals [3].\n\nTortoises are also known for long lives, and some live well over 100 years. Lifespans vary a lot between species, though, so this isn't a firm rule. The words are also used loosely: in everyday British English, \"turtle\" often means only the water-dwelling kinds, while Americans tend to call them all turtles [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.livescience.com/animals/turtles/whats-the-difference-between-a-turtle-and-a-tortoise",
+      "title": "What's the difference between a turtle and a tortoise? (Live Science)"
+    },
+    {
+      "n": 2,
+      "url": "https://www.reconnectwithnature.org/headlines/news/what-the-difference-turtle-vs-tortoise",
+      "title": "What's the difference: Turtle vs. tortoise (Forest Preserve District of Will County)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.chewy.com/education/reptile-and-amphibian/turtle-and-tortoise/turtle-vs-tortoise",
+      "title": "Turtle vs Tortoise: What's the Difference? (Chewy)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Turtle",
+    "Tortoise",
+    "Sea turtle",
+    "Testudines"
+  ],
+  "urls": [
+    "https://www.livescience.com/animals/turtles/whats-the-difference-between-a-turtle-and-a-tortoise",
+    "https://www.reconnectwithnature.org/headlines/news/what-the-difference-turtle-vs-tortoise",
+    "https://www.chewy.com/education/reptile-and-amphibian/turtle-and-tortoise/turtle-vs-tortoise"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.062333799999999995,
+  "duration_ms": 18336,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:48+00:00"
+}

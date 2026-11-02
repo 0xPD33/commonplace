@@ -1,0 +1,41 @@
+{
+  "id": "seed-lt-04",
+  "query": "What is the Voynich manuscript?",
+  "answer": "The Voynich manuscript is an illustrated book from late-medieval Europe, held by Yale's Beinecke Rare Book and Manuscript Library as MS 408. It's written in a script nobody has identified, by an unknown author, and it has never been convincingly deciphered. Yale notes that it may not be a code at all [1][2]. It's named after the bookseller Wilfrid Voynich, who bought it in 1912 from the Jesuit College at Frascati, near Rome [1][2]. Radiocarbon dating of the vellum points to the early 15th century, about 1404–1438. That makes it older than Yale's catalogue suggests, which places it in Central Europe in the late 15th or 16th century [2][1]. The pictures make it look like a mix of an herbal, an astrology book and a medical book. Its sections show plants, astronomical and astrological diagrams, bathing scenes with nude women, cosmological roundels and pharmaceutical drawings, plus a final section of text with no pictures that may be recipes [1]. The earliest owner we can confirm is Holy Roman Emperor Rudolf II. He reportedly paid 600 gold ducats because he thought Roger Bacon wrote it, but that attribution is just speculation. The book later passed through the hands of the scholar Athanasius Kircher, among others, and was given to Yale in 1969 [1]. Yale has put the whole manuscript online, so anyone can look at it [1][2]. Its meaning is still unknown. Over the years people have claimed it's a natural language, a cipher, a constructed language or a hoax, and none of these ideas has won general acceptance [2].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://beinecke.library.yale.edu/collections/highlights/voynich-manuscript",
+      "title": "Voynich Manuscript – Beinecke Rare Book & Manuscript Library, Yale"
+    },
+    {
+      "n": 2,
+      "url": "https://en.wikipedia.org/wiki/Voynich_manuscript",
+      "title": "Voynich manuscript – Wikipedia"
+    }
+  ],
+  "wikipedia_articles": [
+    "Voynich manuscript",
+    "Wilfrid Voynich",
+    "Beinecke Rare Book & Manuscript Library",
+    "Rudolf II, Holy Roman Emperor",
+    "Athanasius Kircher"
+  ],
+  "urls": [
+    "https://beinecke.library.yale.edu/collections/highlights/voynich-manuscript",
+    "https://en.wikipedia.org/wiki/Voynich_manuscript"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.068844,
+  "duration_ms": 30630,
+  "num_turns": 4,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:38:02+00:00"
+}

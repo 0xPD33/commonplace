@@ -1,0 +1,46 @@
+{
+  "id": "seed-ooc-06",
+  "query": "How much does a Big Mac cost in Zurich today?",
+  "answer": "A Big Mac in Zurich costs about CHF 7.30, roughly $9 US. I couldn't find a current Zurich-specific price, though, so this is the Swiss national figure from The Economist's Big Mac Index. Prices at individual restaurants, especially at the airport or main train station, may differ.\n\nSites that track the index list Switzerland at CHF 7.30 in both the January and July 2026 editions. That works out to about $9.04, which they describe as the most expensive Big Mac in the world and about 45% above the US price of $6.22 [1][2]. Another tracker also gives CHF 7.30, which it converts to about $8.85 using October 2026 exchange rates [3]. A few other sites show quite different numbers, between about $8 and $11.45. Those look inconsistent or use different methods, so I wouldn't rely on them. I also didn't check the CHF 7.30 figure against The Economist's own table. For the exact price at a particular Zurich restaurant, check the McDonald's Switzerland app.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://bigmacindex.app/blog/big-mac-price-switzerland-2026/",
+      "title": "Big Mac Price in Switzerland 2026: CHF 7.30, the World's Priciest"
+    },
+    {
+      "n": 2,
+      "url": "https://bigmacindex.app/country/switzerland/",
+      "title": "Switzerland Big Mac Price 2026: CHF7.3 ($9.04)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.livebigmac.com/en/big-mac-index-2026",
+      "title": "Big Mac Index 2026: Big Mac Prices by Country"
+    }
+  ],
+  "wikipedia_articles": [
+    "Big Mac Index",
+    "Big Mac",
+    "McDonald's",
+    "Swiss franc"
+  ],
+  "urls": [
+    "https://bigmacindex.app/blog/big-mac-price-switzerland-2026/",
+    "https://bigmacindex.app/country/switzerland/",
+    "https://www.livebigmac.com/en/big-mac-index-2026"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.0549066,
+  "duration_ms": 20850,
+  "num_turns": 3,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-01T21:40:52+00:00"
+}

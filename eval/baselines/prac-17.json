@@ -1,0 +1,40 @@
+{
+  "id": "prac-17",
+  "query": "How do I treat a sprained ankle at home?",
+  "answer": "For the first two or three days, follow PRICE. Protect the ankle, for example with a support. Rest it and keep weight off it. Ice it for up to 20 minutes every 2 to 3 hours, with the ice wrapped in a cloth rather than directly on your skin. Wear a compression bandage during the day, and keep the foot raised on a pillow [1]. In those first couple of days, skip heat such as hot baths or heat packs, alcohol and massage, because they can make the swelling worse [1]. Paracetamol helps with pain, and ibuprofen gel or tablets can also bring down swelling [1].\n\nWhen you can move the ankle without pain stopping you, start moving it gently so it doesn't stiffen. Most sprains get better within about two weeks, but avoid hard exercise like running for up to eight weeks so you don't hurt it again [1].\n\nGet checked by a GP, urgent care or NHS 111 if:\n- the pain or swelling is severe or getting worse\n- you can't put weight on it or walk more than a few steps\n- it isn't improving with home care [1][2]\n\nGo to A&E or call 999 if:\n- you heard a crack when you hurt it\n- the ankle looks misshapen\n- it's numb or tingling\n- the skin is blue, grey or cold\n\nThese can be signs of a fracture or a more serious injury [1].",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://www.nhs.uk/conditions/sprains-and-strains/",
+      "title": "Sprains and strains - NHS"
+    },
+    {
+      "n": 2,
+      "url": "https://www.baptisthealth.com/about/news-center/2024/know-when-to-seek-medical-care-for-ankle-injury",
+      "title": "Ankle injury treatment, know when to seek medical care - Baptist Health"
+    }
+  ],
+  "wikipedia_articles": [
+    "Sprained ankle",
+    "Sprain",
+    "RICE (medicine)",
+    "Ottawa ankle rules"
+  ],
+  "urls": [
+    "https://www.nhs.uk/conditions/sprains-and-strains/",
+    "https://www.baptisthealth.com/about/news-center/2024/know-when-to-seek-medical-care-for-ankle-injury"
+  ],
+  "requested_model": "opus",
+  "model": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.10614710000000001,
+  "duration_ms": 36308,
+  "num_turns": 6,
+  "web_search_requests": 2,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:13+00:00"
+}

@@ -1,0 +1,54 @@
+{
+  "id": "prac-08",
+  "query": "How do I get rid of fruit flies in my kitchen?",
+  "answer": "To get rid of fruit flies, remove what they're breeding in, trap the adults, and keep at it for a week or two.\n\nFirst, throw out or refrigerate overripe produce. The flies lay their eggs on the skin of ripening fruit [1]. Take out the trash and compost, and rinse recycling, since any fermenting residue can feed them.\n\nNext, clean the sink drain and garbage disposal, because many infestations come up through the drain. Pouring boiling water (or boiling white vinegar) down it kills larvae and loosens the food buildup they eat [1][2].\n\nTo catch the adults, put apple cider vinegar in a jar with a few drops of dish soap. The soap breaks the surface tension, so the flies sink and drown. You can also cover the jar with plastic wrap and poke small holes in it, which lets flies in but makes it hard for them to get out [1].\n\nIf they keep coming back after you've treated the drain, the problem may be the U-shaped pipe under the sink (the P-trap), which holds about two cups of water [3]. Also check that you don't actually have drain flies, which are a different insect and need a deep drain cleaning [3][4]. This next part is general knowledge rather than from these sources: new adults can keep hatching for about a week after you clean up, so keep the traps out until you've gone several days without catching any.",
+  "sources": [
+    {
+      "n": 1,
+      "url": "https://abc7news.com/post/how-get-rid-fruit-flies-keep-kitchen/19708777/",
+      "title": "How to get rid of fruit flies and keep them out of your kitchen (ABC7 News)"
+    },
+    {
+      "n": 2,
+      "url": "https://benjaminfranklinplumbing.com/expert-tips/drains/simple-fast-ways-to-get-rid-of-fruit-flies/",
+      "title": "Simple fast ways to get rid of fruit flies (Benjamin Franklin Plumbing)"
+    },
+    {
+      "n": 3,
+      "url": "https://www.rotorooter.com/frequently-asked-questions/drains/how-to-get-rid-of-drain-flies/",
+      "title": "How to get rid of drain flies (Roto-Rooter)"
+    },
+    {
+      "n": 4,
+      "url": "https://www.tastingtable.com/1938639/how-get-rid-of-drain-fruit-flies-kitchen-sink",
+      "title": "How To Finally Banish Drain And Fruit Flies From Your Kitchen Sink (Tasting Table)"
+    }
+  ],
+  "wikipedia_articles": [
+    "Drosophila melanogaster",
+    "Drosophila",
+    "Fly trap",
+    "Psychodidae",
+    "Trap (plumbing)",
+    "Apple cider vinegar"
+  ],
+  "urls": [
+    "https://abc7news.com/post/how-get-rid-fruit-flies-keep-kitchen/19708777/",
+    "https://benjaminfranklinplumbing.com/expert-tips/drains/simple-fast-ways-to-get-rid-of-fruit-flies/",
+    "https://www.rotorooter.com/frequently-asked-questions/drains/how-to-get-rid-of-drain-flies/",
+    "https://www.tastingtable.com/1938639/how-get-rid-of-drain-fruit-flies-kitchen-sink"
+  ],
+  "requested_model": "opus",
+  "model": "claude-opus-5-5",
+  "models_used": [
+    "claude-haiku-5-5",
+    "claude-opus-5-5"
+  ],
+  "cost_usd": 0.08167459999999999,
+  "duration_ms": 89223,
+  "num_turns": 5,
+  "web_search_requests": 1,
+  "cli_version": "2.1.312 (Claude Code)",
+  "prompt_version": 1,
+  "created": "2026-11-02T12:35:11+00:00"
+}

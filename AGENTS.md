@@ -20,6 +20,8 @@ describe the design. This file holds the rules and traps that are not obvious fr
 - Record every measurement in `docs/BENCHMARKS.md` with the device, the build hash and the date.
 - A change to retrieval, prompts, models or packs needs an eval run and the release gate (`eval/README.md`,
   `report.py --gate <reference run>`). The test split is locked: run it to report, never to tune.
+- Social images, charts and illustrations follow `docs/STYLE.md`. Claude Code has the project skill `commonplace-visuals`
+  (`.claude/skills/`, local to this checkout) with a render helper.
 
 ## Build
 

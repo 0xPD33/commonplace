@@ -184,6 +184,225 @@ LiteRT-LM 0.18.1 on the Pixel 10 with the Starter Wikipedia, in a debug build wi
 - From 0.3.0, the app uses Gemma on the NPU when the Gemma pack is installed. Settings can choose Ling.
 - llama.cpp on the PowerVR GPU was never run here. Planning-stage numbers (about 24 tok/s prefill, 2.5 tok/s decode, no integer dot product in the driver) ruled it out.
 
+### Gemma prefill during the search (2026-11-02)
+
+Pixel 10, `app.commonplace.spike` debug builds of the branch `spike/npu-overlap` on `ac3829e` (uncommitted changes), enwiki-core, wikidata-facts and `gemma4-e2b-npu`, speculative decoding on. 17 seed questions, each as a new topic, plus one warm-up question per round. The builds ran in the order A, B, C, A, B, C, each after `cmd package compile -m speed-profile -f` and 90 s. Thermal headroom was 0.5–0.8. The table gives the medians of 34 questions per build.
+
+| Build | Card | Rerank | Reader | Prefill after the card | First word | Decode |
+|---|---|---|---|---|---|---|
+| C: `Conversation`, as in 0.4.0 | 501 ms | 384 ms | 188 ms | 1,181 ms | 1,865 ms | 27.6 tok/s |
+| A: `Session`, system prompt and question prefilled during the search | 534 ms | 391 ms | 209 ms | 539 ms | 1,277 ms | 27.8 tok/s |
+| B: as A, 6 encoder threads instead of 4 | 629 ms | 485 ms | 312 ms | 549 ms | 1,459 ms | 27.8 tok/s |
+
+- A gave the first word sooner on all 17 questions (paired medians): by 566 ms at the median, 54 to 793 ms.
+- The prefill of the system prompt and the question took 650 ms at the median, more than the card. So the first word still waits about 0.1 s for it.
+- Answer length per question did not change (paired median −1 token). No answer showed template text or hit the token limit. Answer quality is not judged yet.
+- Six encoder threads made the rerank 95 ms and the reader 120 ms slower: the sixth thread probably runs on a small core.
+- On the first question after the model loads, the same prefill took 1.9 s.
+- The driver typed a backslash before each question mark ("2016\?"), in all three builds alike.
+### CPU path: build flag, MoE prefill and energy (2026-11-02 to 2026-11-03)
+
+Pixel 10, `llama-bench` and `llama-completion` from llama.cpp b12032 built with the app's flags, branch
+`spike/cpu-speed` on `ac3829e` (uncommitted), `-C 0xFC --cpu-strict 1`, repacked weights in RAM (`-lm none`).
+Ling is the shipped Q4_0 file; MiniCPM5-2B is a pure Q4_0 requantized from the official Q8_0 for these tests.
+
+`+fp16` in `GGML_CPU_ARM_ARCH` (ABBA order, two runs per build, skin 40-42 °C, 4 threads decode, 6 threads prefill):
+
+| Model | Build | Decode d0 | Decode d1100 | Prefill pp512 d0 | Prefill d1100 |
+|---|---|---|---|---|---|
+| Ling | app flags | 17.6 | 12.2 | 113.4 | 64.9 |
+| Ling | +fp16 | 15.6 | 16.1 | 106.2 | 61.9 |
+| MiniCPM | app flags | 11.7 | 8.0 | 99.7 | 59.8 |
+| MiniCPM | +fp16 | 11.6 | 10.7 | 98.8 | 58.4 |
+
+- Decode at 1,100 tokens of context, where the app always runs: MiniCPM +34%; Ling +32% is unreliable (its row
+  shows depth 1100 faster than depth 0, so heat noise dominates). Prefill does not change. At depth 0,
+  Ling decode measured 17.6 -> 15.6 tok/s (-11%), but its first app-flag run was the coolest of the set; MiniCPM did not change.
+- MiniCPM perplexity at 2,048 context is identical (10.1890, 3 chunks). Greedy answers to two RAG prompts: one
+  identical (94 words), one diverges after 22 words into another cited answer. The eval decides.
+- On the desktop, decode loses only 7% at depth 1,100 (Ling 61.3 against 57.2 tok/s); the phone ran 24-25% slower
+  without `+fp16`. Runs of one Ling build varied by up to 30% in this set, so the MiniCPM gain (+34%) is the firm one;
+  the prefill figures came from a hot phone (113 tok/s here against 167 for the same stock build in a cooler run).
+
+MoE expert matmuls as GEMM (`patches/llama.cpp/0001-moe-gemm.patch`), Ling, 6 threads: prefill 167 -> 201 tok/s at
+depth 0 and 88 -> 115 tok/s at depth 1,100. Decode and perplexity do not change (9.2871 on 8 chunks, desktop).
+
+Energy of Ling decode at depth 1,100, from a trace of the battery's current and voltage: 0.32-0.35 J per token for
+every thread setting tried (masks 0xFC and 0x7C, poll 50 and 0, 3 and 4 threads). Fewer cores lower the power and
+the speed together. Today's setting is the fastest; it fell from 18.1 to 13.1 tok/s in 7 minutes of nonstop decode.
+
+Speculative decoding with the MiniCPM5 DSpark drafter (Q4_0): 2.2-2.6 tokens per step on the Pixel. The best runs
+match plain decode (19 against 17.5-20 tok/s): per step the drafter takes about 40 ms and the 4-token verify about
+75 ms. These runs had thread-pool contention (two pools on shared cores, see "Speculative decoding with a draft
+model on shared cores" below), so they do not count; 0002 now makes the draft context share the target's pools. The medium cores are two clock domains (cpus 2-4 and 5-6): a pool pinned across them waited for cpus
+5-6 at 921 MHz while cpus 2-4 ran at 2.9 GHz.
+
+Speculative decoding acceptance, desktop (acceptance does not depend on the hardware): MiniCPM5-2B pure Q4_0, 10 real
+answer prompts (system prompt, evidence, question; about 1,700 tokens), 200 tokens each, top_k 40, top_p 0.9, temp 0.3.
+
+| Drafting | Tokens per step | Drafted per step |
+|---|---|---|
+| DSpark Q4_0, draft length 2 / 3 / 4 / 5 / 7 | 2.11 / 2.39 / 2.52 / 2.68 / 2.76 | 2.0 / 3.0 / 4.0 / 5.0 / 7.0 |
+| DSpark, length 5, p-min 0.4 | 2.48 | 2.77 |
+| n-gram map-k 2-8 (from the prompt) | 1.50 | 2.58 |
+| n-gram map-k 3-6 | 1.37 | 1.06 |
+| n-gram simple (defaults) | 1.02 | 0.27 |
+| n-gram map-k 3-6, then DSpark length 3 | 2.36 | 3.45 |
+
+Patch identity on the desktop (x86; the arm64 kernels need the QEMU check): Ling, 120 seed questions through the CLI,
+answers word for word identical with and without patches 0001-0004 (fixed sampler seed). KL divergence of patches
+0001-0006 against stock: mean 1e-6, max 6e-5, same top token 100%, which equals stock against itself (the tool stores
+the reference logits in 16 bits). Perplexity of a pure Q4_0 Ling requantized from the mixed file: 12.21 -> 12.69 (+4%,
+16 chunks of 512 tokens of the docs); a proper requant from BF16 is not measured.
+
+arm64 correctness of the llama.cpp patches, checked without the phone: aarch64 Linux builds (GCC 15, the app's
+-march, KleidiAI on) under `qemu-aarch64 -cpu max`, one 256-token chunk, KL divergence against a stock build. With
+0001-0004 and with 0001-0008 (the run also held the first 0009, which never ran): MiniCPM5 max KLD 2.9e-5, Ling max
+KLD 3.7e-5, same top token 100% in every case, below stock against itself on x86 (max 6.3e-5). Phone speed of
+0005-0010 is not measured yet.
+Patch 0009 (Q5_0 through ARM tinyBLAS) needed a second version: ggml-cpu.c turns llamafile off on i8mm builds, so
+the first version never ran. Under QEMU the working version matched the generic Q5_0 dot product within 1.2e-7 per
+output, yet Ling's logits moved more: KL against stock mean 0.002, max 0.011, same top token 98.4%, perplexity
+11.122 -> 11.085 (256 tokens). (An early guess blamed Ling's MoE routing; the dense-model test below refutes it.)
+Against x86 logits (x86 runs Q5_0 natively) the series 0001-0010 had mean KL 0.0070 against 0.0073 for stock, but the
+same top token 97.6% against 99.2% (one chunk, about +-1.4%). So 0009 changes Ling's answers, and its direction is
+unknown: it needs the eval and the release gate before it ships, like any numerics change.
+The MoE explanation is refuted: on a dense model (MiniCPM5 with ffn_down requantized to Q5_0, QEMU, 256 tokens)
+0001-0010 against stock also gives KL 0.0053, same top token 92.9%. Against x86 logits both arm64 builds are equally
+far (stock 0.0075, 0001-0010 0.0077; same top token 93.7% and 97.6%), so the change is not an accuracy loss. A code
+review found no bug (layout, scales, quantized src1, thread split, type routing). Isolated: 0001-0010 without 0009
+is at the floor against stock (max KLD 4.1e-5), so 0009 alone causes it. Tensor dump (llama-eval-callback, QEMU):
+the first Q5_0 ffn_down output agrees in every printed digit and its sum differs by 3e-7 relative (24.576626 against
+24.576633); the next residual sum differs by 2.6e-5, so per-element differences can be larger than the sum suggests.
+Direct matmul check (scratchpad mmtest/mm.cpp, QEMU, Q5_0 6144 x 512 weights, against a double reference from the
+same quantized inputs): with 0009 max relative error 2.6e-8 (13 tokens) and 1.22e-5 (64 tokens), without 0009
+2.0e-8 and 1.22e-5. So 0009 adds no error beyond float rounding; the model-level KL is the model's sensitivity to
+any rounding change (0012's correct change of Q rounding gives 0.0013 in the same kind of test). Against x86 logits
+0009 is as close as stock. It needs the eval like any numerics change.
+
+Prompt-lookup speculative decoding in `commonplace-llm` (`decode_ngram`, desktop, MiniCPM5 pure Q4_0, 30 seeds through
+the CLI, temperature 0.3): 1.32 tokens per step with drafts from the user turn only; 1.52 with the cached system
+prompt included and a draft of at least 2 tokens; 1.56 with a 3-token key that falls back to 2 (48% of drafts accepted,
+against 43%); a cap of 4 drafts instead of 8 gave 1.48. Correctness by bisection (greedy, 10 seeds): the loop with no drafts
+gives 10/10 answers identical to plain decoding, and plain logits plus decoded-and-dropped drafts give 10/10, so the
+rollback is exact. With every draft rejected inside the batch, 4/10 stay identical: batched logits differ from
+one-token logits at rounding level. The text therefore differs from plain decoding and needs the eval. Ling (hybrid
+recurrent memory) is excluded. Phone speed: not measured yet.
+Ling with 8 recurrent state snapshots (`n_rs_seq`, about +170 MB) so that `llama_memory_seq_rm` drops rejected drafts
+inside a verify batch (desktop, 10 seeds, greedy): no rollback errors, 6/10 answers identical to plain decoding, the rest
+diverge after 11-64 words; 1.33 tokens per step. The snapshots cover only the last batch, and its first token must stay.
+Rollback check (test hook, every draft rejected, the same batch size per step in both runs, rollback depth 1-7): real
+drafts against fixed filler tokens, 10/10 answers bit-identical over 1,054 steps and 4,174 rolled-back tokens, so the
+right snapshot is restored; the gap to plain decoding is batch rounding. MiniCPM5 (attention KV only), whole batches
+of up to 8 tokens rolled back and decoded again one at a time: 10/10 identical to plain decoding.
+State files: the model key includes the snapshot count, so a context with snapshots never loads a state saved without.
+In the app, prompt lookup is a separate preference (`prompt_lookup`, off, no UI, debug builds only).
+
+Patch 0010 (MoE expert sum as one fused pass): fuses Ling's 7-ADD chains (8 terms) in every MoE layer; KL against
+stock at the floor on x86 (max 4.8e-5, same top token 100%); desktop decode unchanged within noise (53.6-58.6 against
+57.6-58.8 tok/s). Phone speed: not measured yet.
+
+Verify-batch cost (desktop, Ryzen 9 9950X3D, 4 pinned threads, 0001-0010, 2026-11-03), time of a batch of n tokens
+against one decoded token: MiniCPM5 depth 1100: 2 tokens 1.40x, 4 tokens 1.87x, 9 tokens 4.06x; Ling 1.39x / 1.94x /
+3.50x; the same at depth 0. An earlier phone note gave 4 tokens at about 1.06x (pp4 64 tok/s against pp1 17 at depth 0, model not recorded;
+the contended DSpark runs implied 1.3-1.5x), so the phone ratio is open until morning_verify.sh: the
+desktop is not memory-bound at decode, so its ratios do not transfer. The phone figure at depth 1100 is pending.
+
+Pending patch 0012 (small batches of 2-63 queries through tiled flash attention, heads that share K/V in one tile,
+GEMMs on valid rows only, at least 16 rows per thread chunk). Desktop, 4 threads, depth 4000, ms per batch, before ->
+after: MiniCPM5 2 tokens 55.8 -> 56.2, 4 tokens 86.1 -> 65.8, 8 tokens 167.3 -> 103.8; Ling 32.0 -> 32.3,
+48.4 -> 49.2, 83.4 -> 67.9; decode and 512-token prefill unchanged. Earlier versions: one head per tile was 3-5x
+slower (each 2-row tile paid the K/V conversion and full 64-row GEMMs); without the 16-row gate, Ling's 2-token
+batch was 10% slower (8-row chunks). Numerics (MiniCPM5, x86, perplexity in 4- and 8-token ubatches against
+512-token ubatches): with 0012 KL mean 0.000000, max 5.9e-5, same top token 100%; stock with 4-token ubatches mean
+0.0013, 98.2%, because stock small batches round Q to FP16 in the per-row path. Ling: 0.004 either way (other
+layers). Phone speed: pending (`morning_verify.sh`).
+QEMU arm64 (KleidiAI on, 6 threads, MiniCPM5, 4-token against 256-token ubatches of the same build): 0001-0010
+KL mean 0.00127, with 0012 (before the 16-row gate) 0.00126. On ARM the matmul kernels already differ between
+small and large batches, so this run does not isolate attention. With KleidiAI off and `--no-repack` (matmuls give
+the same numbers at every batch size), 4 threads: with 0012 KL mean 0.000000, max 3.1e-5, same top token 100%;
+0001-0010 mean 0.0014, max 0.011, 97.6%. So 0012 is exact against the prefill on arm64 too.
+
+Ling decode profile (desktop x86, perf, 4 threads, depth 0, 0001-0010): routed experts (Q4_0 repack gemv) 37%,
+output head (Q6_K, 1536 x 157184) 21%, Q8_0 matmuls 14%, ggml_barrier 7.3%, get_rows + memmove + gated delta net
+about 3%. Requantized Ling heads, from the shipped file (perplexity on the docs, 8 x 512 tokens, KL against the
+shipped file): head Q6_K -> Q4_0 (189 -> 130 MiB): perplexity 13.552 -> 13.565, KL mean 0.0044, same top token
+96.3%, desktop decode at depth 1100 +6-7% (57.4-59.3 -> 62.5-63.1 tok/s). Head plus every Q8_0 and Q6_K tensor ->
+Q4_0: perplexity +1.6%, KL 0.029, same top token 91.6%; rejected. The head change needs the eval and the
+maintainer's approval (it changes the model pack).
+
+Decode graph size (x86 marker, one decoded token): Ling computes 1,578 nodes (3,164 in the graph), MiniCPM5 719;
+Ling's extra nodes are tiny ops (ADD 135, RMS_NORM 115, SCALE 113, GET_ROWS 108, CPY 108, SIGMOID 83, ARGSORT 69,
+CONCAT 66, ...), each followed by a barrier. Pending patch 0013 skips barriers: tiny nodes (at most 4,096 values)
+run on thread 0 alone, chains of thread-0-only nodes need no barrier, and simple ops with disjoint memory need
+none either. Barriers per token: Ling 1,577 -> 903, MiniCPM5 718 -> 716. KL against stock at the floor (Ling decode
+at 3, 4 and 6 threads, 512-token prefill, MiniCPM5 decode). x86 decode: Ling -1.8% at depth 0, -0.9% at 1100 (an
+x86 barrier costs about 0.7 us). Versions: independence only skipped 152 barriers; with thread-0 chains 333; the
+tiny-node version first raced in Ling decode (KL 0.15, same top token 84%) because a node that starts a fused group
+(the ADD chain, RMS_NORM+MUL) runs on all threads; the fix asks the fusion code before skipping. Phone: pending
+(`morning_bar.sh`, after the decode profile). Barriers Ling keeps with 0013: 332 after matmuls, about 570 after larger
+dependent ops (RMS_NORM, ADD, CONCAT, SCALE, CPY, CONT, GLU); none after the MoE routing ops, so fusing the routing
+chain would not remove more.
+0012 and 0013 together on 0001-0010 (x86, 4 threads): decode KL against 0001-0010 at the floor for Ling and
+MiniCPM5; MiniCPM5 4-token ubatches against 512-token prefill: KL mean 0.000000, max 5.9e-5, same top token 100%.
+
+Speculative decoding with a draft model on shared cores (desktop, 4 cores via taskset, -t 4, MiniCPM5-2B Q4_0 +
+DSpark Q4_0, greedy, 128 tokens, acceptance 49% in every run; plain decode 46.3 tok/s): stock llama.cpp 7.4 tok/s;
+0002 v1 (draft context with its own pools) 5.2; v1 with --poll 0 47.3; 0002 v2 (draft context shares the target's
+pools) 47.2. Cause: the idle pool busy-waits (poll 50) on the cores the working model needs; in stock the target
+pool spins while the draft's throwaway threads compute. On 32 cores without taskset the effect hides (42 tok/s).
+The Pixel 10 spec runs had contention of this kind (separate pools on shared cores), so their DSpark numbers do
+not count; the exact phone mechanism (unpinned short-lived draft threads) is not measured.
+With the phone's flags on 3 strict desktop cores (plain decode 45.0 tok/s), 0002 v2: -t 3 -tb 3 37.7, -t 3 38.1,
+-td 3 with the same -Cd 38.0 (pools shared), -td 2 16.7 (own pools, unpinned: the fallback still collides). -tb
+makes the target's batch pool unpinned (no mask inherited), so the morning spec test no longer passes it. On the
+desktop, which is not memory-bound, DSpark stays below plain decode; the phone decides.
+Pending 0014 (a thread pauses its previous pool when it starts a graph on another; only live, idle pools): the -td 2
+case 16.7 -> 37.4 tok/s, shared pools unchanged (37.5), same greedy text in all runs; stock llama.cpp 7.7 -> 10.9-12.7
+(its throwaway draft threads remain; 0002 removes them).
+Full stack (0001-0010 with 0002 v2, plus pending 0011-0014; they apply together): decode KL against 0001-0010 at the
+floor for Ling and MiniCPM5 (x86); DSpark on the p00 setup 34.2 tok/s (0001-0004 + 0012: 34.7; 0013 costs a little
+on x86).
+DSpark with pending 0012 (desktop, 3 strict cores, one RAG prompt p00 of about 1,700 tokens, greedy, 0001-0004 +
+0002 v2, three interleaved runs each, logs in the scratchpad's night/dsab/): per step draft 15.2 -> 14.5 ms, verify
+81.2 -> 68.2 ms; decode 29.3-29.4 -> 34.7-34.8 tok/s; plain decode 32.8-33.1 tok/s. On this prompt 0012 turns DSpark
+from 11% slower than plain into 5% faster. 0012 also changes the greedy text (133 -> 128 tokens), as any change to
+verify numerics does. The phone test runs it as setup ds3-0012 on three prompts.
+Draft length 5 with 0012 (same desktop setup, undisturbed runs): 26.8 tok/s against 35.0 at length 3; acceptance
+45.6% against 63.6%, verify 102 ms against 68 ms per step. On the desktop length 3 is better; the phone test also
+runs ds5-0012, because there a longer verify costs little more than one token.
+DSpark acceptance at the app's sampling (temperature 0.3, top_p 0.9, top_k 40; desktop, RAG prompts p00/p04/p08,
+150 tokens each; acceptance does not depend on the hardware): draft length 3: 50% of drafts accepted, about 2.5
+tokens per step; length 5: 36%, about 2.8. Greedy gave about 2.9 at length 3, so the greedy morning test overstates
+the app's gain by about 15%.
+
+Can QEMU stand in for the phone in an eval of ARM-only numerics (+fp16, 0009, 0011)? Stock llama.cpp b12032 with the
+phone's flags, MiniCPM5, greedy, RAG prompts p00 and p03, against the Pixel's output: a GCC 15 aarch64-linux build
+under qemu-aarch64 -cpu max,sme=off,sve-default-vector-length=16 diverges at word 90 of 94 (p00) and at word 4 (p03,
+a near-tie: "really created" against "created"); both texts are coherent. Plain -cpu max would pick KleidiAI's SME
+kernels, which the phone lacks. A static NDK-clang build of the same source and flags (android toolchain,
+-DCMAKE_EXE_LINKER_FLAGS=-static), under qemu-aarch64 -cpu max,sme=off,sve-default-vector-length=16 with the phone's
+-t 4 -tb 6, reproduces the Pixel's output byte for byte on both prompts (94 and 136 words). So the GCC divergence
+came from the compiler. A clang 21 aarch64-linux (glibc) build is byte-exact on both prompts too, so glibc's libm
+does not matter here; GCC's float contraction does. Limits: two prompts only; the phone's model file was not
+hashed (morning_qref.sh records its hash and 9 more reference answers); it covers stock llama-completion greedy, not
+the app's engine (patches, sampling, thread pools), which needs its own static NDK build and a phone comparison
+before QEMU can generate eval answers for ARM-only numerics changes. Speed: about 10 min per answer
+(1,700-token prompt) per QEMU process; several processes run in parallel on the desktop.
+Our engine's prompt lookup (desktop CLI, MiniCPM5, 10 RAG seeds twice, temperature 0.3, 4 cores): plain 33.9 tok/s,
+lookup 29.3 without and 29.7 with 0012; on the desktop lookup loses either way (small batches cost about 1.4x a token
+there); the phone decides.
+
+Flash-attention tile constants (`ggml-cpu/common.h`, default Q 64 x KV 64), KL against stock on x86 (MiniCPM5):
+Q 32 x KV 64 at the floor; KV 32 mean KLD 0.0012 (same top token 98.3%). An op-level check against a double reference
+(scratchpad mmtest/fa.cpp: 64 queries, 4 heads over 2 KV heads, 64/100/1100/4000 keys, causal or not) gives max error
+3-8e-7 for both KV 64 and KV 32, so KV 32 is correct and its KL is rounding sensitivity. Both Q 32 and KV 32 go to the
+phone tile test.
+
+Pending patch 0011 (KleidiAI leaves Q6_K to the repack buffer), QEMU arm64, Ling, 256 tokens, against x86 logits:
+perplexity 11.122 stock / 11.085 with 0001-0010 / 10.936 with 0011 (x86 11.042); KL toward x86 0.0073 / 0.0070 /
+0.0077; model load under QEMU 33.5 s -> 18.6 s. Not applied until phone speed, load time and the eval are in.
+
 ## Answer quality
 
 ### Seeds over time
@@ -208,6 +427,55 @@ LiteRT-LM 0.18.1 on the Pixel 10 with the Starter Wikipedia, in a debug build wi
 - The Reference shelf (`v23` against `v22`) raises travel from 0.41 to 0.53 and long tail from 0.40 to 0.56. Pairwise on all 63 seeds it is 27 / 9 / 27, with a mean gain of 0.52 points [−0.08, +1.13], so the overall gain is not significant. Travel gains 2.5 points, long tail 1.7 and comparison 0.9. Numeric loses 1.0 and explanation 0.3 (2026-10-23).
 - With the older engine on 27 seeds, the full pack set beat the Starter set 17 / 2 / 6 pairwise (p = 0.035), and full evidence rose from 4 to 15 of 27 (2026-10-10).
 - Model ceiling: Claude Sonnet, given exactly Ling's evidence on the 25 seeds with full evidence, scored 0.777 against Ling's 0.639 (2026-10-10). Across all 63 seeds that gap is worth about +0.05.
+
+### Small models and their chat format (desktop, 2026-11-03)
+
+`dev.jsonl` (60 questions), `--phone`, the full library, Opus judge. Build `ac3829e` (old format) against `ac3829e-dirty` on branch `spike/lfm3-prompt` (new format). The new format adds the BOS token when the chat template writes `bos_token` but the GGUF has `add_bos_token = false`. LFM3 and MiniCPM5 both had this gap, so their prompts lacked the BOS. It also sends LFM3's own thinking markers (`<think></think>`, no newlines) and LFM3's recommended sampling (temperature 0.1, top-k 50, repeat penalty 1.1, profile `lfm3`). Ling and Gemma prompts do not change. Times are desktop medians.
+
+| Run | Model and format | Ratio | Median answer | First word | Full answer |
+|---|---|---|---|---|---|
+| `v2-dev-ling` | Ling | 0.646 | 408 chars | 2.26 s | 4.71 s |
+| `x-minicpm-dev-bos` | MiniCPM5-2B pure Q4_0, with BOS | 0.621 | 310 chars | 2.50 s | 4.42 s |
+| `x-minicpm-dev-old` | MiniCPM5-2B pure Q4_0, as shipped | 0.602 | 336 chars | 2.51 s | 4.59 s |
+| `x-lfm3-dev-think` | LFM3-1.7B QAD Q4_0, new format, thinking on (budget 256) | 0.576 | 460 chars | 6.35 s | 8.68 s |
+| `x-gemma-dev` | Gemma 4 E2B Q4_0 | 0.567 | 508 chars | 2.40 s | 5.71 s |
+| `x-lfm3-dev-old` | LFM3, old format | 0.533 | 744 chars | 1.67 s | 5.89 s |
+| `x-lfm3-dev-off` | LFM3, new format, thinking off | 0.524 | 716 chars | 1.67 s | 5.12 s |
+| `x-spark-dev` | Spark-X2.6-1.7B Q4_0 (`bartowski/Spark-X2.6-1.7B-GGUF` @ `0e47f40e`, sha256 `744ff661…`), its own format, thinking off, our sampling | 0.478 | 1,311 chars | 2.03 s | 8.60 s |
+
+Per question, by judge score (better / tie / worse):
+
+- MiniCPM with BOS against as shipped: 27 / 14 / 17 by judge score, but `pairwise.py` gives 23 / 16 / 21 (p = 0.88, mean diff −0.13): no gain. The fix stays because it matches the model's own chat template.
+- LFM3 new format against old, thinking off: 22 / 9 / 27, no gain.
+- LFM3 thinking on against off: 29 / 13 / 18. It is still behind MiniCPM with BOS (18 / 11 / 31), and first words come 3.8 s later.
+- LFM3's errors are mostly missing knowledge, for example "Donald Trump was the US president in 2016". The format did not cause them.
+- Spark-X2.6 lost to MiniCPM with BOS 11 / 7 / 42 and to Gemma 11 / 9 / 40. Its answers are 4× MiniCPM's length (334 tokens) and often list the sources against the prompt's rule. llama.cpp does not know its chat template, so the branch adds Spark's format (`<|System|>`, `<|User|>`, `<|Bot|>`, a bare `</think>` for thinking off). Its card's sampling (temperature 1.0, top-p 0.95) and thinking mode are untested. Decode is 19.8 ms per token against MiniCPM's 25.4.
+
+### Release 0.4.0 candidate (2026-11-03)
+
+Branch `spike/040-candidate` on `ac3829e`: llama.cpp patches 0001-0010, 0012 and 0013 (`patches/llama.cpp/`), `+fp16` in the
+arm64 build, Gemma's prefill during the search (`LlmBackend::prepare`) and the MiniCPM BOS fix. Desktop runs use x86, so they
+do not exercise `+fp16` or the arm64 kernels.
+
+- Desktop, Ling, dev split (`x-040-dev-ling` against `v2-dev-ling`): 43 of 60 answers identical, pairwise 6 / 44 / 10 (p = 0.45).
+- Desktop, MiniCPM, dev split (`x-040-dev-minicpm` against `x-minicpm-dev-old`): pairwise 23 / 11 / 26 (p = 0.78, mean diff −0.21).
+- Desktop, Ling, reference set (142 questions, `x-040-ref-ling` against today's master `x-master-ref-ling`): 122 identical,
+  pairwise 8 / 124 / 10 (p = 0.82, mean diff +0.01). Unverified sentences 16.2% against 12.6% (6 more sentences in 5 how-to and
+  abstention answers, after sampling diverged); expected answers 48 / 53 against 49 / 53.
+- The release gate against `v2-A-ref` fails for master too (unverified 12.6% against 11.4%, limit +1%): the reference predates
+  master's how-to changes and needs replacing.
+- Pixel 10 `llama-bench` (`scripts/bench/ship_bench.sh`), stock against the candidate's llama.cpp, order A B B A per model, skin
+  36-38 °C for all but the first run, tok/s:
+
+| Model | Build | pp512 d0 | pp512 d1100 | tg64 d0 | tg64 d1100 |
+|---|---|---|---|---|---|
+| Ling | stock | 139.8, 155.2 | 70.3, 88.0 | 18.7, 24.5 | 12.1, 11.6 |
+| Ling | 0.4.0 | 224.6, 225.3 | 163.3, 167.4 | 12.8, 24.8 | 17.8, 20.3 |
+| MiniCPM | stock | 167.5, 123.3 | 110.7, 68.5 | 20.9, 12.9 | 13.8, 8.4 |
+| MiniCPM | 0.4.0 | 173.5, 167.1 | 128.8, 111.8 | 11.2, 10.2 | 18.0, 11.1 |
+
+  Ling prefill +50% (depth 0) to about 2× (depth 1,100), Ling decode at depth about +60%, MiniCPM decode at depth about +30%.
+  MiniCPM decode at depth 0 was lower with 0.4.0 in both pairs; heat noise is large here, and a cool retest is pending.
 
 ### Conversations
 
@@ -307,6 +575,12 @@ Each row is a change that we tested. "Kept" means the app has it now.
 | 10-23 | Reference shelf with Gemma on the NPU | 63 seeds on the Pixel, pairwise | 0.511 against 0.499; 28 / 14 / 19 (p = 0.24); travel 0.41 → 0.53 | Recommended in the README |
 | 10-24 | Answer target of 150 to 250 words for Gemma | 63 seeds, desktop, pairwise | Median 86 → 96 words; 0.527 against 0.526; 19 / 28 / 16 (p = 0.74) | Dropped |
 | 10-23 | Rerank pool of 48 or 96 instead of 24 (Ling) | 63 seeds, recall | R@ev 0.271 → 0.267 → 0.258; R@10 0.351 → 0.383 → 0.372; rerank 180 → 288 → 580 ms on the desktop | 24 |
+| 11-02 | Gemma: prefill the system prompt and the question on the NPU during the search (`Session` API) | Pixel, 17 seeds × 2 per build, interleaved | First word 1,865 → 1,277 ms; decode 27.6 → 27.8 tok/s | Candidate; needs the 63-seed eval |
+| 11-02 | 6 instead of 4 ONNX Runtime threads | Same runs | Rerank 391 → 485 ms, card 534 → 629 ms | 4 |
+| 11-03 | `+fp16` in the arm64 ggml build | Pixel `llama-bench`, ABBA | Decode at depth 1,100 +34% (MiniCPM); Ling's +32% is heat noise; prefill unchanged | Candidate; needs the eval |
+| 11-03 | MoE expert matmuls as GEMM (llama.cpp patch 0001) | Pixel `llama-bench`, perplexity | Ling prefill +20-31%; perplexity identical | Candidate; needs the eval |
+| 11-03 | Thread mask, poll and count for decode | Pixel, battery power trace | 0.32-0.35 J per token in every setting | Keep today's setting |
+| 11-03 | DSpark speculative decoding for MiniCPM | Pixel, 120 tokens | Break-even at best (19 against 17.5-20 tok/s), but with pool contention: invalid | Retest (morning_spec.sh) |
 
 Known weak spots that these experiments did not fix:
 

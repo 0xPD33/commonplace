@@ -1,0 +1,336 @@
+diff --git a/android/app/src/main/java/app/commonplace/engine/EngineHolder.kt b/android/app/src/main/java/app/commonplace/engine/EngineHolder.kt
+index 4bf707f..69734fb 100644
+--- a/android/app/src/main/java/app/commonplace/engine/EngineHolder.kt
++++ b/android/app/src/main/java/app/commonplace/engine/EngineHolder.kt
+@@ -82,6 +82,8 @@ class EngineHolder(private val app: Application) {
+                         encoderThreads = 4u,
+                         llmThreads = prefs.threads.toUInt(),
+                         pinBigCores = arm,
++                        // Prompt-lookup drafts for llama.cpp: debug builds only until the phone A/B and the eval are done.
++                        speculative = prefs.promptLookup && BuildConfig.DEBUG,
+                     ),
+                 )
+                 prefs.applyTo(engine)
+diff --git a/android/app/src/main/java/app/commonplace/engine/Prefs.kt b/android/app/src/main/java/app/commonplace/engine/Prefs.kt
+index 4c0e88a..80d9e80 100644
+--- a/android/app/src/main/java/app/commonplace/engine/Prefs.kt
++++ b/android/app/src/main/java/app/commonplace/engine/Prefs.kt
+@@ -33,6 +33,10 @@ class Prefs(context: Context) {
+         get() = sp.getBoolean("speculative", true)
+         set(v) = sp.edit().putBoolean("speculative", v).apply()
+ 
++    /** Prompt-lookup drafts for the llama.cpp models; no UI, set through `run-as` for the phone A/B (read when the engine starts). */
++    val promptLookup: Boolean
++        get() = sp.getBoolean("prompt_lookup", false)
++
+     /** Read answers aloud with the bundled voice (the `tts-en` pack) instead of the system engine. */
+     var bundledVoice: Boolean
+         get() = sp.getBoolean("bundled_voice", false)
+diff --git a/core/commonplace-cli/src/main.rs b/core/commonplace-cli/src/main.rs
+index 9a5181a..5aba1e7 100644
+--- a/core/commonplace-cli/src/main.rs
++++ b/core/commonplace-cli/src/main.rs
+@@ -192,7 +192,7 @@ fn engine(o: &Opts) -> Result<Engine> {
+     let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, t| {
+         let file = mp.file().context("model pack has no file")?;
+         let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
+-        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone() })?;
++        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone(), prompt_lookup: false })?;
+         Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
+     });
+     let e = Engine::new(cfg, Some(loader))?;
+@@ -222,7 +222,10 @@ fn engine(o: &Opts) -> Result<Engine> {
+     }
+     if !o.no_llm {
+         if let Some(path) = &o.model {
+-            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads: threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
++            // On Android pin like the app (commonplace-ffi): the big and medium cores, a batch pool over all of them.
++            let cpus = if cfg!(target_os = "android") { commonplace_llm::big_cores() } else { vec![] };
++            let batch_threads = (cpus.len() as u32).max(threads);
++            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads, cpus, in_ram: true, state_dir: o.llm_state.clone(), prompt_lookup: false })?;
+             e.set_profile(profiles::for_model(None, &path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()));
+             Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite);
+             e.set_llm(ModelRole::LlmFast, Some(Arc::new(llm)));
+diff --git a/core/commonplace-ffi/src/lib.rs b/core/commonplace-ffi/src/lib.rs
+index 8a91ba4..5082213 100644
+--- a/core/commonplace-ffi/src/lib.rs
++++ b/core/commonplace-ffi/src/lib.rs
+@@ -42,6 +42,8 @@ pub struct EngineOptions {
+     pub encoder_threads: u32,
+     pub llm_threads: u32,
+     pub pin_big_cores: bool,
++    /// Speculative decoding: prompt-lookup drafts for the llama.cpp models.
++    pub speculative: bool,
+ }
+ 
+ #[derive(uniffi::Enum, Clone, Copy, PartialEq)]
+@@ -614,12 +616,13 @@ impl CommonplaceEngine {
+             telemetry_path: Some(data_dir.join("telemetry.jsonl")),
+         };
+         let cpus: Vec<usize> = if opts.pin_big_cores { commonplace_llm::big_cores() } else { vec![] };
++        let prompt_lookup = opts.speculative;
+         let state_dir = data_dir.join("llm-state");
+         let loader: LlmLoader = Box::new(move |mp, threads| {
+             let file = mp.file().ok_or_else(|| anyhow::anyhow!("model pack has no file"))?;
+             let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
+             let batch_threads = (cpus.len() as u32).max(threads);
+-            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: true, state_dir: Some(state_dir.clone()) })?;
++            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: true, state_dir: Some(state_dir.clone()), prompt_lookup })?;
+             Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
+         });
+         let engine = Engine::new(cfg, Some(loader))?;
+diff --git a/core/commonplace-llm/src/lib.rs b/core/commonplace-llm/src/lib.rs
+index 840baf0..3065597 100644
+--- a/core/commonplace-llm/src/lib.rs
++++ b/core/commonplace-llm/src/lib.rs
+@@ -71,6 +71,8 @@ struct ThinkStyle {
+ 
+ struct Cached {
+     tokens: usize,
++    /// The prefix tokens, for prompt-lookup drafts (empty unless `Inner::ngram_spec`).
++    ids: Vec<i32>,
+     state: Vec<u8>,
+     /// `Inner::uses` at the last use: the least recent entry goes first when the cache is full.
+     used: u64,
+@@ -104,6 +106,35 @@ struct Inner {
+     state_dir: Option<PathBuf>,
+     /// Model file name and size: a saved state only fits the weights that made it.
+     model_key: String,
++    /// Prompt-lookup speculative decoding (spike: `COMMONPLACE_NGRAM_SPEC=1`); for recurrent and hybrid models only
++    /// when llama.cpp keeps state snapshots (`n_rs_seq`) that let it drop rejected drafts.
++    ngram_spec: bool,
++}
++
++/// Longest prompt-lookup draft. On the Pixel 10 a 4-token prefill batch (llama-bench pp4) took about as long as one
++/// token; a verify also computes logits for every position, which this did not measure.
++const DRAFT_MAX: usize = 8;
++
++/// The tokens that followed the most recent earlier occurrence of the last three tokens of `hist`, else of the last
++/// two, at most `n`. The longer key drafts less often and right more often (MiniCPM5 RAG answers, desktop: 1.56 tokens
++/// per step against 1.52 with the two-token key alone).
++fn ngram_draft(hist: &[i32], n: usize) -> &[i32] {
++    let len = hist.len();
++    if n == 0 {
++        return &[];
++    }
++    for k in [3usize, 2] {
++        if len <= k {
++            continue;
++        }
++        let key = &hist[len - k..];
++        for i in (0..len - k).rev() {
++            if &hist[i..i + k] == key {
++                return &hist[i + k..(i + k + n).min(len)];
++            }
++        }
++    }
++    &[]
+ }
+ 
+ // SAFETY: all access to the raw pointers goes through the Mutex in LlamaBackend.
+@@ -146,6 +177,8 @@ pub struct LoadOptions {
+     /// Save kept system-prompt states (`GenParams::keep_prefix`) here, so a new process loads them instead of
+     /// prefilling the prompt again (seconds on a phone).
+     pub state_dir: Option<PathBuf>,
++    /// Prompt-lookup speculative decoding (see `decode_ngram`); `COMMONPLACE_NGRAM_SPEC=1` also turns it on.
++    pub prompt_lookup: bool,
+ }
+ 
+ impl LlamaBackend {
+@@ -164,6 +197,12 @@ impl LlamaBackend {
+         cp.n_seq_max = 1;
+         cp.n_threads = opts.threads as i32;
+         cp.n_threads_batch = opts.batch_threads.max(1) as i32;
++        let lookup = opts.prompt_lookup || std::env::var("COMMONPLACE_NGRAM_SPEC").is_ok_and(|v| v == "1");
++        let recurrent = unsafe { sys::llama_model_is_recurrent(model) || sys::llama_model_is_hybrid(model) };
++        if lookup && recurrent {
++            // Recurrent state snapshots let llama_memory_seq_rm drop rejected drafts (Ling: about 19 MB each).
++            cp.n_rs_seq = DRAFT_MAX as u32;
++        }
+         let ctx = unsafe { sys::llama_init_from_model(model, cp) };
+         if ctx.is_null() {
+             unsafe { sys::llama_model_free(model) };
+@@ -195,7 +234,12 @@ impl LlamaBackend {
+         desc.truncate(n.max(0) as usize);
+         let desc = String::from_utf8_lossy(&desc).into_owned();
+         let name = path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default();
+-        let model_key = format!("{name} {}", std::fs::metadata(path).map(|m| m.len()).unwrap_or(0));
++        let mut model_key = format!("{name} {}", std::fs::metadata(path).map(|m| m.len()).unwrap_or(0));
++        // Recurrent state snapshots change the layout of a saved state: such a state only fits the same count.
++        let n_rs_seq = unsafe { sys::llama_n_rs_seq(ctx) };
++        if n_rs_seq > 0 {
++            model_key.push_str(&format!(" rs{n_rs_seq}"));
++        }
+         // Reasoning models (LFM2.5-8B-A1B, Qwen3.x) skip thinking when handed an empty think block.
+         // Ling 3.0 also needs "detailed thinking off" in the system turn; llama.cpp maps its template to Ling 2.0's.
+         let tmpl = unsafe { sys::llama_model_chat_template(model, ptr::null()) };
+@@ -207,7 +251,9 @@ impl LlamaBackend {
+         } else {
+             None
+         };
+-        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key };
++        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key, ngram_spec: false };
++        // llama.cpp grants the snapshots only for architectures that support the rollback.
++        inner.ngram_spec = lookup && (!recurrent || unsafe { sys::llama_n_rs_seq(ctx) } >= DRAFT_MAX as u32);
+         inner.think_end = inner.tokenize("</think>", false).ok().filter(|t| t.len() == 1).map(|t| t[0]);
+         if opts.in_ram {
+             // One tiny decode warms the kernels.
+@@ -387,13 +433,20 @@ impl Inner {
+ 
+         let t = Instant::now();
+         self.uses += 1;
++        // The system prompt's tokens, when it comes from the cache: prompt-lookup drafts also copy from it.
++        let mut prefix_ids: Vec<i32> = Vec::new();
+         let suffix_toks = if let Some(rest) = head.strip_prefix(prefix.as_str()) {
+             let restored = match self.cache.get_mut(system.as_str()) {
+                 Some(c) => {
+                     let ok = unsafe { sys::llama_state_seq_set_data(self.ctx, c.state.as_ptr(), c.state.len(), 0) } > 0;
+                     c.used = self.uses;
+                     c.keep |= p.keep_prefix;
+-                    if ok { Some(c.tokens) } else { None }
++                    if ok {
++                        prefix_ids = c.ids.clone();
++                        Some(c.tokens)
++                    } else {
++                        None
++                    }
+                 }
+                 None => None,
+             };
+@@ -422,7 +475,9 @@ impl Inner {
+                     {
+                         self.cache.remove(&old);
+                     }
+-                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), state, used: self.uses, keep: p.keep_prefix });
++                    let ids = if self.ngram_spec { ptoks.clone() } else { Vec::new() };
++                    prefix_ids = ids.clone();
++                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), ids, state, used: self.uses, keep: p.keep_prefix });
+                 }
+             }
+             st.prompt_tokens += st.cached_tokens;
+@@ -438,6 +493,13 @@ impl Inner {
+ 
+         let smpl = self.sampler(p)?;
+         let t = Instant::now();
++        if self.ngram_spec && p.grammar.is_none() && budget.is_none() {
++            let r = self.decode_ngram([prefix_ids, suffix_toks].concat(), smpl, p, on_token, &mut st);
++            unsafe { sys::llama_sampler_free(smpl) };
++            r?;
++            st.decode_ms = t.elapsed().as_secs_f64() * 1000.0;
++            return Ok(st);
++        }
+         let mut pending: Vec<u8> = Vec::new();
+         // Reasoning is streamed between "<think>" and "</think>" so the caller can show it apart.
+         let mut thinking = budget.is_some();
+@@ -524,6 +586,111 @@ impl Inner {
+     }
+ }
+ 
++impl Inner {
++    /// Decode with prompt-lookup drafts: each step feeds the last sampled token plus the drafted tokens in one batch and
++    /// samples every position in turn; a draft token is kept only while it equals what the sampler picks. Batched logits
++    /// differ from one-token logits at rounding level, so the text can differ from plain decoding (greedy: 4 of 10
++    /// answers stayed identical even with every draft rejected). The KV cache then drops the rejected positions.
++    fn decode_ngram(&mut self, mut hist: Vec<i32>, smpl: *mut sys::llama_sampler, p: &GenParams, on_token: &mut dyn FnMut(&str) -> bool, st: &mut GenStats) -> Result<()> {
++        let mem = unsafe { sys::llama_get_memory(self.ctx) };
++        let mut n_past = unsafe { sys::llama_memory_seq_pos_max(mem, 0) } + 1;
++        let mut batch = unsafe { sys::llama_batch_init(DRAFT_MAX as i32 + 1, 0, 1) };
++        // Verify batches would run on the prefill pool and its thread count; switching pools every step costs more
++        // than the extra threads give, so the decode pool runs both until the answer ends.
++        let nt = unsafe { sys::llama_n_threads(self.ctx) };
++        unsafe {
++            if !self.threadpool.is_null() {
++                sys::llama_attach_threadpool(self.ctx, self.threadpool, self.threadpool);
++            }
++            sys::llama_set_n_threads(self.ctx, nt, nt);
++        }
++        let mut pending: Vec<u8> = Vec::new();
++        let (mut steps, mut drafted, mut accepted) = (0u32, 0u32, 0u32);
++        // Emits one token; false ends the answer (end token, length limit or cancel).
++        let mut emit = |this: &Inner, tok: i32, hist: &mut Vec<i32>, st: &mut GenStats| -> bool {
++            if unsafe { sys::llama_vocab_is_eog(this.vocab(), tok) } {
++                return false;
++            }
++            st.gen_tokens += 1;
++            if st.gen_tokens > p.max_tokens {
++                st.truncated = true;
++                return false;
++            }
++            hist.push(tok);
++            this.piece(tok, &mut pending);
++            let valid = match std::str::from_utf8(&pending) {
++                Ok(_) => pending.len(),
++                Err(e) if e.error_len().is_none() => e.valid_up_to(),
++                Err(_) => pending.len(),
++            };
++            if valid > 0 {
++                let s = String::from_utf8_lossy(&pending[..valid]).into_owned();
++                pending.drain(..valid);
++                if !on_token(&s) {
++                    return false;
++                }
++            }
++            true
++        };
++        let result = (|| -> Result<()> {
++            let mut id_last = unsafe { sys::llama_sampler_sample(smpl, self.ctx, -1) };
++            let mut want = 2usize;
++            loop {
++                if !emit(self, id_last, &mut hist, st) {
++                    return Ok(());
++                }
++                let left = (p.max_tokens.saturating_sub(st.gen_tokens)) as usize;
++                let draft: Vec<i32> = ngram_draft(&hist, want.min(left)).to_vec();
++                unsafe {
++                    let b = &mut batch;
++                    b.n_tokens = 0;
++                    for (i, &tok) in std::iter::once(&id_last).chain(draft.iter()).enumerate() {
++                        *b.token.add(i) = tok;
++                        *b.pos.add(i) = n_past + i as i32;
++                        *b.n_seq_id.add(i) = 1;
++                        **b.seq_id.add(i) = 0;
++                        *b.logits.add(i) = 1;
++                        b.n_tokens += 1;
++                    }
++                }
++                let rc = unsafe { sys::llama_decode(self.ctx, batch) };
++                ensure!(rc == 0, "llama_decode failed ({rc})");
++                steps += 1;
++                drafted += draft.len() as u32;
++                let mut acc = 0usize;
++                let next = loop {
++                    let s = unsafe { sys::llama_sampler_sample(smpl, self.ctx, acc as i32) };
++                    if acc < draft.len() && s == draft[acc] {
++                        acc += 1;
++                        if !emit(self, s, &mut hist, st) {
++                            return Ok(());
++                        }
++                    } else {
++                        break s;
++                    }
++                };
++                accepted += acc as u32;
++                n_past += 1 + acc as i32;
++                ensure!(unsafe { sys::llama_memory_seq_rm(mem, 0, n_past, -1) }, "the memory cannot drop rejected drafts");
++                // At least 2 drafts: small batches cost little more than one token (see DRAFT_MAX).
++                want = (acc + 2).min(DRAFT_MAX);
++                id_last = next;
++            }
++        })();
++        unsafe {
++            sys::llama_batch_free(batch);
++            if !self.threadpool.is_null() {
++                sys::llama_attach_threadpool(self.ctx, self.threadpool, self.batch_pool);
++            }
++            sys::llama_set_n_threads(self.ctx, nt, self.batch_threads as i32);
++        }
++        if std::env::var_os("COMMONPLACE_NGRAM_LOG").is_some() {
++            eprintln!("ngram-spec: steps {steps} drafted {drafted} accepted {accepted} tokens/step {:.2}", (accepted + steps) as f64 / steps.max(1) as f64);
++        }
++        result
++    }
++}
++
+ impl LlmBackend for LlamaBackend {
+     fn id(&self) -> String {
+         self.id.clone()

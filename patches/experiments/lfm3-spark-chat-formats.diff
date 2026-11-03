@@ -1,0 +1,185 @@
+diff --git a/core/commonplace-core/src/engine.rs b/core/commonplace-core/src/engine.rs
+index 573dd03..a88582e 100644
+--- a/core/commonplace-core/src/engine.rs
++++ b/core/commonplace-core/src/engine.rs
+@@ -1148,7 +1148,7 @@ impl Engine {
+         let earlier: Vec<(&str, &str)> = earlier.iter().map(|(q, a)| (*q, a.as_str())).collect();
+         let user = prompts::synthesis_user(&rendered, &asked, &earlier);
+         let n = ev.count();
+-        let mut params = GenParams::synthesis(s.max_answer_tokens);
++        let mut params = self.profile().synthesis(s.max_answer_tokens);
+         params.think_budget = req.think.then_some(s.think_budget);
+         params.keep_prefix = true;
+         let mut raw = String::new();
+diff --git a/core/commonplace-core/src/llm.rs b/core/commonplace-core/src/llm.rs
+index bfe604c..47d74e6 100644
+--- a/core/commonplace-core/src/llm.rs
++++ b/core/commonplace-core/src/llm.rs
+@@ -8,6 +8,7 @@ use serde::Serialize;
+ pub struct GenParams {
+     pub max_tokens: u32,
+     pub temperature: f32,
++    pub top_k: i32,
+     pub top_p: f32,
+     pub repeat_penalty: f32,
+     /// GBNF grammar. Backends without grammar support ignore it; callers parse tolerantly.
+@@ -21,16 +22,16 @@ pub struct GenParams {
+ 
+ impl GenParams {
+     pub fn synthesis(max_tokens: u32) -> Self {
+-        Self { max_tokens, temperature: 0.3, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None, keep_prefix: false }
++        Self { max_tokens, temperature: 0.3, top_k: 40, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None, keep_prefix: false }
+     }
+ 
+     /// Short deterministic output without a grammar (query rewriting).
+     pub fn greedy(max_tokens: u32) -> Self {
+-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None, keep_prefix: false }
++        Self { max_tokens, temperature: 0.0, top_k: 40, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None, keep_prefix: false }
+     }
+ 
+     pub fn json(max_tokens: u32, grammar: &str) -> Self {
+-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None, keep_prefix: false }
++        Self { max_tokens, temperature: 0.0, top_k: 40, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None, keep_prefix: false }
+     }
+ }
+ 
+diff --git a/core/commonplace-core/src/profiles.rs b/core/commonplace-core/src/profiles.rs
+index a36851e..d6844fb 100644
+--- a/core/commonplace-core/src/profiles.rs
++++ b/core/commonplace-core/src/profiles.rs
+@@ -3,6 +3,8 @@
+ 
+ use serde::Serialize;
+ 
++use crate::llm::GenParams;
++
+ #[derive(Debug, Serialize)]
+ pub struct ModelProfile {
+     pub name: &'static str,
+@@ -10,17 +12,31 @@ pub struct ModelProfile {
+     pub evidence_tokens: usize,
+     /// Shrink the evidence on a warm phone: a hot CPU reads the prompt slowly, the Tensor NPU does not.
+     pub warm_evidence_cut: bool,
++    /// Answer sampling: temperature, top-k, top-p, repeat penalty.
++    pub sampling: (f32, i32, f32, f32),
++}
++
++impl ModelProfile {
++    pub fn synthesis(&self, max_tokens: u32) -> GenParams {
++        let (temperature, top_k, top_p, repeat_penalty) = self.sampling;
++        GenParams { temperature, top_k, top_p, repeat_penalty, ..GenParams::synthesis(max_tokens) }
++    }
+ }
+ 
++const OUR_SAMPLING: (f32, i32, f32, f32) = (0.3, 40, 0.9, 1.05);
++
+ /// Ling and MiniCPM on the CPU (llama.cpp).
+-pub const DEFAULT: ModelProfile = ModelProfile { name: "default", evidence_tokens: 600, warm_evidence_cut: true };
++pub const DEFAULT: ModelProfile = ModelProfile { name: "default", evidence_tokens: 600, warm_evidence_cut: true, sampling: OUR_SAMPLING };
+ /// Gemma 4 through llama.cpp (the desktop stand-in for the NPU file) or LiteRT's CPU and GPU backends.
+-pub const GEMMA4: ModelProfile = ModelProfile { name: "gemma4", evidence_tokens: 600, warm_evidence_cut: true };
++pub const GEMMA4: ModelProfile = ModelProfile { name: "gemma4", evidence_tokens: 600, warm_evidence_cut: true, sampling: OUR_SAMPLING };
+ /// Gemma 4 on the Tensor NPU, which reads 800–2,000 tok/s on a warm phone too (docs/BENCHMARKS.md).
+-pub const GEMMA4_NPU: ModelProfile = ModelProfile { name: "gemma4-npu", evidence_tokens: 600, warm_evidence_cut: false };
++pub const GEMMA4_NPU: ModelProfile = ModelProfile { name: "gemma4-npu", evidence_tokens: 600, warm_evidence_cut: false, sampling: OUR_SAMPLING };
++
++/// LFM3 with Liquid's recommended sampling (model card; also in the GGUF's `general.sampling.*`).
++pub const LFM3: ModelProfile = ModelProfile { name: "lfm3", evidence_tokens: 600, warm_evidence_cut: true, sampling: (0.1, 50, 1.0, 1.1) };
+ 
+ pub fn by_name(name: &str) -> Option<&'static ModelProfile> {
+-    let all: [&'static ModelProfile; 3] = [&DEFAULT, &GEMMA4, &GEMMA4_NPU];
++    let all: [&'static ModelProfile; 4] = [&DEFAULT, &GEMMA4, &GEMMA4_NPU, &LFM3];
+     all.into_iter().find(|p| p.name == name)
+ }
+ 
+@@ -34,6 +50,8 @@ pub fn for_model(declared: Option<&str>, file_name: &str) -> &'static ModelProfi
+         &GEMMA4_NPU
+     } else if f.contains("gemma-4") {
+         &GEMMA4
++    } else if f.contains("lfm3") {
++        &LFM3
+     } else {
+         &DEFAULT
+     }
+diff --git a/core/commonplace-llm/src/lib.rs b/core/commonplace-llm/src/lib.rs
+index 840baf0..44fc737 100644
+--- a/core/commonplace-llm/src/lib.rs
++++ b/core/commonplace-llm/src/lib.rs
+@@ -104,6 +104,8 @@ struct Inner {
+     state_dir: Option<PathBuf>,
+     /// Model file name and size: a saved state only fits the weights that made it.
+     model_key: String,
++    /// The chat template writes `bos_token` but the vocabulary does not add it (LFM3, MiniCPM5).
++    template_bos: bool,
+ }
+ 
+ // SAFETY: all access to the raw pointers goes through the Mutex in LlamaBackend.
+@@ -202,12 +204,19 @@ impl LlamaBackend {
+         let tmpl = if tmpl.is_null() { String::new() } else { unsafe { CStr::from_ptr(tmpl) }.to_string_lossy().into_owned() };
+         let think = if tmpl.contains("detailed thinking") {
+             Some(ThinkStyle { off_system: "\ndetailed thinking off", off_open: "\n<think></think>", on_system: "\ndetailed thinking on", on_open: "\n<think>" })
++        } else if tmpl.contains("\"<think></think>\"") {
++            // LFM3: the template's own markers, with no newlines.
++            Some(ThinkStyle { off_system: "", off_open: "<think></think>", on_system: "", on_open: "<think>" })
++        } else if tmpl.contains("<|Bot|>") {
++            // Spark-X: a bare "</think>" switches thinking off.
++            Some(ThinkStyle { off_system: "", off_open: "</think>", on_system: "", on_open: "<think>" })
+         } else if tmpl.contains("</think>") {
+             Some(ThinkStyle { off_system: "", off_open: "<think>\n\n</think>\n\n", on_system: "", on_open: "<think>\n" })
+         } else {
+             None
+         };
+-        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key };
++        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key, template_bos: false };
++        inner.template_bos = tmpl.contains("bos_token") && !unsafe { sys::llama_vocab_get_add_bos(inner.vocab()) };
+         inner.think_end = inner.tokenize("</think>", false).ok().filter(|t| t.len() == 1).map(|t| t[0]);
+         if opts.in_ram {
+             // One tiny decode warms the kernels.
+@@ -240,6 +249,9 @@ impl Inner {
+         };
+         ensure!(n >= 0, "tokenize failed");
+         toks.truncate(n as usize);
++        if add_special && self.template_bos {
++            toks.insert(0, self.bos());
++        }
+         Ok(toks)
+     }
+ 
+@@ -265,7 +277,27 @@ impl Inner {
+         }
+         if n < 0 {
+             // Unknown template: Gemma 4 uses <|turn>role … <turn|>; otherwise ChatML, which LFM2 and Qwen use.
+-            let gemma4 = !tmpl.is_null() && unsafe { CStr::from_ptr(tmpl) }.to_string_lossy().contains("<|turn>");
++            let t = if tmpl.is_null() { String::new() } else { unsafe { CStr::from_ptr(tmpl) }.to_string_lossy().into_owned() };
++            let gemma4 = t.contains("<|turn>");
++            if t.contains("<|Bot|>") {
++                // Spark-X: its template always opens with its own default system line.
++                let (bos, eos) = ("<｜start▁of▁sentence｜>", "<｜end▁of▁sentence｜>");
++                let mut s = format!("{bos}<|System|>\nyou are a helpful assistant.");
++                for (r, c) in msgs {
++                    match *r {
++                        "system" => s.push_str(&format!("\n\n{c}{eos}")),
++                        "user" => s.push_str(&format!("{bos}<|User|>{c}{eos}")),
++                        _ => s.push_str(&format!("{bos}<|Bot|></think>{c}{eos}")),
++                    }
++                }
++                if !msgs.iter().any(|m| m.0 == "system") {
++                    s.push_str(eos);
++                }
++                if add_ass {
++                    s.push_str(&format!("{bos}<|Bot|>"));
++                }
++                return Ok(s);
++            }
+             let mut s = String::new();
+             for (r, c) in msgs {
+                 if gemma4 {
+@@ -356,7 +388,7 @@ impl Inner {
+             if p.temperature <= 0.0 {
+                 sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_greedy());
+             } else {
+-                sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_top_k(40));
++                sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_top_k(p.top_k));
+                 sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_top_p(p.top_p, 1));
+                 sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_temp(p.temperature));
+                 sys::llama_sampler_chain_add(chain, sys::llama_sampler_init_dist(0x5eed));

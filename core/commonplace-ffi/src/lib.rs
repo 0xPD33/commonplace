@@ -377,6 +377,8 @@ pub trait ForeignLlm: Send + Sync {
     /// `think_budget`: reason first, for at most this many tokens, and stream the reasoning as `<think>…</think>`
     /// before the answer, as the llama.cpp backend does.
     fn generate(&self, system: String, user: String, max_tokens: u32, temperature: f32, top_p: f32, json_only: bool, think_budget: Option<u32>, sink: Arc<TokenSink>) -> R<GenStatsRecord>;
+    /// See `LlmBackend::prepare`. Must return at once; the prefill runs in the background.
+    fn prepare(&self, system: String, user_prefix: String, temperature: f32, top_p: f32);
 }
 
 /// Receives streamed tokens from a ForeignLlm. `on_token` returns false when the app wants it to stop.
@@ -419,6 +421,10 @@ impl LlmBackend for ForeignAdapter {
         }
         let st = worker.join().map_err(|_| anyhow::anyhow!("foreign llm panicked"))?.map_err(|e| anyhow::anyhow!("{e}"))?;
         Ok(GenStats { prompt_tokens: st.prompt_tokens, gen_tokens: st.gen_tokens, prefill_ms: st.prefill_ms, decode_ms: st.decode_ms, ..Default::default() })
+    }
+
+    fn prepare(&self, system: &str, user_prefix: &str, p: &GenParams) {
+        self.0.prepare(system.to_string(), user_prefix.to_string(), p.temperature, p.top_p);
     }
 }
 

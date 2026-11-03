@@ -117,7 +117,12 @@ pub fn synthesis_user(evidence: &str, question: &str, earlier: &[(&str, &str)]) 
     let turns: String = earlier.iter().map(|(q, a)| if a.is_empty() { format!("User: {q}\n") } else { format!("User: {q}\nYou: {a}\n") }).collect();
     let earlier = if turns.is_empty() { String::new() } else { format!("Earlier exchange (the user already read this; do not repeat it):\n{turns}\n") };
     // The question also comes first, so the model reads the sources with it in mind.
-    format!("{earlier}Question: {question}\n\nSources:\n{evidence}\n\nQuestion: {question}")
+    format!("{earlier}{}{evidence}\n\nQuestion: {question}", synthesis_user_prefix(question))
+}
+
+/// The start of `synthesis_user` without earlier turns: known before the search, so a backend can prefill it.
+pub fn synthesis_user_prefix(question: &str) -> String {
+    format!("Question: {question}\n\nSources:\n")
 }
 
 pub const REFORMAT_SYSTEM: &str = "You rewrite your previous answer the way the user asks: shorter, simpler, as a list, or

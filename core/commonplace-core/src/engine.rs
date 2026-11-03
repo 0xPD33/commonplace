@@ -761,6 +761,12 @@ impl Engine {
         route.complex |= route.compare || intent != "lookup";
         rec.intent = intent.to_string();
         let raw_query = route.query.clone();
+        // A first question's answer prompt starts with the system prompt and the question: the backend can
+        // prefill them on its own chip while the search runs. Later turns add earlier exchanges in front.
+        if let Some((_, l)) = llm.as_ref().filter(|_| req.history.is_empty() && !req.think) {
+            let system = if s.how_to_steps && is_how_to(&req.query) { prompts::HOW_TO_SYSTEM.to_string() } else { prompts::synthesis_system(&lib.snapshot_date()) };
+            l.prepare(&system, &prompts::synthesis_user_prefix(&route.query), &GenParams::synthesis(s.max_answer_tokens));
+        }
         // Follow-ups without the rewrite step. A message that the follow-up head reads as needing the last turn
         // takes its topic, and its entities when the message names at most one thing; so does a comparison that
         // names one thing ("Is France bigger?"). An expand or check request searches the last question again.

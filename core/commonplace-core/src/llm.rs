@@ -64,4 +64,7 @@ pub trait LlmBackend: Send + Sync {
     fn generate(&self, system: &str, user: &str, params: &GenParams, on_token: &mut dyn FnMut(&str) -> bool) -> Result<GenStats>;
     /// Change the thread count (thermal adaptation). Default: unsupported, ignored.
     fn set_threads(&self, _n: u32) {}
+    /// Hint: the next `generate` will likely use `system` and a user text that starts with `user_prefix`.
+    /// A backend may start that prefill now, while retrieval runs on the CPU. Default: ignored.
+    fn prepare(&self, _system: &str, _user_prefix: &str, _params: &GenParams) {}
 }

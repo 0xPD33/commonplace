@@ -11,14 +11,19 @@ import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ExperimentalFlags
+import com.google.ai.edge.litertlm.InputData
 import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
+import com.google.ai.edge.litertlm.ResponseCallback
 import com.google.ai.edge.litertlm.SamplerConfig
+import com.google.ai.edge.litertlm.Session
+import com.google.ai.edge.litertlm.SessionConfig
 import com.google.ai.edge.litertlm.ThinkingConfig
 import uniffi.commonplace_ffi.CpException
 import uniffi.commonplace_ffi.ForeignLlm
 import uniffi.commonplace_ffi.GenStatsRecord
 import uniffi.commonplace_ffi.TokenSink
+import android.util.Log
 import java.io.File
 import java.util.concurrent.CountDownLatch
 
@@ -34,6 +39,20 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
     private var engine: Engine? = null
     private val lock = Any() // one generate at a time; close() waits for it so the engine never closes under a conversation
     @Volatile private var running: Conversation? = null
+    @Volatile private var runningSession: Session? = null
+
+    /** A session whose prompt start runs through the NPU while the Rust core searches ([prepare]). */
+    private class Prepared(val system: String, val prefix: String, val session: Session, val thread: Thread) {
+        @Volatile var error: Throwable? = null
+        @Volatile var prefillMs = 0.0
+    }
+    @Volatile private var prepared: Prepared? = null
+
+    // Gemma's chat template around the system and user text, rendered by LiteRT itself in [initialize].
+    private var systemStart = ""
+    private var systemEnd = ""
+    private var userStart = ""
+    private var userEnd = ""
     private val name = File(modelPath).name
     private val backendName = when {
         name.contains("_Google_Tensor_") -> "npu"
@@ -52,12 +71,55 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             "gpu" -> LiteBackend.GPU()
             else -> LiteBackend.CPU()
         }
-        engine = Engine(EngineConfig(modelPath = modelPath, backend = backend, cacheDir = context.cacheDir.path)).also { it.initialize() }
+        val e = Engine(EngineConfig(modelPath = modelPath, backend = backend, cacheDir = context.cacheDir.path)).also { it.initialize() }
+        engine = e
+        e.createConversation(ConversationConfig(systemInstruction = Contents.of(MARK))).use { c ->
+            val preface = c.renderPrefaceIntoString()
+            // The first message renders as the whole prompt: preface, user turn and the model turn's start.
+            val user = c.renderMessageIntoString(Message.user(USER_MARK), emptyMap()).substringAfter(preface)
+            systemStart = preface.substringBefore(MARK)
+            systemEnd = preface.substringAfter(MARK)
+            userStart = user.substringBefore(USER_MARK)
+            userEnd = user.substringAfter(USER_MARK)
+            Log.i(TAG, "template: ${listOf(systemStart, systemEnd, userStart, userEnd).joinToString(" | ") { it.replace("\n", "\\n") }}")
+        }
     }
+
+    override fun prepare(system: String, userPrefix: String, temperature: Float, topP: Float) {
+        val e = engine ?: return
+        if (backendName != "npu") return
+        discardPrepared()
+        val session = e.createSession(sessionConfig(temperature, topP))
+        val text = systemStart + system.trim() + systemEnd + userStart + userPrefix
+        lateinit var p: Prepared
+        val thread = Thread {
+            val t = System.nanoTime()
+            runCatching { session.runPrefill(listOf(InputData.Text(text))) }.onFailure { p.error = it }
+            p.prefillMs = (System.nanoTime() - t) / 1e6
+            Log.i(TAG, "prepare: prefilled ${text.length} chars in ${p.prefillMs.toInt()} ms")
+        }
+        p = Prepared(system, userPrefix, session, thread)
+        prepared = p
+        thread.start()
+    }
+
+    private fun discardPrepared() {
+        val p = prepared ?: return
+        prepared = null
+        p.thread.join()
+        p.session.close()
+    }
+
+    private fun sessionConfig(temperature: Float, topP: Float) = SessionConfig(
+        samplerConfig = SamplerConfig(topK = 40, topP = topP.toDouble(), temperature = temperature.toDouble().coerceAtLeast(0.01)),
+        enableSpeculativeDecoding = speculative && backendName == "npu",
+    )
 
     fun close() {
         running?.cancelProcess()
+        runningSession?.cancelProcess()
         synchronized(lock) {
+            discardPrepared()
             engine?.close()
             engine = null
         }
@@ -76,6 +138,16 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
         sink: TokenSink,
     ): GenStatsRecord = synchronized(lock) {
         val e = engine ?: throw CpException.Failed("LiteRT-LM engine is not initialized")
+        val p = prepared
+        if (p != null) {
+            prepared = null
+            p.thread.join()
+            if (p.error == null && thinkBudget == null && !jsonOnly && p.system == system && user.startsWith(p.prefix)) {
+                return@synchronized resume(p, user.substring(p.prefix.length), maxTokens, sink)
+            }
+            p.error?.let { Log.w(TAG, "prepare failed", it) }
+            p.session.close()
+        }
         val cfg = ConversationConfig(
             systemInstruction = Contents.of(system),
             samplerConfig = SamplerConfig(topK = 40, topP = topP.toDouble(), temperature = temperature.toDouble().coerceAtLeast(0.01)),
@@ -140,5 +212,52 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             prefillMs = (firstAt - start) / 1e6,
             decodeMs = (end - firstAt) / 1e6,
         )
+    }
+
+    /** The rest of the user turn on top of a [prepare]d session, then the answer. */
+    private fun resume(p: Prepared, rest: String, maxTokens: UInt, sink: TokenSink): GenStatsRecord = p.session.use { s ->
+        val text = rest + userEnd
+        val start = System.nanoTime()
+        var first = 0L
+        var tokens = 0u
+        var error: Throwable? = null
+        val done = CountDownLatch(1)
+        runningSession = s
+        s.generateContentStream(
+            listOf(InputData.Text(text)),
+            object : ResponseCallback {
+                override fun onNext(response: String) {
+                    if (first == 0L) first = System.nanoTime()
+                    tokens++
+                    if ((response.isNotEmpty() && !sink.onToken(response)) || tokens >= maxTokens) s.cancelProcess()
+                }
+
+                override fun onDone() = done.countDown()
+
+                override fun onError(throwable: Throwable) {
+                    error = throwable
+                    done.countDown()
+                }
+            },
+        )
+        done.await()
+        runningSession = null
+        error?.let { if (it !is java.util.concurrent.CancellationException) throw CpException.Failed(it.message ?: it.toString()) }
+        val end = System.nanoTime()
+        val firstAt = if (first == 0L) end else first
+        Log.i(TAG, "resume: prepared prefill ${p.prefillMs.toInt()} ms, rest to first token ${((firstAt - start) / 1e6).toInt()} ms, $tokens chunks")
+        GenStatsRecord(
+            // The session API has no benchmark counter: estimate the prompt from characters, one token per chunk.
+            promptTokens = ((p.system.length + p.prefix.length + rest.length) / 4).toUInt(),
+            genTokens = tokens,
+            prefillMs = (firstAt - start) / 1e6,
+            decodeMs = (end - firstAt) / 1e6,
+        )
+    }
+
+    private companion object {
+        const val TAG = "LiteRtBackend"
+        const val MARK = "@@COMMONPLACE@@"
+        const val USER_MARK = "@@COMMONPLACE_USER@@"
     }
 }

@@ -104,6 +104,8 @@ struct Inner {
     state_dir: Option<PathBuf>,
     /// Model file name and size: a saved state only fits the weights that made it.
     model_key: String,
+    /// The chat template writes `bos_token` but the vocabulary does not add it (MiniCPM5, LFM3).
+    template_bos: bool,
 }
 
 // SAFETY: all access to the raw pointers goes through the Mutex in LlamaBackend.
@@ -207,7 +209,8 @@ impl LlamaBackend {
         } else {
             None
         };
-        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key };
+        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key, template_bos: false };
+        inner.template_bos = tmpl.contains("bos_token") && !unsafe { sys::llama_vocab_get_add_bos(inner.vocab()) };
         inner.think_end = inner.tokenize("</think>", false).ok().filter(|t| t.len() == 1).map(|t| t[0]);
         if opts.in_ram {
             // One tiny decode warms the kernels.
@@ -240,6 +243,9 @@ impl Inner {
         };
         ensure!(n >= 0, "tokenize failed");
         toks.truncate(n as usize);
+        if add_special && self.template_bos {
+            toks.insert(0, self.bos());
+        }
         Ok(toks)
     }
 

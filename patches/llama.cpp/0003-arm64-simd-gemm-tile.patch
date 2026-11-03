@@ -1,0 +1,24 @@
+ggml-cpu simd-gemm: use the 4x4 register tile on arm64 (__ARM_NEON, not __ARM_NEON__)
+
+simd-gemm.h tests __ARM_NEON__, which only 32-bit ARM compilers define. aarch64 clang (NDK r29) defines
+__ARM_NEON, so arm64 builds fell back to GEMM_RM = GEMM_RN = 2. The tiled flash-attention kernel that runs every
+prefill then had 4 FMA chains instead of 16. The 4x4 tile adds the same terms in the same order, so results should
+stay bit-identical. arm64 under QEMU (MiniCPM5 and Ling, with 0001-0004): KL divergence against stock at the
+tool's floor (max 3.7e-5, same top token 100%).
+
+Expected: flash attention is about half of each prefill token's time at depth 1,100 on a Pixel 10 (derived, MiniCPM5
+and Ling); phone measurement pending. Upstream master still has the bug; no PR yet.
+
+diff --git a/ggml/src/ggml-cpu/simd-gemm.h b/ggml/src/ggml-cpu/simd-gemm.h
+index 4b9396d54..9076cc3d8 100644
+--- a/ggml/src/ggml-cpu/simd-gemm.h
++++ b/ggml/src/ggml-cpu/simd-gemm.h
+@@ -9,7 +9,7 @@
+ 
+ // TODO: untested on avx512
+ // These are in units of GGML_F32_EPR
+-#if defined(__AVX512F__) || defined (__ARM_NEON__)
++#if defined(__AVX512F__) || defined(__ARM_NEON)
+     static constexpr int GEMM_RM = 4;
+     static constexpr int GEMM_RN = 4; // 16+4+1 = 25/32
+ #elif defined(__AVX2__) || defined(__AVX__)

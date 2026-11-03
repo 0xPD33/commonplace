@@ -1,0 +1,11 @@
+Title: ggml-cpu : use the 4x4 simd_gemm tile on arm64 (__ARM_NEON, not __ARM_NEON__)
+
+simd-gemm.h selects the register tile with `defined(__ARM_NEON__)`. Only 32-bit ARM compilers define that macro;
+aarch64 clang and GCC define `__ARM_NEON` (checked with `-dM -E` for NDK r29 clang 21 and GCC 15 at
+-march=armv8.2-a+dotprod+i8mm+fp16). So every arm64 build falls back to GEMM_RM = GEMM_RN = 2, and the tiled flash
+attention kernel used for prompt processing keeps 4 FMA accumulators instead of 16.
+
+The 4x4 tile adds the same terms in the same order per output, so results do not change. Checked on arm64 under
+qemu-aarch64 -cpu max (Ling-3.0-tiny and MiniCPM5-2B, KL divergence against an unpatched build at the tool's floor).
+
+Phone numbers (Pixel 10, Tensor G5): <fill in from the morning run: pp512 at depth 0 and 1100, before and after>.

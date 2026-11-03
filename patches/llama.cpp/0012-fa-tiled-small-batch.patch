@@ -1,0 +1,205 @@
+ggml-cpu: tiled flash attention for small batches (2-63 queries), with heads that share K/V in one tile
+
+Speculative verify batches (2-9 tokens) took the per-row one_chunk path: it rounds Q to FP16, so a verify batch
+scored differently from the prefill of the same tokens, and every query row re-read and re-converted the whole KV.
+Now they take the tiled path, with these changes:
+- the GEMMs, scaling and softmax run on the valid rows of a tile only (they ran on all Q_TILE_SZ rows);
+- a tile spans the heads that share one K/V head (rows run head-major), so each K/V tile is converted once per
+  group instead of once per head;
+- small batches get one chunk per thread, aligned to whole groups when there are at least as many groups as threads;
+- below 16 rows per chunk the per-row path stays: too few rows to repay the K/V conversion (Ling, 2 tokens, 4
+  threads: 10% slower without this gate).
+Single-token decode keeps the split-KV path.
+x86 (AVX2, 4 threads), depth 4000, ms per batch, before -> after: MiniCPM5 batch 2 55.8 -> 56.2, batch 4
+86.1 -> 65.8, batch 8 167.3 -> 103.8; Ling 32.0 -> 32.3, 48.4 -> 49.2, 83.4 -> 67.9; decode and prefill 512
+unchanged. Numerics: MiniCPM5 perplexity with 4- and 8-token ubatches against 512-token ubatches, KL mean 0.000000,
+max 5.9e-5, same top token 100% (stock with 4-token ubatches: mean 0.0013, 98.2%). Phone speed: not measured yet.
+--- a/ggml/src/ggml-cpu/ops.cpp
++++ b/ggml/src/ggml-cpu/ops.cpp
+@@ -9153,15 +9153,23 @@
+         const int iq2 = (ir - iq3*neq2*neq1)/neq1;
+         const int iq1 = (ir - iq3*neq2*neq1 - iq2*neq1);
+ 
+-        // Number of valid rows in this tile:
+-        // - limited by tile size (Q_TILE_SZ)
+-        // - limited by chunk boundary (ir1 - ir)
+-        // - limited by head boundary (neq1 - iq1) to avoid crossing into next head
+-        const int tile_rows = MIN(Q_TILE_SZ, MIN((int)(ir1 - ir), (int)(neq1 - iq1)));
++        // Number of valid rows in this tile: limited by tile size, by the chunk boundary, and by the last head that
++        // shares this K and V head. Rows run head-major, so a small batch (few rows per head) fills one tile with
++        // several heads and converts each K/V tile once for all of them.
++        const int64_t head_end = MIN((iq2/rk2 + 1)*rk2, (iq2/rv2 + 1)*rv2);
++        const int tile_rows = MIN(Q_TILE_SZ, MIN((int)(ir1 - ir), (int)((head_end - iq2)*neq1 - iq1)));
+         GGML_ASSERT(tile_rows > 0);
+ 
+-        const uint32_t h = iq2; // head index
+-        const float slope = (max_bias > 0.0f) ? h < n_head_log2 ? powf(m0, h + 1) : powf(m1, 2*(h - n_head_log2) + 1) : 1.0f;
++        int   rq1[Q_TILE_SZ];
++        int   rq2[Q_TILE_SZ];
++        float rslope[Q_TILE_SZ];
++        for (int tq = 0; tq < tile_rows; tq++) {
++            const int r = iq2*neq1 + iq1 + tq;
++            rq2[tq] = r / neq1;
++            rq1[tq] = r % neq1;
++            const uint32_t h = rq2[tq];
++            rslope[tq] = (max_bias > 0.0f) ? h < n_head_log2 ? powf(m0, h + 1) : powf(m1, 2*(h - n_head_log2) + 1) : 1.0f;
++        }
+ 
+         float S[Q_TILE_SZ];
+         float M[Q_TILE_SZ];
+@@ -9187,8 +9195,8 @@
+         float * V32    = VKQ32 + Q_TILE_SZ * DV;
+         float * K_f32  = V32 + KV_TILE_SZ * DV;
+ 
+-        memset(VKQ32, 0, Q_TILE_SZ * DV * sizeof(float));
+-        memset(mask32, 0, Q_TILE_SZ * KV_TILE_SZ * sizeof(float));
++        memset(VKQ32, 0, tile_rows * DV * sizeof(float));
++        memset(mask32, 0, tile_rows * KV_TILE_SZ * sizeof(float));
+ 
+         // k indices
+         const int ik3 = iq3 / rk3;
+@@ -9201,12 +9209,9 @@
+         {
+             float * Q_f32 = (float *)Q_q;
+             for (int tq = 0; tq < tile_rows; tq++) {
+-                const float * pq = (const float *) ((char *) q->data + ((iq1 + tq)*nbq1 + iq2*nbq2 + iq3*nbq3));
++                const float * pq = (const float *) ((char *) q->data + (rq1[tq]*nbq1 + rq2[tq]*nbq2 + iq3*nbq3));
+                 memcpy(Q_f32 + tq * DK, pq, DK * sizeof(float));
+             }
+-            for (int tq = tile_rows; tq < Q_TILE_SZ; tq++) {
+-                memset(Q_f32 + tq * DK, 0, DK * sizeof(float));
+-            }
+         }
+ 
+         memset(K_f32, 0, DK * KV_TILE_SZ * sizeof(float));
+@@ -9219,9 +9224,9 @@
+             if (mask) {
+                 bool can_skip = true;
+                 for (int tq = 0; tq < tile_rows; tq++) {
+-                    const ggml_fp16_t * mp_row = (const ggml_fp16_t *)((const char *) mask->data + (iq1 + tq)*mask->nb[1] + (iq2%mask->ne[2])*mask->nb[2] + (iq3%mask->ne[3])*mask->nb[3]);
++                    const ggml_fp16_t * mp_row = (const ggml_fp16_t *)((const char *) mask->data + rq1[tq]*mask->nb[1] + (rq2[tq]%mask->ne[2])*mask->nb[2] + (iq3%mask->ne[3])*mask->nb[3]);
+                     for (int tk = 0; tk < kv_tile; tk++) {
+-                        mask32[tq * KV_TILE_SZ + tk] = slope * GGML_CPU_FP16_TO_FP32(mp_row[ic + tk]);
++                        mask32[tq * KV_TILE_SZ + tk] = rslope[tq] * GGML_CPU_FP16_TO_FP32(mp_row[ic + tk]);
+                         if (mask32[tq * KV_TILE_SZ + tk] != -INFINITY) {
+                             can_skip = false;
+                         }
+@@ -9279,18 +9284,19 @@
+                     }
+                 }
+             }
+-            memset(KQ, 0, Q_TILE_SZ * KV_TILE_SZ * sizeof(float));
+-            simd_gemm(KQ, (const float *)Q_q, K_f32, Q_TILE_SZ, DK, KV_TILE_SZ);
+-            ggml_vec_scale_f32(Q_TILE_SZ * KV_TILE_SZ, KQ, scale);
++            // Rows past tile_rows are padding: a partial tile (a small batch, the end of a head) skips them.
++            memset(KQ, 0, tile_rows * KV_TILE_SZ * sizeof(float));
++            simd_gemm(KQ, (const float *)Q_q, K_f32, tile_rows, DK, KV_TILE_SZ);
++            ggml_vec_scale_f32(tile_rows * KV_TILE_SZ, KQ, scale);
+ 
+             if (logit_softcap != 0.0f) {
+-                ggml_vec_tanh_f32(Q_TILE_SZ * KV_TILE_SZ, KQ, KQ);
+-                ggml_vec_scale_f32(Q_TILE_SZ * KV_TILE_SZ, KQ, logit_softcap);
++                ggml_vec_tanh_f32(tile_rows * KV_TILE_SZ, KQ, KQ);
++                ggml_vec_scale_f32(tile_rows * KV_TILE_SZ, KQ, logit_softcap);
+             }
+ 
+             // Set padded KQ entries to -inf so softmax gives them zero weight
+             if (kv_tile < KV_TILE_SZ) {
+-                for (int tq = 0; tq < Q_TILE_SZ; tq++) {
++                for (int tq = 0; tq < tile_rows; tq++) {
+                     for (int tk = kv_tile; tk < KV_TILE_SZ; tk++) {
+                         KQ[tq * KV_TILE_SZ + tk] = -INFINITY;
+                     }
+@@ -9303,7 +9309,7 @@
+ 
+             bool skip[Q_TILE_SZ] = {};
+ 
+-            for (int tq = 0; tq < Q_TILE_SZ; tq++) {
++            for (int tq = 0; tq < tile_rows; tq++) {
+                 float * kq_row = KQ + tq * KV_TILE_SZ;
+ 
+                 float tile_max;
+@@ -9338,19 +9344,18 @@
+                     memcpy(V32 + tk * DV, v_data, DV * sizeof(float));
+                 }
+             }
+-            for (int tq = 0; tq < Q_TILE_SZ; tq++) {
++            for (int tq = 0; tq < tile_rows; tq++) {
+                 if (skip[tq]) {
+                     memset(KQ + tq * KV_TILE_SZ, 0, KV_TILE_SZ * sizeof(float));
+                 }
+             }
+-            simd_gemm(VKQ32, KQ, V32, Q_TILE_SZ, KV_TILE_SZ, DV);
++            simd_gemm(VKQ32, KQ, V32, tile_rows, KV_TILE_SZ, DV);
+         }
+ 
+         // sinks (apply only to valid rows in the tile)
+         if (sinks) {
+-            const float s = ((float *)((char *) sinks->data))[h];
+-
+             for (int tq = 0; tq < tile_rows; tq++) {
++                const float s = ((float *)((char *) sinks->data))[rq2[tq]];
+                 float ms = 1.0f;
+                 float vs = 1.0f;
+ 
+@@ -9371,8 +9376,8 @@
+             ggml_vec_scale_f32(DV, VKQ32 + tq * DV, S_inv);
+ 
+             // dst indices
+-            const int i1 = iq1 + tq;
+-            const int i2 = iq2;
++            const int i1 = rq1[tq];
++            const int i2 = rq2[tq];
+             const int i3 = iq3;
+ 
+             // permute(0, 2, 1, 3)
+@@ -9548,7 +9553,7 @@
+                                (q->type == GGML_TYPE_F32 &&
+                                 kv_is_f32_or_f16 &&
+                                 k->type == v->type &&
+-                                neq1 >= Q_TILE_SZ);
++                                neq1 >= 2);
+ #if defined(GGML_SIMD) && !defined(__x86_64__) && !defined(_M_X64)
+ #if defined(__ARM_FEATURE_SVE)
+         const int64_t f32_epr = svcntw();
+@@ -9558,6 +9563,20 @@
+         use_tiled &= (DV % f32_epr == 0);
+ #endif
+ 
++        // Small batches (fewer than Q_TILE_SZ queries): a tile holds the heads that share one K/V head, and each tile
++        // converts the whole K/V once. Give each thread whole groups when there are enough of them, and keep the
++        // per-row path when a chunk would get fewer than 16 rows (too few to repay the conversion).
++        int64_t dr_small = 0;
++        if (use_tiled && neq1 < Q_TILE_SZ) {
++            const int64_t group    = MIN(neq2/nek2, neq2/nev2)*neq1;
++            const int64_t n_groups = nr/group;
++            dr_small = n_groups >= nth ? (n_groups + nth - 1)/nth*group : (nr + nth - 1)/nth;
++            if (dr_small < 16) {
++                use_tiled = false;
++                dr_small  = 0;
++            }
++        }
++
+         // 4x chunks per thread
+         int nth_scaled = nth * 4;
+         int64_t chunk_size = (nr + nth_scaled - 1) / nth_scaled;
+@@ -9573,6 +9592,10 @@
+             nchunk = nth;
+             align_chunks = false;
+         }
++        if (use_tiled && neq1 < Q_TILE_SZ) {
++            nchunk = (nr + dr_small - 1)/dr_small;
++            align_chunks = false;
++        }
+ 
+         if (ith == 0) {
+             ggml_threadpool_chunk_set(params->threadpool, nth);
+@@ -9581,7 +9604,7 @@
+         ggml_barrier(params->threadpool);
+ 
+         // ceil(nr/nchunk) is not always a multiple of Q_TILE_SZ
+-        const int64_t dr = align_chunks ? chunk_size : (nr + nchunk - 1) / nchunk;
++        const int64_t dr = dr_small ? dr_small : align_chunks ? chunk_size : (nr + nchunk - 1) / nchunk;
+ 
+         int current_chunk = ith;
+ 

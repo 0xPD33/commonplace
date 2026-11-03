@@ -1,0 +1,236 @@
+ggml-cpu: skip the barrier between graph nodes that cannot see each other's work
+
+Every computed node ends with a barrier. Ling-3.0 computes 1,578 nodes per decoded token (MiniCPM5: 719), most of
+them tiny ops. Every thread takes the same decision, from the graph alone:
+- tiny simple nodes (at most 4,096 output values) run on thread 0 alone (nth = 1); the whitelisted ops split by
+  rows or elements without cross-thread reductions, so results do not change;
+- thread-0 chain: when the nodes since the last barrier and the next node all run on thread 0 only (tiny, or a
+  row-split op on one row), no barrier is needed;
+- independence: the next node and the nodes since the last barrier are simple ops (static ith/nth split, no shared
+  wdata, chunk counter or internal barrier, plain types) with disjoint memory ranges.
+A node that starts a fused group (RMS_NORM+MUL, the ADD chain) runs on all threads, so it never takes part; an
+earlier version missed this and raced in Ling decode (KL 0.15). The abort callback is checked only at a kept
+barrier, so every thread sees the flag at the same node. Ops with per-thread wdata (rope, soft_max,
+set_rows, cpy to quantized) are excluded: their per-thread offsets depend on the op.
+Barriers per decoded token: Ling 1,577 -> 903, MiniCPM5 718 -> 716. Results unchanged: x86 KL against stock at the
+floor for decode at 3, 4 and 6 threads and for 512-token prefill. x86 decode (4 threads): Ling -1.8% at depth 0,
+-0.9% at 1100 (an x86 barrier costs about 0.7 us, so running tiny ops on one thread does not pay there). Phone: not
+measured yet; it decides.
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -3132,6 +3132,9 @@
+     if (n < 3 || !ggml_can_fuse(cgraph, node_n, ops, n - 1)) {
+         return 0;
+     }
++    if (params == NULL) {
++        return n - 2; // detection only (barrier elision)
++    }
+     const struct ggml_tensor * dst = cgraph->nodes[node_n + n - 2];
+     const int64_t ne0 = a0->ne[0];
+     const int64_t nr  = a0->ne[1];
+@@ -3158,6 +3161,7 @@
+     return n - 2;
+ }
+ 
++// params == NULL: only report whether node_n starts a fused group (all threads run fused groups)
+ static int ggml_cpu_try_fuse_ops(
+         const struct ggml_cgraph * cgraph,
+         const int node_n,
+@@ -3187,7 +3191,9 @@
+                 mul_w->ne[0]        == node->ne[0]   &&
+                 mul_w->nb[0]        == sizeof(float)) {
+ 
+-                ggml_compute_forward_rms_norm_mul_fused(params, node, mul_node);
++                if (params != NULL) {
++                    ggml_compute_forward_rms_norm_mul_fused(params, node, mul_node);
++                }
+                 return 1;
+             }
+         }
+@@ -3196,6 +3202,99 @@
+     return 0;
+ }
+ 
++
++// Barrier elision between graph nodes. All threads take the same decision (it depends on the graph only):
++// - thread-0 chain: every node since the last barrier and the next one give all their work to thread 0 (one row,
++//   row-split op), so thread 0 runs them in order and the other threads have nothing to wait for;
++// - independence: the next node and every node since the last barrier are simple ops (static ith/nth split, no wdata,
++//   chunk counter or internal barrier) and their memory ranges do not overlap (no RAW, WAR or WAW).
++#define GGML_CPU_ELIDE_MAX 8
++
++struct ggml_cpu_range { const char * b; const char * e; };
++
++static bool ggml_cpu_plain_type(enum ggml_type t) {
++    return t == GGML_TYPE_F32 || t == GGML_TYPE_F16 || t == GGML_TYPE_BF16 || t == GGML_TYPE_I32;
++}
++
++static bool ggml_cpu_plain_srcs(const struct ggml_tensor * t) {
++    if (!ggml_cpu_plain_type(t->type)) {
++        return false;
++    }
++    for (int i = 0; i < GGML_MAX_SRC; i++) {
++        // GET_ROWS may read quantized rows: it dequantizes row by row, without scratch
++        if (t->src[i] && !ggml_cpu_plain_type(t->src[i]->type) && !(t->op == GGML_OP_GET_ROWS && i == 0)) {
++            return false;
++        }
++    }
++    return true;
++}
++
++static bool ggml_cpu_barrier_free_op(const struct ggml_tensor * t) {
++    switch (t->op) {
++        case GGML_OP_ADD: case GGML_OP_SUB: case GGML_OP_MUL: case GGML_OP_DIV: case GGML_OP_SCALE:
++        case GGML_OP_UNARY: case GGML_OP_GLU: case GGML_OP_GET_ROWS: case GGML_OP_CPY: case GGML_OP_DUP:
++        case GGML_OP_CONT: case GGML_OP_CONCAT: case GGML_OP_CLAMP: case GGML_OP_FILL: case GGML_OP_SUM_ROWS:
++        case GGML_OP_RMS_NORM: case GGML_OP_ARGSORT: case GGML_OP_SSM_CONV: case GGML_OP_SQR: case GGML_OP_SQRT:
++            return ggml_cpu_plain_srcs(t);
++        default:
++            return false;
++    }
++}
++
++// Tiny simple nodes run on thread 0 alone (nth = 1): splitting a few thousand values costs more in barriers than it
++// saves. The whitelisted ops split by rows or elements without cross-thread reductions, so results do not change.
++#define GGML_CPU_TINY_NODE 4096
++
++static bool ggml_cpu_tiny(const struct ggml_tensor * t) {
++    return ggml_nelements(t) <= GGML_CPU_TINY_NODE && ggml_cpu_barrier_free_op(t);
++}
++
++// true when only thread 0 does work: tiny nodes, and row-split ops (get_thread_range, dr = ceil(nr/nth), or
++// ith-strided rows) on one row
++static bool ggml_cpu_thread0_only(const struct ggml_tensor * t) {
++    if (!ggml_cpu_plain_srcs(t)) {
++        return false;
++    }
++    if (ggml_cpu_tiny(t)) {
++        return true;
++    }
++    switch (t->op) {
++        case GGML_OP_SUM_ROWS:
++            return true;
++        case GGML_OP_UNARY:
++            switch (ggml_get_unary_op(t)) {
++                case GGML_UNARY_OP_SIGMOID: case GGML_UNARY_OP_SILU: case GGML_UNARY_OP_EXP: case GGML_UNARY_OP_NEG:
++                case GGML_UNARY_OP_RELU: case GGML_UNARY_OP_TANH:
++                    return ggml_nrows(t->src[0]) == 1;
++                default:
++                    return false;
++            }
++        case GGML_OP_ADD: case GGML_OP_SUB: case GGML_OP_MUL: case GGML_OP_DIV: case GGML_OP_SCALE: case GGML_OP_GLU:
++        case GGML_OP_ARGSORT: case GGML_OP_CLAMP:
++            return ggml_nrows(t->src[0]) == 1 && ggml_nrows(t) == 1;
++        case GGML_OP_RMS_NORM:
++            return ggml_nrows(t->src[0]) == 1;
++        case GGML_OP_GET_ROWS:
++            return ggml_nelements(t->src[1]) == 1;
++        default:
++            return false;
++    }
++}
++
++static struct ggml_cpu_range ggml_cpu_range_of(const struct ggml_tensor * t) {
++    struct ggml_cpu_range r = { (const char *) t->data, (const char *) t->data + ggml_nbytes(t) };
++    return r;
++}
++
++static bool ggml_cpu_ranges_overlap(struct ggml_cpu_range a, const struct ggml_cpu_range * v, int n) {
++    for (int i = 0; i < n; i++) {
++        if (a.b < v[i].e && v[i].b < a.e) {
++            return true;
++        }
++    }
++    return false;
++}
++
+ static thread_ret_t ggml_graph_compute_thread(void * data) {
+     struct ggml_compute_state * state = (struct ggml_compute_state *) data;
+     struct ggml_threadpool    * tp    = state->threadpool;
+@@ -3224,6 +3323,14 @@
+     GGML_PRINT_DEBUG("thread #%d compute-start cplan %p last-graph %d\n", state->ith, (const void *)cplan, state->last_graph);
+ #endif
+ 
++    // nodes run since the last barrier (see ggml_cpu_barrier_free_op)
++    struct ggml_cpu_range ew[GGML_CPU_ELIDE_MAX];
++    struct ggml_cpu_range er[GGML_CPU_ELIDE_MAX*GGML_MAX_SRC];
++    int  n_ew   = 0;
++    int  n_er   = 0;
++    bool grp_t0 = true;
++    bool grp_bf = true;
++
+     for (int node_n = 0; node_n < cgraph->n_nodes && atomic_load_explicit(&tp->abort, memory_order_relaxed) != node_n; node_n++) {
+         struct ggml_tensor * node = cgraph->nodes[node_n];
+ 
+@@ -3241,18 +3348,64 @@
+         const int n_fused = ggml_cpu_try_fuse_ops(cgraph, node_n, &params, cplan);
+         if (n_fused > 0) {
+             node_n += n_fused;
++        } else if (ggml_cpu_tiny(node)) {
++            if (state->ith == 0) {
++                struct ggml_compute_params p1 = params;
++                p1.ith = 0;
++                p1.nth = 1;
++                ggml_compute_forward(&p1, node);
++            }
+         } else {
+             ggml_compute_forward(&params, node);
+         }
+ 
+-        if (state->ith == 0 && cplan->abort_callback &&
+-                cplan->abort_callback(cplan->abort_callback_data)) {
+-            atomic_store_explicit(&tp->abort, node_n + 1, memory_order_relaxed);
+-            tp->ec    = GGML_STATUS_ABORTED;
+-        }
+-
+         if (node_n + 1 < cgraph->n_nodes) {
+-            ggml_barrier(state->threadpool);
++            bool need = true;
++            if (n_fused == 0) {
++                grp_t0 = grp_t0 && ggml_cpu_thread0_only(node);
++                grp_bf = grp_bf && n_ew < GGML_CPU_ELIDE_MAX && ggml_cpu_barrier_free_op(node);
++                if (grp_bf) {
++                    ew[n_ew++] = ggml_cpu_range_of(node);
++                    for (int i = 0; i < GGML_MAX_SRC; i++) {
++                        if (node->src[i] && node->src[i]->data) {
++                            er[n_er++] = ggml_cpu_range_of(node->src[i]);
++                        }
++                    }
++                }
++                int nx = node_n + 1;
++                while (nx < cgraph->n_nodes && (ggml_op_is_empty(cgraph->nodes[nx]->op) ||
++                        (cgraph->nodes[nx]->flags & GGML_TENSOR_FLAG_COMPUTE) == 0)) {
++                    nx++;
++                }
++                // a node that starts a fused group runs on all threads, whatever its own split
++                const struct ggml_tensor * next = nx < cgraph->n_nodes && ggml_cpu_try_fuse_ops(cgraph, nx, NULL, cplan) == 0 ?
++                    cgraph->nodes[nx] : NULL;
++                if (next && grp_t0 && ggml_cpu_thread0_only(next)) {
++                    need = false;
++                } else if (next && grp_bf && ggml_cpu_barrier_free_op(next)) {
++                    bool clash = ggml_cpu_ranges_overlap(ggml_cpu_range_of(next), ew, n_ew) ||
++                                 ggml_cpu_ranges_overlap(ggml_cpu_range_of(next), er, n_er);
++                    for (int i = 0; i < GGML_MAX_SRC && !clash; i++) {
++                        if (next->src[i] && next->src[i]->data) {
++                            clash = ggml_cpu_ranges_overlap(ggml_cpu_range_of(next->src[i]), ew, n_ew);
++                        }
++                    }
++                    need = clash;
++                }
++            }
++            if (need) {
++                // abort only where every thread meets: a skipped barrier would let the others read the flag late
++                if (state->ith == 0 && cplan->abort_callback &&
++                        cplan->abort_callback(cplan->abort_callback_data)) {
++                    atomic_store_explicit(&tp->abort, node_n + 1, memory_order_relaxed);
++                    tp->ec    = GGML_STATUS_ABORTED;
++                }
++                ggml_barrier(state->threadpool);
++                n_ew   = 0;
++                n_er   = 0;
++                grp_t0 = true;
++                grp_bf = true;
++            }
+         }
+     }
+ 

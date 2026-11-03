@@ -1,0 +1,97 @@
+ggml-cpu repack: run MoE expert matmuls (MUL_MAT_ID) as GEMM on groups of 4 routed rows
+
+Upstream b12032 calls one GEMV per routed token per expert, even in a 512-token prefill.
+This packs each expert's rows 4 at a time (q8_0x4) and calls the repacked GEMM; the tail rows keep the GEMV.
+
+Measured (2026-11-02/03): Ling-3.0-tiny Q4_0, perplexity identical (9.2871 on 8 chunks, desktop).
+Pixel 10, 6 threads, pp512: 167 -> 201 tok/s at depth 0, 88 -> 115 tok/s at depth 1100. Decode unchanged.
+Upstream PR: not opened yet.
+
+diff --git a/ggml/src/ggml-cpu/repack.cpp b/ggml/src/ggml-cpu/repack.cpp
+index 9282ca299..ca61fea50 100644
+--- a/ggml/src/ggml-cpu/repack.cpp
++++ b/ggml/src/ggml-cpu/repack.cpp
+@@ -4554,7 +4554,7 @@ class tensor_traits_base : public ggml::cpu::tensor_traits {
+ 
+ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PARAM_TYPE> class tensor_traits : public tensor_traits_base {
+ 
+-    bool work_size(int /* n_threads */, const struct ggml_tensor * op, size_t & size) override {
++    bool work_size(int n_threads, const struct ggml_tensor * op, size_t & size) override {
+         // not realy a GGML_TYPE_Q8_0 but same size.
+         switch (op->op) {
+             case GGML_OP_MUL_MAT:
+@@ -4574,6 +4574,12 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+ 
+                     size += sizeof_mmid_row_mapping*ne02*(ne12 + 1);
+ 
++                    // MoE GEMM: group offsets, every routed row packed in groups of 4, per-thread scratch.
++                    const int64_t n_ids = op->src[2]->ne[0];
++                    size += ne02*sizeof(int64_t);
++                    size += GGML_PAD(ggml_row_size(PARAM_TYPE, op->src[1]->ne[0])*n_ids*ne12, sizeof(float));
++                    size += (size_t) n_threads*4*(op->src[1]->ne[0] + op->src[0]->ne[1])*sizeof(float);
++
+                     return true;
+                 }
+             default:
+@@ -4834,6 +4840,14 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+         auto * matrix_row_counts = (int64_t *) (wdata_src1_end);                                        // [n_as]
+         struct mmid_row_mapping * matrix_rows = (struct mmid_row_mapping *) (matrix_row_counts + n_as); // [n_as][ne12]
+ 
++        // Rows routed to one expert, packed 4 at a time so that prefill runs gemm instead of one gemv per row.
++        const size_t nbx4      = 4 * nbw1;
++        auto *       group_off = (int64_t *) (matrix_rows + n_as * ne12);   // [n_as] first group of each expert
++        auto *       wdata_x4  = (char *) (group_off + n_as);
++        auto *       scratch   = (float *) (wdata_x4 + GGML_PAD(nbw1 * n_ids * ne12, sizeof(float))) + ith * 4 * (ne10 + ne01);
++        float *      xf        = scratch;              // 4 gathered src1 rows
++        float *      tmp       = scratch + 4 * ne10;   // 4 gemm output rows
++
+         // src1: float32 => param type
+         for (int64_t i12 = 0; i12 < ne12; ++i12) {
+             for (int64_t i11 = ith; i11 < ne11; i11 += nth) {
+@@ -4866,6 +4880,26 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+                     matrix_row_counts[i02] += 1;
+                 }
+             }
++            for (int64_t a = 0, off = 0; a < n_as; ++a) {
++                group_off[a] = off;
++                off += matrix_row_counts[a] / 4;
++            }
++        }
++
++        ggml_barrier(params->threadpool);
++
++        for (int cur_a = 0; cur_a < n_as; ++cur_a) {
++            const int64_t ng = matrix_row_counts[cur_a] / 4;
++            for (int64_t g = 0; g < ng; ++g) {
++                if ((group_off[cur_a] + g) % nth != ith) {
++                    continue;
++                }
++                for (int m = 0; m < 4; ++m) {
++                    const struct mmid_row_mapping rm = MMID_MATRIX_ROW(cur_a, 4 * g + m);
++                    memcpy(xf + m * ne10, (const char *) src1->data + (rm.i1 % ne11) * nb11 + rm.i2 * nb12, ne10 * sizeof(float));
++                }
++                ggml_quantize_mat_t<INTER_SIZE, PARAM_TYPE>(xf, wdata_x4 + (group_off[cur_a] + g) * nbx4, 4, ne10);
++            }
+         }
+ 
+         ggml_barrier(params->threadpool);
+@@ -4897,7 +4931,18 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+                 return;
+             }
+ 
+-            for (int ir1 = 0; ir1 < nr1; ir1++) {
++            const int64_t ncols = src0_cur_end - src0_cur_start;
++            const int64_t ng    = nr1 / 4;
++            for (int64_t g = 0; g < ng; ++g) {
++                gemm<BLOC_TYPE, INTER_SIZE, NB_COLS, PARAM_TYPE>(ne00, tmp, ncols, src0_cur + src0_cur_start * nb01,
++                                                                 wdata_x4 + (group_off[cur_a] + g) * nbx4, 4, ncols);
++                for (int m = 0; m < 4; ++m) {
++                    const struct mmid_row_mapping rm = MMID_MATRIX_ROW(cur_a, 4 * g + m);
++                    memcpy((float *) ((char *) dst->data + rm.i1 * nb1 + rm.i2 * nb2) + src0_cur_start, tmp + m * ncols, ncols * sizeof(float));
++                }
++            }
++
++            for (int ir1 = 4 * ng; ir1 < nr1; ir1++) {
+                 struct mmid_row_mapping row_mapping = MMID_MATRIX_ROW(cur_a, ir1);
+ 
+                 const int id = row_mapping.i1;  // selected expert index

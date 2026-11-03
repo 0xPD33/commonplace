@@ -1,0 +1,141 @@
+ggml-cpu: pause a thread's previous threadpool when it starts a graph on another one
+
+Two threadpools driven one after the other by the same thread (a speculative draft model and its target) busy-wait
+against each other on shared cores: after each graph, the idle pool's workers spin for 1024*128*poll relax rounds
+while the other pool needs those cores. Stock llama.cpp hits this with every draft model (the target pool spins while
+the draft's throwaway pool computes), and so does a draft with its own -td/-Cd pools.
+When a thread starts a graph on a pool other than its last one, it now pauses that last pool. Only a live pool
+(a registry under the global critical section) with no graph in flight (a busy flag set at kickoff, cleared when
+ggml_graph_compute returns, after the final barrier) is paused, so no worker can sleep through a kicked-off graph;
+pausing another thread's pool between kickoff and pickup would deadlock. A paused pool resumes at its next kickoff.
+Desktop, 3 strict cores, MiniCPM5-2B Q4_0 + DSpark Q4_0, greedy (same text in every run): draft with its own pools
+(-td 2) 16.7 -> 37.4 tok/s; draft sharing the target's pools (0002) unchanged, 37.5. On stock llama.cpp (4 cores) only
+7.7 -> 10.9-12.7: there the draft still creates and joins throwaway threads for every graph, which 0002 removes.
+Review (2026-11-03): no deadlock or use-after-free found (busy clears after the final barrier; pause and kickoff
+share the pool mutex; lock order is critical section -> pool mutex only; free unregisters before destroying). Side
+effect: resuming a paused pool re-applies its priority and affinity to the calling thread, two syscalls per switch.
+Upstream PR: not opened yet.
+
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -514,6 +514,7 @@
+     atomic_bool stop;         // Used for stopping the threadpool altogether
+     atomic_bool pause;        // Used for pausing the threadpool or individual threads
+     atomic_int  abort;        // Used for aborting processing of a graph
++    atomic_bool busy;         // a graph was kicked off and its ggml_graph_compute has not returned
+ 
+     struct ggml_compute_state * workers;   // per thread state
+     int          n_threads;   // Number of threads in the pool
+@@ -2769,9 +2770,64 @@
+     }
+ }
+ 
++#ifndef GGML_USE_OPENMP
++// Pools that one thread runs one after the other (a speculative draft model and its target) must not busy-wait
++// against each other on shared cores: when a thread starts a graph on a different pool than its last one, it pauses
++// that last pool. Only a live pool with no graph in flight is paused, so no worker can miss a kicked-off graph; a
++// paused pool resumes at its next kickoff. The registry keeps a freed pool from being touched.
++#if defined(_MSC_VER)
++#define GGML_CPU_TLS __declspec(thread)
++#else
++#define GGML_CPU_TLS _Thread_local
++#endif
++#define GGML_CPU_MAX_LIVE_POOLS 64
++
++static struct ggml_threadpool * ggml_live_pools[GGML_CPU_MAX_LIVE_POOLS];
++static GGML_CPU_TLS struct ggml_threadpool * ggml_last_pool;
++
++static void ggml_threadpool_register(struct ggml_threadpool * tp, bool add) {
++    ggml_critical_section_start();
++    for (int i = 0; i < GGML_CPU_MAX_LIVE_POOLS; i++) {
++        if (ggml_live_pools[i] == (add ? NULL : tp)) {
++            ggml_live_pools[i] = add ? tp : NULL;
++            break;
++        }
++    }
++    ggml_critical_section_end();
++}
++
++static void ggml_threadpool_pause_previous(struct ggml_threadpool * cur) {
++    struct ggml_threadpool * prev = ggml_last_pool;
++    ggml_last_pool = cur;
++    if (prev == NULL || prev == cur) {
++        return;
++    }
++    ggml_critical_section_start();
++    for (int i = 0; i < GGML_CPU_MAX_LIVE_POOLS; i++) {
++        if (ggml_live_pools[i] == prev) {
++            ggml_mutex_lock(&prev->mutex);
++            if (!prev->pause && !atomic_load(&prev->busy)) {
++                prev->pause = true;
++                ggml_cond_broadcast(&prev->cond);
++            }
++            ggml_mutex_unlock(&prev->mutex);
++            break;
++        }
++    }
++    ggml_critical_section_end();
++}
++#endif
++
+ void ggml_threadpool_free(struct ggml_threadpool* threadpool) {
+     if (!threadpool) return;
+ 
++#ifndef GGML_USE_OPENMP
++    ggml_threadpool_register(threadpool, false);
++    if (ggml_last_pool == threadpool) {
++        ggml_last_pool = NULL;
++    }
++#endif
++
+     const int n_threads = threadpool->n_threads;
+ 
+ #ifndef GGML_USE_OPENMP
+@@ -3387,6 +3443,8 @@
+ 
+     GGML_PRINT_DEBUG("compute-kickoff: n_threads %d n_graph %d\n", n_threads, n_graph);
+ 
++    atomic_store(&threadpool->busy, true);
++
+     // Indicate the graph is ready to be processed
+     // We need the full seq-cst fence here because of the polling threads (used in thread_sync)
+     atomic_store_explicit(&threadpool->n_graph, n_graph, memory_order_seq_cst);
+@@ -3425,6 +3483,7 @@
+         threadpool->current_chunk    = 0;
+         threadpool->stop             = false;
+         threadpool->pause            = tpp->paused;
++        threadpool->busy             = false;
+         threadpool->abort            = -1;
+         threadpool->workers          = NULL;
+         threadpool->n_threads        = tpp->n_threads;
+@@ -3479,6 +3538,10 @@
+     }
+ #endif // GGML_USE_OPENMP
+ 
++#ifndef GGML_USE_OPENMP
++    ggml_threadpool_register(threadpool, true);
++#endif
++
+     return threadpool;
+ }
+ 
+@@ -3544,6 +3607,9 @@
+         n_threads = threadpool->n_threads;
+     }
+ 
++    // a throwaway pool is never remembered; it is freed below
++    ggml_threadpool_pause_previous(disposable_threadpool ? NULL : threadpool);
++
+     // Kick all threads to start the new graph
+     ggml_graph_compute_kickoff(threadpool, n_threads);
+ 
+@@ -3555,6 +3621,9 @@
+     clear_numa_thread_affinity();
+ 
+     enum ggml_status ret = threadpool->ec;
++#ifndef GGML_USE_OPENMP
++    atomic_store(&threadpool->busy, false);
++#endif
+ 
+     if (disposable_threadpool) {
+         ggml_threadpool_free(threadpool);

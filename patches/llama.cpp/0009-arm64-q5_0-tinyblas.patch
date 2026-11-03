@@ -1,0 +1,102 @@
+llamafile sgemm: Q5_0 x Q8_0 on arm64 through tinyBLAS_Q0_ARM
+
+Q5_0 had a tinyBLAS path for AVX only, and neither KleidiAI nor the repack code takes Q5_0, so on arm64 every Q5_0
+matmul ran the generic per-element ggml_vec_dot_q5_0_q8_0 (about 60 instructions per 64 MACs, scratchpad bughunt asm).
+Ling-3.0-tiny stores its shared experts (ffn_*_shexp, 12 layers) in Q5_0. This adds load_lo/load_hi that expand the
+5th bit from qh with vtst and uses the existing dotprod tile code. ggml-cpu.c undefines GGML_USE_LLAMAFILE on every
+i8mm or SVE build, so it also keeps llamafile for Q5_0 matmuls there (prefill only: llamafile needs n >= 2).
+Numerics: the int8 values and integer dot products are the same as the generic path. Under QEMU (arm64), each
+tinyBLAS output matched ggml_vec_dot_q5_0_q8_0 within 1.2e-7 (outputs up to 1.8). Ling's logits still moved: KL
+against stock mean 0.002, max 0.011, same top token 98.4%, perplexity 11.122 -> 11.085 (256 tokens). Likely
+cause (not proven): the rounding-level change flips near-tied expert choices in the 8-of-128 MoE routing. Needs the
+eval. Phone speed: not measured yet.
+
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index f4eaea5df..6d50360f2 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -44,13 +44,23 @@
+ #endif
+ 
+ #if defined(__ARM_FEATURE_SVE) || defined(__ARM_FEATURE_MATMUL_INT8)
++#ifdef GGML_USE_LLAMAFILE
++// The i8mm and SVE kernels beat llamafile for the types they cover; Q5_0 has none, so it keeps llamafile.
++#define GGML_LLAMAFILE_Q5_0_ONLY 1
++#endif
+ #undef GGML_USE_LLAMAFILE
+ #endif
+ 
+-#ifdef GGML_USE_LLAMAFILE
++#if defined(GGML_USE_LLAMAFILE) || defined(GGML_LLAMAFILE_Q5_0_ONLY)
+ #include "llamafile/sgemm.h"
+ #endif
+ 
++#ifdef GGML_USE_LLAMAFILE
++#define GGML_LLAMAFILE_ALL_TYPES 1
++#else
++#define GGML_LLAMAFILE_ALL_TYPES 0
++#endif
++
+ #ifdef GGML_USE_CPU_RISCV64_SPACEMIT
+ #    include "spacemit/ime.h"
+ #endif
+@@ -1392,8 +1402,10 @@ UseGgmlGemm1:;
+ 
+     ggml_barrier(params->threadpool);
+ 
+-#if GGML_USE_LLAMAFILE
+-    if (!params->use_ref && src1->type != vec_dot_type) {
++#if GGML_USE_LLAMAFILE || GGML_LLAMAFILE_Q5_0_ONLY
++    if (!params->use_ref && src1->type != vec_dot_type && (GGML_LLAMAFILE_ALL_TYPES || src0->type == GGML_TYPE_Q5_0)) {
++        const int64_t r2 = ne12 / ne02; // broadcast factors (the first llamafile block is off in Q5_0-only builds)
++        const int64_t r3 = ne13 / ne03;
+         const void* wdata = (src1->type == vec_dot_type) ? src1->data : params->wdata;
+         const size_t row_size = ggml_row_size(vec_dot_type, ne10);
+ 
+diff --git a/ggml/src/ggml-cpu/llamafile/sgemm.cpp b/ggml/src/ggml-cpu/llamafile/sgemm.cpp
+index d28840a91..a0ae7259d 100644
+--- a/ggml/src/ggml-cpu/llamafile/sgemm.cpp
++++ b/ggml/src/ggml-cpu/llamafile/sgemm.cpp
+@@ -1427,6 +1427,27 @@ class tinyBLAS_Q0_ARM {
+                         vdupq_n_s8(0x8));
+     }
+ 
++    // Q5_0: element i is its 4-bit nibble plus bit i of qh as the 5th bit, minus 16.
++    inline uint8x16_t q5_0_high_bits(uint32_t qh) {
++        static const uint8_t bit[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
++        const uint8x16_t bytes = vcombine_u8(vdup_n_u8(qh & 0xff), vdup_n_u8((qh >> 8) & 0xff));
++        return vandq_u8(vtstq_u8(bytes, vld1q_u8(bit)), vdupq_n_u8(0x10));
++    }
++
++    inline int8x16_t load_lo(const block_q5_0 *b) {
++        uint32_t qh;
++        memcpy(&qh, b->qh, sizeof(qh));
++        return vsubq_s8(vreinterpretq_s8_u8(vorrq_u8(vandq_u8(vld1q_u8(b->qs), vdupq_n_u8(0x0f)), q5_0_high_bits(qh))),
++                        vdupq_n_s8(0x10));
++    }
++
++    inline int8x16_t load_hi(const block_q5_0 *b) {
++        uint32_t qh;
++        memcpy(&qh, b->qh, sizeof(qh));
++        return vsubq_s8(vreinterpretq_s8_u8(vorrq_u8(vshrq_n_u8(vld1q_u8(b->qs), 4), q5_0_high_bits(qh >> 16))),
++                        vdupq_n_s8(0x10));
++    }
++
+     const TA *const A;
+     const block_q8_0 *const B;
+     float *const C;
+@@ -4214,6 +4235,14 @@ bool llamafile_sgemm(const struct ggml_compute_params * params, int64_t m, int64
+             params->ith, params->nth};
+         tb.matmul(m, n);
+         return true;
++#elif defined(__ARM_FEATURE_DOTPROD)
++        tinyBLAS_Q0_ARM<block_q5_0> tb{
++            k, (const block_q5_0 *)A, lda,
++            (const block_q8_0 *)B, ldb,
++            (float *)C, ldc,
++            params->ith, params->nth};
++        tb.matmul(m, n);
++        return true;
+ #else
+         return false;
+ #endif

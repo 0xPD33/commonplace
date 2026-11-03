@@ -1,0 +1,74 @@
+ggml-cpu repack: dynamic chunks for MoE MUL_MAT_ID (on top of 0001)
+
+Upstream splits every expert's columns statically (ith*ne01/nth), so the op lasts as long as the slowest thread. On a
+Pixel 10 the threads run on a big core and on medium cores in two clock domains. This hands out chunks of whole
+NB_COLS groups over all used experts (about 4 per thread) through the threadpool chunk counter, like the dense path.
+Each output column is still computed by one thread with the same kernel, so results should not change.
+Correctness: arm64 under QEMU (0001-0008 plus a first 0009 that never ran, MiniCPM5 and Ling, 256 tokens): KL divergence against stock at the
+tool's floor (max 3.7e-5, same top token 100%). Phone speed: not measured yet.
+
+diff --git a/ggml/src/ggml-cpu/repack.cpp b/ggml/src/ggml-cpu/repack.cpp
+index ca61fea50..467e7c83b 100644
+--- a/ggml/src/ggml-cpu/repack.cpp
++++ b/ggml/src/ggml-cpu/repack.cpp
+@@ -4884,6 +4884,8 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+                 group_off[a] = off;
+                 off += matrix_row_counts[a] / 4;
+             }
++            // The first chunk of the compute loop below comes from each thread's id.
++            ggml_threadpool_chunk_set(params->threadpool, nth);
+         }
+ 
+         ggml_barrier(params->threadpool);
+@@ -4904,32 +4906,28 @@ template <typename BLOC_TYPE, int64_t INTER_SIZE, int64_t NB_COLS, ggml_type PAR
+ 
+         ggml_barrier(params->threadpool);
+ 
+-        // compute each matrix multiplication in sequence
+-        for (int cur_a = 0; cur_a < n_as; ++cur_a) {
+-            const int64_t cne1 = matrix_row_counts[cur_a];
+-
+-            if (cne1 == 0) {
+-                continue;
+-            }
+-
+-            const auto * src0_cur = (const char *) src0->data + cur_a*nb02;
+-
+-            //const int64_t nr0 = ne01; // src0 rows
+-            const int64_t nr1 = cne1; // src1 rows
+-
+-            int64_t src0_cur_start = (ith * ne01) / nth;
+-            int64_t src0_cur_end   = ((ith + 1) * ne01) / nth;
++        // Columns of all used experts in dynamic chunks of whole NB_COLS groups, about 4 per thread: fast cores take
++        // more chunks. Each output column is still computed by one thread with the same kernel, so results do not change.
++        int64_t n_active = 0;
++        for (int a = 0; a < n_as; ++a) {
++            n_active += matrix_row_counts[a] > 0;
++        }
++        int64_t cc = (n_active * ne01 + 4 * nth - 1) / (4 * nth);
++        cc = std::min<int64_t>(std::max<int64_t>((cc + NB_COLS - 1) / NB_COLS * NB_COLS, NB_COLS), ne01);
++        const int64_t ncc   = (ne01 + cc - 1) / cc;
++        const int64_t total = n_active * ncc;
+ 
+-            // Align boundaries to NB_COLS - round up to ensure all data is included
+-            src0_cur_start = (src0_cur_start % NB_COLS) ? src0_cur_start + NB_COLS - (src0_cur_start % NB_COLS) : src0_cur_start;
+-            src0_cur_end   = (src0_cur_end   % NB_COLS) ? src0_cur_end   + NB_COLS - (src0_cur_end   % NB_COLS) : src0_cur_end;
+-            if (src0_cur_end > ne01) {
+-                src0_cur_end = ne01;
++        int     cur_a = -1;
++        int64_t k     = -1; // index of cur_a among the used experts
++        for (int64_t c = ith; c < total; c = ggml_threadpool_chunk_add(params->threadpool, 1)) {
++            for (; k < c / ncc; ++k) {
++                do { ++cur_a; } while (matrix_row_counts[cur_a] == 0);
+             }
+ 
+-            if (src0_cur_start >= src0_cur_end) {
+-                return;
+-            }
++            const auto *  src0_cur       = (const char *) src0->data + cur_a*nb02;
++            const int64_t nr1            = matrix_row_counts[cur_a]; // src1 rows
++            const int64_t src0_cur_start = (c % ncc) * cc;
++            const int64_t src0_cur_end   = std::min<int64_t>(src0_cur_start + cc, ne01);
+ 
+             const int64_t ncols = src0_cur_end - src0_cur_start;
+             const int64_t ng    = nr1 / 4;

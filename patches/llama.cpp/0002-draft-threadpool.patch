@@ -1,0 +1,103 @@
+common/speculative: the draft context uses the target's threadpools
+
+Upstream b12032 attaches threadpools only to the target context (common.cpp common_init_result). The draft
+context (DFlash, DSpark, draft-simple) has none, so ggml creates and joins new threads for every draft graph
+(on a Pixel 10: hundreds of short-lived threads, 77% of the time in spin and barrier waits).
+A first version gave the draft context its own pools. That made it worse on shared cores: the idle pair busy-waits
+(poll 50) against the working pair. Desktop, MiniCPM5-2B Q4_0 + DSpark Q4_0, 4 cores (taskset), -t 4: 5.2 tok/s
+with two pairs, 47.3 tok/s with --poll 0 (plain decode 46.3). Draft and target never compute at the same time, so
+the draft context now attaches the target's pools when it asks for the same thread settings, and gets its own only
+when -td/-Cd differ. Adds llama_get_threadpool() and llama_get_threadpool_batch().
+Limit: the fallback (own pools) still collides with the target's idle pool, and -td without -Cd leaves the draft
+pool unpinned: desktop, 4 cores, -t 3 strict, -td 2: 16.7 tok/s against 37.7 with shared pools.
+Upstream PR: not opened yet.
+
+diff --git a/common/speculative.cpp b/common/speculative.cpp
+index 4305ac6..1f422e7 100644
+--- a/common/speculative.cpp
++++ b/common/speculative.cpp
+@@ -2697,8 +2697,9 @@ struct common_speculative_init_result::impl {
+     ~impl() = default;
+ 
+     // note: the order in which model, context, etc. are declared matters because their destructors will be called bottom-to-top
+-    llama_model_ptr   model;
+-    llama_context_ptr context;
++    llama_model_ptr    model;
++    common_threadpools threadpools; // freed after the context that uses them
++    llama_context_ptr  context;
+ };
+ 
+ common_speculative_init_result::common_speculative_init_result(
+@@ -2746,6 +2747,23 @@ common_speculative_init_result::common_speculative_init_result(
+         }
+ 
+         pimpl->context.reset(ctx_dft);
++
++        // Without threadpools the draft context creates and joins new threads on every graph. Two sets of pools on
++        // the same cores busy-wait against each other (draft and target never compute at the same time), so share
++        // the target's pools when the draft asks for the same threads; otherwise give it its own.
++        const ggml_threadpool_params tp_tgt  = ggml_threadpool_params_from_cpu_params(params.cpuparams);
++        const ggml_threadpool_params tpb_tgt = ggml_threadpool_params_from_cpu_params(params.cpuparams_batch);
++        const ggml_threadpool_params tp_dft  = ggml_threadpool_params_from_cpu_params(params.speculative.draft.cpuparams);
++        const ggml_threadpool_params tpb_dft = ggml_threadpool_params_from_cpu_params(params.speculative.draft.cpuparams_batch);
++        if (llama_get_threadpool(ctx_tgt) && ggml_threadpool_params_match(&tp_tgt, &tp_dft) &&
++                ggml_threadpool_params_match(&tpb_tgt, &tpb_dft)) {
++            llama_attach_threadpool(ctx_dft, llama_get_threadpool(ctx_tgt), llama_get_threadpool_batch(ctx_tgt));
++        } else {
++            common_params params_dft = params;
++            params_dft.cpuparams       = params.speculative.draft.cpuparams;
++            params_dft.cpuparams_batch = params.speculative.draft.cpuparams_batch;
++            pimpl->threadpools.init(ctx_dft, params_dft);
++        }
+     } else if (spec_mtp) {
+         model_path = params.model.path;
+ 
+diff --git a/include/llama.h b/include/llama.h
+index 3877b69..0c00eea 100644
+--- a/include/llama.h
++++ b/include/llama.h
+@@ -504,6 +504,11 @@ extern "C" {
+ 
+     LLAMA_API void llama_detach_threadpool(struct llama_context * ctx);
+ 
++    // The threadpools attached to ctx (NULL if none), e.g. to share them with a context that never computes at the
++    // same time, such as a speculative draft context
++    LLAMA_API ggml_threadpool_t llama_get_threadpool      (const struct llama_context * ctx);
++    LLAMA_API ggml_threadpool_t llama_get_threadpool_batch(const struct llama_context * ctx);
++
+     typedef void (*llama_model_set_tensor_data_t)(struct ggml_tensor * tensor, void * userdata);
+ 
+     // Create a new model from GGUF metadata as well as a function to set the tensor data
+diff --git a/src/llama-context.cpp b/src/llama-context.cpp
+index 4141e3c..37ae6b4 100644
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -4247,6 +4247,14 @@ void llama_detach_threadpool(llama_context * ctx) {
+     ctx->detach_threadpool();
+ }
+ 
++ggml_threadpool_t llama_get_threadpool(const llama_context * ctx) {
++    return ctx->get_threadpool();
++}
++
++ggml_threadpool_t llama_get_threadpool_batch(const llama_context * ctx) {
++    return ctx->get_threadpool_batch();
++}
++
+ void llama_set_n_threads(llama_context * ctx, int32_t n_threads, int32_t n_threads_batch) {
+     ctx->set_n_threads(n_threads, n_threads_batch);
+ }
+diff --git a/src/llama-context.h b/src/llama-context.h
+index 6938fb1..bd66f14 100644
+--- a/src/llama-context.h
++++ b/src/llama-context.h
+@@ -113,6 +113,9 @@ struct llama_context {
+ 
+     void detach_threadpool();
+ 
++    ggml_threadpool_t get_threadpool()       const { return threadpool; }
++    ggml_threadpool_t get_threadpool_batch() const { return threadpool_batch; }
++
+     void set_n_threads(int32_t n_threads, int32_t n_threads_batch);
+ 
+     void set_abort_callback(bool (*abort_callback)(void * data), void * abort_callback_data);

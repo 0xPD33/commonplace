@@ -1,0 +1,22 @@
+Title: common/speculative : let the draft context use the target's threadpools
+
+With a draft model (draft-simple, DFlash, DSpark), the target context has threadpools and the draft context has
+none, so ggml spawns threads for each draft graph while the target pool busy-waits (default --poll 50) on the same
+cores. On machines with few cores, speculative decoding becomes much slower than plain decoding.
+
+Repro (Ryzen 9 9950X3D, taskset -c 20-23, MiniCPM5-2B Q4_0 + openbmb DSpark Q4_0, greedy, -t 4, 128 tokens):
+  plain decode (llama-bench tg128)                46.3 tok/s
+  llama-speculative-simple, master                 7.4 tok/s
+  same with --poll 0 --poll-draft 0               47.3 tok/s
+  this PR (draft attaches the target's pools)     47.2 tok/s
+Acceptance is 49% in every run, so only scheduling differs. Giving the draft context its own pools does not help
+(5.2 tok/s): the idle pair spins against the working pair.
+
+Draft and target never compute at the same time, so the draft context now attaches the target's pools when its
+cpuparams match (the default when -td/-Cd are not given), and creates its own pools otherwise. Adds
+llama_get_threadpool() / llama_get_threadpool_batch().
+
+Not covered: with -td/-Cd different from the target, the draft still gets its own pools and the idle pair still
+spins (3 cores, -t 3 strict, -td 2: 16.7 tok/s against 37.7 shared). A follow-up (our pending 0014) pauses a thread's
+previous pool when it starts a graph on another live, idle one: -td 2 16.7 -> 37.4 tok/s. -td without -Cd also leaves the draft pool unpinned (postprocess_cpu_params inherits the
+mask only when n_threads < 0).

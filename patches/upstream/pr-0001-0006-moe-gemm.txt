@@ -1,0 +1,14 @@
+Title: ggml-cpu : repack MUL_MAT_ID with GEMM on groups of 4 routed rows, and dynamic chunks
+
+forward_mul_mat_id calls one gemv per routed token per expert, even in a 512-token prompt, and splits every expert's
+columns statically across threads. This patch packs each expert's routed rows 4 at a time (q8_0x4, the same
+ggml_quantize_mat_t the dense path uses) and calls the repacked gemm; the rows left over keep the gemv. Columns of all
+used experts are then handed out in chunks of whole NB_COLS groups through the threadpool chunk counter, like the dense
+path, so fast cores take more work on mixed-core phones.
+
+Each output is computed with the same kernels as before (gemm vs gemv only change how many rows share a tile), and each
+column by one thread: on x86, 120 prompts through our app gave word-for-word identical answers, and KL divergence on
+Ling-3.0-tiny is at the tool's floor; the same on arm64 under qemu-aarch64.
+
+Pixel 10, Ling-3.0-tiny Q4_0, 6 threads: pp512 167 -> 201 tok/s at depth 0, 88 -> 115 tok/s at depth 1100 (gemm part;
+the chunking part: <fill in>). Desktop x86 (AVX2): +5-8% pp512.

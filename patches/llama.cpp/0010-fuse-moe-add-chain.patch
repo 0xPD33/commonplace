@@ -1,0 +1,94 @@
+ggml-cpu: fuse the MoE expert sum (a chain of ADDs over views of one tensor) into one pass
+
+build_moe_ffn sums the n_expert_used weighted expert outputs with n-1 ADD nodes, each ending in a thread barrier
+(Ling-3.0-tiny: 7 ADDs in each of 23 MoE layers per token). This detects ADD(view(E,0), view(E,1)), ADD(prev,
+view(E,2)), ... over equally spaced F32 views of one tensor and computes the chain in one pass, adding the same terms in
+the same order per element, so the result does not change. Fewer barriers: 6 per MoE layer.
+Expected gain: small (decode 1-2%, guessed). x86: a one-time stderr marker showed 8-term chains fused; KL against
+stock at the floor. Phone speed: not measured yet.
+
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+index f4eaea5df..8602861ad 100644
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -3083,6 +3083,69 @@ struct ggml_cplan ggml_graph_plan(
+ // Returns the number of nodes skipped by fusion (>=1), or 0 if no fusion was applied.
+ static bool ggml_cpu_disable_fusion = false;  // initialized once in ggml_cpu_init(), read-only afterwards
+ 
++// ADD(view(E, 0), view(E, 1)), ADD(prev, view(E, 2)), ... over equally spaced F32 views of one tensor (the MoE expert
++// sum) as one pass: each element adds the same terms in the same order, so the result is unchanged, with one barrier
++// instead of one per ADD. Returns the number of extra nodes taken, 0 when the pattern does not match.
++static int ggml_cpu_try_fuse_add_chain(const struct ggml_cgraph * cgraph, const int node_n, const struct ggml_compute_params * params) {
++    const struct ggml_tensor * node = cgraph->nodes[node_n];
++    const struct ggml_tensor * a0   = node->src[0];
++    const struct ggml_tensor * a1   = node->src[1];
++    const struct ggml_tensor * e    = a0->view_src;
++    if (e == NULL || a1->view_src != e || node->type != GGML_TYPE_F32 || a0->type != GGML_TYPE_F32 || a1->type != GGML_TYPE_F32 ||
++        !ggml_are_same_shape(a0, a1) || !ggml_are_same_shape(a0, node) || a0->ne[2] != 1 || a0->ne[3] != 1 ||
++        a0->nb[0] != sizeof(float) || a1->nb[0] != sizeof(float) || node->nb[0] != sizeof(float) || a0->nb[1] != a1->nb[1]) {
++        return 0;
++    }
++    const ptrdiff_t step = (const char *) a1->data - (const char *) a0->data;
++    if (step <= 0) {
++        return 0;
++    }
++    enum { MAX_TERMS = 32 };
++    const char * terms[MAX_TERMS] = { (const char *) a0->data, (const char *) a1->data };
++    int n = 2;
++    while (n < MAX_TERMS && node_n + n - 1 < cgraph->n_nodes) {
++        const struct ggml_tensor * next = cgraph->nodes[node_n + n - 1];
++        const struct ggml_tensor * v    = next->src[1];
++        if (next->op != GGML_OP_ADD || next->src[0] != cgraph->nodes[node_n + n - 2] || v->view_src != e ||
++            v->type != GGML_TYPE_F32 || !ggml_are_same_shape(v, a0) || v->nb[1] != a0->nb[1] || next->nb[0] != sizeof(float) ||
++            (const char *) v->data - (const char *) a0->data != (ptrdiff_t) n * step) {
++            break;
++        }
++        terms[n++] = (const char *) v->data;
++    }
++    enum ggml_op ops[MAX_TERMS];
++    for (int i = 0; i < n - 1; i++) {
++        ops[i] = GGML_OP_ADD;
++    }
++    if (n < 3 || !ggml_can_fuse(cgraph, node_n, ops, n - 1)) {
++        return 0;
++    }
++    const struct ggml_tensor * dst = cgraph->nodes[node_n + n - 2];
++    const int64_t ne0 = a0->ne[0];
++    const int64_t nr  = a0->ne[1];
++    // Rows across threads; with fewer rows than threads (decode), columns in 64-float chunks (256 bytes, so threads
++    // rarely write the same cache line).
++    const int64_t nc = nr >= params->nth ? 1 : (ne0 + 63) / 64;
++    for (int64_t w = params->ith; w < nr * nc; w += params->nth) {
++        const int64_t r  = w / nc;
++        const int64_t c0 = nc == 1 ? 0 : (w % nc) * 64;
++        const int64_t c1 = nc == 1 ? ne0 : MIN(c0 + 64, ne0);
++        float * out = (float *) ((char *) dst->data + r * dst->nb[1]);
++        const float * s0 = (const float *) (terms[0] + r * a0->nb[1]);
++        const float * s1 = (const float *) (terms[1] + r * a0->nb[1]);
++        for (int64_t j = c0; j < c1; j++) {
++            out[j] = s0[j] + s1[j];
++        }
++        for (int i = 2; i < n; i++) {
++            const float * si = (const float *) (terms[i] + r * a0->nb[1]);
++            for (int64_t j = c0; j < c1; j++) {
++                out[j] += si[j];
++            }
++        }
++    }
++    return n - 2;
++}
++
+ static int ggml_cpu_try_fuse_ops(
+         const struct ggml_cgraph * cgraph,
+         const int node_n,
+@@ -3095,6 +3157,10 @@ static int ggml_cpu_try_fuse_ops(
+ 
+     struct ggml_tensor * node = cgraph->nodes[node_n];
+ 
++    if (node->op == GGML_OP_ADD) {
++        return ggml_cpu_try_fuse_add_chain(cgraph, node_n, params);
++    }
++
+     if (node->op == GGML_OP_RMS_NORM) {
+         // RMS_NORM + MUL fusion
+         const enum ggml_op fuse_ops[] = { GGML_OP_RMS_NORM, GGML_OP_MUL };

@@ -1,13 +1,19 @@
 //! Builds the pinned llama.cpp submodule as static libraries and generates FFI bindings.
+//! The patches in `patches/llama.cpp/` apply to a copy in OUT_DIR, so the submodule stays upstream.
 
 use std::env;
-use std::path::PathBuf;
+use std::fs;
+use std::hash::{Hash, Hasher};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() {
-    let root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("../../third_party/llama.cpp");
+    let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let upstream = manifest.join("../../third_party/llama.cpp");
     let target = env::var("TARGET").unwrap();
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed={}", root.join("include/llama.h").display());
+    println!("cargo:rerun-if-changed={}", upstream.join("include/llama.h").display());
+    let root = patched(&upstream, &manifest.join("../../patches/llama.cpp"));
 
     let mut cfg = cmake::Config::new(&root);
     cfg.profile("Release")
@@ -38,7 +44,9 @@ fn main() {
             .define("GGML_NATIVE", "OFF");
         if abi == "arm64-v8a" {
             // Build trap: without the explicit arch the dotprod check can silently fail.
-            cfg.define("GGML_CPU_ARM_ARCH", "armv8.2-a+dotprod+i8mm").define("GGML_CPU_KLEIDIAI", "ON");
+            // +fp16: native FP16 math for the F16 KV cache. MiniCPM decode at 1,100 tokens of context ran 34% faster on a
+            // Pixel 10 (docs/BENCHMARKS.md). Every core with i8mm, which this build already needs, has FP16.
+            cfg.define("GGML_CPU_ARM_ARCH", "armv8.2-a+dotprod+i8mm+fp16").define("GGML_CPU_KLEIDIAI", "ON");
         }
     } else {
         // The Nix cc wrapper strips -march=native, so name the features instead.
@@ -85,4 +93,66 @@ fn main() {
         .generate()
         .expect("bindgen llama.h");
     bindings.write_to_file(PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs")).unwrap();
+}
+
+/// The llama.cpp source tree to build: `upstream` itself without patches, else a copy in OUT_DIR with every
+/// `*.patch` in `patches` applied in name order. The copy is rebuilt when a patch or the upstream commit changes.
+fn patched(upstream: &Path, patches: &Path) -> PathBuf {
+    println!("cargo:rerun-if-changed={}", patches.display());
+    let mut list: Vec<PathBuf> = fs::read_dir(patches)
+        .map(|d| d.filter_map(|e| e.ok().map(|e| e.path())).filter(|p| p.extension().is_some_and(|x| x == "patch")).collect())
+        .unwrap_or_default();
+    if list.is_empty() {
+        return upstream.to_path_buf();
+    }
+    list.sort();
+    let head = Command::new("git").arg("-C").arg(upstream).args(["rev-parse", "HEAD"]).output().expect("git rev-parse");
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    head.stdout.hash(&mut h);
+    for p in &list {
+        println!("cargo:rerun-if-changed={}", p.display());
+        fs::read(p).unwrap().hash(&mut h);
+    }
+    let stamp = format!("{:016x}", h.finish());
+    let dst = PathBuf::from(env::var("OUT_DIR").unwrap()).join("llama.cpp-patched");
+    if fs::read_to_string(dst.join(".patch-stamp")).ok().as_deref() == Some(stamp.as_str()) {
+        return dst;
+    }
+    let _ = fs::remove_dir_all(&dst);
+    // The test models (75 MB) and the git data are not needed for the build.
+    copy_tree(upstream, &dst, &[".git", "models"]);
+    for p in &list {
+        // OUT_DIR lies inside our own repository: stop git from applying the paths relative to its root.
+        let ok = Command::new("git")
+            .current_dir(&dst)
+            .env("GIT_CEILING_DIRECTORIES", dst.parent().unwrap())
+            .arg("apply")
+            .arg(p)
+            .status()
+            .expect("git apply")
+            .success();
+        assert!(ok, "patch {} does not apply to llama.cpp {}", p.display(), String::from_utf8_lossy(&head.stdout).trim());
+    }
+    fs::write(dst.join(".patch-stamp"), stamp).unwrap();
+    dst
+}
+
+fn copy_tree(src: &Path, dst: &Path, skip: &[&str]) {
+    fs::create_dir_all(dst).unwrap();
+    for e in fs::read_dir(src).unwrap() {
+        let e = e.unwrap();
+        let name = e.file_name();
+        if skip.iter().any(|s| name == *s) {
+            continue;
+        }
+        let (from, to) = (e.path(), dst.join(&name));
+        let ty = e.file_type().unwrap();
+        if ty.is_symlink() {
+            std::os::unix::fs::symlink(fs::read_link(&from).unwrap(), &to).unwrap();
+        } else if ty.is_dir() {
+            copy_tree(&from, &to, &[]);
+        } else {
+            fs::copy(&from, &to).unwrap();
+        }
+    }
 }

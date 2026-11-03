@@ -1,0 +1,48 @@
+ggml-cpu flash attention: NEON K-tile transpose on arm64
+
+The tiled kernel converts each 64-key K tile to F32 and transposes it for every Q tile and every query head that
+shares a KV head (16x for Ling's MLA). The scalar loop compiles to ldr h / fcvt / str s with a 256-byte stride, about
+10% of the kernel's instructions (scratchpad bughunt asm). This converts 4 keys x 4 dims per step and transposes in
+registers. FP16 to FP32 conversion is exact, so K_f32 holds the same values.
+Correctness: arm64 under QEMU (0001-0008 plus a first 0009 that never ran, MiniCPM5 and Ling, 256 tokens): KL divergence against stock at the
+tool's floor (max 3.7e-5, same top token 100%). Phone speed: not measured yet.
+
+diff --git a/ggml/src/ggml-cpu/ops.cpp b/ggml/src/ggml-cpu/ops.cpp
+index d3a156b12..6d85eff16 100644
+--- a/ggml/src/ggml-cpu/ops.cpp
++++ b/ggml/src/ggml-cpu/ops.cpp
+@@ -9239,7 +9239,33 @@ static void ggml_compute_forward_flash_attn_ext_tiled(
+ 
+             // Pack K tile transposed: K_f32[dk][kv] so KV_TILE is contiguous (SIMD dim)
+             // Zero-pad the last tile so the GEMM always operates on KV_TILE_SZ columns
+-            for (int tk = 0; tk < kv_tile; tk++) {
++            int tk = 0;
++#if defined(__ARM_NEON)
++            // 4 keys x 4 dims per step: convert with vcvt and transpose in registers (the scalar loop stores one
++            // float at a 4*KV_TILE_SZ-byte stride). The conversion is exact, so K_f32 is unchanged.
++            if (kv_type == GGML_TYPE_F16 && DK % 4 == 0) {
++                for (; tk + 4 <= kv_tile; tk += 4) {
++                    const ggml_fp16_t * r[4];
++                    for (int j = 0; j < 4; j++) {
++                        r[j] = (const ggml_fp16_t *)((const char *)k->data + (ic + tk + j)*nbk1 + ik2*nbk2 + ik3*nbk3);
++                    }
++                    for (int64_t dk = 0; dk < DK; dk += 4) {
++                        const float32x4_t a0 = vcvt_f32_f16(vld1_f16((const __fp16 *)(r[0] + dk)));
++                        const float32x4_t a1 = vcvt_f32_f16(vld1_f16((const __fp16 *)(r[1] + dk)));
++                        const float32x4_t a2 = vcvt_f32_f16(vld1_f16((const __fp16 *)(r[2] + dk)));
++                        const float32x4_t a3 = vcvt_f32_f16(vld1_f16((const __fp16 *)(r[3] + dk)));
++                        const float32x4_t t0 = vtrn1q_f32(a0, a1), t1 = vtrn2q_f32(a0, a1);
++                        const float32x4_t t2 = vtrn1q_f32(a2, a3), t3 = vtrn2q_f32(a2, a3);
++                        float * o = K_f32 + dk * KV_TILE_SZ + tk;
++                        vst1q_f32(o + 0*KV_TILE_SZ, vreinterpretq_f32_f64(vtrn1q_f64(vreinterpretq_f64_f32(t0), vreinterpretq_f64_f32(t2))));
++                        vst1q_f32(o + 1*KV_TILE_SZ, vreinterpretq_f32_f64(vtrn1q_f64(vreinterpretq_f64_f32(t1), vreinterpretq_f64_f32(t3))));
++                        vst1q_f32(o + 2*KV_TILE_SZ, vreinterpretq_f32_f64(vtrn2q_f64(vreinterpretq_f64_f32(t0), vreinterpretq_f64_f32(t2))));
++                        vst1q_f32(o + 3*KV_TILE_SZ, vreinterpretq_f32_f64(vtrn2q_f64(vreinterpretq_f64_f32(t1), vreinterpretq_f64_f32(t3))));
++                    }
++                }
++            }
++#endif
++            for (; tk < kv_tile; tk++) {
+                 const char * k_data = (const char *)k->data + (ic + tk)*nbk1 + ik2*nbk2 + ik3*nbk3;
+                 if (kv_type == GGML_TYPE_F16) {
+                     const ggml_fp16_t * k_f16 = (const ggml_fp16_t *)k_data;

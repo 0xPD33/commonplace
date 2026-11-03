@@ -1,0 +1,28 @@
+ggml-cpu kleidiai: leave Q6_K weights to the repack buffer
+
+KleidiAI is first in the extra buffer list and claims Q6_K matmul weights, which it requantizes to per-row int8
+(max_abs/127 per row, kleidiai.cpp repack): lossy, and about 1.0 instead of 0.82 bytes per weight per decode step.
+The repack buffer that comes next has native q6_K_8x8_q8_K (i8mm) and q6_K_8x4_q8_K (dotprod) kernels. Ling-3.0-tiny
+keeps its output head (about 198 MB) and 9 attn_q tensors in Q6_K, so decode reads about 48 MB less per token (derived).
+Numerics change (the lossy requantization goes away). Under QEMU arm64, Ling, 256 tokens, against x86 logits (x86 runs
+Q6_K natively): perplexity 11.122 (stock) / 11.085 (0001-0010) / 10.936 (with this patch), x86 11.042; KL toward x86
+0.0073 / 0.0070 / 0.0077, so no clear accuracy direction (any rounding-level change moves the logits this much). Model load under
+QEMU fell from 33.5 s to 18.6 s: KleidiAI's Q6_K requantization at load is expensive. Pending: phone speed, load time
+and the eval. Kept out of the applied series (patches/llama.cpp-pending/) until then.
+
+diff --git a/ggml/src/ggml-cpu/kleidiai/kleidiai.cpp b/ggml/src/ggml-cpu/kleidiai/kleidiai.cpp
+index 57a4a5662..bd013015a 100644
+--- a/ggml/src/ggml-cpu/kleidiai/kleidiai.cpp
++++ b/ggml/src/ggml-cpu/kleidiai/kleidiai.cpp
+@@ -1795,6 +1795,11 @@ class extra_buffer_type : ggml::cpu::extra_buffer_type {
+         if (op->op != GGML_OP_MUL_MAT) {
+             return false;
+         }
++        // Q6_K would be requantized to per-row int8 (lossy, about 1.0 instead of 0.82 bytes per weight); the repack
++        // buffer that comes next has native Q6_K i8mm and dotprod kernels.
++        if (op->src[0]->type == GGML_TYPE_Q6_K) {
++            return false;
++        }
+ 
+         std::array<ggml_kleidiai_kernels *, GGML_KLEIDIAI_MAX_KERNEL_SLOTS> kernel_chain;
+         const int slot_total = kleidiai_collect_kernel_chain(op, kernel_chain);

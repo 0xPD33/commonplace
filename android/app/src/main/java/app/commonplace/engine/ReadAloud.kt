@@ -29,9 +29,9 @@ import java.util.concurrent.TimeUnit
  * Reads an answer aloud on the device, with the system engine or the bundled voice.
  *
  * The system engine only uses a voice that needs no network, for the language of the answer. The bundled voice is
- * Phonon (English) from the `tts-en` pack, always with the pack's default voice. It holds about 0.2 GB, so it stays
- * loaded from the first answer it reads until [close]. `onDone` runs on the main thread, and never for a stopped
- * answer.
+ * Phonon (English) from the `tts-en` pack, always with the pack's default voice. It holds about 0.2 GB and loads in
+ * under 0.2 s, so it loads for each answer it reads and frees the memory for the LLM. `onDone` runs on the main
+ * thread, and never for a stopped answer.
  */
 class ReadAloud(context: Context) {
     private val app = context.applicationContext
@@ -46,7 +46,6 @@ class ReadAloud(context: Context) {
 
     // Guarded by [bundledLock]: the model takes one call at a time.
     private val bundledLock = Any()
-    private var phonon: PhononTTS? = null
     @Volatile private var closed = false
 
     val bundledInstalled: Boolean get() = File(dir, "model.q8.gguf").isFile
@@ -77,8 +76,6 @@ class ReadAloud(context: Context) {
         closed = true
         system?.shutdown()
         system = null
-        // Off the main thread: an answer that is still stopping holds the model until its next piece of audio.
-        Thread { synchronized(bundledLock) { phonon?.close(); phonon = null } }.start()
     }
 
     private fun current(id: Int) = synchronized(lock) { id == session }
@@ -138,12 +135,12 @@ class ReadAloud(context: Context) {
     private fun speakBundled(id: Int, text: String): String? {
         synchronized(bundledLock) {
             if (closed || !current(id)) return null
-            val tts = phonon ?: try {
+            val tts = try {
                 val start = SystemClock.elapsedRealtime()
-                // Phonon reads it at its first load. Our Rust core sizes its own rayon pool from it too, if it has none yet.
+                // Only for Phonon's own rayon pool: the Rust core sizes its pool from the same variable at its first search.
+                // ponytail: a first search during the first reading still gets 2 threads; it only searches slower.
                 Os.setenv("RAYON_NUM_THREADS", "2", true)
                 PhononTTS(dir.path, "en").also {
-                    phonon = it
                     Log.i(TAG, "Phonon loaded in ${SystemClock.elapsedRealtime() - start} ms")
                 }
             } catch (e: LinkageError) {
@@ -156,7 +153,12 @@ class ReadAloud(context: Context) {
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()
             synchronized(lock) {
-                if (id != session) return null.also { t.release() }
+                if (id != session) {
+                    t.release()
+                    tts.close()
+                    Os.unsetenv("RAYON_NUM_THREADS")
+                    return null
+                }
                 track = t
             }
             try {
@@ -184,6 +186,8 @@ class ReadAloud(context: Context) {
             } finally {
                 synchronized(lock) { if (track === t) track = null }
                 t.release()
+                tts.close()
+                Os.unsetenv("RAYON_NUM_THREADS")
             }
         }
         return null

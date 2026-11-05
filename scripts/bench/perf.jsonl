@@ -1,0 +1,9 @@
+{"id": "perf-02", "query": "How can you tell a leopard, a jaguar and a cheetah apart, and where does each one live?", "category": "comparison", "stress": "long answer, three entities, large evidence"}
+{"id": "perf-04", "query": "How do I propagate a pothos plant from cuttings?", "category": "howto", "stress": "how-to system prompt: prompt-cache switch"}
+{"id": "perf-05", "query": "What causes the seasons, why are they reversed in the southern hemisphere, and why is it not about the distance from the Sun?", "category": "explanation", "stress": "multi-part question after a how-to: cache switch back, long answer"}
+{"id": "perf-07", "query": "Walking 5 km an hour, how long would it take to walk the length of the Great Wall of China?", "category": "numeric", "stress": "COMPUTED with a number from the question"}
+{"id": "perf-09", "query": "What was the Great Molasses Flood?", "category": "long_tail", "stress": "conversation start"}
+{"id": "perf-10", "query": "Why did the tank burst, and what changed in building rules afterwards?", "category": "followup", "stress": "follow-up: earlier turn in the prompt", "followup": true}
+{"id": "perf-11", "query": "Tell me more about the lawsuits that followed.", "category": "followup", "stress": "second follow-up: longer history", "followup": true}
+{"id": "perf-12", "query": "How do I fix a leaking kitchen tap, step by step?", "category": "howto", "stress": "how-to with a long step list"}
+{"id": "perf-13", "query": "Compare the French Revolution and the American Revolution: causes, key events, and results.", "category": "comparison", "stress": "longest answer: two entities on three points"}

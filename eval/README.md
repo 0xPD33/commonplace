@@ -30,6 +30,8 @@ The eval harness. It measures our answers against Claude with web search. [docs/
 | Run | What it is | Score ratio |
 |---|---|---|
 | `v2-ref-ling` | The reference run and the gate's baseline: Ling with the phone's settings, the Starter set and the Reference shelf, on test, canary, abstention, robust and recent (142 questions, 2026-11-02). The source of `docs/EVAL.md` | 0.64 |
+| `v3-ref-warm`, `v3-ref-warm2` | Two rolls of the 0.3 prompt at 400 evidence tokens, what a warm phone runs before 0.4.0: the gate's reference for 0.4.0 (142 questions, 2026-11-05) | |
+| `v4-rc-ling`, `v4-rc-ling2` | Two rolls of the 0.4.0 Ling candidate on the same questions: the shorter prompt at 400 evidence tokens, the new how-to prompt at 450, the last-layer patch, the head rows and the wider number check | |
 | `v2-gemma-e2b` | The same with the Gemma 4 E2B Q4_0 GGUF (`ggml-org/gemma-4-E2B-it-GGUF`), a desktop stand-in for the NPU file | 0.60 |
 | `v2-closed-ling` | The same Ling with `--closed-book`: no library | 0.47 |
 | `v2-ref-ling-r2` | A second run of the reference build on the first 122 questions: identical answers, judged again | 0.591 |
@@ -119,19 +121,24 @@ nix develop -c python3 eval/report.py --run <run-id> --systems <run>,<run>   # a
 
 ## Release check
 
-A release candidate answers every gated file in one run. Then it is compared with the reference run of the last release:
+A release candidate answers every gated file twice: once as built, and once with a no-meaning edit of each prompt
+that changed (the how-to prompt is separate), built in a worktree. Any prompt edit re-rolls about 80% of the answers, so one roll cannot judge. Both rolls are then
+compared with the two reference rolls of the last release:
 
 ```sh
 Q=eval/test.jsonl,eval/canary.jsonl,eval/abstention.jsonl,eval/robust.jsonl,eval/recent.jsonl
 nix develop -c python3 eval/run.py --queries $Q --phone --run-id <candidate>
-nix develop -c python3 eval/abstain.py --run <candidate>
-nix develop -c python3 eval/pairwise.py --a <candidate> --b <reference>
-nix develop -c python3 eval/report.py --run <candidate> --gate <reference>   # exit 1 on fail
+nix develop -c python3 eval/run.py --queries $Q --phone --bin <edited build> --run-id <candidate2>
+nix develop -c python3 eval/abstain.py --run <candidate>      # and <candidate2>
+nix develop -c python3 eval/pairwise.py --a <candidate> --b <reference> --subset <test ids>
+nix develop -c python3 eval/pairwise.py --a <candidate2> --b <reference2> --subset <test ids>
+nix develop -c python3 eval/report.py --run <candidate> --roll2 <candidate2> --gate <reference>,<reference2>   # exit 1 on fail
 ```
 
-The gate fails on any error, any failed canary, an Unverified-sentence rate more than 1 point above the
-reference, fewer `expect` passes, more than one lost abstention, or a significant pairwise loss
-(more losses than wins, sign test p < 0.05) on the locked test split. The report puts the gate table
+The gate pools the rolls, except that the pairwise check takes one result per question, the mean of its rolls. It fails
+on any error, any failed canary, an Unverified-sentence rate more than 1 point above the reference, fewer `expect`
+passes, more than one lost abstention per roll, or a significant pairwise loss (more losses than wins, sign test
+p < 0.05) on the locked test split. The report puts the gate table
 above the results. The citation columns (Unverified, uncited, sources cited) need no LLM; they come
 from the answer segments that the core's citation check writes. The report also gives a bootstrap 95%
 interval for each score ratio, the judge points per rubric item ("Where the points go"), and "Answers to
@@ -142,6 +149,8 @@ results computes the main points: the largest rubric gap, the weakest category, 
 generator failure counts, misspelled against clean wording, answer length, judge order agreement and
 the grading cost.
 
+- Search orders the candidates before the rerank pool with the learned fusion scorer. `--cli=--fusion=rrf` runs
+  the reciprocal-rank fusion of runs before 2026-11-04.
 - `run.py --phone` runs what the phone ships: `--fuse-keep=24`, the quantized encoders
   (`--leaf-model=onnx/model_quantized.onnx`, `--ettin-model=onnx/model_sel8.onnx`) and the GGUF of the
   library's own model pack. Choose the pack set with `--library <dir>` and the build with `--bin`.

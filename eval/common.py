@@ -28,7 +28,7 @@ def portable(p):
     if p.is_relative_to(Path.home()):
         return "~/" + str(p.relative_to(Path.home()))
     return p.name
-ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-doc2query", "no-llm"]
+ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-doc2query", "no-llm", "no-reformat-followup", "no-sentence-head"]
 CATEGORIES = [
     "factual", "explanation", "comparison", "multihop", "numeric",
     "travel", "howto", "out_of_corpus", "long_tail",

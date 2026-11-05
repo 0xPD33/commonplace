@@ -510,11 +510,13 @@ def systems(run_ids):
 GATE_UNVERIFIED_SLACK = 0.01
 
 
-def gate(run_dir, rows, ref_id):
-    """Release checks against a reference run on the same query files. Returns (passed, markdown)."""
-    _, _, ref_rows = load_run(RUNS / ref_id)
-    ids = {r["id"] for r in rows}
-    ref_rows = [r for r in ref_rows if r["id"] in ids]
+def gate(run_dirs, ref_ids):
+    """Release checks of a candidate's rolls against the reference's rolls on the same query files. Counts pool over
+    the rolls: any prompt edit re-rolls about 80% of the answers, so one roll cannot judge. Returns (passed, markdown)."""
+    rolls = [load_run(d)[2] for d in run_dirs]
+    ids = {r["id"] for r in rolls[0]}
+    refs = [[r for r in load_run(RUNS / ref)[2] if r["id"] in ids] for ref in ref_ids]
+    rows, ref_rows = sum(rolls, []), sum(refs, [])
     canary = [r for r in rows if r.get("category") == "canary"]
     rest, ref_rest = ([r for r in rs if r.get("category") != "canary"] for rs in (rows, ref_rows))
     new, ref = summarize(rest), summarize(ref_rest)
@@ -531,28 +533,45 @@ def gate(run_dir, rows, ref_id):
         checks.append(("Expected answers", new["expect_pass"] >= ref["expect_pass"],
                        f"{new['expect_pass']} / {new['expect_n']} vs {ref['expect_pass']} / {ref['expect_n']}"))
     if new["abstain_n"]:
-        checks.append(("Abstention", new["abstain_pass"] >= ref["abstain_pass"] - 1,
-                       f"{new['abstain_pass']} / {new['abstain_n']} vs {ref['abstain_pass']} / {ref['abstain_n']} (limit -1)"))
+        checks.append(("Abstention", new["abstain_pass"] >= ref["abstain_pass"] - len(rolls),
+                       f"{new['abstain_pass']} / {new['abstain_n']} vs {ref['abstain_pass']} / {ref['abstain_n']} (limit -{len(rolls)})"))
     # Quality: the blind pairwise judge on the locked test split (all pairs if there is no split).
-    pw = read_jsonl(run_dir / f"pairwise-vs-{ref_id}.jsonl")
     test = {q["id"] for q in read_jsonl(EVAL / "test.jsonl")}
-    pw = [p for p in pw if not test or p["id"] in test]
-    if pw:
-        s = pairwise_summary(pw)
+    pws = [[p for p in read_jsonl(d / f"pairwise-vs-{ref}.jsonl") if not test or p["id"] in test]
+           for d, ref in zip(run_dirs, ref_ids)]
+    if all(pws):
+        s = pairwise_summary(per_question(pws))
         worse = s["loss"] > s["win"] and s["sign_p"] < 0.05
         checks.append(("Pairwise quality", not worse,
                        f"{s['win']} / {s['tie']} / {s['loss']}, sign test p = {s['sign_p']:.3f}, diff {s['mean_diff']:+.2f}"))
     else:
-        checks.append(("Pairwise quality", False, f"not run: `eval/pairwise.py --a {run_dir.name} --b {ref_id}`"))
+        checks.append(("Pairwise quality", False, f"not run for every roll: `eval/pairwise.py --a <roll> --b <reference>`"))
 
     ok = all(c[1] for c in checks)
-    lines = [f"## Release gate\n\nAgainst `{ref_id}`: **{'PASS' if ok else 'FAIL'}**\n",
+    lines = [f"## Release gate\n\nAgainst `{', '.join(ref_ids)}`: **{'PASS' if ok else 'FAIL'}**\n",
              "| Check | Result | Detail |", "|---|---|---|",
              *[f"| {n} | {'pass' if p else '**fail**'} | {d} |" for n, p, d in checks]]
-    changes = changed(rows, ref_rows, pw)
+    changes = sum((changed(*x) for x in zip(rolls, refs, pws)), [])
     if changes:
         lines += ["", "What changed against the reference:", "", "| Query | Change | Detail |", "|---|---|---|", *changes]
     return ok, "\n".join(lines) + "\n"
+
+
+def per_question(pws):
+    """One pairwise row per question, the mean of its rolls. Pooled rolls count each question twice, which makes the
+    sign test's p too small; a how-to question repeats the same two answers if the edit leaves its prompt alone."""
+    by_id = {}
+    for p in sum(pws, []):
+        by_id.setdefault(p["id"], []).append(p)
+    out = []
+    for qid, ps in by_id.items():
+        judged = [p for p in ps if not p.get("identical")]
+        diff = statistics.fmean(p["diff"] for p in ps)
+        out.append({"id": qid, "diff": diff, "outcome": "win" if diff > 0 else "loss" if diff < 0 else "tie",
+                    "identical": not judged, "orders": [],
+                    "a": statistics.fmean(p["a"] for p in judged) if judged else None,
+                    "b": statistics.fmean(p["b"] for p in judged) if judged else None})
+    return out
 
 
 def changed(rows, ref_rows, pw):
@@ -583,7 +602,8 @@ def main():
     ap.add_argument("--out", default=str(REPO / "docs/EVAL.md"))
     ap.add_argument("--history", default=str(EVAL / "history.csv"), help="the CSV that gets this run's row")
     ap.add_argument("--systems", metavar="RUN,RUN", help="add a table of this run and these runs on their shared queries")
-    ap.add_argument("--gate", metavar="REF_RUN", help="add the release gate against this reference run; exit 1 on fail")
+    ap.add_argument("--roll2", metavar="RUN", help="the candidate's second roll, for the gate")
+    ap.add_argument("--gate", metavar="REF_RUN[,REF_RUN]", help="add the release gate against the reference runs, one per roll; exit 1 on fail")
     a = ap.parse_args()
 
     run_dir = RUNS / a.run if a.run else max(RUNS.iterdir(), key=lambda p: p.stat().st_mtime)
@@ -623,7 +643,10 @@ def main():
         report = report.replace("## Reproduce\n", systems([meta["run_id"], *a.systems.split(",")]) + "\n## Reproduce\n", 1)
     gate_ok = True
     if a.gate:
-        gate_ok, section = gate(run_dir, rows, a.gate)
+        run_dirs = [run_dir, *([RUNS / a.roll2] if a.roll2 else [])]
+        if len(a.gate.split(",")) != len(run_dirs):
+            sys.exit("--gate needs one reference run per roll")
+        gate_ok, section = gate(run_dirs, a.gate.split(","))
         report = report.replace("## Results\n", section + "\n## Results\n", 1)
     Path(a.out).write_text(report)
 

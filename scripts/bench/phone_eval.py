@@ -55,9 +55,10 @@ def typed(q):
     return q
 
 
-def ask(q, timeout=180):
-    tap("new_topic", tries=2)
-    time.sleep(1)
+def ask(q, timeout=180, followup=False):
+    if not followup:
+        tap("new_topic", tries=2)
+        time.sleep(1)
     if not tap("ask_input"):
         raise RuntimeError("no ask_input")
     text = typed(q).replace("'", "'\\''").replace(" ", "%s")
@@ -116,11 +117,11 @@ def main():
     for i, q in enumerate(qs, 1):
         print(f"[{label}] {i}/{len(qs)} {q['id']}", flush=True)
         try:
-            ask(q["query"])
+            ask(q["query"], followup=q.get("followup", False))
         except RuntimeError as e:
             print(f"  {e}; retry", flush=True)
             time.sleep(3)
-            ask(q["query"])
+            ask(q["query"], followup=q.get("followup", False))
     time.sleep(2)
     tel = sh(f"run-as {PKG} cat files/telemetry.jsonl").splitlines()[n_tel0:]
     (HERE / f"{label}.tel.jsonl").write_text("\n".join(tel) + "\n")

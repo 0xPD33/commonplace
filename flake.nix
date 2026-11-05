@@ -23,7 +23,7 @@
 
       rust = pkgs.rust-bin.stable.latest.default.override {
         extensions = [ "rust-src" "rust-analyzer" ];
-        targets = [ "aarch64-linux-android" "x86_64-linux-android" ];
+        targets = [ "aarch64-linux-android" "x86_64-linux-android" "aarch64-unknown-linux-gnu" ];
       };
 
       android = pkgs.androidenv.composeAndroidPackages {

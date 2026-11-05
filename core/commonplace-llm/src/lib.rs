@@ -156,6 +156,12 @@ impl LlamaBackend {
         let cpath = CString::new(path.to_string_lossy().as_bytes())?;
         let mut mp = unsafe { sys::llama_model_default_params() };
         mp.load_mode = if opts.in_ram { sys::LLAMA_LOAD_MODE_NONE } else { sys::LLAMA_LOAD_MODE_MMAP };
+        // Ling's vocabulary ids: tokens seen at least twice in the packs and in earlier answers (docs/BENCHMARKS.md, 2026-11-05).
+        let head_rows: Vec<i32> = include_bytes!("ling_head_rows.bin").chunks_exact(4).map(|b| i32::from_le_bytes([b[0], b[1], b[2], b[3]])).collect();
+        if opts.in_ram && path.file_name().is_some_and(|f| f.to_string_lossy().starts_with("Ling-3.0-tiny")) {
+            mp.head_rows = head_rows.as_ptr();
+            mp.n_head_rows = head_rows.len() as i32;
+        }
         let model = unsafe { sys::llama_model_load_from_file(cpath.as_ptr(), mp) };
         ensure!(!model.is_null(), "failed to load model {}", path.display());
 
@@ -388,6 +394,7 @@ impl Inner {
         let (head, tail) = marked.split_once(USER_SLOT).context("the chat template dropped the user message")?;
         let tail = format!("{tail}{open}");
         let user_toks = self.tokenize_with(user, false, false)?;
+        unsafe { sys::llama_head_extra_tokens(self.ctx, user_toks.as_ptr(), user_toks.len() as i32) };
         let mem = unsafe { sys::llama_get_memory(self.ctx) };
         unsafe { sys::llama_memory_clear(mem, true) };
 

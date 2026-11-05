@@ -51,6 +51,11 @@ fn main() {
     } else {
         // The Nix cc wrapper strips -march=native, so name the features instead.
         cfg.define("GGML_NATIVE", "OFF");
+        if target == "aarch64-unknown-linux-gnu" {
+            // The phone's arch flags: a clang build of this target under qemu-aarch64 (-cpu max,sme=off) gives the
+            // Pixel's output byte for byte, so ARM-only numerics can be evaluated on the desktop.
+            cfg.define("GGML_CPU_ARM_ARCH", "armv8.2-a+dotprod+i8mm+fp16").define("GGML_CPU_KLEIDIAI", "ON");
+        }
     }
     if target.starts_with("x86_64") {
         // Desktop and the emulator (KVM passes the host AVX2/FMA/F16C through).
@@ -73,8 +78,8 @@ fn main() {
     } else {
         println!("cargo:rustc-link-lib=dylib=stdc++");
     }
-    if target.contains("aarch64") && target.contains("android") {
-        // KleidiAI builds as its own static library.
+    if target.contains("aarch64") {
+        // KleidiAI builds as its own static library (Android and the phone-exact Linux build).
         println!("cargo:rustc-link-lib=static=kleidiai");
     }
 

@@ -15,7 +15,7 @@ are near each other by nature, so the turn-kind head uses `--near 1` (same text 
 by `commonplace encode`, with the desktop (fp32) and the phone (int8) encoder, so the head fits both.
 Writes core/commonplace-core/src/<name>_head.json (dashes become underscores); the core compiles it in.
 
-  uv run --project pipeline python -m commonplace_pipeline.heads turn-kind --near 1 --l2 1e-4 --merge followup=question --allow reformat=1 \\
+  uv run --project pipeline python -m commonplace_pipeline.heads turn-kind --near 1 --l2 1e-4 --merge followup=question --allow reformat=6 \\
       --eval eval/conversation.jsonl --map followup=question,compare_followup=question,topic_switch=question,expand=expand,reformat=reformat,chat=chat
   uv run --project pipeline python -m commonplace_pipeline.heads follow-up --examples turn-kind --near 1 --l2 1e-4 \\
       --merge expand=followup --only question,followup --strict none \\
@@ -27,9 +27,10 @@ Writes core/commonplace-core/src/<name>_head.json (dashes become underscores); t
 head whose errors cost the same both ways, such as follow-up). The engine takes a strict label only at its
 own bar (`min_probs`) or above, else the most likely other label. Each bar is set from cross-validation so
 that no held-out example of a non-strict label would have been taken for that strict label; `--allow
-label=k` leaves out its k highest such mistakes. The turn-kind head allows one for reformat, which the
-engine takes only after an earlier turn: a mistake there rewrites an answer, while a mistaken chat
-answers a first question with small talk.
+label=k` leaves out its k highest such mistakes (the output lists them). The turn-kind head allows six for
+reformat, which the engine takes only after an earlier turn and not for a message that names a thing and
+stands alone ("summarize the Declaration of Independence"): a mistake there rewrites an answer, while a
+mistaken chat answers a first question with small talk.
 `--eval` only reports; it never trains.
 """
 
@@ -134,11 +135,13 @@ def main() -> None:
     allow = {lab: int(k) for lab, k in (pair.split("=") for pair in a.allow.split(",") if pair)}
     min_probs = {}
     for li in np.where(is_strict)[0]:
-        wrong = sorted((probs[i, j, li] for i in range(len(MODELS)) for j in range(len(rows)) if not is_strict[y[j]] and pred[i, j] == li),
+        taken = sorted(((probs[i, j, li], texts[j]) for i in range(len(MODELS)) for j in range(len(rows)) if not is_strict[y[j]] and pred[i, j] == li),
                        reverse=True)
+        wrong = [p for p, _ in taken]
         k = allow.get(labels[li], 0)
         min_probs[labels[li]] = round(float(wrong[k]) + 0.01, 3) if len(wrong) > k else 0.51
         print(f"held-out examples taken for {labels[li]}: {len(wrong)}, {k} allowed; min_prob = {min_probs[labels[li]]}")
+        print("  highest: " + "; ".join(f"{t!r} {p:.2f}" for p, t in taken[:k + 3]))
     min_prob = max(min_probs.values(), default=0.51)
 
     def decide(p: np.ndarray) -> str:

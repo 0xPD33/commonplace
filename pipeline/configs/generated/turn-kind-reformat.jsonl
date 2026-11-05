@@ -1,0 +1,158 @@
+{"text": "short version", "kind": "reformat", "src": "claude-gen"}
+{"text": "the short version please", "kind": "reformat", "src": "claude-gen"}
+{"text": "give me the quick version", "kind": "reformat", "src": "claude-gen"}
+{"text": "quick version?", "kind": "reformat", "src": "claude-gen"}
+{"text": "the simple version please", "kind": "reformat", "src": "claude-gen"}
+{"text": "abridged version please", "kind": "reformat", "src": "claude-gen"}
+{"text": "the condensed version", "kind": "reformat", "src": "claude-gen"}
+{"text": "a shorter version of that", "kind": "reformat", "src": "claude-gen"}
+{"text": "can I get the short version", "kind": "reformat", "src": "claude-gen"}
+{"text": "the gist", "kind": "reformat", "src": "claude-gen"}
+{"text": "gist please", "kind": "reformat", "src": "claude-gen"}
+{"text": "just the gist of it", "kind": "reformat", "src": "claude-gen"}
+{"text": "what's the gist of that", "kind": "reformat", "src": "claude-gen"}
+{"text": "give me the gist in one line", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain like I'm five years old", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain it as if I were five", "kind": "reformat", "src": "claude-gen"}
+{"text": "like I'm five please", "kind": "reformat", "src": "claude-gen"}
+{"text": "ELI5 version please", "kind": "reformat", "src": "claude-gen"}
+{"text": "for a child", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain it for a child", "kind": "reformat", "src": "claude-gen"}
+{"text": "put it in words a child would understand", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain it for a ten year old", "kind": "reformat", "src": "claude-gen"}
+{"text": "make it understandable for a kid", "kind": "reformat", "src": "claude-gen"}
+{"text": "for a beginner please", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain that for a complete beginner", "kind": "reformat", "src": "claude-gen"}
+{"text": "for someone with no background", "kind": "reformat", "src": "claude-gen"}
+{"text": "explain it to a non-expert", "kind": "reformat", "src": "claude-gen"}
+{"text": "as if I know nothing about it", "kind": "reformat", "src": "claude-gen"}
+{"text": "I'm not a scientist, explain it simpler", "kind": "reformat", "src": "claude-gen"}
+{"text": "in plain words", "kind": "reformat", "src": "claude-gen"}
+{"text": "plain words please", "kind": "reformat", "src": "claude-gen"}
+{"text": "in plain language please", "kind": "reformat", "src": "claude-gen"}
+{"text": "in everyday language", "kind": "reformat", "src": "claude-gen"}
+{"text": "say it in normal words", "kind": "reformat", "src": "claude-gen"}
+{"text": "use everyday words", "kind": "reformat", "src": "claude-gen"}
+{"text": "can you say that in simpler language", "kind": "reformat", "src": "claude-gen"}
+{"text": "in easier words", "kind": "reformat", "src": "claude-gen"}
+{"text": "use smaller words please", "kind": "reformat", "src": "claude-gen"}
+{"text": "fewer big words", "kind": "reformat", "src": "claude-gen"}
+{"text": "in simple English please", "kind": "reformat", "src": "claude-gen"}
+{"text": "less technical", "kind": "reformat", "src": "claude-gen"}
+{"text": "without technical terms", "kind": "reformat", "src": "claude-gen"}
+{"text": "can you make it less complicated", "kind": "reformat", "src": "claude-gen"}
+{"text": "too much detail, simplify", "kind": "reformat", "src": "claude-gen"}
+{"text": "skip the details", "kind": "reformat", "src": "claude-gen"}
+{"text": "just the essentials", "kind": "reformat", "src": "claude-gen"}
+{"text": "the essentials please", "kind": "reformat", "src": "claude-gen"}
+{"text": "only the headline", "kind": "reformat", "src": "claude-gen"}
+{"text": "just the bottom line", "kind": "reformat", "src": "claude-gen"}
+{"text": "bottom line?", "kind": "reformat", "src": "claude-gen"}
+{"text": "the main takeaway?", "kind": "reformat", "src": "claude-gen"}
+{"text": "what's the takeaway", "kind": "reformat", "src": "claude-gen"}
+{"text": "one sentence version", "kind": "reformat", "src": "claude-gen"}
+{"text": "two sentence version please", "kind": "reformat", "src": "claude-gen"}
+{"text": "summary?", "kind": "reformat", "src": "claude-gen"}
+{"text": "summarize", "kind": "reformat", "src": "claude-gen"}
+{"text": "summarise please", "kind": "reformat", "src": "claude-gen"}
+{"text": "recap that briefly", "kind": "reformat", "src": "claude-gen"}
+{"text": "quick recap please", "kind": "reformat", "src": "claude-gen"}
+{"text": "can you recap", "kind": "reformat", "src": "claude-gen"}
+{"text": "make it snappier", "kind": "reformat", "src": "claude-gen"}
+{"text": "make it punchier", "kind": "reformat", "src": "claude-gen"}
+{"text": "too long, condense it", "kind": "reformat", "src": "claude-gen"}
+{"text": "shorten", "kind": "reformat", "src": "claude-gen"}
+{"text": "shorten please", "kind": "reformat", "src": "claude-gen"}
+{"text": "cut it in half", "kind": "reformat", "src": "claude-gen"}
+{"text": "half as long please", "kind": "reformat", "src": "claude-gen"}
+{"text": "list them out", "kind": "reformat", "src": "claude-gen"}
+{"text": "can you list them", "kind": "reformat", "src": "claude-gen"}
+{"text": "itemize that", "kind": "reformat", "src": "claude-gen"}
+{"text": "break it into bullets", "kind": "reformat", "src": "claude-gen"}
+{"text": "bullets please", "kind": "reformat", "src": "claude-gen"}
+{"text": "make it bullet points", "kind": "reformat", "src": "claude-gen"}
+{"text": "numbered list please", "kind": "reformat", "src": "claude-gen"}
+{"text": "as a numbered list", "kind": "reformat", "src": "claude-gen"}
+{"text": "turn that into a checklist", "kind": "reformat", "src": "claude-gen"}
+{"text": "format it as a table", "kind": "reformat", "src": "claude-gen"}
+{"text": "make it a step by step list", "kind": "reformat", "src": "claude-gen"}
+{"text": "step by step please", "kind": "reformat", "src": "claude-gen"}
+{"text": "rewrite it simpler", "kind": "reformat", "src": "claude-gen"}
+{"text": "say it again but simpler", "kind": "reformat", "src": "claude-gen"}
+{"text": "reword that more simply", "kind": "reformat", "src": "claude-gen"}
+{"text": "rephrase it for a layperson", "kind": "reformat", "src": "claude-gen"}
+{"text": "in a few words", "kind": "reformat", "src": "claude-gen"}
+{"text": "in a sentence or two", "kind": "reformat", "src": "claude-gen"}
+{"text": "keep it short", "kind": "reformat", "src": "claude-gen"}
+{"text": "much shorter please", "kind": "reformat", "src": "claude-gen"}
+{"text": "way too long", "kind": "reformat", "src": "claude-gen"}
+{"text": "tldr pls", "kind": "reformat", "src": "claude-gen"}
+{"text": "tl dr", "kind": "reformat", "src": "claude-gen"}
+{"text": "tl;dr?", "kind": "reformat", "src": "claude-gen"}
+{"text": "too long didn't read", "kind": "reformat", "src": "claude-gen"}
+{"text": "How do I reverse a list in Java?", "kind": "question", "src": "claude-gen"}
+{"text": "how to sort a list in Python", "kind": "question", "src": "claude-gen"}
+{"text": "how do I explain death to a child?", "kind": "question", "src": "claude-gen"}
+{"text": "how to explain divorce to kids", "kind": "question", "src": "claude-gen"}
+{"text": "what is a bullet journal?", "kind": "question", "src": "claude-gen"}
+{"text": "how fast is a bullet?", "kind": "question", "src": "claude-gen"}
+{"text": "What is the gist of Kant's categorical imperative?", "kind": "question", "src": "claude-gen"}
+{"text": "give me the gist of the Treaty of Versailles", "kind": "question", "src": "claude-gen"}
+{"text": "short version of the history of China", "kind": "question", "src": "claude-gen"}
+{"text": "explain the stock market for a beginner", "kind": "question", "src": "claude-gen"}
+{"text": "explain DNA to a ten year old", "kind": "question", "src": "claude-gen"}
+{"text": "explain inflation in simple words", "kind": "question", "src": "claude-gen"}
+{"text": "explain the Big Bang in plain language", "kind": "question", "src": "claude-gen"}
+{"text": "list the wives of Henry VIII", "kind": "question", "src": "claude-gen"}
+{"text": "list the main causes of World War I", "kind": "question", "src": "claude-gen"}
+{"text": "list the countries in the European Union", "kind": "question", "src": "claude-gen"}
+{"text": "summarize the Declaration of Independence", "kind": "question", "src": "claude-gen"}
+{"text": "summarise the plot of Pride and Prejudice", "kind": "question", "src": "claude-gen"}
+{"text": "give me a quick recap of the Napoleonic Wars", "kind": "question", "src": "claude-gen"}
+{"text": "recap the 2022 World Cup final", "kind": "question", "src": "claude-gen"}
+{"text": "bullet points on the causes of the Great Depression", "kind": "question", "src": "claude-gen"}
+{"text": "in one sentence, what is quantum mechanics?", "kind": "question", "src": "claude-gen"}
+{"text": "in plain words, what is a mortgage?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the simplest programming language?", "kind": "question", "src": "claude-gen"}
+{"text": "explain blockchain like I'm five", "kind": "question", "src": "claude-gen"}
+{"text": "how long is the short version of the Lord of the Rings films?", "kind": "question", "src": "claude-gen"}
+{"text": "what does FYI stand for?", "kind": "question", "src": "claude-gen"}
+{"text": "what does IMO mean in texting?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the meaning of the word concise?", "kind": "question", "src": "claude-gen"}
+{"text": "what does verbose mean?", "kind": "question", "src": "claude-gen"}
+{"text": "what is an abstract in a scientific paper?", "kind": "question", "src": "claude-gen"}
+{"text": "how long should an executive summary be?", "kind": "question", "src": "claude-gen"}
+{"text": "how do I write a book report?", "kind": "question", "src": "claude-gen"}
+{"text": "how to write an essay outline", "kind": "question", "src": "claude-gen"}
+{"text": "what is a pr\u00e9cis?", "kind": "question", "src": "claude-gen"}
+{"text": "how do you paraphrase without plagiarizing?", "kind": "question", "src": "claude-gen"}
+{"text": "how to make a bullet point in Excel", "kind": "question", "src": "claude-gen"}
+{"text": "how do I make a table in Markdown?", "kind": "question", "src": "claude-gen"}
+{"text": "how to sort a column alphabetically in Excel", "kind": "question", "src": "claude-gen"}
+{"text": "how do I shorten a long link for Twitter?", "kind": "question", "src": "claude-gen"}
+{"text": "how to reduce a fraction to lowest terms", "kind": "question", "src": "claude-gen"}
+{"text": "how do I simplify an algebraic expression?", "kind": "question", "src": "claude-gen"}
+{"text": "how to round a number to two decimal places", "kind": "question", "src": "claude-gen"}
+{"text": "what is plain English writing?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the Plain Writing Act?", "kind": "question", "src": "claude-gen"}
+{"text": "what is a glossary?", "kind": "question", "src": "claude-gen"}
+{"text": "what does acronym mean?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the difference between a summary and a synopsis?", "kind": "question", "src": "claude-gen"}
+{"text": "what is a TL;DR in Reddit posts?", "kind": "question", "src": "claude-gen"}
+{"text": "what does ELI5 mean on Reddit?", "kind": "question", "src": "claude-gen"}
+{"text": "how to explain a hard topic to a child", "kind": "question", "src": "claude-gen"}
+{"text": "how do teachers simplify lessons for kids?", "kind": "question", "src": "claude-gen"}
+{"text": "how do I make my writing more concise?", "kind": "question", "src": "claude-gen"}
+{"text": "how to write shorter sentences", "kind": "question", "src": "claude-gen"}
+{"text": "what is the Flesch reading ease score?", "kind": "question", "src": "claude-gen"}
+{"text": "what reading level are newspapers written at?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the gist of a story in literature class?", "kind": "question", "src": "claude-gen"}
+{"text": "what is a listicle?", "kind": "question", "src": "claude-gen"}
+{"text": "what is a numbered list called in HTML?", "kind": "question", "src": "claude-gen"}
+{"text": "how do I convert a PDF to a shorter document?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the abridged version of a book?", "kind": "question", "src": "claude-gen"}
+{"text": "what is the CliffsNotes series?", "kind": "question", "src": "claude-gen"}
+{"text": "how do I summarize a meeting in an email?", "kind": "question", "src": "claude-gen"}
+{"text": "how to write a one sentence summary of a novel", "kind": "question", "src": "claude-gen"}
+{"text": "what is an elevator pitch?", "kind": "question", "src": "claude-gen"}
+{"text": "how to make a checklist in Notion", "kind": "question", "src": "claude-gen"}

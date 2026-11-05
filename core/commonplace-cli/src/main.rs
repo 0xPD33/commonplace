@@ -7,6 +7,7 @@ use commonplace_core::engine::{AskOutcome, AskRequest, Engine, EngineConfig, Eve
 use commonplace_core::llm::LlmBackend;
 use commonplace_core::pack::ModelRole;
 use commonplace_core::profiles;
+use commonplace_core::retrieval::Fusion;
 use commonplace_llm::{LlamaBackend, LoadOptions};
 use serde::Deserialize;
 use std::io::{BufRead, Write};
@@ -50,6 +51,9 @@ struct Opts {
     no_llm: bool,
     #[arg(long, global = true, default_value_t = 8)]
     threads: u32,
+    /// Prompt-reading threads (default: --threads). The phone app uses 4 decode and 6 batch threads.
+    #[arg(long, global = true)]
+    batch_threads: Option<u32>,
     #[arg(long, global = true)]
     no_dense: bool,
     #[arg(long, global = true)]
@@ -58,6 +62,9 @@ struct Opts {
     no_rerank: bool,
     #[arg(long, global = true)]
     no_cards: bool,
+    /// Pick evidence sentences by word overlap instead of the sentence head.
+    #[arg(long, global = true)]
+    no_sentence_head: bool,
     /// Let the model rewrite the message into a standalone, typo-free search query first (off by default).
     #[arg(long, global = true)]
     rewrite: bool,
@@ -82,6 +89,9 @@ struct Opts {
     nprobe: Option<usize>,
     #[arg(long, global = true)]
     keyword_only_keep: Option<usize>,
+    /// How to order candidates before the rerank pool: rrf or learned.
+    #[arg(long, global = true)]
+    fusion: Option<String>,
     /// Weight of the fusion rank added to the rerank score (0 = reranker only).
     #[arg(long, global = true)]
     rerank_blend: Option<f32>,
@@ -97,7 +107,10 @@ struct Opts {
     /// Answer "how do I" questions with the general synthesis prompt, as before eval run `v2-A-ref`.
     #[arg(long, global = true)]
     no_how_to_steps: bool,
-    /// Evidence token budget (default: the model profile's, 600 for every profile today).
+    /// Any linked name makes a reformat request a question, as before the follow-up check (`Settings::reformat_followup`).
+    #[arg(long, global = true)]
+    no_reformat_followup: bool,
+    /// Evidence token budget (default: the budgets of the model profile).
     #[arg(long, global = true)]
     evidence_tokens: Option<usize>,
     /// Model defaults to use instead of the ones the model file implies: default, gemma4 or gemma4-npu.
@@ -106,6 +119,9 @@ struct Opts {
     /// serve-eval only: answer from the model alone, with no search (the eval's closed-book reference).
     #[arg(long, global = true)]
     closed_book: bool,
+    /// Build the evidence but write no answer: a stub model returns empty text. For evidence-only evals.
+    #[arg(long, global = true)]
+    evidence_only: bool,
 }
 
 #[derive(Subcommand)]
@@ -140,7 +156,15 @@ enum Cmd {
     ServeEval,
     /// Read JSONL {"id", "query"} on stdin; write each query's fused pool (reranker input text, fusion
     /// order, reranker score) as one JSON line. Reranker training data.
-    Pool,
+    Pool {
+        /// Write the learned-fusion candidates within this depth of each list instead, with their features
+        /// (training data for `pipeline/commonplace_pipeline/fusion.py`).
+        #[arg(long)]
+        candidates: Option<usize>,
+    },
+    /// Read eval JSONL ({"query", "history"?} and any other fields) on stdin; write each line back with the
+    /// turn-kind head's "label" and the engine's "kind" (Question, Reformat or Chat). No LLM.
+    Turn,
     /// Score (query, doc) pairs with the reranker.
     Rerank { query: String, docs: Vec<String> },
     /// Embed each stdin line with the query encoder, as the engine does; write one JSON array per line.
@@ -176,6 +200,7 @@ enum PackAction {
 
 fn engine(o: &Opts) -> Result<Engine> {
     let threads = o.threads;
+    let batch_threads = o.batch_threads.unwrap_or(threads);
     let state_dir = o.llm_state.clone();
     let cfg = EngineConfig {
         library_dir: o.library.clone(),
@@ -192,7 +217,7 @@ fn engine(o: &Opts) -> Result<Engine> {
     let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, t| {
         let file = mp.file().context("model pack has no file")?;
         let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
-        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone() })?;
+        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(batch_threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone() })?;
         Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
     });
     let e = Engine::new(cfg, Some(loader))?;
@@ -202,6 +227,7 @@ fn engine(o: &Opts) -> Result<Engine> {
         s.retrieval.use_dense = !o.no_dense;
         s.retrieval.use_sparse = !o.no_sparse;
         s.retrieval.use_rerank = !o.no_rerank;
+        s.retrieval.sentence_head = !o.no_sentence_head;
         s.use_cards = !o.no_cards;
         s.rewrite = o.rewrite && !o.no_rewrite;
         let r = &mut s.retrieval;
@@ -211,20 +237,29 @@ fn engine(o: &Opts) -> Result<Engine> {
         r.nprobe = o.nprobe.unwrap_or(r.nprobe);
         r.keyword_only_keep = o.keyword_only_keep.unwrap_or(r.keyword_only_keep);
         r.rerank_blend = o.rerank_blend.unwrap_or(r.rerank_blend);
+        r.fusion = match o.fusion.as_deref() {
+            None => r.fusion,
+            Some("rrf") => Fusion::Rrf,
+            Some("learned") => Fusion::Learned,
+            Some(x) => anyhow::bail!("--fusion must be rrf or learned, not {x}"),
+        };
         s.think_budget = o.think_budget.unwrap_or(s.think_budget);
         s.max_answer_tokens = o.max_answer_tokens.unwrap_or(s.max_answer_tokens);
         s.evidence_score_gap = o.evidence_gap.or(s.evidence_score_gap);
         s.evidence_tokens = o.evidence_tokens.or(s.evidence_tokens);
         s.how_to_steps &= !o.no_how_to_steps;
+        s.reformat_followup &= !o.no_reformat_followup;
     }
     if o.no_doc2query {
         eprintln!("note: --no-doc2query needs a pack built without questions; flag recorded only");
     }
-    if !o.no_llm {
+    if o.evidence_only {
+        e.set_llm(ModelRole::LlmFast, Some(Arc::new(NoAnswer)));
+    } else if !o.no_llm {
         if let Some(path) = &o.model {
-            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads: threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
+            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
             e.set_profile(profiles::for_model(None, &path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()));
-            Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite);
+            Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite, e.profile().lean);
             e.set_llm(ModelRole::LlmFast, Some(Arc::new(llm)));
         } else if e.library().model(&ModelRole::LlmFast).is_some() {
             e.load_model(ModelRole::LlmFast)?;
@@ -240,6 +275,18 @@ fn engine(o: &Opts) -> Result<Engine> {
         eprintln!("skipped pack {p}: {why}");
     }
     Ok(e)
+}
+
+/// The model of `--evidence-only`: every call returns at once with no text.
+struct NoAnswer;
+
+impl LlmBackend for NoAnswer {
+    fn id(&self) -> String {
+        "evidence-only".into()
+    }
+    fn generate(&self, _: &str, _: &str, _: &commonplace_core::llm::GenParams, _: &mut dyn FnMut(&str) -> bool) -> Result<commonplace_core::llm::GenStats> {
+        Ok(Default::default())
+    }
 }
 
 /// Streams the answer to the terminal: new text only, citations as [n].
@@ -491,16 +538,42 @@ fn main() -> Result<()> {
                 std::io::stdout().flush()?;
             }
         }
-        Cmd::Pool => {
+        Cmd::Turn => {
             let e = engine(&Opts { no_llm: true, ..o.clone() })?;
+            let lib = e.library();
+            for line in std::io::stdin().lock().lines() {
+                let line = line?;
+                if line.trim().is_empty() {
+                    continue;
+                }
+                let mut v: serde_json::Value = serde_json::from_str(&line)?;
+                let req: EvalReq = serde_json::from_value(v.clone())?;
+                let (label, kind) = e.turn(&lib, &AskRequest { query: req.query, history: req.history, think: false, packs: req.packs })?;
+                v["label"] = label.into();
+                v["kind"] = serde_json::to_value(kind)?;
+                println!("{v}");
+            }
+        }
+        Cmd::Pool { candidates } => {
+            let e = engine(&Opts { no_llm: true, ..o.clone() })?;
+            if candidates.is_some() {
+                let names: Vec<&str> = commonplace_core::fusion::CHEAP.iter().chain(commonplace_core::fusion::LOADED).copied().collect();
+                println!("{}", serde_json::json!({ "feature_names": names }));
+            }
             for line in std::io::stdin().lock().lines() {
                 let req: serde_json::Value = serde_json::from_str(&line?)?;
-                let (lib, hits) = e.pool(req["query"].as_str().context("query")?)?;
+                let (lib, hits) = e.pool_with(req["query"].as_str().context("query")?, *candidates)?;
                 let hits: Vec<_> = hits
                     .iter()
-                    .map(|h| {
-                        serde_json::json!({ "pack": lib.packs[h.pack as usize].manifest.pack_id, "pid": h.pid,
-                            "title": h.article.title, "text": h.rerank_text(), "fused": h.fused, "rerank": h.rerank })
+                    .map(|(h, f)| {
+                        let mut v = serde_json::json!({ "pack": lib.packs[h.pack as usize].manifest.pack_id, "pid": h.pid,
+                            "title": h.article.title, "text": h.rerank_text(), "fused": h.fused, "rerank": h.rerank,
+                            "spans": commonplace_core::evidence::piece_spans(h), "sentence_scores": h.sentence_scores });
+                        if candidates.is_some() {
+                            v["article"] = h.article.id.into();
+                            v["feat"] = f.clone().into();
+                        }
+                        v
                     })
                     .collect();
                 println!("{}", serde_json::json!({ "id": req["id"], "query": req["query"], "hits": hits }));

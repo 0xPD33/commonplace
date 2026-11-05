@@ -4,6 +4,7 @@ pub mod citations;
 pub mod encoders;
 pub mod engine;
 pub mod evidence;
+pub mod fusion;
 pub mod library;
 pub mod llm;
 pub mod pack;

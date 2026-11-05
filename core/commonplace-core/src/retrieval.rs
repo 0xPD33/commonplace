@@ -1,6 +1,7 @@
-//! Stage 1: hybrid retrieval (BM25 + binary IVF), RRF fusion with a popularity prior, rerank.
+//! Stage 1: hybrid retrieval (BM25 + binary IVF), fusion (RRF with a popularity prior, or learned), rerank.
 
 use crate::encoders::{QueryEncoder, Reranker};
+use crate::fusion;
 use crate::library::Library;
 use crate::pack::{PassageRecord, meta::Article};
 use crate::route::Entity;
@@ -34,6 +35,18 @@ pub struct RetrievalSettings {
     pub use_sparse: bool,
     pub use_dense: bool,
     pub use_rerank: bool,
+    /// Score each sentence piece with the sentence head during the rerank; the evidence then keeps the best
+    /// pieces of all passages instead of a word-overlap window per passage.
+    pub sentence_head: bool,
+    pub fusion: Fusion,
+}
+
+/// How `fused` orders candidates before the cut to the rerank pool.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Fusion {
+    Rrf,
+    Learned,
 }
 
 impl Default for RetrievalSettings {
@@ -56,6 +69,8 @@ impl Default for RetrievalSettings {
             use_sparse: true,
             use_dense: true,
             use_rerank: true,
+            sentence_head: true,
+            fusion: Fusion::Learned,
         }
     }
 }
@@ -68,6 +83,9 @@ pub struct Hit {
     pub article: Article,
     pub fused: f32,
     pub rerank: Option<f32>,
+    /// Sentence-head logits of `evidence::pieces(&passage.text)` for the rerank query; `None` for a piece past the
+    /// reranker's 256-token cut.
+    pub sentence_scores: Option<Vec<Option<f32>>>,
 }
 
 impl Hit {
@@ -111,8 +129,8 @@ pub struct Retriever<'a> {
 }
 
 impl Retriever<'_> {
-    /// Steps 1-4: sparse and dense search in parallel, entity boost, RRF, prior. Returns fused hits.
-    pub fn fused(&self, query: &str, entities: &[Entity], st: &mut RetrievalStats) -> Result<Vec<Hit>> {
+    /// Step 1: sparse and dense search in parallel. One list per pack, best first.
+    fn search(&self, query: &str, st: &mut RetrievalStats) -> Result<(Vec<(u8, Vec<(u32, f32)>)>, Vec<(u8, Vec<(u32, f32)>)>)> {
         let (sparse, dense) = std::thread::scope(|sc| {
             let sparse = sc.spawn(|| {
                 let t = Instant::now();
@@ -148,39 +166,51 @@ impl Retriever<'_> {
         st.encode_ms = encode_ms;
         st.n_sparse = sparse.iter().map(|x| x.1.len()).sum();
         st.n_dense = dense.iter().map(|x| x.1.len()).sum();
+        Ok((sparse, dense))
+    }
 
+    fn candidates(&self, sparse: &fusion::Lists, dense: &fusion::Lists, entities: &[Entity]) -> HashMap<(u8, u32), fusion::Cand> {
+        fusion::candidates(sparse, dense, entities, self.s.rrf_k, self.s.w_sparse, self.s.w_dense, self.s.w_entity)
+    }
+
+    /// Steps 1-4: search, entity boost, fusion (RRF and a popularity prior, or the learned scorer). Returns
+    /// fused hits.
+    pub fn fused(&self, query: &str, entities: &[Entity], st: &mut RetrievalStats) -> Result<Vec<Hit>> {
+        let (sparse, dense) = self.search(query, st)?;
         let t = Instant::now();
-        let mut fused: HashMap<(u8, u32), f32> = HashMap::new();
-        let k = self.s.rrf_k;
-        for (w, lists) in [(self.s.w_sparse, &sparse), (self.s.w_dense, &dense)] {
-            // One ranked list per source. Dense scores compare across packs (one embedder); BM25 scores only roughly,
-            // because each index has its own term statistics.
-            let mut merged: Vec<(u8, u32, f32)> = lists.iter().flat_map(|(p, l)| l.iter().map(move |&(id, s)| (*p, id, s))).collect();
-            merged.sort_unstable_by(|a, b| b.2.total_cmp(&a.2));
-            for (rank, (pack, pid, _)) in merged.iter().enumerate() {
-                *fused.entry((*pack, *pid)).or_default() += w / (k + rank as f32 + 1.0);
-            }
-        }
-        for (rank, e) in entities.iter().enumerate() {
-            *fused.entry((e.pack, e.article.first_passage)).or_default() += self.s.w_entity / (k + rank as f32 + 1.0);
-        }
+        let cands = self.candidates(&sparse, &dense, entities);
+        let learned = self.s.fusion == Fusion::Learned;
+        let fused: HashMap<(u8, u32), f32> = if learned {
+            // The scorer saw only the candidates near a list's top in training (`candidate_dump`).
+            let (ctx, m) = (fusion::Ctx::new(self.lib, query, &sparse, &dense), fusion::Model::get());
+            Self::near_top(&cands, fusion::DEPTH).into_iter().map(|(k, c)| (*k, m.cheap_score(&fusion::cheap(k.0, c, &ctx)))).collect()
+        } else {
+            cands.iter().map(|(k, c)| (*k, c.rrf)).collect()
+        };
         let mut top: Vec<((u8, u32), f32)> = fused.iter().map(|(k, v)| (*k, *v)).collect();
         top.sort_unstable_by(|a, b| b.1.total_cmp(&a.1));
         top.truncate(self.s.fuse_keep * 3);
         // Packs without dense codes appear in one list only; keep each pack's best keyword hits in the
-        // pool so the reranker sees them.
+        // pool so the reranker sees them. The learned scorer has no entity boost: keep linked entities' leads.
         let keyword_only = |p: u8| self.lib.packs[p as usize].dense.is_none();
-        for (pack, list) in sparse.iter().filter(|(p, _)| keyword_only(*p)) {
-            for &(pid, _) in list.iter().take(self.s.keyword_only_keep) {
-                if !top.iter().any(|((p, i), _)| *p == *pack && *i == pid) {
-                    top.push(((*pack, pid), fused.get(&(*pack, pid)).copied().unwrap_or(0.0)));
-                }
+        let mut pinned: Vec<(u8, u32)> =
+            sparse.iter().filter(|(p, _)| keyword_only(*p)).flat_map(|(p, l)| l.iter().take(self.s.keyword_only_keep).map(move |&(id, _)| (*p, id))).collect();
+        if learned {
+            pinned.extend(entities.iter().map(|e| (e.pack, e.article.first_passage)));
+        }
+        for k in &pinned {
+            if !top.iter().any(|(t, _)| t == k) {
+                top.push((*k, fused.get(k).copied().unwrap_or(0.0)));
             }
         }
         let mut hits = self.load(&top)?;
         let norm = (1.0f32 + 1e7).ln();
         for h in &mut hits {
-            h.fused += self.s.prior_weight * ((1.0 + h.article.popularity as f32).ln() / norm).min(1.0);
+            h.fused += if learned {
+                fusion::Model::get().loaded_score(&fusion::loaded(h))
+            } else {
+                self.s.prior_weight * ((1.0 + h.article.popularity as f32).ln() / norm).min(1.0)
+            };
         }
         hits.sort_unstable_by(|a, b| b.fused.total_cmp(&a.fused));
         // Leave room in the rerank pool for other articles: at most four passages per article.
@@ -190,16 +220,52 @@ impl Retriever<'_> {
             *c += 1;
             *c <= 4
         });
-        let best_keyword: std::collections::HashSet<(u8, u32)> =
-            sparse.iter().filter(|(p, _)| keyword_only(*p)).flat_map(|(p, l)| l.iter().take(self.s.keyword_only_keep).map(move |&(id, _)| (*p, id))).collect();
         let mut rank = 0;
         hits.retain(|h| {
             rank += 1;
-            rank <= self.s.fuse_keep || best_keyword.contains(&(h.pack, h.pid))
+            rank <= self.s.fuse_keep || pinned.contains(&(h.pack, h.pid))
         });
+        if learned {
+            // Learned scores carry per-query offsets; a comparison merges several queries' pools by `fused`,
+            // so give each hit an RRF-like value of its rank instead.
+            for (rank, h) in hits.iter_mut().enumerate() {
+                h.fused = 1.0 / (self.s.rrf_k + rank as f32 + 1.0);
+            }
+        }
         st.n_fused = hits.len();
         st.fuse_ms = ms(t);
         Ok(hits)
+    }
+
+    /// Candidates within `depth` of the top of a list or of RRF, among their pack's best 10, or linked
+    /// entities, by RRF.
+    fn near_top(cands: &HashMap<(u8, u32), fusion::Cand>, depth: usize) -> Vec<(&(u8, u32), &fusion::Cand)> {
+        let mut by_rrf: Vec<(&(u8, u32), &fusion::Cand)> = cands.iter().collect();
+        by_rrf.sort_unstable_by(|a, b| b.1.rrf.total_cmp(&a.1.rrf).then(a.0.cmp(b.0)));
+        let near = |p: Option<(u32, u32, f32)>| p.is_some_and(|(r, pr, _)| (r as usize) < depth || pr < 10);
+        by_rrf.into_iter().enumerate().filter(|(i, (_, c))| *i < depth || near(c.s) || near(c.d) || c.e.is_some()).map(|(_, x)| x).collect()
+    }
+
+    /// Training data for learned fusion: every candidate within `depth` of the top of a list (or of RRF), or
+    /// among its pack's best 10, loaded, with its features (`fusion::CHEAP` then `fusion::LOADED`). `fused`
+    /// holds the RRF score with the popularity prior.
+    pub fn candidate_dump(&self, query: &str, entities: &[Entity], depth: usize) -> Result<Vec<(Hit, Vec<f32>)>> {
+        let mut st = RetrievalStats::default();
+        let (sparse, dense) = self.search(query, &mut st)?;
+        let cands = self.candidates(&sparse, &dense, entities);
+        let ctx = fusion::Ctx::new(self.lib, query, &sparse, &dense);
+        let keep: Vec<((u8, u32), f32)> = Self::near_top(&cands, depth).into_iter().map(|(k, c)| (*k, c.rrf)).collect();
+        let mut hits = self.load(&keep)?;
+        let norm = (1.0f32 + 1e7).ln();
+        Ok(hits
+            .drain(..)
+            .map(|mut h| {
+                h.fused += self.s.prior_weight * ((1.0 + h.article.popularity as f32).ln() / norm).min(1.0);
+                let mut f = fusion::cheap(h.pack, &cands[&(h.pack, h.pid)], &ctx);
+                f.extend(fusion::loaded(&h));
+                (h, f)
+            })
+            .collect())
     }
 
     fn pack_penalty(&self, pack: u8) -> f32 {
@@ -228,7 +294,7 @@ impl Retriever<'_> {
                     .zip(recs)
                     .filter_map(|((i, pid), rec)| {
                         let a = arts.get(&rec.article_id)?.clone();
-                        Some((i, Hit { pack, pid, article: a, passage: rec, fused: ids[i].1, rerank: None }))
+                        Some((i, Hit { pack, pid, article: a, passage: rec, fused: ids[i].1, rerank: None, sentence_scores: None }))
                     })
                     .collect())
             })
@@ -249,12 +315,14 @@ impl Retriever<'_> {
         {
             let todo: Vec<usize> = (0..hits.len()).filter(|&i| hits[i].rerank.is_none()).collect();
             let docs: Vec<String> = todo.iter().map(|&i| hits[i].rerank_text()).collect();
-            let scores = if docs.is_empty() { vec![] } else { rr.score(query, &docs)? };
+            let spans: Vec<Vec<(usize, usize)>> = if self.s.sentence_head { todo.iter().map(|&i| crate::evidence::piece_spans(&hits[i])).collect() } else { vec![] };
+            let (scores, sents) = if docs.is_empty() { (vec![], vec![]) } else { rr.score_spans(query, &docs, &spans)? };
             // `hits` arrive in fusion order, so the index is the retrieval rank.
             let n = hits.len() as f32;
-            for (&i, s) in todo.iter().zip(scores) {
+            for ((&i, s), sent) in todo.iter().zip(scores).zip(sents) {
                 let blend = self.s.rerank_blend * (1.0 - i as f32 / n);
                 hits[i].rerank = Some(s - list_penalty(&hits[i].article.title) - self.pack_penalty(hits[i].pack) + blend);
+                hits[i].sentence_scores = self.s.sentence_head.then_some(sent);
             }
             hits.sort_unstable_by(|a, b| b.score().total_cmp(&a.score()));
         }

@@ -33,6 +33,10 @@ ettin-reranker-17m-commonplace  Apache-2.0
     Reranker distilled for this app from cross-encoder/ettin-reranker-17m-v1 (by the cross-encoder
     organization, fine-tuned from jhu-clsp/ettin-encoder-17m) and cross-encoder/ettin-reranker-400m-v1
     (https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)
+Learned fusion scorer (fusion_model.json in the Commonplace core)  Apache-2.0
+    Part of Commonplace. Trained on rank and score features of search results for questions from NQ-open
+    (CC BY-SA 3.0, https://huggingface.co/datasets/google-research-datasets/nq_open) and databricks-dolly-15k
+    (CC BY-SA 3.0, https://huggingface.co/datasets/databricks/databricks-dolly-15k); it holds no question text.
 deberta-v3-xsmall-squad2  Apache-2.0
     Answer reader by nlpconnect, ONNX export by tomasmcm
     (https://huggingface.co/nlpconnect/deberta-v3-xsmall-squad2)

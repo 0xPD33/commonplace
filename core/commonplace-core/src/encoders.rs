@@ -261,6 +261,70 @@ impl RerankHead {
     }
 }
 
+/// Sentence head, trained by `pipeline/commonplace_pipeline/sentsel.py` on Claude's labels: how much an answer
+/// needs a sentence piece. Input: the mean of the piece's token states from the reranker pass; a head with a
+/// hidden layer also reads the CLS state.
+#[derive(serde::Deserialize)]
+struct SentenceHead {
+    /// 0: one linear layer on the mean alone.
+    hidden: usize,
+    #[serde(default)]
+    w1: Vec<f32>,
+    #[serde(default)]
+    b1: Vec<f32>,
+    w2: Vec<f32>,
+    b2: f32,
+}
+
+static SENTENCE_HEAD: std::sync::LazyLock<SentenceHead> =
+    std::sync::LazyLock::new(|| serde_json::from_str(include_str!("sentence_head.json")).expect("sentence_head.json"));
+
+impl SentenceHead {
+    fn logit(&self, mean: &[f32], cls: &[f32]) -> f32 {
+        if self.hidden == 0 {
+            return self.w2.iter().zip(mean).map(|(w, x)| w * x).sum::<f32>() + self.b2;
+        }
+        let k = mean.len() + cls.len();
+        (0..self.hidden)
+            .map(|o| {
+                let row = &self.w1[o * k..(o + 1) * k];
+                let x = row.iter().zip(mean.iter().chain(cls)).map(|(w, x)| w * x).sum::<f32>() + self.b1[o];
+                0.5 * x * (1.0 + erf(x / std::f32::consts::SQRT_2)) * self.w2[o]
+            })
+            .sum::<f32>()
+            + self.b2
+    }
+
+    /// One logit per span: the mean state of the doc tokens that start inside it. Doc offsets count from the doc's start.
+    fn score_spans(&self, enc: &tokenizers::Encoding, states: &[f32], d: usize, spans: &[(usize, usize)]) -> Vec<Option<f32>> {
+        let mut sums = vec![vec![0f32; d]; spans.len()];
+        let mut counts = vec![0usize; spans.len()];
+        let n = states.len() / d;
+        for (t, (seq, off)) in enc.get_sequence_ids().iter().zip(enc.get_offsets()).enumerate().take(n) {
+            if *seq != Some(1) {
+                continue;
+            }
+            let k = spans.partition_point(|s| s.0 <= off.0);
+            if k > 0 && off.0 < spans[k - 1].1 {
+                sums[k - 1].iter_mut().zip(&states[t * d..(t + 1) * d]).for_each(|(s, x)| *s += x);
+                counts[k - 1] += 1;
+            }
+        }
+        sums.iter_mut()
+            .zip(&counts)
+            .map(|(s, &c)| {
+                (c > 0).then(|| {
+                    s.iter_mut().for_each(|x| *x /= c as f32);
+                    self.logit(s, &states[..d])
+                })
+            })
+            .collect()
+    }
+}
+
+/// Per doc, one sentence-head logit per span; `None` past the 256-token cut.
+pub type SpanScores = Vec<Vec<Option<f32>>>;
+
 pub struct Reranker {
     session: Mutex<Session>,
     tok: Tokenizer,
@@ -290,6 +354,12 @@ impl Reranker {
     /// Relevance logits for (query, doc) pairs, in input order. Each batch holds pairs of similar length,
     /// so a short pair is not padded to the longest one.
     pub fn score(&self, query: &str, docs: &[String]) -> Result<Vec<f32>> {
+        Ok(self.score_spans(query, docs, &[])?.0)
+    }
+
+    /// `score`, plus a sentence-head logit for each byte span of each doc (`spans[i]` belongs to `docs[i]`;
+    /// empty `spans` scores none). A span that the 256-token cut left without tokens gets `None`.
+    pub fn score_spans(&self, query: &str, docs: &[String], spans: &[Vec<(usize, usize)>]) -> Result<(Vec<f32>, SpanScores)> {
         let pairs: Vec<(String, String)> = docs.iter().map(|d| (query.to_string(), d.clone())).collect();
         let encs = self.tok.encode_batch(pairs, true).map_err(|e| anyhow!("{e}"))?;
         // Padding is on the right, so the first `len` tokens of a padded pair are the pair itself.
@@ -297,6 +367,7 @@ impl Reranker {
         let mut order: Vec<usize> = (0..docs.len()).collect();
         order.sort_by_key(|&i| lens[i]);
         let mut scores = vec![0f32; docs.len()];
+        let mut sent: Vec<Vec<Option<f32>>> = vec![Vec::new(); docs.len()];
         for chunk in order.chunks(self.batch) {
             let (b, n) = (chunk.len(), chunk.iter().map(|&i| lens[i]).max().unwrap_or(0));
             let ids: Vec<i64> = chunk.iter().flat_map(|&i| encs[i].get_ids()[..n].iter().map(|&x| x as i64)).collect();
@@ -310,10 +381,14 @@ impl Reranker {
             let d = shape[2] as usize;
             ensure!(d == self.head.d, "hidden size {d} != head size {}", self.head.d);
             for (j, &i) in chunk.iter().enumerate() {
-                scores[i] = self.head.score(&hidden[j * n * d..j * n * d + d]);
+                let states = &hidden[j * n * d..(j + 1) * n * d];
+                scores[i] = self.head.score(&states[..d]);
+                if let Some(sp) = spans.get(i).filter(|sp| !sp.is_empty()) {
+                    sent[i] = SENTENCE_HEAD.score_spans(&encs[i], states, d, sp);
+                }
             }
         }
-        Ok(scores)
+        Ok((scores, sent))
     }
 }
 

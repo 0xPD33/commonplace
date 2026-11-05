@@ -6,21 +6,27 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct ModelProfile {
     pub name: &'static str,
-    /// The evidence budget when the user has not set one.
+    /// The evidence budget when the user has not set one. With the sentence head, a profile with
+    /// `warm_evidence_cut` gets the engine's smaller `HEAD_EVIDENCE_TOKENS`.
     pub evidence_tokens: usize,
     /// Shrink the evidence on a warm phone: a hot CPU reads the prompt slowly, the Tensor NPU does not.
     pub warm_evidence_cut: bool,
+    /// The shorter answer prompt and the evidence budgets by question type. On MiniCPM the shorter prompt lost
+    /// abstentions (docs/BENCHMARKS.md, 2026-11-05), and the Tensor NPU has no need of it.
+    pub lean: bool,
 }
 
-/// Ling and MiniCPM on the CPU (llama.cpp).
-pub const DEFAULT: ModelProfile = ModelProfile { name: "default", evidence_tokens: 600, warm_evidence_cut: true };
+/// MiniCPM on the CPU (llama.cpp), and any other model.
+pub const DEFAULT: ModelProfile = ModelProfile { name: "default", evidence_tokens: 600, warm_evidence_cut: true, lean: false };
+/// Ling on the CPU: the slowest prompt reader of the three models, so every token of the prompt counts.
+pub const LING: ModelProfile = ModelProfile { name: "ling", evidence_tokens: 600, warm_evidence_cut: true, lean: true };
 /// Gemma 4 through llama.cpp (the desktop stand-in for the NPU file) or LiteRT's CPU and GPU backends.
-pub const GEMMA4: ModelProfile = ModelProfile { name: "gemma4", evidence_tokens: 600, warm_evidence_cut: true };
+pub const GEMMA4: ModelProfile = ModelProfile { name: "gemma4", evidence_tokens: 600, warm_evidence_cut: true, lean: false };
 /// Gemma 4 on the Tensor NPU, which reads 800–2,000 tok/s on a warm phone too (docs/BENCHMARKS.md).
-pub const GEMMA4_NPU: ModelProfile = ModelProfile { name: "gemma4-npu", evidence_tokens: 600, warm_evidence_cut: false };
+pub const GEMMA4_NPU: ModelProfile = ModelProfile { name: "gemma4-npu", evidence_tokens: 600, warm_evidence_cut: false, lean: false };
 
 pub fn by_name(name: &str) -> Option<&'static ModelProfile> {
-    let all: [&'static ModelProfile; 3] = [&DEFAULT, &GEMMA4, &GEMMA4_NPU];
+    let all: [&'static ModelProfile; 4] = [&DEFAULT, &LING, &GEMMA4, &GEMMA4_NPU];
     all.into_iter().find(|p| p.name == name)
 }
 
@@ -34,6 +40,8 @@ pub fn for_model(declared: Option<&str>, file_name: &str) -> &'static ModelProfi
         &GEMMA4_NPU
     } else if f.contains("gemma-4") {
         &GEMMA4
+    } else if f.contains("ling-") {
+        &LING
     } else {
         &DEFAULT
     }

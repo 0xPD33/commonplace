@@ -119,6 +119,70 @@ pub fn sentence_window(text: &str, qterms: &HashSet<String>, max_tokens: usize) 
     out
 }
 
+/// The sentence of `text` that holds the best-scored piece: the card highlight when the sentence head ran.
+pub fn best_scored_sentence(text: &str, scores: &[Option<f32>]) -> Option<String> {
+    let parts = pieces(text);
+    if parts.len() != scores.len() {
+        return None;
+    }
+    let best = parts.iter().zip(scores).filter_map(|(p, s)| s.map(|s| (p, s))).max_by(|a, b| a.1.total_cmp(&b.1))?.0;
+    let at = best.as_ptr() as usize - text.as_ptr() as usize;
+    sentences(text).into_iter().find(|s| {
+        let a = s.as_ptr() as usize - text.as_ptr() as usize;
+        a <= at && at < a + s.len()
+    }).map(str::to_string)
+}
+
+/// The longest piece of a sentence: half the 120-token window of `sentence_window`.
+const PIECE_TOKENS: usize = 60;
+
+/// The units that sentence selection scores and picks: sentences, with long ones cut into pieces.
+pub fn pieces(text: &str) -> Vec<&str> {
+    sentences(text).into_iter().flat_map(|s| split_long(s, PIECE_TOKENS)).collect()
+}
+
+/// Byte ranges of the passage's `pieces` in `Hit::rerank_text`, which ends with the passage text.
+pub fn piece_spans(h: &Hit) -> Vec<(usize, usize)> {
+    let text = &h.passage.text;
+    let prefix = h.rerank_text().len() - text.len();
+    pieces(text)
+        .into_iter()
+        .map(|p| {
+            let a = p.as_ptr() as usize - text.as_ptr() as usize + prefix;
+            (a, a + p.len())
+        })
+        .collect()
+}
+
+/// The contiguous stretch of `text` around its best-scored piece, grown toward the better-scored neighbor up to
+/// `max_tokens`: one coherent stretch per passage, with its line breaks. `None` when the scores do not fit the pieces.
+fn head_window(text: &str, scores: &[Option<f32>], max_tokens: usize) -> Option<String> {
+    let parts = pieces(text);
+    if parts.len() != scores.len() {
+        return None;
+    }
+    if approx_tokens(text) <= max_tokens {
+        return Some(text.to_string());
+    }
+    let sc = |i: usize| scores[i].unwrap_or(f32::MIN);
+    let best = (0..parts.len()).max_by(|&x, &y| sc(x).total_cmp(&sc(y)))?;
+    let (mut a, mut b, mut used) = (best, best, approx_tokens(parts[best]));
+    loop {
+        let fits = |i: usize| used + approx_tokens(parts[i]) <= max_tokens;
+        let left = (a > 0 && fits(a - 1)).then(|| a - 1);
+        let right = (b + 1 < parts.len() && fits(b + 1)).then_some(b + 1);
+        let next = match (left, right) {
+            (Some(l), Some(r)) => if sc(l) >= sc(r) { l } else { r },
+            (Some(i), None) | (None, Some(i)) => i,
+            (None, None) => break,
+        };
+        used += approx_tokens(parts[next]);
+        if next < a { a = next } else { b = next }
+    }
+    let at = |p: &str| p.as_ptr() as usize - text.as_ptr() as usize;
+    Some(text[at(parts[a])..at(parts[b]) + parts[b].len()].to_string())
+}
+
 /// A "sentence" longer than `limit` tokens, such as a table flattened to text, cut at spaces into pieces that fit.
 fn split_long(s: &str, limit: usize) -> Vec<&str> {
     let mut out = Vec::new();
@@ -166,7 +230,8 @@ pub fn assemble(lib: &Library, hits: &[Hit], query: &str, budget_tokens: usize, 
     for h in hits {
         let facts: Vec<Fact> = lib.packs[h.pack as usize].facts(h.pid).unwrap_or_default();
         let (shown, from_cards) = if facts.is_empty() {
-            (sentence_window(&h.passage.text, &qterms, 120), false)
+            let head = h.sentence_scores.as_deref().and_then(|sc| head_window(&h.passage.text, sc, 120));
+            (head.unwrap_or_else(|| sentence_window(&h.passage.text, &qterms, 120)), false)
         } else {
             (facts.iter().map(|f| format!("- {}", f.text)).collect::<Vec<_>>().join("\n"), true)
         };
@@ -175,7 +240,8 @@ pub fn assemble(lib: &Library, hits: &[Hit], query: &str, budget_tokens: usize, 
             continue;
         }
         used += cost;
-        ev.numbers.extend(numbers(&shown));
+        // The whole passage counts: the windows shrink with the budget, but a number in the passage is still from the source.
+        ev.numbers.extend(numbers(&h.passage.text));
         ev.numbers.extend(numbers(&h.article.title));
         ev.sources.push(Source { n: ev.sources.len() as u32 + 1, hit: h.clone(), shown, from_cards });
     }

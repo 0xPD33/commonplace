@@ -43,7 +43,7 @@ pub struct Settings {
     pub evidence_tokens: Option<usize>,
     /// Leave out passages whose rerank score is more than this below the best one (keeps at least 3).
     pub evidence_score_gap: Option<f32>,
-    /// Answer "how do I" questions with `prompts::HOW_TO_SYSTEM`. On 34 how-to questions it raised the judge's mean
+    /// Answer "how do I" questions with `prompts::how_to_system`. On 34 how-to questions it raised the judge's mean
     /// from 4.18 to 4.90 of 10 (eval run `v2-A-ref`); the model's own steps show as unverified.
     pub how_to_steps: bool,
     pub max_answer_tokens: u32,
@@ -54,6 +54,9 @@ pub struct Settings {
     pub llm_threads: u32,
     /// Reasoning-token cap in thinking mode (~14 tok/s on a warm Pixel: 256 tokens ≈ 18 s).
     pub think_budget: u32,
+    /// A reformat request that links a name still rewrites the last answer when the follow-up head reads that it
+    /// needs the last turn ("in simpler words?" links "Simplicity"). Off: any linked name makes it a question.
+    pub reformat_followup: bool,
 }
 
 impl Default for Settings {
@@ -70,6 +73,7 @@ impl Default for Settings {
             use_cards: true,
             llm_threads: 4,
             think_budget: 256,
+            reformat_followup: true,
         }
     }
 }
@@ -194,6 +198,14 @@ const HOT_HEADROOM: f32 = 0.85;
 const WARM_HEADROOM: f32 = 0.70;
 /// The evidence budget of a warm phone: the evidence is most of the new prompt, and prefill sets the first word.
 const HOT_EVIDENCE_TOKENS: usize = 400;
+/// The budgets of a CPU model with the sentence head. On the evidence judge, its windows at 500 matched word overlap
+/// at 600 (63 and 62 of 100 full) with 95 fewer tokens; at 400, how-to questions lost steps (docs/BENCHMARKS.md, 2026-11-04).
+const HEAD_EVIDENCE_TOKENS: usize = 500;
+const HEAD_HOT_EVIDENCE_TOKENS: usize = 400;
+/// The budgets of `ModelProfile::lean`. A warm phone read 400 already, and on 142 questions 400 held. With its own prompt,
+/// how-to at 450 scored level with today's 500 and cited 3.29 against 1.19 times (docs/BENCHMARKS.md, 2026-11-05).
+const LEAN_EVIDENCE_TOKENS: usize = 400;
+const LEAN_HOW_TO_EVIDENCE_TOKENS: usize = 450;
 
 /// Featured snippet: a short answer span, the sentence around it, and where it came from.
 #[derive(Debug, Clone, Serialize)]
@@ -323,16 +335,29 @@ impl Engine {
     /// The fused pool the reranker would see for `query` (no rewrite, no follow-up context), in fusion
     /// order with the reranker's scores. Builds reranker training data (`commonplace pool`).
     pub fn pool(&self, query: &str) -> Result<(Arc<Library>, Vec<Hit>)> {
+        let (lib, hits) = self.pool_with(query, None)?;
+        Ok((lib, hits.into_iter().map(|h| h.0).collect()))
+    }
+
+    /// `pool`, or with `depth` the learned-fusion candidates (`Retriever::candidate_dump`) with their features.
+    pub fn pool_with(&self, query: &str, depth: Option<usize>) -> Result<(Arc<Library>, Vec<(Hit, Vec<f32>)>)> {
         let lib = self.library();
         let s = self.settings.read().unwrap().clone();
         let route = route::route(&lib, query, self.rr.as_ref(), &[], &[]);
         let retriever = Retriever { lib: &lib, enc: self.enc.as_ref(), rr: self.rr.as_ref(), s: &s.retrieval, scope: &[] };
         let mut st = Default::default();
-        let mut hits = retriever.fused(&route.query, &route.entities, &mut st)?;
+        let mut hits = match depth {
+            Some(d) => retriever.candidate_dump(&route.query, &route.entities, d)?,
+            None => retriever.fused(&route.query, &route.entities, &mut st)?.into_iter().map(|h| (h, vec![])).collect(),
+        };
         if let Some(rr) = self.rr.as_ref().filter(|_| s.retrieval.use_rerank) {
-            let docs: Vec<String> = hits.iter().map(Hit::rerank_text).collect();
-            for (h, s) in hits.iter_mut().zip(rr.score(query, &docs)?) {
-                h.rerank = Some(s);
+            let s_head = s.retrieval.sentence_head;
+            let docs: Vec<String> = hits.iter().map(|h| h.0.rerank_text()).collect();
+            let spans: Vec<Vec<(usize, usize)>> = if s_head { hits.iter().map(|h| evidence::piece_spans(&h.0)).collect() } else { vec![] };
+            let (scores, sents) = rr.score_spans(query, &docs, &spans)?;
+            for ((h, s), sent) in hits.iter_mut().zip(scores).zip(sents) {
+                h.0.rerank = Some(s);
+                h.0.sentence_scores = s_head.then_some(sent);
             }
         }
         Ok((lib, hits))
@@ -392,7 +417,7 @@ impl Engine {
         };
         let llm = loader(mp, threads)?;
         self.set_profile(mp.profile());
-        Self::warm_up(llm.as_ref(), &lib.snapshot_date(), rewrite);
+        Self::warm_up(llm.as_ref(), &lib.snapshot_date(), rewrite, self.profile().lean);
         *self.llm.write().unwrap() = Some((role, llm));
         Ok(())
     }
@@ -401,13 +426,13 @@ impl Engine {
     /// question does not pay for them (the backend caches a system prompt's state after its first use, and
     /// with a state directory loads the answer prompt's state from disk instead of prefilling it).
     /// Seconds on a phone CPU.
-    pub fn warm_up(llm: &dyn LlmBackend, snapshot_date: &str, rewrite: bool) {
+    pub fn warm_up(llm: &dyn LlmBackend, snapshot_date: &str, rewrite: bool, lean: bool) {
         let one = GenParams::greedy(1);
         if rewrite {
             let _ = llm.generate(prompts::REWRITE_SYSTEM, "Message: hello", &one, &mut |_| false);
         }
         let answer = GenParams { keep_prefix: true, ..one };
-        let _ = llm.generate(&prompts::synthesis_system(snapshot_date), "Question: hello", &answer, &mut |_| false);
+        let _ = llm.generate(&prompts::synthesis_system(snapshot_date, lean), "Question: hello", &answer, &mut |_| false);
     }
 
     pub fn unload_model(&self) {
@@ -666,6 +691,24 @@ impl Engine {
         out
     }
 
+    /// The turn-kind head's label for a message, and the kind of turn the engine makes of it.
+    pub fn turn(&self, lib: &Library, req: &AskRequest) -> Result<(&'static str, TurnKind)> {
+        let Some(enc) = &self.enc else { return Ok(("question", TurnKind::Question)) };
+        let emb = enc.encode(&req.query)?;
+        let label = Head::turn().classify(&emb);
+        // "How do I reverse a list in Python?" reads like "as a list", but names a thing and stands alone. A
+        // name alone is no proof: "in simpler words?" links to "Simplicity", yet the follow-up head reads that it
+        // needs the last turn.
+        let follows = self.settings.read().unwrap().reformat_followup && Head::follow_up().classify(&emb) == "followup";
+        let stands_alone = || !follows && !route::link_entities(lib, &req.query, &req.packs).is_empty();
+        Ok((label, match label {
+            "reformat" if !req.history.is_empty() && !stands_alone() => TurnKind::Reformat,
+            "chat" => TurnKind::Chat,
+            "check" if req.history.is_empty() => TurnKind::Chat,
+            _ => TurnKind::Question,
+        }))
+    }
+
     pub fn ask(&self, req: &AskRequest, sink: &dyn EventSink) -> Result<AskOutcome> {
         let t0 = Instant::now();
         let ms = |t: Instant| t.elapsed().as_secs_f64() * 1000.0;
@@ -705,17 +748,7 @@ impl Engine {
         // reply. The empty card lets the app show it; a reformat also sends the last turn's sources, which
         // its citations use. An expand request ("tell me more") is a question about the last topic, and so is a
         // check request ("are you sure?").
-        let label = match &self.enc {
-            Some(enc) => Head::turn().classify(&enc.encode(&req.query)?),
-            None => "question",
-        };
-        let kind = match label {
-            // "How do I reverse a list in Python?" reads like "as a list", but a reformat request names no thing.
-            "reformat" if !req.history.is_empty() && route::link_entities(&lib, &req.query, &req.packs).is_empty() => TurnKind::Reformat,
-            "chat" => TurnKind::Chat,
-            "check" if req.history.is_empty() => TurnKind::Chat,
-            _ => TurnKind::Question,
-        };
+        let (label, kind) = self.turn(&lib, req)?;
         if let Some((_, l)) = llm.as_ref().filter(|_| kind != TurnKind::Question) {
             let card = Card { query: req.query.clone(), ..Default::default() };
             sink.event(Event::Card(card.clone()));
@@ -764,7 +797,7 @@ impl Engine {
         // A first question's answer prompt starts with the system prompt and the question: the backend can
         // prefill them on its own chip while the search runs. Later turns add earlier exchanges in front.
         if let Some((_, l)) = llm.as_ref().filter(|_| req.history.is_empty() && !req.think) {
-            let system = if s.how_to_steps && is_how_to(&req.query) { prompts::HOW_TO_SYSTEM.to_string() } else { prompts::synthesis_system(&lib.snapshot_date()) };
+            let system = if s.how_to_steps && is_how_to(&req.query) { prompts::how_to_system(self.profile().lean).to_string() } else { prompts::synthesis_system(&lib.snapshot_date(), self.profile().lean) };
             l.prepare(&system, &prompts::synthesis_user_prefix(&route.query), &GenParams::synthesis(s.max_answer_tokens));
         }
         // Follow-ups without the rewrite step. A message that the follow-up head reads as needing the last turn
@@ -918,7 +951,8 @@ impl Engine {
                 } else {
                     (facts.iter().map(|f| f.text.clone()).collect::<Vec<_>>().join("\n"), true)
                 };
-                let highlight = evidence::best_sentence(&text, &route.query);
+                let scored = h.sentence_scores.as_deref().filter(|_| !from_cards).and_then(|sc| evidence::best_scored_sentence(&text, sc));
+                let highlight = scored.unwrap_or_else(|| evidence::best_sentence(&text, &route.query));
                 CardPassage { source: Self::source_ref(&lib, h, 0), text, highlight, from_cards }
             });
             Card {
@@ -1042,9 +1076,13 @@ impl Engine {
 
         // Stage 3: evidence.
         let profile = self.profile();
-        let base = s.evidence_tokens.unwrap_or(profile.evidence_tokens);
-        let warm = profile.warm_evidence_cut && rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
-        let budget = if warm { base.min(HOT_EVIDENCE_TOKENS) } else { base };
+        // A CPU model reads the prompt slowly, so there the sentence head buys speed instead of more facts.
+        let head_cpu = s.retrieval.sentence_head && profile.warm_evidence_cut;
+        let lean = head_cpu && profile.lean;
+        let lean_budget = if s.how_to_steps && is_how_to(&req.query) { LEAN_HOW_TO_EVIDENCE_TOKENS } else { LEAN_EVIDENCE_TOKENS };
+        let base = s.evidence_tokens.unwrap_or(if lean { lean_budget } else if head_cpu { profile.evidence_tokens.min(HEAD_EVIDENCE_TOKENS) } else { profile.evidence_tokens });
+        let warm = !lean && profile.warm_evidence_cut && rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
+        let budget = if warm { base.min(if head_cpu { HEAD_HOT_EVIDENCE_TOKENS } else { HOT_EVIDENCE_TOKENS }) } else { base };
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {
@@ -1055,6 +1093,10 @@ impl Engine {
         // A follow-up searched with an earlier answer's sentence: the evidence windows and the answer read the
         // earlier question and this one instead, so that sentence does not pull them back to the old answer.
         let question = focus.unwrap_or_else(|| route.query.clone());
+        if question != route.query {
+            // The sentence scores belong to the search text; fall back to the word-overlap windows.
+            hits.iter_mut().for_each(|h| h.sentence_scores = None);
+        }
         let mut ev: Evidence = evidence::assemble(&lib, &hits, &question, budget, wd);
         if !s.use_cards {
             for src in &mut ev.sources {
@@ -1136,7 +1178,7 @@ impl Engine {
         ev.numbers.extend(crate::text::numbers(&lib.snapshot_date()));
         // A new how-to question in a running chat counts; a follow-up of the last answer keeps the general prompt.
         let how_to = s.how_to_steps && !route.needs_rewrite && !inherit && is_how_to(&req.query);
-        let system = if how_to { prompts::HOW_TO_SYSTEM.to_string() } else { prompts::synthesis_system(&lib.snapshot_date()) };
+        let system = if how_to { prompts::how_to_system(self.profile().lean).to_string() } else { prompts::synthesis_system(&lib.snapshot_date(), self.profile().lean) };
         // Keep the user's own words in front of the model; a rewritten question can drift.
         let asked = if raw_query != question && !req.history.is_empty() { format!("{} ({question})", req.query.trim()) } else { question.clone() };
         // The exchange the follow-up refers to, so it builds on it. Its citations point at another turn's sources.

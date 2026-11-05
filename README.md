@@ -223,7 +223,7 @@ flowchart TD
   ENT --> BM25["BM25 per pack, tantivy"]
   ENT --> ENC["leaf-mt query encoder"]
   ENC --> IVF["Binary IVF, 512-bit codes"]
-  BM25 --> RRF["RRF fusion"]
+  BM25 --> RRF["Learned fusion"]
   IVF --> RRF
   ENT --> RRF
   INT -.->|"compare: one search each"| RRF
@@ -234,7 +234,7 @@ flowchart TD
     F["Wikidata facts"]
     R["Reader snippet, DeBERTa, optional"]
   end
-  RR --> EV["Evidence selection, 600 tokens, 400 on a hot phone"]
+  RR --> EV["Evidence selection, 400 to 600 tokens by model"]
   RR --> HOP["Wikidata second hop"]
   HOP -.-> EV
   EV --> COMP["Optional compute: ratios, units, calc"]
@@ -249,7 +249,7 @@ flowchart TD
 
 ### Design choices
 
-1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. Reciprocal-rank fusion merges the two lists. An Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop. I distilled it from Ettin-400m on 23,012 of the app's own search pools ([0xPD33/ettin-reranker-17m-commonplace](https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)).
+1. **Search in about one second.** Keyword search (tantivy BM25) and semantic search run in parallel. The semantic index holds 512-bit binary codes in an IVF index. The 23M-parameter leaf-mt encoder embeds the question. A small learned scorer merges the two lists: a linear layer and 16 tanh units over the ranks and scores of each passage in both lists, pack statistics and popularity. I trained it to keep the passages that the reranker would rank highest if it saw every candidate. It replaces reciprocal-rank fusion (`--fusion rrf` restores it). An Ettin-17m cross-encoder then reranks the top 24 passages on the phone and the top 40 on the desktop. I distilled it from Ettin-400m on 23,012 of the app's own search pools ([0xPD33/ettin-reranker-17m-commonplace](https://huggingface.co/0xPD33/ettin-reranker-17m-commonplace)).
 2. **An answer card before the answer.** The best passage, Wikidata facts and the source list appear before the model writes a word. The app highlights the sentence that matches. For a simple lookup, an extractive reader adds a short snippet.
 3. **A small model writes the answer.** Ling-3.0-tiny (7.9B parameters in total, 1.3B active for each token, MIT license) runs fully in RAM through llama.cpp. Phones with 8 GB of RAM use MiniCPM5-2B (2.5B parameters, Apache-2.0). On a phone with a Tensor G5, Gemma 4 E2B (Apache-2.0) runs on the NPU through LiteRT-LM with speculative decoding: it reads the prompt at 800 to 2,000 tokens per second and writes 27 to 31. For the NPU, the app ships its own build of Google's Tensor dispatch library, because the prebuilt one crashes with LiteRT-LM 0.18.1 ([MODELS](docs/MODELS.md#runtimes)). Each model reads short evidence, not whole articles. The system prompt holds the rules and three worked answers. With llama.cpp, the app keeps the state of the system prompt in memory, so each question pays only for its own evidence. It also saves that state to a file, so after a restart the app loads the file and does not read the prompt again.
 4. **Checks in code, not in a second model.** The app removes citations to sources that do not exist, and a list of sources that the model writes at the end of an answer. It underlines a sentence when the evidence does not have one of its numbers. It also underlines a sentence without a citation when the evidence does not have most of its rare words. When the sources do not answer a question, the model says so first and can then answer from general knowledge, and those sentences get the underline. Code does unit conversions, percentages and Wikidata ratios. A question that asks only for a conversion or a percentage gets the result from code, with no model call. For another calculation, the model writes an expression and code calculates the result.

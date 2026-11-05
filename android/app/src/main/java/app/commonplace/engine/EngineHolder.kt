@@ -48,6 +48,7 @@ class EngineHolder(private val app: Application) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val modelLock = Mutex()
     val prefs = Prefs(app)
+    val power = PowerMeter(app)
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Starting)
     val state: StateFlow<EngineState> = _state.asStateFlow()

@@ -251,7 +251,10 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     return@launch
                 }
+                val startMs = System.currentTimeMillis()
+                val energyBefore = holder.power.read()
                 val result = engine.ask(AskInput(query, history, think, holder.thermalHeadroom(), packs), Listener(turn))
+                holder.power.log(query, (model as? ModelState.Loaded)?.id, startMs, energyBefore, holder.power.read())
                 main.post {
                     turn.kind = result.kind
                     turn.card = result.card

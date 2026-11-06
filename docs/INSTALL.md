@@ -4,7 +4,7 @@
 
 The [README](../README.md#install-on-a-phone) has the requirements and the steps. This section adds the details.
 
-- **Which starter set.** The app marks the set for your phone with **For this phone**. It counts a phone with less than 10 GB of RAM as an 8 GB phone. Ling uses about 5.5 GB while it runs, and MiniCPM5-2B about 2.6 GB.
+- **Which starter set.** The app marks the set for your phone with **For this phone**. It counts a phone with less than 10 GB of RAM as an 8 GB phone. Ling uses about 5.4 GB while it runs, and MiniCPM5-2B about 2.6 GB. When the app goes off screen, it unloads Ling, then loads it again on return. MiniCPM5-2B and Gemma stay loaded for 5 minutes.
 - **What a starter set holds.**
   - `enwiki-core`: English Wikipedia (dump of 2026-09-01). It has the opening passages of the 2 million most-viewed articles and the full text of the 200,000 most-viewed articles.
   - `ling3-tiny` or `minicpm5-2b`: the model that writes the answers.

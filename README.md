@@ -162,8 +162,9 @@ First word, full answer and warm-phone speed: 62 questions typed in the app, on 
 Known limits:
 
 - Ling and MiniCPM get slower when the phone gets hot. On an older build, Ling's median first word rose from 13 s to 28–30 s over 75 questions. Gemma kept its speed over 126 questions in 76 minutes (first word 2.8 s at most), but those runs did not make the phone hot ([BENCHMARKS](docs/BENCHMARKS.md#long-sessions-and-heat)).
+- Ling holds about 5 GB while it is loaded. Android 17 limits a hidden app to 3 GiB, so the app unloads Ling when it goes off screen, or when a running answer ends, and loads it again on return. On a Pixel 10 that took about 15 s and about 5 s in two tests. Other apps can still be killed in the seconds after you leave, and a full phone can still kill this app.
 - Only a Pixel 10 (Tensor G5) runs Gemma on its NPU. Other phones answer on the CPU. On 63 seeds asked on the phone, Ling won more often head to head (33 / 7 / 21, not significant). The judge rates Gemma's answers as correct as Ling's, but less complete.
-- Ling's answer to "How do I fix a squeaky door hinge?" can give door-fitting steps instead of the fix. A citation can also point to the wrong article, for example a pipe-welding article for a leaking tap.
+- Ling's answer to "How do I fix a squeaky door hinge?" can give door-fitting steps instead of the fix. A citation can also point to the wrong article, for example a pipe-welding article for a leaking tap. Asked who won Eurovision 2025, Ling names the singer instead of the country and gives the wrong song.
 - Voice input (Moonshine, the optional `voice-en` pack) is English only. I tested real speech on the desktop, not yet on a phone's microphone.
 - Read aloud uses only an offline voice for the answer's language. Without one, the app says so and does not fall back to a network voice. The optional `tts-en` pack adds a bundled English voice (Phonon 31m, Apache-2.0, 65 MB).
 

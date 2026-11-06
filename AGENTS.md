@@ -32,6 +32,7 @@ describe the design. This file holds the rules and traps that are not obvious fr
 - The Nix Android SDK is read-only and has only the platforms and build-tools that `flake.nix` lists.
 - `android/app/src/main/vendorLibs/` holds prebuilt native libraries (the Tensor dispatch library and Phonon's
   `libptts_ffi.so`). Their sources and build commands are in `docs/MODELS.md`. Building outside code needs the maintainer's approval.
+- The build stamp comes from `git describe --dirty`, so any uncommitted file marks a build as dirty. Commit first, then build a release.
 - `third_party/llama.cpp` is a submodule: run `git submodule update --init third_party/llama.cpp` in a new worktree.
   Git refuses to remove a worktree with a submodule, so a clean, merged worktree needs `git worktree remove --force`.
 
@@ -51,6 +52,8 @@ describe the design. This file holds the rules and traps that are not obvious fr
   screenshot or a recording: it shows private messages. Never send a blind BACK key.
 - For speed comparisons, force the post-install compile (`adb shell cmd package compile -m speed-profile -f <pkg>`),
   wait about 90 s, and interleave the builds (A, B, A, B). Runs right after an install were 30% slower.
+- The speed and eval drivers keep the app on screen, so they cannot see the 3 GiB limit of a hidden app on Android 17. Before a
+  release, turn stay-awake off, hide the app and lock the phone on each model, then read `adb shell dumpsys activity exit-info <pkg>`.
 - Restore every phone setting you change, such as the default TTS engine (`tts_default_synth`).
 
 ## Native-code traps

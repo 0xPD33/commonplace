@@ -6,6 +6,8 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import app.commonplace.BuildConfig
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -88,7 +90,7 @@ class EngineHolder(private val app: Application) {
                 prefs.applyTo(engine)
                 _state.value = EngineState.Ready(engine)
                 refreshLibrary()
-                ensureModel(null)
+                if (onScreen()) ensureModel(null)
             } catch (t: Throwable) {
                 Log.e(TAG, "engine start failed", t)
                 _state.value = EngineState.Failed(t.message ?: t.toString())
@@ -165,6 +167,33 @@ class EngineHolder(private val app: Application) {
                     }
                 }
                 _model.value = ModelState.Failed(t.message ?: t.toString())
+            }
+        }
+    }
+
+    /** An answer runs: its model stays loaded when the app goes off screen, so coming back does not load a second copy. */
+    @Volatile
+    var answering = false
+
+    private fun onScreen() = ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+
+    /** A process that starts hidden does not load the model, so the app comes on screen with none. */
+    fun loadModelOnScreen() {
+        scope.launch { ensureModel(null) }
+    }
+
+    /**
+     * Android 17 limits a hidden app to 3 GiB, so the kernel swaps about 2 GB of Ling's 5 GB out and other apps get killed.
+     * Models below the limit stay loaded. The lock also catches a load that was running when the app went off screen.
+     */
+    fun unloadModelOverHiddenLimit() {
+        scope.launch {
+            modelLock.withLock {
+                val m = _model.value
+                if (!answering && !onScreen() && m is ModelState.Loaded && m.backend == Backend.Cpu && m.kind == ModelKind.FAST) {
+                    engineOrNull?.unloadModel()
+                    _model.value = ModelState.None
+                }
             }
         }
     }

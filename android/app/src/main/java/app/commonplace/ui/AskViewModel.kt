@@ -231,6 +231,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         val turn = Turn(query, think)
         val packs = listOfNotNull(scope?.packId)
         turns += turn
+        holder.answering = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if (holder.model.value !is ModelState.Loaded) {
@@ -273,6 +274,10 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     turn.answering = false
                     turn.done = true
                 }
+            } finally {
+                // The app may have gone off screen during the answer.
+                holder.answering = false
+                holder.unloadModelOverHiddenLimit()
             }
         }
     }

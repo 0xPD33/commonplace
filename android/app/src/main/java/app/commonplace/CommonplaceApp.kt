@@ -2,6 +2,9 @@ package app.commonplace
 
 import android.app.Application
 import android.content.ComponentCallbacks2
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import app.commonplace.engine.EngineHolder
 
 class CommonplaceApp : Application() {
@@ -12,6 +15,10 @@ class CommonplaceApp : Application() {
         super.onCreate()
         engine = EngineHolder(this)
         engine.start()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = engine.loadModelOnScreen()
+            override fun onStop(owner: LifecycleOwner) = engine.unloadModelOverHiddenLimit()
+        })
     }
 
     @Suppress("DEPRECATION")

@@ -9,7 +9,7 @@ The [README](../README.md#install-on-a-phone) has the requirements and the steps
   - `enwiki-core`: English Wikipedia (dump of 2026-09-01). It has the opening passages of the 2 million most-viewed articles and the full text of the 200,000 most-viewed articles.
   - `ling3-tiny` or `minicpm5-2b`: the model that writes the answers.
   - `wikidata-facts`: numbers and dates from Wikidata, such as population, area and dates of birth.
-- **Gemma on a Pixel 10.** When the pack is installed, Gemma becomes the answer model. Settings can still choose Ling. For a full answer, it is about twice as fast as Ling (4.8 s against 10.0 s at the median).
+- **Gemma on a Pixel 10.** When the pack is installed, Gemma becomes the answer model. Settings can still choose Ling. For a full answer, it is more than twice as fast as Ling (4.23 s against 10.0 s at the median).
 - **A damaged file.** The app names the file and installs nothing from the damaged part. It ignores files that are not packs.
 
 ### More packs

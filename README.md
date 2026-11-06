@@ -2,7 +2,7 @@
 
 Commonplace is an offline research assistant for Android. You ask a question, and it answers from Wikipedia and other reference text stored on your phone. Every answer cites its sources. The app has no `INTERNET` permission, so it cannot use the network.
 
-On a Pixel 10, Gemma 4 E2B writes the answer on the Tensor G5 NPU: the first word comes after about 1.4 seconds and the full answer after 5 to 8. Other phones run Ling-3.0-tiny or MiniCPM5-2B on the CPU through llama.cpp.
+On a Pixel 10, Gemma 4 E2B writes the answer on the Tensor G5 NPU: the first word comes after about 1.3 seconds and the full answer after about 4. Other phones run Ling-3.0-tiny or MiniCPM5-2B on the CPU through llama.cpp.
 
 I built it for the poidh bounty [Build the Best Offline AI Research App for Android](https://poidh.xyz/mainnet/bounty/31). I test it on a Google Pixel 10 with GrapheneOS and 12 GB of RAM.
 
@@ -151,13 +151,13 @@ The 64% comes from the reference run `v2-ref-ling` (2026-11-02, before 0.4.0): L
 | Measure | Gemma 4 E2B on the NPU | Ling-3.0-tiny on the CPU |
 |---|---|---|
 | Answer card (search, rerank, best passage) | 0.61 s median | 0.50 s median |
-| First word | 1.39 s median | 6.02 s median on a warm phone; 5.1–5.3 s from a cool start |
-| Full answer | 4.8 s median | 10.0 s median |
-| Writing speed | 24.3 tokens/s on a warm phone; 25 to 31 before | 13.1 tokens/s on a warm phone; 14.0–15.4 from a cool start |
+| First word | 1.34 s median | 6.02 s median on a warm phone; 5.4–6.5 s from a cool start |
+| Full answer | 4.23 s median | 10.0 s median |
+| Writing speed | 25.8 tokens/s on a warm phone; 25 to 31 before | 13.1 tokens/s on a warm phone; 14.9 from a cool start |
 | Model start after the app was closed | 6 to 9 s | About 16.5 s (about 25 s without the saved warm-up state) |
 | Peak memory | 2.3 GB | 5.4 GB |
 
-First word, full answer and warm-phone speed: 0.4.0 candidate, 62 questions typed in the app, 2026-11-05. Cool starts: 9 demanding prompts, same day. Card, model start and Gemma's peak memory: earlier builds. [docs/BENCHMARKS.md](docs/BENCHMARKS.md) names each date and build.
+First word, full answer and warm-phone speed: 62 questions typed in the app, on the final 0.4.0 code for Gemma (2026-11-06) and on the 0.4.0 candidate for Ling (2026-11-05). Cool starts: 9 demanding prompts on the final code, 2026-11-06. Card, model start and Gemma's peak memory: earlier builds. [docs/BENCHMARKS.md](docs/BENCHMARKS.md) names each date and build.
 
 Known limits:
 

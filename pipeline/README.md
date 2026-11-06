@@ -8,8 +8,6 @@ nix develop -c uv run --project pipeline python -m commonplace_pipeline.<module>
 
 ## Steps
 
-**Not used in the release:** `doc2query.py` and `cards.py` write synthetic questions and fact cards with an OpenAI-compatible server. I ran them only as small CPU tests. No release pack contains their output.
-
 **Wikidata facts:**
 
 ```sh
@@ -19,9 +17,7 @@ cd core && ./target/release/packbuild wikidata --input ../data/work/wikidata \
   --out ../data/library/packs/wikidata-facts --snapshot 2026-05-07
 ```
 
-`configs/wikidata-props.tsv` lists the kept properties and their labels. Line order sets the display priority.
-Stage 1 keeps its output in `data/work/wikidata/claims-flat/` and skips files it already did. After you add a property, delete that folder.
-The step also writes `data/work/wikidata/title_qid.parquet` (enwiki title → QID).
+`configs/wikidata-props.tsv` lists the kept properties and their labels, and line order sets the display priority. After you add a property, delete `data/work/wikidata/claims-flat/`. The step also writes `title_qid.parquet` (enwiki title → QID).
 
 ## Breadth packs
 
@@ -52,7 +48,7 @@ scripts/check-pack.sh <id> "<question>"           # inside nix develop; writes d
 
 Without `data/work/<id>/dense/`, `packbuild` builds a keyword-only pack. The next section adds the dense index.
 
-Every released pack needs its notice: pass `--notice pipeline/notices/<id>.txt` to `packbuild build`, or run `packbuild notice` on a built pack. `textbooks-en` and `stackexchange` also take `--credits` with the file that `python -m commonplace_pipeline.credits` writes. The table below is the manifest data; `NOTICE.txt` holds the full credit.
+Every released pack needs its notice: pass `--notice pipeline/notices/<id>.txt` to `packbuild build`. `textbooks-en` and `stackexchange` also take `--credits` with the file that `python -m commonplace_pipeline.credits` writes. The table below is the manifest data.
 
 | Pack | Snapshot | License | Attribution |
 |---|---|---|---|
@@ -72,14 +68,11 @@ Every released pack needs its notice: pass `--notice pipeline/notices/<id>.txt` 
 | wiktionary-en | 2026-09-28 | CC BY-SA 4.0 and GFDL | Wiktionary contributors; kaikki.org English extract (Tatu Ylonen, wiktextract) of 2026-09-28 |
 | factbook | 2026-02 | Public domain (U.S. government work); JSON mirror CC0 | Central Intelligence Agency, The World Factbook (public domain); factbook/factbook.json@144d697 (CC0) |
 
-The common-pile Stack Exchange rows have no scores, accepted flags or post boundaries. So `stackexchange` keeps threads by distinct-author count and drops comments by a heuristic (see the module docstring).
-
-`zim` reads Kiwix ZIM files with `python-libzim`. MediaWiki pages keep only `.mw-parser-output`, without references, navboxes and figures, and pages in other languages are skipped (ArchWiki ships its translations in the English ZIM). `--prefix` puts the DevDocs docset name before each title ("Python: itertools").
+`zim` reads Kiwix ZIM files with `python-libzim` and skips pages in other languages. `--prefix` puts the DevDocs docset name before each title. `--drop-alt-medicine` drops the Wikibooks alternative-medicine books, whose home remedies reached first-aid answers.
 
 ## Dense codes on the GPU
 
-`embed` embeds a work directory with mxbai-embed-large-v1 (fp16, CLS pooling, no prompt; the text is "title > section" + newline + passage) and writes `dense/` for `packbuild`: 512-bit sign codes, an IVF with about 1,500 codes per list, and the list assignments.
-It writes shards of 50,000 passages to `dense/shards/`; after a stop, the same command skips the finished shards. The 5060 Ti embeds about 330–640 passages per second (longer passages are slower).
+`embed` embeds a work directory with mxbai-embed-large-v1 and writes `dense/` for `packbuild`: 512-bit sign codes, an IVF with about 1,500 codes per list, and the list assignments. After a stop, the same command skips the finished shards. The 5060 Ti embeds about 330–640 passages per second.
 
 ```sh
 nix develop -c uv run --project pipeline --extra gpu python -m commonplace_pipeline.embed --work data/work/<id>
@@ -102,18 +95,24 @@ python -m commonplace_pipeline.rerank sel8 --src data/models/<student>/onnx/mode
 python -m commonplace_pipeline.rerank hitk --pools nq-dev-pool.jsonl --answers nq-dev.jsonl --scores teacher.jsonl
 ```
 
-`hitk` counts a query as a hit at k when a normalized answer string occurs in one of the top k passages (the DPR measure). `train` picks the checkpoint by hit@1 on the first 1,000 NQ-open validation queries, so report results with `--offset 1000`.
+`train` picks the checkpoint by hit@1 on the first 1,000 NQ-open validation queries, so report results with `--offset 1000`. `sel8` writes the phone's file: dynamic int8, except layer 0's MLP output MatMul, which stays fp32. Check a new file against its fp32 source on the labeled pools and NQ before you ship it.
 
-`sel8` writes the phone's file: dynamic int8 per channel, except layer 0's MLP output MatMul, which stays fp32. It finds that node by the name suffix `/layers.0/mlp/Wo/MatMul` and stops if it does not find exactly one. `nb8` writes the 8-bit weight-only file. Check a new file against its fp32 source on the labeled pools and NQ before you ship it.
+The app's reranker came from this step with `cross-encoder/ettin-reranker-400m-v1` as the teacher, on 23,012 pools. Its run used a variant of `train` that is not in this repository. The model card has the settings. To test a reranker change without new judge costs, score it against the 161 pools that Claude Sonnet graded (nDCG@8, see docs/BENCHMARKS.md).
 
-The app's reranker, `0xPD33/ettin-reranker-17m-commonplace`, came from this step with `cross-encoder/ettin-reranker-400m-v1` as the teacher, on 23,012 pools: NQ-open train questions, Stack Exchange titles and 8,902 questions that a local Gemma model wrote from pack passages. Its run used a variant of `train` that also picks the checkpoint on 368 held-out generated questions; that variant is not in this repository. The model card on Hugging Face has the settings. To test a reranker change without new judge costs, score it against the 161 pools that Claude Sonnet graded (nDCG@8, see docs/BENCHMARKS.md).
+## Learned fusion, sentence head and output rows
+
+Each module's docstring has the full commands and results.
+
+- `fusion` trains the scorer that orders search candidates before the rerank pool (`core/commonplace-core/src/fusion_model.json`). Its training questions contain no Stack Exchange text, because those dumps forbid LLM training.
+- `sentsel` trains the head that scores sentence pieces of a passage (`sentence_head.json`). Claude grades the pieces.
+- `head_rows` writes `core/commonplace-llm/src/ling_head_rows.bin`, the rows of Ling's output head that the app computes. A new list can change answers: run the release gate after you replace the file. A rebuild does not give the same bytes, because the answers in `eval/runs` change over time.
 
 ## Classifier heads and property vectors
 
-`heads` trains a softmax layer on the leaf-mt question embedding, with the desktop (fp32) and the phone (int8) encoder, and writes `core/commonplace-core/src/<name>_head.json`. The core compiles the file in. The examples are in `configs/<name>-examples.jsonl`. `--eval` only reports; examples that repeat an eval question are dropped.
+`heads` trains a softmax layer on the leaf-mt question embedding and writes `core/commonplace-core/src/<name>_head.json`. The examples are in `configs/<name>-examples.jsonl` and `configs/generated/<name>-*.jsonl`. `--eval` only reports.
 
 ```sh
-uv run --project pipeline python -m commonplace_pipeline.heads turn-kind --near 1 --l2 1e-4 --merge followup=question --allow reformat=1 \
+uv run --project pipeline python -m commonplace_pipeline.heads turn-kind --near 1 --l2 1e-4 --merge followup=question --allow reformat=6 \
   --eval eval/conversation.jsonl --map followup=question,compare_followup=question,topic_switch=question,expand=expand,reformat=reformat,chat=chat
 uv run --project pipeline python -m commonplace_pipeline.heads follow-up --examples turn-kind --near 1 --l2 1e-4 \
   --merge expand=followup --only question,followup --strict none \
@@ -122,10 +121,9 @@ uv run --project pipeline python -m commonplace_pipeline.heads intent --strict c
   --eval eval/queries.jsonl --map factual=lookup,explanation=explain,comparison=compare,numeric=calc
 ```
 
-- The turn-kind head sorts a chat message into question, expand ("tell me more"), check ("are you sure?"), reformat or chat. The follow-up head tells whether a question needs the last turn. Both learn from `configs/turn-kind-examples.jsonl`. The intent head sorts a question into lookup, explain, compare or calc.
 - `--strict` names the labels whose mistakes are costly. Cross-validation sets a bar for each strict label (`min_probs`), so that no held-out example of another label reaches it. `--allow label=k` leaves out the k highest mistakes for that label.
 
-`prop_vectors` writes `core/commonplace-core/src/wikidata_props.json`: one vector per property of `configs/wikidata-props.tsv`, plus population density. Each vector is the mean leaf-mt embedding of the property's label, its Wikidata label and its English aliases. The core picks the Wikidata facts that a question asks about by the cosine to these vectors. Run it again after you change the property list or the query encoder:
+`prop_vectors` writes `core/commonplace-core/src/wikidata_props.json`, one vector per kept property. Run it again after you change the property list or the query encoder:
 
 ```sh
 uv run --project pipeline python -m commonplace_pipeline.prop_vectors   # needs data/raw/wikidata and data/work/wikidata
@@ -133,7 +131,7 @@ uv run --project pipeline python -m commonplace_pipeline.prop_vectors   # needs 
 
 ## Wikipedia, monthly (public XML dumps, no account)
 
-`wikipedia.py` turns a monthly dump from dumps.wikimedia.org/enwiki/ into packbuild input. The build also needs the pageviews file: `scripts/fetch-extra-packs.sh pageviews`. `convert` downloads one dump part at a time and deletes it after rendering, so the full ~25 GB never sits on disk. A new dump starts on the 1st of each month and is usually complete by the 3rd–5th.
+`wikipedia.py` turns a monthly dump from dumps.wikimedia.org/enwiki/ into packbuild input. The build also needs the pageviews file: `scripts/fetch-extra-packs.sh pageviews`. `convert` deletes each dump part after rendering, so the full ~25 GB never sits on disk.
 
 ```sh
 python -m commonplace_pipeline.wikipedia convert --date 20261001 --out data/work/enwiki-20261001      # ~2.5 h on 16 cores
@@ -145,4 +143,4 @@ core/target/release/packbuild build --input data/work/enwiki-20261001 --out data
   --attribution "Wikipedia contributors; Wikimedia dump enwiki-20261001"
 ```
 
-The first dump has nothing to reuse: 44.6M passages took 33.5 h on the 5060 Ti. I have not measured the share of reused passages yet.
+The first dump has nothing to reuse: 44.6M passages took 33.5 h on the 5060 Ti.

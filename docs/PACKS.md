@@ -49,36 +49,47 @@ The app refuses a knowledge pack whose `embedder` differs from the installed pac
 
 ### User documents
 
-The app builds a knowledge pack on the device from a document that the user adds ("My documents"): `CommonplaceEngine.add_document(title, pages, listener)`, or `commonplace add-doc <file.txt>` on the desktop. The code is `core/commonplace-core/src/userdoc.rs`. It writes through the same `pack` writers as `packbuild`. "Ask this document" in Library limits the questions that follow to that pack (`AskInput.packs` in the FFI, `AskRequest.packs` in the core; `commonplace ask|retrieve --pack <id>` on the desktop). Retrieval, entity linking and Wikidata facts skip every pack outside the list. An empty list means every enabled pack.
+The app builds a knowledge pack on the device from a document that the user adds: `CommonplaceEngine.add_document(title, pages, listener)`, or `commonplace add-doc <file.txt>` on the desktop (`core/commonplace-core/src/userdoc.rs`). "Ask this document" limits the questions that follow to that pack (`AskRequest.packs`; `commonplace ask|retrieve --pack <id>` on the desktop).
 
 - The core receives the text of each page. Android extracts it from the PDF.
-- The pack is `doc-<10 hex of SHA-256 over title and pages>`, with `user_document: true` in the manifest and the license "user document". The library list, verify and remove treat it like any pack.
+- The pack is `doc-<10 hex of SHA-256 over title and pages>`, with `user_document: true` in the manifest.
 - The document is one article. Each passage has the section path `p. <page>`, and no passage spans two pages. The chunker follows `chunk.py` (80 to 220 words per passage).
-- The dense index has one IVF list, because a document has at most 5,000 passages. Its codes come from the leaf-mt encoder without the query prompt. leaf-mt shares the mxbai vector space, so the manifest records `embedder.doc = MongoDB/mdbr-leaf-mt`. Each pack is searched on its own and fused by rank, so the embedder check skips packs with `user_document`.
-- The build runs in `packs/.building-<id>/` and moves into place when it is complete. A document without text, or with more than 5,000 passages, fails with a message that the UI can show.
+- The dense index has one IVF list, because a document has at most 5,000 passages. Its codes come from the leaf-mt encoder without the query prompt, which shares the mxbai vector space (`embedder.doc = MongoDB/mdbr-leaf-mt`).
+- A document without text, or with more than 5,000 passages, fails with a message that the UI can show.
 
 ## Distribution
 
-`packbuild split --single` writes one plain tar stream of `<pack_id>/` as `<pack_id>.tar`. Without `--single`, it writes parts of at most `--part-size` bytes (2 GB by default) plus `<pack_id>.pack.json` with the SHA-256 of each part. The app still imports such multi-part packs, for example from a third party.
-The app imports the file through the Android file picker (SAF). It extracts the stream directly, hashes the file and each file inside it as it reads, checks everything against `manifest.json` (and against the SHA-256 of the catalog, for a catalog pack), and only then moves the pack into place. After a verified import, it offers to delete the downloaded files.
-The app also enforces the 50 GB total footprint before an import starts. For a bundle, it uses the size of the whole file.
+### Files
 
-A bundle is a distribution container, not a new pack format: one tar stream with several top-level `<pack_id>/` directories, one after the other. Pack format version 1 does not change, and a bundle has no manifest of its own. `packbuild bundle --pack <dir>... --out <file>.tar` writes the packs in the given order. The importer handles each pack like a single pack:
-- It checks the pack against its own `manifest.json`, runs the compatibility check for that manifest, and moves the pack into place when the next pack starts. The last pack waits until the whole file is read.
-- If a pack replaces an installed pack with the same id, the import replaces it, as for a single pack.
-- If an error stops the import, the packs that were complete before it stay installed. The error names the failed pack.
-- The SHA-256 of the whole file (from the catalog) is checked while the file is read. A mismatch is reported before the last pack goes into place.
-- The app tells the user which pack it installs (`ImportListener.on_pack`), and `import_pack` returns the ids of all installed packs.
+- **Single pack.** `packbuild split --single` writes one plain tar stream of `<pack_id>/` as `<pack_id>.tar`. Without `--single`, it writes parts of at most `--part-size` bytes (2 GB by default) plus `<pack_id>.pack.json` with the SHA-256 of each part. The app still imports such multi-part packs.
+- **Bundle.** `packbuild bundle --pack <dir>... --out <file>.tar` writes one tar stream with several top-level `<pack_id>/` directories. A bundle is a container, not a pack format, and it has no manifest of its own. The `BUNDLES` list at the top of `scripts/release.sh` defines the bundles: the two starter sets and the Reference shelf (13 packs). Large packs (`enwiki`, `arxiv-abs`, `stackexchange`) stay single. A pack inside a bundle has no file of its own, except `minicpm5-2b`.
+- **Desktop install.** `tar -xf <file>.tar -C data/library/packs` installs a pack or a bundle.
 
-The catalog packs live in a Hugging Face dataset repo, one `.tar` file per pack. Hugging Face has no 2 GiB limit, so a user downloads one file per pack. Bundles reduce this further: each starter set is one file, so getting started is one download. The set for 12 GB phones holds `enwiki-core`, `ling3-tiny` and `wikidata-facts` (11.3 GB). The set for 8 GB phones holds `minicpm5-2b` in place of `ling3-tiny` (8.1 GB). The Reference shelf (13 breadth packs, about 2 GB) is one file as well. Large packs (`enwiki`, `arxiv-abs`, `stackexchange`, `minicpm5-2b`) stay single. A pack inside a bundle has no `.tar` file of its own, except `minicpm5-2b`: a phone with the 12 GB set can add it alone. The new files of a release go in a new folder `packs-<date>` of the repo (for example `packs-2026-11`). A file that a catalog already lists never changes, because older apps check it against their own SHA-256: a rebuilt pack or bundle gets the new folder, and the files that did not change stay in their old folder. The app releases have their own tags on GitHub.
-`HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]` verifies the packs and writes the `.tar` files, `SHA256SUMS`, `catalog.json` and `README.md` (the dataset card) to `dist/<tag>`. `HF_REPO` has no default.
-The `BUNDLES` list at the top of `scripts/release.sh` defines the bundles: one line per bundle with the id, title, description and pack ids in tar order. The script writes the bundle `commonplace-<bundle_id>.tar` when all its packs are in the `pack_id` list of the call. A bundle that is already in the output directory stays in the catalog. `BUNDLES=...` in the environment replaces the list, for a test.
-`catalog.json` has the title, description, type, sizes, license, `build_date`, `replaces` and `recommended` of each pack, and the name, size, SHA-256 and download URL of its file. The app compares `build_date` with the installed pack's manifest and lists the download under Updates when the catalog's build is newer; entries from catalogs before 0.4.0 have no `build_date` and never show as updates. The URL is `https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/<tag>/<file>?download=true`. The query `download=true` makes the browser save the file.
-The top-level list `bundles` has `bundle_id`, `title`, `description`, `pack_ids`, `members` (`pack_id`, `title` and, since 0.4.0, `build_date` of each pack in `pack_ids`), `download_bytes`, `installed_bytes`, `files` (as for a pack) and `recommended` (only the two starter bundles; the app shows the one that suits the phone's RAM). A catalog without `bundles` is still valid.
-`README.md` has the license front matter and a table of the bundles, then a table with the file, size, license, credit and SHA-256 of each pack. Each pack also holds its own `NOTICE.txt` with the full license texts.
-The script copies `catalog.json` to `android/app/src/main/assets/catalog.json`. That file is committed, so the APK build is reproducible: commit the new copy after each packs release. The app has no INTERNET permission, so the catalog only gives the user browser links.
-`HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>` creates the dataset repo if it is missing and uploads the files with the Hugging Face CLI (run through `uvx`). It needs a write token (`HF_TOKEN`). It is the only mode that writes to Hugging Face.
-A user downloads the `.tar` file of a bundle or of each pack with a browser, then imports the files with the file picker (INSTALL.md). On a desktop, `tar -xf <file>.tar -C data/library/packs` installs a pack or a bundle, because each pack is a top-level directory of the file.
+### Import
+
+The app imports a file through the Android file picker. It extracts the stream, hashes the file and each file inside it as it reads, checks everything against `manifest.json` (and the catalog's SHA-256, for a catalog pack), and only then moves the pack into place. It enforces the 50 GB limit before the import starts, using the size of the whole file for a bundle. After a verified import, it offers to delete the download.
+
+In a bundle, the importer handles each pack like a single pack:
+
+- It moves a checked pack into place when the next pack starts. The last pack waits until the whole file is read.
+- If an error stops the import, the complete packs stay installed, and the error names the failed pack.
+- A mismatch of the whole file's SHA-256 shows before the last pack goes into place.
+- The app names each pack while it installs (`ImportListener.on_pack`), and `import_pack` returns the ids of all installed packs.
+
+### Release
+
+The catalog packs live in the Hugging Face dataset. **A file that a catalog lists never changes**, because older apps check it against their own SHA-256. So a rebuilt pack or bundle goes in a new folder `packs-<date>` (for example `packs-2026-11`), and unchanged files stay in their old folder.
+
+- `HF_REPO=<namespace>/<name> scripts/release.sh packs <tag> [pack_id...]` verifies the packs and writes the `.tar` files, `SHA256SUMS`, `catalog.json` and `README.md` (the dataset card) to `dist/<tag>`. It also copies `catalog.json` to `android/app/src/main/assets/catalog.json`: commit that copy, because the APK build reads it.
+- `HF_REPO=<namespace>/<name> scripts/release.sh upload <tag>` uploads the files. It needs a write token (`HF_TOKEN`), and it is the only mode that writes to Hugging Face.
+
+### Catalog
+
+For each pack, `catalog.json` has the title, description, type, sizes, license, `build_date`, `replaces`, `recommended`, and the name, size, SHA-256 and download URL of its file. The URL is `https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/<tag>/<file>?download=true`.
+
+The top-level list `bundles` has `bundle_id`, `title`, `description`, `pack_ids`, `members` (`pack_id`, `title`, `build_date`), `download_bytes`, `installed_bytes`, `files` and `recommended`. Only the two starter bundles are recommended, and the app shows the one that suits the phone's RAM.
+
+The app has no `INTERNET` permission, so the catalog only gives the user browser links. The app compares `build_date` with the installed pack's manifest and lists the download under Updates when the catalog's build is newer. Entries from catalogs before 0.4.0 have no `build_date` and never show as updates.
 
 ## Build a pack
 

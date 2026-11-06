@@ -1,0 +1,451 @@
+{
+  "run_id": "x-m4-on400",
+  "started": "2026-11-06T02:22:45+00:00",
+  "git": "v0.3.2-35-g3fb99f0-dirty",
+  "bin": "commonplace-0a72d15f7b05",
+  "binary_sha256": "0a72d15f7b05639cb658737f50fe7c04c3cfcd5dc84ee1d7ee322d52b2a0e370",
+  "model": {
+    "path": "data/models/llm/MiniCPM5-2B-pureQ4_0.gguf",
+    "sha256": "d998b9433fe6e9b20e0dde7780e6c435a8a9cd893538ea70cbf1e09ce28cd5ae",
+    "from_library": false
+  },
+  "flags": [],
+  "cli": [
+    "--fuse-keep=24",
+    "--leaf-model=onnx/model_quantized.onnx",
+    "--ettin-model=onnx/model_sel8.onnx",
+    "--evidence-tokens=400"
+  ],
+  "phone": true,
+  "ort_dylib_path": "/nix/store/xpnhdp09h7hv06v5k4343vmm7h5l0g0h-onnxruntime-1.27.1/lib/libonnxruntime.so",
+  "think": false,
+  "live_history": false,
+  "queries": "eval/test.jsonl,eval/canary.jsonl,eval/abstention.jsonl,eval/robust.jsonl,eval/recent.jsonl",
+  "queries_sha256": "ab88dba3c4c000dc9083cc82728dc79c9ad187fe20c5537ab48bb46caf965a9b,2c59f9c34724b60c156f15976f072f126212849b51ada4fb5d7cb0b6239163e2,623c4dccc37876bca3b78922b48f4770a2b74498854b5690dfe7fc3c04a46d06,45827e660661d789f41b103ea44232349da6f0439efe800466e0d86d0be29837,fb038868c3564d3d04bf7b717dc768295806e0254940877431557fbf2db8e542",
+  "subset": null,
+  "library": "data/library",
+  "packs": [
+    {
+      "pack_id": "archwiki-en",
+      "pack_type": "knowledge",
+      "title": "ArchWiki",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 2168,
+        "passages": 34161
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "5e6e6002e4cca3bc78952c214751886ba2aacf39737b95dc7a92b6c035593168"
+    },
+    {
+      "pack_id": "cdc-travel",
+      "pack_type": "knowledge",
+      "title": "CDC travel health by destination",
+      "snapshot_date": "2026-09-30",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 244,
+        "passages": 13503
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "6f2a5c002c954ae7e6ee9f851bfbde1c722ba960a4769e33037f8f3c0880772f"
+    },
+    {
+      "pack_id": "devdocs-en",
+      "pack_type": "knowledge",
+      "title": "DevDocs (20 documentation sets)",
+      "snapshot_date": "2026-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 19321,
+        "passages": 153517
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "79bd07031dd672983be98bb3e9c8bc33a5005cd1a367d94fd15735e4cf7192bc"
+    },
+    {
+      "pack_id": "enwiki-core",
+      "pack_type": "knowledge",
+      "title": "English Wikipedia (starter)",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-10-02",
+      "counts": {
+        "articles": 2000000,
+        "passages": 6518976
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "861b977039a1d2d1064e8b7a36cd9fa540120e3d0cac8f0cd911f4754b763ad7"
+    },
+    {
+      "pack_id": "factbook",
+      "pack_type": "knowledge",
+      "title": "CIA World Factbook (final edition)",
+      "snapshot_date": "2026-02",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 261,
+        "passages": 6505
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "6f1d5fc5dc91b5169fee6f8810dd85c256c77779648f2648c3d0f6ff0c2aede1"
+    },
+    {
+      "pack_id": "ling3-tiny",
+      "pack_type": "model",
+      "title": "Ling 3.0 tiny (Q4_0)",
+      "snapshot_date": "",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "c0a1f4c1d6a55b02daff9d261f78e7a10f5723e9f43f5f55f880403a701f592c"
+    },
+    {
+      "pack_id": "medlineplus",
+      "pack_type": "knowledge",
+      "title": "MedlinePlus health topics",
+      "snapshot_date": "2026-09-26",
+      "build_date": "2026-09-29",
+      "counts": {
+        "articles": 1014,
+        "passages": 3285
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "37df81384bfaebd324af5972bb60483f4b447f4ee8f85243bb56ac72cd1a1347"
+    },
+    {
+      "pack_id": "openstax",
+      "pack_type": "knowledge",
+      "title": "OpenStax textbooks",
+      "snapshot_date": "2024-01-29",
+      "build_date": "2026-10-02",
+      "counts": {
+        "articles": 4566,
+        "passages": 15025
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "6eca002b81d5924c835ac059cf5f7a62e3ea7b2af21e5b6235029e04fe90f0ac"
+    },
+    {
+      "pack_id": "textbooks-en",
+      "pack_type": "knowledge",
+      "title": "Open textbooks (Pressbooks, LibreTexts)",
+      "snapshot_date": "2025-03",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 93008,
+        "passages": 863744
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "7b35099f32c61b939256f2aa2d4114b3b88174b9a98241f01593291624d4c7b4"
+    },
+    {
+      "pack_id": "wikem-en",
+      "pack_type": "knowledge",
+      "title": "WikEM emergency medicine",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 4236,
+        "passages": 41867
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "1a63738668fcc1a1ce82ca1c5d6158f4bd61709c65e386ba18ae68f943863abb"
+    },
+    {
+      "pack_id": "wikibooks-en",
+      "pack_type": "knowledge",
+      "title": "English Wikibooks",
+      "snapshot_date": "2026-04",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 83521,
+        "passages": 1010601
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "7073bb8190873801b1e44c0c0dd9da39882b12ca4d0705b06c1d931858a555fc"
+    },
+    {
+      "pack_id": "wikidata-facts",
+      "pack_type": "wikidata",
+      "title": "Wikidata facts",
+      "snapshot_date": "2026-05-07",
+      "build_date": "2026-09-29",
+      "counts": null,
+      "embedder": null,
+      "manifest_sha256": "dfa355712a0217058c95bb7e3cb8ddc980f941042d0fc21bab749c56cc1ce5c2"
+    },
+    {
+      "pack_id": "wikiquote-en",
+      "pack_type": "knowledge",
+      "title": "English Wikiquote",
+      "snapshot_date": "2026-07",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 67668,
+        "passages": 831284
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "a002ec4352240d0dfc5ea652fb227863d0ca3fbbeb51c043da30f047d9790218"
+    },
+    {
+      "pack_id": "wikiversity-en",
+      "pack_type": "knowledge",
+      "title": "English Wikiversity",
+      "snapshot_date": "2026-08",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 42937,
+        "passages": 449719
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "396fa445fa1bc5478a8a27703df3ce0a7cf392dde31b8c5c1c99079e86401307"
+    },
+    {
+      "pack_id": "wikivoyage-en",
+      "pack_type": "knowledge",
+      "title": "English Wikivoyage",
+      "snapshot_date": "2026-09-01",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 32378,
+        "passages": 526315
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "026c16546606d239813f8c3779ea192c930f2f50bc7870a406e79b640730a9ba"
+    },
+    {
+      "pack_id": "wiktionary-en",
+      "pack_type": "knowledge",
+      "title": "English Wiktionary (dictionary)",
+      "snapshot_date": "2026-09-28",
+      "build_date": "2026-09-30",
+      "counts": {
+        "articles": 614411,
+        "passages": 621042
+      },
+      "embedder": {
+        "doc": "mixedbread-ai/mxbai-embed-large-v1",
+        "query": "MongoDB/mdbr-leaf-mt",
+        "dims": 512,
+        "encoding": "binary-sign-mrl"
+      },
+      "manifest_sha256": "d9a5b3e2af268dd2b41df852dad0cfd4ade7842bbb278fa5442732078b624406"
+    }
+  ],
+  "host": {
+    "node": "desktop",
+    "machine": "x86_64",
+    "cpus": 32
+  },
+  "query_ids": [
+    "seed-fac-01",
+    "seed-fac-03",
+    "seed-fac-04",
+    "seed-fac-05",
+    "seed-exp-01",
+    "seed-exp-04",
+    "seed-exp-05",
+    "seed-exp-06",
+    "seed-exp-08",
+    "seed-cmp-03",
+    "seed-cmp-04",
+    "seed-cmp-05",
+    "seed-cmp-06",
+    "seed-cmp-08",
+    "seed-mh-02",
+    "seed-mh-03",
+    "seed-mh-06",
+    "seed-mh-07",
+    "seed-mh-09",
+    "seed-num-02",
+    "seed-num-03",
+    "seed-trv-01",
+    "seed-trv-02",
+    "seed-trv-07",
+    "seed-trv-08",
+    "seed-trv-09",
+    "seed-how-01",
+    "seed-how-02",
+    "seed-how-06",
+    "seed-how-07",
+    "seed-ooc-04",
+    "seed-lt-01",
+    "seed-lt-02",
+    "seed-fu-02",
+    "seed-fu-03",
+    "seed-fac-06",
+    "seed-fac-10",
+    "seed-fac-12",
+    "seed-fac-15",
+    "seed-fac-16",
+    "seed-num-06",
+    "seed-num-07",
+    "seed-num-09",
+    "seed-num-10",
+    "seed-num-15",
+    "seed-num-16",
+    "seed-lt-04",
+    "seed-lt-09",
+    "seed-lt-10",
+    "seed-lt-11",
+    "seed-cmp-09",
+    "seed-how-09",
+    "seed-how-12",
+    "seed-trv-10",
+    "seed-exp-11",
+    "seed-exp-13",
+    "seed-mh-13",
+    "seed-mh-14",
+    "seed-ooc-05",
+    "seed-ooc-06",
+    "can-01",
+    "can-02",
+    "can-03",
+    "can-04",
+    "can-05",
+    "can-06",
+    "can-07",
+    "can-08",
+    "can-09",
+    "can-10",
+    "can-11",
+    "can-12",
+    "abs-01",
+    "abs-02",
+    "abs-03",
+    "abs-04",
+    "abs-05",
+    "abs-06",
+    "abs-07",
+    "abs-08",
+    "abs-09",
+    "abs-10",
+    "abs-11",
+    "abs-12",
+    "abs-13",
+    "abs-14",
+    "abs-15",
+    "abs-16",
+    "abs-17",
+    "abs-18",
+    "abs-19",
+    "abs-20",
+    "abs-21",
+    "abs-22",
+    "abs-23",
+    "abs-24",
+    "abs-25",
+    "abs-26",
+    "abs-27",
+    "abs-28",
+    "abs-29",
+    "abs-30",
+    "rob-fac-02",
+    "rob-fac-04",
+    "rob-exp-03",
+    "rob-exp-04",
+    "rob-exp-05",
+    "rob-cmp-01",
+    "rob-cmp-04",
+    "rob-cmp-06",
+    "rob-mh-03",
+    "rob-mh-05",
+    "rob-mh-06",
+    "rob-mh-08",
+    "rob-num-03",
+    "rob-num-05",
+    "rob-trv-02",
+    "rob-trv-03",
+    "rob-trv-06",
+    "rob-how-02",
+    "rob-how-04",
+    "rob-lt-03",
+    "rec-01",
+    "rec-02",
+    "rec-03",
+    "rec-04",
+    "rec-05",
+    "rec-06",
+    "rec-07",
+    "rec-08",
+    "rec-09",
+    "rec-10",
+    "rec-11",
+    "rec-12",
+    "rec-13",
+    "rec-14",
+    "rec-15",
+    "rec-16",
+    "rec-17",
+    "rec-18",
+    "rec-19",
+    "rec-20"
+  ],
+  "finished": "2026-11-06T02:31:00+00:00"
+}

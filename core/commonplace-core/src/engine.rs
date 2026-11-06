@@ -8,7 +8,7 @@ use crate::llm::{GenParams, GenStats, LlmBackend};
 use crate::pack::{ModelRole, normalize_title};
 use crate::profiles::{self, ModelProfile};
 use crate::prompts;
-use crate::retrieval::{Hit, RetrievalSettings, Retriever, select_diverse};
+use crate::retrieval::{Fusion, Hit, RetrievalSettings, Retriever, select_diverse};
 use crate::route::{self, Route};
 use crate::telemetry::{self, QueryRecord};
 use crate::tools::{calc, units, wikidata::PropScore, wikidata::WdFact, wikidata::format_num, wikidata::prop_scores};
@@ -198,10 +198,6 @@ const HOT_HEADROOM: f32 = 0.85;
 const WARM_HEADROOM: f32 = 0.70;
 /// The evidence budget of a warm phone: the evidence is most of the new prompt, and prefill sets the first word.
 const HOT_EVIDENCE_TOKENS: usize = 400;
-/// The budgets of a CPU model with the sentence head. On the evidence judge, its windows at 500 matched word overlap
-/// at 600 (63 and 62 of 100 full) with 95 fewer tokens; at 400, how-to questions lost steps (docs/BENCHMARKS.md, 2026-11-04).
-const HEAD_EVIDENCE_TOKENS: usize = 500;
-const HEAD_HOT_EVIDENCE_TOKENS: usize = 400;
 /// The budgets of `ModelProfile::lean`. A warm phone read 400 already, and on 142 questions 400 held. With its own prompt,
 /// how-to at 450 scored level with today's 500 and cited 3.29 against 1.19 times (docs/BENCHMARKS.md, 2026-11-05).
 const LEAN_EVIDENCE_TOKENS: usize = 400;
@@ -399,6 +395,17 @@ impl Engine {
 
     pub fn profile(&self) -> &'static ModelProfile {
         *self.profile.read().unwrap()
+    }
+
+    /// The user's settings as a question reads them under the loaded model's profile.
+    fn question_settings(&self) -> Settings {
+        let mut s = self.settings.read().unwrap().clone();
+        if !self.profile().learned_search {
+            s.retrieval.sentence_head = false;
+            s.retrieval.fusion = Fusion::Rrf;
+            s.reformat_followup = false;
+        }
+        s
     }
 
     pub fn llm(&self) -> Option<(ModelRole, Arc<dyn LlmBackend>)> {
@@ -699,7 +706,7 @@ impl Engine {
         // "How do I reverse a list in Python?" reads like "as a list", but names a thing and stands alone. A
         // name alone is no proof: "in simpler words?" links to "Simplicity", yet the follow-up head reads that it
         // needs the last turn.
-        let follows = self.settings.read().unwrap().reformat_followup && Head::follow_up().classify(&emb) == "followup";
+        let follows = self.question_settings().reformat_followup && Head::follow_up().classify(&emb) == "followup";
         let stands_alone = || !follows && !route::link_entities(lib, &req.query, &req.packs).is_empty();
         Ok((label, match label {
             "reformat" if !req.history.is_empty() && !stands_alone() => TurnKind::Reformat,
@@ -713,7 +720,7 @@ impl Engine {
         let t0 = Instant::now();
         let ms = |t: Instant| t.elapsed().as_secs_f64() * 1000.0;
         let lib = self.library();
-        let s = self.settings.read().unwrap().clone();
+        let s = self.question_settings();
         let llm = self.llm();
         let mut rec = QueryRecord {
             ts_ms: telemetry::now_ms(),
@@ -1076,13 +1083,11 @@ impl Engine {
 
         // Stage 3: evidence.
         let profile = self.profile();
-        // A CPU model reads the prompt slowly, so there the sentence head buys speed instead of more facts.
-        let head_cpu = s.retrieval.sentence_head && profile.warm_evidence_cut;
-        let lean = head_cpu && profile.lean;
+        let lean = s.retrieval.sentence_head && profile.lean;
         let lean_budget = if s.how_to_steps && is_how_to(&req.query) { LEAN_HOW_TO_EVIDENCE_TOKENS } else { LEAN_EVIDENCE_TOKENS };
-        let base = s.evidence_tokens.unwrap_or(if lean { lean_budget } else if head_cpu { profile.evidence_tokens.min(HEAD_EVIDENCE_TOKENS) } else { profile.evidence_tokens });
+        let base = s.evidence_tokens.unwrap_or(if lean { lean_budget } else { profile.evidence_tokens });
         let warm = !lean && profile.warm_evidence_cut && rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
-        let budget = if warm { base.min(if head_cpu { HEAD_HOT_EVIDENCE_TOKENS } else { HOT_EVIDENCE_TOKENS }) } else { base };
+        let budget = if warm { base.min(HOT_EVIDENCE_TOKENS) } else { base };
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {

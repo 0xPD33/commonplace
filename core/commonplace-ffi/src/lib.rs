@@ -716,8 +716,15 @@ impl CommonplaceEngine {
     }
 
     pub fn load_model(&self, kind: ModelKind) -> R<ModelStatus> {
-        self.engine.load_model(kind.into())?;
+        let loaded = self.engine.load_model(kind.into());
+        commonplace_llm::reset_load_progress();
+        loaded?;
         Ok(self.model_status())
+    }
+
+    /// The fraction of the weights that llama.cpp has read, from 0 to 1. Safe to poll during `load_model`.
+    pub fn model_load_progress(&self) -> f32 {
+        commonplace_llm::load_progress()
     }
 
     pub fn unload_model(&self) {

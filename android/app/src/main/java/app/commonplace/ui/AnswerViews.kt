@@ -44,7 +44,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Calculate
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
@@ -73,6 +72,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -115,8 +115,13 @@ fun TurnView(
     speaking: Boolean,
     speakError: String?,
     onSpeak: () -> Unit,
+    /** Opens the packs to get; null when the catalog has none left for this phone. */
+    onMorePacks: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    // A citation count is a deterministic fact: a finished answer with none did not use the library.
+    val citesNone = turn.done && turn.error == null && !turn.stopped && !turn.searchOnly && turn.kind == TurnKind.QUESTION &&
+        turn.segments.isNotEmpty() && turn.segments.none { it is AnswerSegment.Cite }
     Column(modifier.fillMaxWidth().animateContentSize().testTag("turn")) {
         Row(verticalAlignment = Alignment.Top) {
             if (turn.think) {
@@ -126,11 +131,13 @@ fun TurnView(
         }
         Spacer(Modifier.height(10.dp))
         StageLine(turn, showTimings)
+        if (turn.loadingModel) ModelLoadRule(Modifier.padding(top = 12.dp))
         Spacer(Modifier.height(14.dp))
 
         val card = turn.card
         AnimatedVisibility(visible = card != null, enter = fadeIn() + expandVertically()) {
-            if (card != null) EvidenceCard(card, onOpen)
+            // The card is what there is to read during the wait; the first word of an answer folds it away.
+            if (card != null) EvidenceCard(card, onOpen, foldable = !turn.searchOnly && turn.segments.isNotEmpty() && turn.error == null, closest = citesNone, sweepKey = if (turn.restored) null else "card-${turn.id}")
         }
 
         val err = turn.error
@@ -164,16 +171,23 @@ fun TurnView(
                 Spacer(Modifier.height(10.dp))
                 UnverifiedLegend()
             }
+            AnimatedVisibility(citesNone, enter = expandVertically() + fadeIn()) {
+                NoCitationNote(onMorePacks)
+            }
         }
 
         // A finished answer shows the sources it cites first, in the order it cites them. The numbers stay.
         val cited = if (turn.done) turn.segments.filterIsInstance<AnswerSegment.Cite>().map { it.n }.distinct() else emptyList()
         val sources = turn.sources.ifEmpty { card?.sources ?: emptyList() }
             .sortedBy { s -> cited.indexOf(s.n).takeIf { turn.sources.isNotEmpty() && it >= 0 } ?: Int.MAX_VALUE }
-        if (sources.isNotEmpty() && (turn.done || turn.sources.isNotEmpty())) {
-            Spacer(Modifier.height(18.dp))
-            SectionLabel("Sources", Modifier.padding(bottom = 8.dp))
-            SourcesRow(sources, numbered = turn.sources.isNotEmpty(), onOpen = onOpen, key = turn.id, animate = !turn.restored)
+        // While the words stream, the row stays away: under the growing text it would slide down with each line.
+        val showSources = sources.isNotEmpty() && (turn.done || (turn.sources.isNotEmpty() && turn.segments.isEmpty()))
+        AnimatedVisibility(showSources, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Column {
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("Sources", Modifier.padding(bottom = 8.dp))
+                SourcesRow(sources, numbered = turn.sources.isNotEmpty(), onOpen = onOpen, key = turn.id, animate = !turn.restored)
+            }
         }
 
         if (turn.done && turn.error == null && !turn.searchOnly && turn.kind != TurnKind.CHAT) {
@@ -197,7 +211,7 @@ fun TurnView(
 }
 
 /** What the stage line shows: work in progress, stopped, or done. */
-private enum class StageMark { Working, Stopped, Done, None }
+private enum class StageMark { Working, Stopped, Done, Doubted, None }
 
 @Composable
 private fun StageLine(turn: Turn, showTimings: Boolean) {
@@ -206,10 +220,22 @@ private fun StageLine(turn: Turn, showTimings: Boolean) {
         turn.answering -> StageMark.Working to stageText(turn)
         turn.stopped -> StageMark.Stopped to "Stopped"
         turn.error == null && turn.kind != TurnKind.CHAT -> {
-            val n = turn.sources.size.takeIf { it > 0 } ?: turn.card?.sources?.size ?: 0
+            val read = turn.sources.size.takeIf { it > 0 } ?: turn.card?.sources?.size ?: 0
+            val cited = turn.segments.filterIsInstance<AnswerSegment.Cite>().map { it.n }.distinct().size
+            val n = maxOf(read, cited)
+            val doubted = turn.segments.any { it is AnswerSegment.Unverified }
             val t = turn.timing
-            StageMark.Done to buildString {
-                append(if (turn.searchOnly) "Found $n passages" else "Answered from $n sources")
+            (if (doubted) StageMark.Doubted else StageMark.Done) to buildString {
+                append(
+                    when {
+                        turn.searchOnly -> if (n == 1) "Found 1 passage" else "Found $n passages"
+                        cited > 0 -> "Cites $cited of $n ${if (n == 1) "source" else "sources"}"
+                        turn.kind == TurnKind.REFORMAT -> "Rewritten"
+                        n > 0 -> "Read $n ${if (n == 1) "source" else "sources"}, cites none"
+                        else -> "Answered"
+                    },
+                )
+                if (doubted) append(" · some sentences unverified")
                 turn.thinkMs?.let { append(" · thought for ${it / 1000} s") }
                 if (t != null) append(" · ${seconds(t.totalMs)}")
             }
@@ -239,10 +265,16 @@ private fun StageLine(turn: Turn, showTimings: Boolean) {
                     Spacer(Modifier.width(6.dp))
                     Text(label, style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
                 }
+                // Neutral on purpose: the line counts sources, and a citation can still point to a wrong article.
                 StageMark.Done -> {
-                    Icon(Icons.Outlined.CheckCircle, null, tint = LocalExtra.current.good, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Outlined.MenuBook, null, tint = c.outline, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(label, style = MaterialTheme.typography.labelLarge, color = c.onSurfaceVariant)
+                }
+                StageMark.Doubted -> {
+                    Icon(Icons.Outlined.Info, null, tint = LocalExtra.current.unverified, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(label, style = MaterialTheme.typography.labelLarge, color = LocalExtra.current.unverified)
                 }
                 StageMark.None -> {}
             }
@@ -286,18 +318,22 @@ private fun readingText(turn: Turn): String {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun EvidenceCard(card: AnswerCard, onOpen: (OpenSource) -> Unit) {
+fun EvidenceCard(card: AnswerCard, onOpen: (OpenSource) -> Unit, foldable: Boolean, closest: Boolean, sweepKey: Any?) {
     val top = card.top ?: return
-    val ex = LocalExtra.current
     val c = MaterialTheme.colorScheme
+    var unfolded by rememberSaveable { mutableStateOf(false) }
+    val open = !foldable || unfolded
+    val turnUp by animateFloatAsState(if (open) 180f else 0f, tween(220), label = "card_chevron")
+    // The answer did not use this passage, so nothing in it counts as the cited sentence or as a short answer.
+    val mark = if (closest) "" else card.highlight
     Surface(
-        onClick = { onOpen(OpenSource(top, card.highlight)) },
+        onClick = { if (open) onOpen(OpenSource(top, mark)) else unfolded = true },
         shape = MaterialTheme.shapes.medium,
         color = c.surfaceContainerLow,
         border = BorderStroke(1.dp, c.outlineVariant),
         modifier = Modifier.fillMaxWidth().testTag("evidence_card"),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(start = 14.dp, end = if (foldable) 4.dp else 14.dp, top = if (foldable) 4.dp else 12.dp, bottom = if (open || card.featured != null || card.computed.isNotEmpty()) 12.dp else 4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.AutoMirrored.Outlined.MenuBook, null, tint = c.primary, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -306,27 +342,46 @@ fun EvidenceCard(card: AnswerCard, onOpen: (OpenSource) -> Unit) {
                     val sub = listOf(top.section, top.packTitle, top.license).filter { it.isNotBlank() }.joinToString(" · ")
                     Text(sub, style = MaterialTheme.typography.labelSmall, color = c.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                if (card.fromCards) {
+                if (closest) {
+                    Text("Closest match", style = MaterialTheme.typography.labelSmall, color = c.secondary, modifier = Modifier.padding(start = 8.dp).testTag("closest_match"))
+                } else if (card.fromCards) {
                     Text("Key facts", style = MaterialTheme.typography.labelSmall, color = c.secondary)
                 }
+                if (foldable) {
+                    IconButton(onClick = { unfolded = !unfolded }, modifier = Modifier.testTag("evidence_fold")) {
+                        Icon(
+                            Icons.Outlined.KeyboardArrowDown,
+                            if (open) "Hide the excerpt" else "Show the excerpt",
+                            tint = c.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp).rotate(turnUp),
+                        )
+                    }
+                }
             }
-            card.featured?.let { f ->
+            val inner = Modifier.padding(end = if (foldable) 10.dp else 0.dp)
+            card.featured?.takeIf { !closest }?.let { f ->
                 // The reader's short answer; it can be wrong, so its source is always named.
-                Spacer(Modifier.height(10.dp))
-                Text(f.text, style = MaterialTheme.typography.headlineSmall, color = c.primary, modifier = Modifier.testTag("featured"))
-                Text("Quick answer from ${f.source.title}", style = MaterialTheme.typography.labelSmall, color = c.onSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                Text(f.text, style = MaterialTheme.typography.titleLarge, color = c.primary, modifier = inner.testTag("featured"))
+                Text("Quick answer from ${f.source.title}", style = MaterialTheme.typography.labelSmall, color = c.onSurfaceVariant, modifier = inner)
             }
-            Spacer(Modifier.height(10.dp))
-            val body = remember(card) { excerpt(card.topText, card.highlight) }
-            Text(
-                highlighted(body, card.highlight, ex.highlight, ex.onHighlight),
-                style = ReadingStyle.copy(fontSize = 16.sp, lineHeight = 25.sp),
-                maxLines = 7,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (card.facts.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                FactTable(card)
+            AnimatedVisibility(open, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                Column(inner) {
+                    Spacer(Modifier.height(8.dp))
+                    val body = remember(card) { excerpt(card.topText, card.highlight, max = 280, lead = 40) }
+                    MarkedText(
+                        body,
+                        mark,
+                        ReadingStyle.copy(fontSize = 15.sp, lineHeight = 23.sp),
+                        sweepKey = sweepKey,
+                        maxLines = 5,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (card.facts.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        FactTable(card)
+                    }
+                }
             }
             if (card.computed.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -356,7 +411,7 @@ private fun FactTable(card: AnswerCard) {
     var expanded by remember(card) { mutableStateOf(false) }
     val shown = if (expanded) card.facts else card.facts.take(3)
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 10.dp, vertical = 6.dp)
             .testTag("fact_table"),
     ) {
         for (f in shown) {
@@ -392,7 +447,7 @@ private fun CompareTable(card: AnswerCard, names: List<String>) {
     var expanded by remember(card) { mutableStateOf(false) }
     val cell = Modifier.padding(start = 8.dp)
     Column(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 12.dp, vertical = 8.dp)
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).background(c.surfaceContainerHigh).padding(horizontal = 10.dp, vertical = 6.dp)
             .testTag("fact_table"),
     ) {
         Row(Modifier.padding(vertical = 3.dp)) {
@@ -470,9 +525,16 @@ private fun ReadingRule(finishing: Boolean) {
             p.animateTo(0.97f, tween(expected * 2, easing = LinearEasing))
         }
     }
-    val c = MaterialTheme.colorScheme
-    Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(2.dp).background(c.outlineVariant).testTag("reading_rule")) {
-        Box(Modifier.fillMaxWidth(p.value).height(2.dp).background(c.primary))
+    InkRule(p.value, Modifier.padding(vertical = 6.dp).testTag("reading_rule"))
+}
+
+@Composable
+private fun NoCitationNote(onMorePacks: (() -> Unit)?) {
+    Column(Modifier.padding(top = 14.dp).testTag("no_citation_note")) {
+        InfoNote("This answer cites nothing from your library, so check it elsewhere." + if (onMorePacks != null) " More packs can help." else "")
+        if (onMorePacks != null) {
+            TextButton(onClick = onMorePacks, modifier = Modifier.testTag("more_packs")) { Text("See more packs") }
+        }
     }
 }
 

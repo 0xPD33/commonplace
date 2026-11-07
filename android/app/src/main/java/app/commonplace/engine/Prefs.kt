@@ -83,6 +83,14 @@ class Prefs(context: Context) {
         readMs = (0.7 * readMs + 0.3 * ms.coerceIn(1000.0, 30000.0)).toInt()
     }
 
+    /** The part of a model load with no progress signal, smoothed over recent loads; it paces the load bar. */
+    fun loadTailMs(lite: Boolean) = sp.getInt(if (lite) "load_tail_lite_ms" else "load_tail_ms", if (lite) 15000 else 3000)
+
+    fun noteLoadTail(lite: Boolean, ms: Long) {
+        val next = (0.7 * loadTailMs(lite) + 0.3 * ms.coerceIn(500, 120000)).toInt()
+        sp.edit().putInt(if (lite) "load_tail_lite_ms" else "load_tail_ms", next).apply()
+    }
+
     /** Let the model rewrite each question (typos, follow-ups) before searching. */
     var rewrite: Boolean
         get() = sp.getBoolean("rewrite", false)

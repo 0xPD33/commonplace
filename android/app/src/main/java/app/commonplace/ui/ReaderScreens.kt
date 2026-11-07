@@ -61,14 +61,14 @@ import kotlinx.coroutines.withContext
 import uniffi.commonplace_ffi.ArticleView
 import uniffi.commonplace_ffi.PassageView
 
-private sealed interface Loaded<out T> {
+internal sealed interface Loaded<out T> {
     data object Loading : Loaded<Nothing>
     data class Ok<T>(val value: T) : Loaded<T>
     data class Err(val msg: String) : Loaded<Nothing>
 }
 
 @Composable
-private fun <T> load(key: Any, block: (uniffi.commonplace_ffi.CommonplaceEngine) -> T): Loaded<T> {
+internal fun <T> load(key: Any, block: (uniffi.commonplace_ffi.CommonplaceEngine) -> T): Loaded<T> {
     val holder = (LocalContext.current.applicationContext as CommonplaceApp).engine
     val state by produceState<Loaded<T>>(Loaded.Loading, key) {
         value = withContext(Dispatchers.IO) {
@@ -109,7 +109,6 @@ fun PassageScreen(packId: String, passageId: UInt, highlight: String, onBack: ()
 
 @Composable
 private fun PassageBody(pad: PaddingValues, p: PassageView, highlight: String, onArticle: () -> Unit) {
-    val ex = LocalExtra.current
     val mark = remember(p, highlight) { bestMatch(p.text, highlight) }
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 12.dp).navigationBarsPadding()
@@ -126,7 +125,7 @@ private fun PassageBody(pad: PaddingValues, p: PassageView, highlight: String, o
         // One Text per paragraph: Compose has no paragraph spacing inside a single Text.
         p.text.split('\n').filter { it.isNotBlank() }.forEachIndexed { i, para ->
             if (i > 0) Spacer(Modifier.height(14.dp))
-            Text(highlighted(para, mark, ex.highlight, ex.onHighlight), style = ReadingStyle)
+            MarkedText(para, mark, ReadingStyle, sweepKey = "passage-${p.packId}/${p.passageId}/$highlight/$i")
         }
         Spacer(Modifier.height(28.dp))
         Button(onClick = onArticle, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("open_article")) {

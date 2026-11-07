@@ -30,7 +30,11 @@ data class CatalogPack(
     val memberBuildDates: Map<String, String> = emptyMap(),
 )
 
-class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>)
+class Catalog(val packs: List<CatalogPack>, val bundles: List<CatalogPack>) {
+    /** The name to show for a pack or bundle id; the id itself when the catalog does not list it. */
+    fun titleOf(id: String): String =
+        (packs + bundles).firstOrNull { it.packId == id }?.title ?: bundles.firstNotNullOfOrNull { it.memberTitles[id] } ?: id
+}
 
 /** The answer model for phones with less than about 10 GB of memory. */
 const val SMALL_MODEL_PACK = "minicpm5-2b"

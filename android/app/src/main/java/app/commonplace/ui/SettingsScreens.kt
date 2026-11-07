@@ -3,6 +3,13 @@ package app.commonplace.ui
 import android.app.UiModeManager
 import android.content.Intent
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.IosShare
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -48,6 +56,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.rotate
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +89,7 @@ import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,13 +153,15 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             Spacer(Modifier.height(8.dp))
             Text(
                 when (val m = model) {
-                    is ModelState.Loaded -> m.id
+                    // The pack's title; the raw id names a file and a quantization.
+                    is ModelState.Loaded -> lib?.models?.firstOrNull { it.filePath.endsWith(".litertlm") == (m.backend == Backend.Tpu) && (m.backend == Backend.Tpu || it.kind == m.kind) }?.title ?: m.id
                     is ModelState.Loading -> "Loading…"
                     is ModelState.Failed -> "Failed: ${m.message}"
                     ModelState.None -> "No model loaded"
                 },
                 style = MaterialTheme.typography.bodyMedium,
             )
+            ModelLoadRule(Modifier.padding(top = 8.dp))
             // A Gemma pack (LiteRT-LM) is one choice next to the llama.cpp models; choosing it sets the engine.
             val choices = lib?.models?.filter { it.answers } ?: emptyList()
             val gemma = choices.firstOrNull { it.filePath.endsWith(".litertlm") }
@@ -199,29 +212,21 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                     modifier = Modifier.padding(top = 4.dp).testTag("lite_crashed"),
                 )
             }
-            if (gemma != null && backend == Backend.Tpu) {
-                SwitchRow("Speculative decoding (writes about 1.5× faster on the Tensor chip)", speculative) {
-                    speculative = it
-                    prefs.speculative = it
-                    holder.reloadModel()
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-            LabeledSlider("CPU threads", threads.toFloat(), 2f..6f, 3, "$threads") { threads = it.toInt() }
-            Text("For the models on the CPU. 4 is cooler, 6 is faster until the phone gets hot.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
             Spacer(Modifier.height(20.dp))
             SectionLabel("Answers")
-            SwitchRow("Show timings under answers", timings) { timings = it }
-            SwitchRow("Understand the question first (fixes typos and follow-ups, a few seconds)", rewrite) { rewrite = it }
-            LabeledSlider("Answer length (tokens)", answer.toFloat(), 150f..800f, 12, "$answer") { answer = (it / 50).toInt() * 50 }
-            LabeledSlider("Thinking budget (tokens)", thinkBudget.toFloat(), 128f..1536f, 10, "$thinkBudget") { thinkBudget = (it / 128).toInt() * 128 }
-            Text(
-                "When Think is on (the button next to the question box), the model reasons for at most this many tokens before it answers. Ling writes about 15 tokens a second on a warm phone, Gemma on the Tensor chip about 18.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Spacer(Modifier.height(8.dp))
+            Text("Answer length", style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(6.dp))
+            val lengths = listOf(250 to "Short", 400 to "Medium", 700 to "Long")
+            // A value set with the older slider shows as the nearest choice until the user picks one.
+            val nearest = lengths.minBy { abs(it.first - answer) }.first
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().testTag("answer_length")) {
+                lengths.forEachIndexed { i, (tokens, label) ->
+                    SegmentedButton(selected = nearest == tokens, onClick = { answer = tokens }, shape = SegmentedButtonDefaults.itemShape(i, lengths.size)) { Text(label) }
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            SwitchRow("Understand the question first", rewrite, "Fixes typos and follow-ups. Adds a few seconds.") { rewrite = it }
 
             if (lib?.models?.any { it.kind == ModelKind.READ_ALOUD } == true) {
                 Spacer(Modifier.height(20.dp))
@@ -248,17 +253,38 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                 )
             }
 
-            Spacer(Modifier.height(20.dp))
-            SectionLabel("Advanced")
-            val evidence = evidenceOverride ?: modelEvidence
-            LabeledSlider("Evidence budget (tokens)", evidence.toFloat(), 300f..2500f, 21, "$evidence") { evidenceOverride = (it / 100).toInt() * 100 }
-            Text(
-                "More evidence can help long answers but takes longer to read on a phone CPU. The default for this model is $modelEvidence.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (evidenceOverride != null) {
-                TextButton(onClick = { evidenceOverride = null }, modifier = Modifier.testTag("evidence_default")) { Text("Use the model's default") }
+            Spacer(Modifier.height(12.dp))
+            var advanced by rememberSaveable { mutableStateOf(false) }
+            val turnUp by animateFloatAsState(if (advanced) 180f else 0f, tween(220), label = "advanced_chevron")
+            ClickableRow(onClick = { advanced = !advanced }, modifier = Modifier.testTag("advanced_toggle")) {
+                Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel("Advanced", Modifier.weight(1f))
+                    Icon(Icons.Outlined.KeyboardArrowDown, if (advanced) "Hide" else "Show", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.rotate(turnUp))
+                }
+            }
+            AnimatedVisibility(advanced, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                Column {
+                    SwitchRow("Show timings under answers", timings) { timings = it }
+                    if (gemma != null && backend == Backend.Tpu) {
+                        SwitchRow("Speculative decoding", speculative, "Writes about 1.5× faster on the Tensor chip.") {
+                            speculative = it
+                            prefs.speculative = it
+                            holder.reloadModel()
+                        }
+                    }
+                    LabeledSlider("CPU threads", threads.toFloat(), 2f..6f, 3, "$threads") { threads = it.toInt() }
+                    Hint("For the models on the CPU. 4 is cooler, 6 is faster until the phone gets hot.")
+                    Spacer(Modifier.height(12.dp))
+                    LabeledSlider("Thinking budget (tokens)", thinkBudget.toFloat(), 128f..1536f, 10, "$thinkBudget") { thinkBudget = (it / 128).toInt() * 128 }
+                    Hint("When Think is on, the model reasons for at most this many tokens before it answers. Ling writes about 15 tokens a second on a warm phone, Gemma on the Tensor chip about 18.")
+                    Spacer(Modifier.height(12.dp))
+                    val evidence = evidenceOverride ?: modelEvidence
+                    LabeledSlider("Evidence budget (tokens)", evidence.toFloat(), 300f..2500f, 21, "$evidence") { evidenceOverride = (it / 100).toInt() * 100 }
+                    Hint("More evidence can help long answers but takes longer to read on a phone CPU. The default for this model is $modelEvidence.")
+                    if (evidenceOverride != null) {
+                        TextButton(onClick = { evidenceOverride = null }, modifier = Modifier.testTag("evidence_default")) { Text("Use the model's default") }
+                    }
+                }
             }
             Spacer(Modifier.height(24.dp))
             HorizontalDivider()
@@ -269,9 +295,18 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
 }
 
 @Composable
-private fun SwitchRow(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
+private fun Hint(text: String) {
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@Composable
+private fun SwitchRow(label: String, value: Boolean, hint: String? = null, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            if (hint != null) Hint(hint)
+        }
+        Spacer(Modifier.width(12.dp))
         Switch(checked = value, onCheckedChange = onChange)
     }
 }

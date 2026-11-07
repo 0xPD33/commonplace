@@ -8,6 +8,9 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,6 +59,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -91,6 +95,7 @@ import kotlinx.coroutines.withContext
 import uniffi.commonplace_ffi.CpException
 import uniffi.commonplace_ffi.ImportListener
 import uniffi.commonplace_ffi.ImportPart
+import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
 
 class ImportState {
@@ -115,6 +120,9 @@ private const val PDF_NEEDS_ANDROID_15 = "PDF import needs Android 15 or later. 
 
 /** The message of a core error without the UniFFI "msg=" wrapper. */
 private fun reason(t: Throwable) = (t as? CpException.Failed)?.msg ?: t.message ?: t.toString()
+
+internal fun installedIds(l: LibraryInfo): Set<String> =
+    (l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata })).toSet()
 
 class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     private val holder = (app as CommonplaceApp).engine
@@ -180,7 +188,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                         // A bundle holds several packs: the card names the one that is being read.
                         override fun onPack(packId: String) {
                             if (job.packIds.size > 1) {
-                                holder.scope.launch(Dispatchers.Main) { import.message = "$label: $packId (${job.packIds.indexOf(packId) + 1} of ${job.packIds.size})…" }
+                                holder.scope.launch(Dispatchers.Main) { import.message = "$label: ${catalog.titleOf(packId)} (${job.packIds.indexOf(packId) + 1} of ${job.packIds.size})…" }
                             }
                         }
                     }
@@ -198,12 +206,21 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             withContext(Dispatchers.Main) {
                 import.running = false
                 problems = failed
-                if (installed.isNotEmpty()) snackbar = "Installed ${installed.joinToString(", ")}"
+                if (installed.isNotEmpty()) snackbar = "Installed ${installed.joinToString(", ") { catalog.titleOf(it) }}"
                 deletable = sources
             }
             holder.refreshLibrary()
             // Also after a failed bundle: the packs that were complete before the error are installed.
             if (plan.jobs.isNotEmpty()) holder.ensureModel(null)
+        }
+    }
+
+    /** The browser does the download; the app has no network access of its own. */
+    fun openDownload(url: String) {
+        try {
+            getApplication<Application>().startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: ActivityNotFoundException) {
+            snackbar = "No browser app found on this phone"
         }
     }
 
@@ -217,17 +234,21 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun setEnabled(packId: String, enabled: Boolean) {
+    fun setEnabled(packId: String, title: String, enabled: Boolean) {
         toggling[packId] = enabled
         holder.scope.launch {
             val r = runCatching { holder.engineOrNull!!.setPackEnabled(packId, enabled) }
             runCatching { holder.refreshLibrary() }
             withContext(Dispatchers.Main) {
                 if (toggling[packId] == enabled) toggling.remove(packId)
-                r.onFailure { snackbar = "Could not switch $packId: ${reason(it)}" }
+                r.onFailure { snackbar = "Could not switch $title: ${reason(it)}" }
             }
         }
     }
+
+    fun displayName(uri: Uri): String = runCatching {
+        getApplication<Application>().contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+    }.getOrNull() ?: "this file"
 
     /** Extract the text of a PDF, TXT or MD file and index it as a pack on the phone. */
     fun addDocument(uri: Uri) {
@@ -296,18 +317,18 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         withContext(Dispatchers.Main) { snackbar = r.fold({ "Removed $label" }, { "Could not remove: ${it.message}" }) }
     }
 
-    fun verify(packId: String) = viewModelScope.launch(Dispatchers.IO) {
-        withContext(Dispatchers.Main) { snackbar = "Checking $packId…" }
+    fun verify(packId: String, title: String) = viewModelScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.Main) { snackbar = "Checking $title…" }
         val r = runCatching { holder.engineOrNull!!.verifyPack(packId) }
         withContext(Dispatchers.Main) {
-            snackbar = r.fold({ if (it.isEmpty()) "$packId is intact" else "$packId: ${it.size} files damaged" }, { "Check failed: ${it.message}" })
+            snackbar = r.fold({ if (it.isEmpty()) "$title is intact" else "$title: ${it.size} files damaged" }, { "Check failed: ${it.message}" })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument: (String, String) -> Unit, vm: LibraryViewModel = viewModel()) {
+fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument: (String, String) -> Unit, vm: LibraryViewModel = viewModel(), moreFirst: Boolean = false) {
     val ctx = LocalContext.current
     val holder = (ctx.applicationContext as CommonplaceApp).engine
     val lib by holder.library.collectAsState()
@@ -319,9 +340,10 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
     val docPicker = rememberLauncherForActivityResult(PickDocument()) { uri -> if (uri != null) vm.addDocument(uri) }
     var confirmRemove by remember { mutableStateOf<String?>(null) }
     var detail by remember { mutableStateOf<CatalogPack?>(null) }
-    val installedIds = remember(lib) {
-        lib?.let { l -> l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata }) }.orEmpty().toSet()
-    }
+    val installedIds = remember(lib) { lib?.let(::installedIds).orEmpty() }
+    fun titleOf(id: String) = lib?.packs?.firstOrNull { it.packId == id }?.title
+        ?: lib?.models?.firstOrNull { it.packId == id }?.title
+        ?: if (id == WIKIDATA) "Wikidata facts" else catalog.titleOf(id)
     val available = remember(catalog, installedIds) { if (lib == null) emptyList() else availablePacks(catalog, installedIds) }
     val newer = remember(catalog, lib) { lib?.let { updates(catalog, it.buildDates) }.orEmpty() }
     val lowRam = remember { Prefs(ctx).lowRam }
@@ -378,7 +400,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                 }
             }
             // A new user needs the catalog first; someone with packs wants to see what they have.
-            val firstRun = l?.packs.isNullOrEmpty()
+            val firstRun = moreFirst || l?.packs.isNullOrEmpty()
             if (firstRun) getMore()
             item { SectionLabel("Knowledge", Modifier.padding(top = 12.dp)) }
             val knowledge = l?.packs?.filter { !it.userDocument }.orEmpty()
@@ -393,6 +415,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             }
             items(knowledge, key = { it.packId }) { p ->
                 PackRow(
+                    modifier = Modifier.animateItem(),
                     icon = Icons.AutoMirrored.Outlined.LibraryBooks,
                     title = p.title,
                     subtitle = "${count(p.passages)} passages · ${count(p.articles)} articles · snapshot ${p.snapshotDate}",
@@ -403,8 +426,8 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                     }.joinToString(" · "),
                     license = p.license,
                     enabled = vm.toggling[p.packId] ?: p.enabled,
-                    onEnabled = { vm.setEnabled(p.packId, it) },
-                    onVerify = { vm.verify(p.packId) },
+                    onEnabled = { vm.setEnabled(p.packId, p.title, it) },
+                    onVerify = { vm.verify(p.packId, p.title) },
                     onRemove = { confirmRemove = p.packId },
                     onNotice = { onNotice(p.packId) },
                 )
@@ -412,8 +435,8 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (l?.hasWikidata == true) {
                 item {
                     PackRow(Icons.Outlined.DataObject, "Wikidata facts", "Numbers and dates for people, places and things", bytes(l.wikidataSizeBytes.toLong()) + " · CC0",
-                        enabled = vm.toggling[WIKIDATA] ?: l.wikidataEnabled, onEnabled = { vm.setEnabled(WIKIDATA, it) },
-                        onVerify = { vm.verify(WIKIDATA) }, onRemove = { confirmRemove = WIKIDATA }, onNotice = { onNotice(WIKIDATA) })
+                        enabled = vm.toggling[WIKIDATA] ?: l.wikidataEnabled, onEnabled = { vm.setEnabled(WIKIDATA, "Wikidata facts", it) },
+                        onVerify = { vm.verify(WIKIDATA, "Wikidata facts") }, onRemove = { confirmRemove = WIKIDATA }, onNotice = { onNotice(WIKIDATA) })
                 }
             }
             item { SectionLabel("My documents", Modifier.padding(top = 12.dp)) }
@@ -423,13 +446,14 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (!DocumentText.pdfSupported) item { InfoNote(PDF_NEEDS_ANDROID_15) }
             items(documents, key = { it.packId }) { p ->
                 PackRow(
+                    modifier = Modifier.animateItem(),
                     icon = Icons.Outlined.Description,
                     title = p.title,
-                    subtitle = "${count(p.passages)} passages · ${bytes(p.sizeBytes.toLong())}",
+                    subtitle = "${count(p.passages)} ${if (p.passages == 1UL) "passage" else "passages"} · ${bytes(p.sizeBytes.toLong())}",
                     detail = "added ${p.snapshotDate}",
                     enabled = vm.toggling[p.packId] ?: p.enabled,
-                    onEnabled = { vm.setEnabled(p.packId, it) },
-                    onVerify = { vm.verify(p.packId) },
+                    onEnabled = { vm.setEnabled(p.packId, p.title, it) },
+                    onVerify = { vm.verify(p.packId, p.title) },
                     onRemove = { confirmRemove = p.packId },
                     onAsk = { onAskDocument(p.packId, p.title) },
                 )
@@ -453,6 +477,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             items(l?.models ?: emptyList(), key = { it.packId }) { m ->
                 val loaded = m.answers && (model as? ModelState.Loaded)?.kind == m.kind
                 PackRow(
+                    modifier = Modifier.animateItem(),
                     icon = Icons.Outlined.Memory,
                     title = m.title,
                     subtitle = when (m.kind) {
@@ -462,7 +487,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                         ModelKind.READ_ALOUD -> "Read aloud · a voice for answers, English"
                     } + if (loaded) " · loaded" else "",
                     detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}",
-                    onVerify = { vm.verify(m.packId) },
+                    onVerify = { vm.verify(m.packId, m.title) },
                     onRemove = { confirmRemove = m.packId },
                     onNotice = { onNotice(m.packId) },
                 )
@@ -470,7 +495,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (!firstRun) getMore()
             l?.skipped?.takeIf { it.isNotEmpty() }?.let { sk ->
                 item { SectionLabel("Not loaded", Modifier.padding(top = 12.dp)) }
-                items(sk) { s -> InfoNote("${s.packId}: ${s.reason}") }
+                items(sk) { s -> InfoNote("${catalog.titleOf(s.packId)}: ${s.reason}") }
             }
         }
     }
@@ -480,46 +505,65 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             p,
             contents = p.members.map { id -> p.memberTitles[id] ?: id },
             onDismiss = { detail = null },
-            onDownload = { url ->
-                try {
-                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                } catch (_: ActivityNotFoundException) {
-                    vm.snackbar = "No browser app found on this phone"
-                }
-            },
+            onDownload = { url -> vm.openDownload(url) },
             onInstall = { detail = null; picker.launch(arrayOf("*/*")) },
         )
     }
     confirmRemove?.let { id ->
         val doc = lib?.packs?.firstOrNull { it.packId == id && it.userDocument }
+        val title = titleOf(id)
         AlertDialog(
             onDismissRequest = { confirmRemove = null },
-            title = { Text("Remove ${doc?.title ?: id}?") },
+            title = { Text("Remove $title?") },
             text = { Text(if (doc != null) "This deletes the document's search index from the phone. The original file is not changed. You can add it again later." else "This deletes the pack from the phone. You can import it again later.") },
-            confirmButton = { TextButton(onClick = { vm.remove(id, doc?.title ?: id); confirmRemove = null }) { Text("Remove") } },
+            confirmButton = { TextButton(onClick = { vm.remove(id, title); confirmRemove = null }) { Text("Remove") } },
             dismissButton = { TextButton(onClick = { confirmRemove = null }) { Text("Cancel") } },
         )
     }
-    if (vm.deletable.isNotEmpty()) {
-        val size = vm.deletable.sumOf { it.second }
-        val one = vm.deletable.size == 1
-        AlertDialog(
-            onDismissRequest = { vm.deletable = emptyList() },
-            title = { Text(if (one) "Delete the downloaded file?" else "Delete the downloaded files?") },
-            text = { Text(if (one) "Installed and verified. The downloaded file (${bytes(size)}) is no longer needed." else "Installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
-            confirmButton = { TextButton(onClick = vm::deleteSources, modifier = Modifier.testTag("delete_sources")) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { vm.deletable = emptyList() }) { Text("Keep") } },
-        )
-    }
+    DeleteDownloadsDialog(vm)
+}
+
+/** Another app shared a file. It indexes only after the user agrees: any app on the phone can send this. */
+@Composable
+fun SharedDocumentDialog(uri: Uri, vm: LibraryViewModel, onDismiss: () -> Unit, onAdded: () -> Unit) {
+    // The sender's provider answers this, and it can be slow.
+    val name by produceState("this file", uri) { value = withContext(Dispatchers.IO) { vm.displayName(uri) } }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add $name to My documents?") },
+        text = { Text(if (vm.import.running) "An install is running. Try again when it ends." else "The phone indexes it and searches it like any pack. The file stays on the phone.") },
+        confirmButton = {
+            if (!vm.import.running) {
+                TextButton(onClick = { vm.addDocument(uri); onAdded() }, modifier = Modifier.testTag("shared_add")) { Text("Add") }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+/** After an install: offer to delete the verified download. The empty-library screen installs too, so both show this. */
+@Composable
+fun DeleteDownloadsDialog(vm: LibraryViewModel) {
+    if (vm.deletable.isEmpty()) return
+    val size = vm.deletable.sumOf { it.second }
+    val one = vm.deletable.size == 1
+    AlertDialog(
+        onDismissRequest = { vm.deletable = emptyList() },
+        title = { Text(if (one) "Delete the downloaded file?" else "Delete the downloaded files?") },
+        text = { Text(if (one) "Installed and verified. The downloaded file (${bytes(size)}) is no longer needed." else "Installed and verified. The ${vm.deletable.size} downloaded files (${bytes(size)}) are no longer needed.") },
+        confirmButton = { TextButton(onClick = vm::deleteSources, modifier = Modifier.testTag("delete_sources")) { Text("Delete") } },
+        dismissButton = { TextButton(onClick = { vm.deletable = emptyList() }) { Text("Keep") } },
+    )
 }
 
 @Composable
-private fun ImportProgress(s: ImportState) {
+fun ImportProgress(s: ImportState) {
+    val shown by animateFloatAsState((s.done.toDouble() / s.total.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f), tween(240, easing = LinearEasing), label = "import")
     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().testTag("import_progress")) {
         Column(Modifier.padding(16.dp)) {
             Text(s.message, style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(10.dp))
-            LinearProgressIndicator(progress = { (s.done.toDouble() / s.total.coerceAtLeast(1)).toFloat().coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
+            LinearProgressIndicator(progress = { shown }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(6.dp))
             Text(
                 when {
@@ -558,10 +602,11 @@ private fun PackRow(
     onNotice: (() -> Unit)? = null,
     /** "Ask this document": limits the next questions to this pack. */
     onAsk: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     var menu by remember { mutableStateOf(false) }
     val dim = Modifier.alpha(if (enabled == false) 0.5f else 1f)
-    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("pack_row")) {
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = modifier.fillMaxWidth().testTag("pack_row")) {
         Row(Modifier.padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = dim)
             Spacer(Modifier.width(14.dp))

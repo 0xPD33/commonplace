@@ -10,6 +10,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +29,7 @@ import uniffi.commonplace_ffi.LibraryInfo
 import uniffi.commonplace_ffi.ModelKind
 import uniffi.commonplace_ffi.ModelPackInfo
 import java.io.File
+import kotlin.math.exp
 
 sealed interface EngineState {
     data object Starting : EngineState
@@ -40,6 +46,9 @@ sealed interface ModelState {
 }
 
 enum class Backend { Cpu, Tpu }
+
+/** How far a model load is. [percent] is set only while llama.cpp reports the weights it has read. */
+data class LoadProgress(val fraction: Float, val percent: Int?)
 
 /** An answer model, not a voice pack. */
 val ModelPackInfo.answers: Boolean get() = kind == ModelKind.FAST || kind == ModelKind.SMALL
@@ -60,6 +69,9 @@ class EngineHolder(private val app: Application) {
 
     private val _model = MutableStateFlow<ModelState>(ModelState.None)
     val model: StateFlow<ModelState> = _model.asStateFlow()
+
+    private val _loadProgress = MutableStateFlow<LoadProgress?>(null)
+    val loadProgress: StateFlow<LoadProgress?> = _loadProgress.asStateFlow()
 
     private var liteRt: LiteRtBackend? = null
     /** The Gemma pack failed to start (another chip, or no NPU access): answer with llama.cpp until the next reload. */
@@ -134,6 +146,7 @@ class EngineHolder(private val app: Application) {
             }
             _model.value = ModelState.Loading(want)
             InferenceService.start(app)
+            val poll = pollLoadProgress(e, useTpu)
             try {
                 if (useTpu) {
                     e.unloadModel()
@@ -167,7 +180,36 @@ class EngineHolder(private val app: Application) {
                     }
                 }
                 _model.value = ModelState.Failed(t.message ?: t.toString())
+            } finally {
+                // Joined, so a last write of the poll cannot land after this clear and leave the rule stuck.
+                withContext(NonCancellable) { poll.cancelAndJoin() }
+                _loadProgress.value = null
             }
+        }
+    }
+
+    /**
+     * Weights give a real fraction, up to [WEIGHTS_SHARE] of the bar. The prompt state after them, and all of a LiteRT
+     * load, report nothing: that part eases towards the end, paced by how long it took on this phone last time.
+     */
+    private fun pollLoadProgress(e: CommonplaceEngine, lite: Boolean): Job = scope.launch {
+        var pacedFrom = if (lite) System.currentTimeMillis() else 0L
+        val expected = prefs.loadTailMs(lite).toDouble()
+        var weights = 0f
+        try {
+            while (isActive) {
+                if (!lite) weights = e.modelLoadProgress()
+                if (pacedFrom == 0L && weights >= 1f) pacedFrom = System.currentTimeMillis()
+                val paced = if (pacedFrom == 0L) 0f else (1 - exp(-2.3 * (System.currentTimeMillis() - pacedFrom) / expected)).toFloat()
+                _loadProgress.value = when {
+                    lite -> LoadProgress(paced, null)
+                    pacedFrom == 0L -> LoadProgress(weights * WEIGHTS_SHARE, (weights * 100).toInt())
+                    else -> LoadProgress(WEIGHTS_SHARE + (1 - WEIGHTS_SHARE) * paced, null)
+                }
+                delay(100)
+            }
+        } finally {
+            if (pacedFrom != 0L) prefs.noteLoadTail(lite, System.currentTimeMillis() - pacedFrom)
         }
     }
 
@@ -242,6 +284,7 @@ class EngineHolder(private val app: Application) {
 
     companion object {
         private const val TAG = "Commonplace"
+        private const val WEIGHTS_SHARE = 0.85f
 
         /** Copy the bundled ONNX encoders out of the APK once per app version. */
         private fun installEncoders(app: Application): File {

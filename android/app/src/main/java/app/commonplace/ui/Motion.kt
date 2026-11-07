@@ -26,6 +26,21 @@ fun rememberReduceMotion(): Boolean {
 /** Keys whose entrance already played in this process: an item scrolled back into view does not rise again. */
 private val entered = HashSet<Any>()
 
+/** 0 to 1 the first time [key] appears, then always 1. A null [key] or "Remove animations" skips to 1. */
+@Composable
+fun rememberSweep(key: Any?, delayMs: Int = 0, durationMs: Int = 420): Float {
+    val reduce = rememberReduceMotion()
+    val first = remember(key) { key != null && !reduce && entered.add(key) }
+    val p = remember(key) { Animatable(if (first) 0f else 1f) }
+    LaunchedEffect(key) {
+        if (first) {
+            delay(delayMs.toLong())
+            p.animateTo(1f, tween(durationMs, easing = FastOutSlowInEasing))
+        }
+    }
+    return p.value
+}
+
 /**
  * Fade in and rise by [rise] the first time an element with [key] appears, after [delayMs].
  * Only transform and alpha change, so the layout never moves.

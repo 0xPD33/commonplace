@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
 use std::ptr;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Mutex, Once};
 use std::time::Instant;
 
@@ -150,6 +151,23 @@ pub struct LoadOptions {
     pub state_dir: Option<PathBuf>,
 }
 
+/// How much of the weights the current load has read, in thousandths. One model loads at a time.
+static LOAD_PROGRESS: AtomicU32 = AtomicU32::new(0);
+
+/// The fraction of the weights that the running load has read, from 0 to 1. It stays at 1 until `reset_load_progress`.
+pub fn load_progress() -> f32 {
+    LOAD_PROGRESS.load(Ordering::Relaxed) as f32 / 1000.0
+}
+
+pub fn reset_load_progress() {
+    LOAD_PROGRESS.store(0, Ordering::Relaxed);
+}
+
+unsafe extern "C" fn on_load_progress(progress: f32, _: *mut std::os::raw::c_void) -> bool {
+    LOAD_PROGRESS.store((progress.clamp(0.0, 1.0) * 1000.0) as u32, Ordering::Relaxed);
+    true
+}
+
 impl LlamaBackend {
     pub fn load(path: &Path, opts: &LoadOptions) -> Result<Self> {
         init();
@@ -162,8 +180,11 @@ impl LlamaBackend {
             mp.head_rows = head_rows.as_ptr();
             mp.n_head_rows = head_rows.len() as i32;
         }
+        mp.progress_callback = Some(on_load_progress);
         let model = unsafe { sys::llama_model_load_from_file(cpath.as_ptr(), mp) };
         ensure!(!model.is_null(), "failed to load model {}", path.display());
+        // llama.cpp can stop short of 1 (Ling's head rows skip part of a tensor), and the caller waits for 1.
+        LOAD_PROGRESS.store(1000, Ordering::Relaxed);
 
         let mut cp = unsafe { sys::llama_context_default_params() };
         cp.n_ctx = opts.n_ctx;

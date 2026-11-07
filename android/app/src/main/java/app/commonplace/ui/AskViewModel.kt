@@ -16,6 +16,9 @@ import app.commonplace.engine.ReadAloud
 import app.commonplace.engine.SavedTurn
 import app.commonplace.engine.VoiceInput
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import uniffi.commonplace_ffi.AnswerCard
 import uniffi.commonplace_ffi.AnswerSegment
@@ -65,7 +68,7 @@ class Turn(val query: String, val think: Boolean = false) {
     /** Citation numbers resolve against [sources] once evidence is numbered, else the card list. */
     fun source(n: UInt): SourceItem? = sources.firstOrNull { it.n == n } ?: card?.sources?.getOrNull(n.toInt() - 1)
 
-    fun saved() = SavedTurn(query, think, kind, card, sources, segments)
+    fun saved() = SavedTurn(query, think, kind, card, sources, segments, stopped, error)
 
     companion object {
         fun restore(t: SavedTurn) = Turn(t.query, t.think).apply {
@@ -76,6 +79,8 @@ class Turn(val query: String, val think: Boolean = false) {
             stage = AskStage.DONE
             done = true
             answering = false
+            stopped = t.stopped
+            error = t.error
             restored = true
         }
     }
@@ -83,6 +88,8 @@ class Turn(val query: String, val think: Boolean = false) {
 
 /** The one pack a question is limited to ("Ask this document"). */
 class AskScope(val packId: String, val title: String)
+
+private const val MAX_DRAFT_CHARS = 1000
 
 class AskViewModel(app: Application) : AndroidViewModel(app) {
     private val holder = (app as CommonplaceApp).engine
@@ -97,6 +104,22 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     /** While set, every question searches only this pack, follow-ups included, until the user removes it. */
     var scope by mutableStateOf<AskScope?>(null)
         private set
+
+    /** A draft from another app has not yet moved the focus to the question box. */
+    var draftWaiting by mutableStateOf(false)
+
+    /** Text that another app sent. It starts a new topic and waits in the box, so the user decides whether to ask. */
+    fun receiveDraft(text: String) {
+        stopVoice()
+        // The recognizer flushes a last line after it stops; it must not overwrite this draft.
+        voiceSession++
+        if (!busy) {
+            newTopic()
+            scope = null
+        }
+        input = text.trim().take(MAX_DRAFT_CHARS)
+        draftWaiting = true
+    }
 
     /** Limit the next questions to one pack. A conversation about the whole library starts over. */
     fun searchOnly(packId: String, title: String) {
@@ -249,6 +272,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     main.post {
                         turn.answering = false
                         turn.done = true
+                        persist()
                     }
                     return@launch
                 }
@@ -273,6 +297,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     turn.error = t.message ?: t.toString()
                     turn.answering = false
                     turn.done = true
+                    persist()
                 }
             } finally {
                 // The app may have gone off screen during the answer.
@@ -307,11 +332,13 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     /** Save the finished turns of the conversation on screen. */
     private fun persist() {
         val id = conversationId
-        val done = turns.filter { it.done && it.error == null && !it.stopped }.map { it.saved() }
+        val done = turns.filter { it.done }.map { it.saved() }
         viewModelScope.launch(Dispatchers.IO) { saved.save(id, done) }
     }
 
-    fun history(): List<Conversations.Summary> = saved.list()
+    fun recent(): List<Conversations.Summary> = saved.summaries().take(5).toList().sortedByDescending { it.updated }
+
+    fun historyPages(): Flow<List<Conversations.Summary>> = saved.summaries().chunked(30).asFlow().flowOn(Dispatchers.IO)
 
     fun open(id: Long) {
         if (busy) return

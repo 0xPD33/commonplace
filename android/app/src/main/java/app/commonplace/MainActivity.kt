@@ -1,6 +1,8 @@
 package app.commonplace
 
 import android.Manifest
+import android.content.ContentResolver
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -12,6 +14,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.IntentCompat
+import androidx.core.os.BundleCompat
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
@@ -37,13 +45,50 @@ import app.commonplace.ui.CommonplaceTheme
 import app.commonplace.ui.DiagnosticsScreen
 import app.commonplace.ui.HistoryScreen
 import app.commonplace.ui.LibraryScreen
+import app.commonplace.ui.LibraryViewModel
+import app.commonplace.ui.SharedDocumentDialog
 import app.commonplace.ui.LicensesScreen
 import app.commonplace.ui.NoticeScreen
 import app.commonplace.ui.PassageScreen
 import app.commonplace.ui.SettingsScreen
 import app.commonplace.ui.paperGrain
 
+/** What another app sent: text to ask about, or a file for My documents. */
+private sealed interface Shared {
+    data class Draft(val text: String) : Shared
+    data class Document(val uri: Uri) : Shared
+}
+
+private const val SHARED_DOCUMENT = "shared_document"
+
 class MainActivity : ComponentActivity() {
+    private var incoming by mutableStateOf<Shared?>(null)
+
+    // The app reads a shared URI with its own rights, so a sender must not be able to name the app's private files.
+    private fun readableShare(uri: Uri) = uri.scheme == ContentResolver.SCHEME_CONTENT &&
+        uri.authority?.let { packageManager.resolveContentProvider(it, 0)?.packageName } != packageName
+
+    private fun shared(intent: Intent?): Shared? = when (intent?.action) {
+        Intent.ACTION_PROCESS_TEXT -> intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)?.let { Shared.Draft(it.toString()) }
+        Intent.ACTION_SEND -> {
+            val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+            if (stream != null) Shared.Document(stream).takeIf { readableShare(stream) }
+            else intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.let { Shared.Draft(it.toString()) }
+        }
+        else -> null
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        shared(intent)?.let { incoming = it }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        (incoming as? Shared.Document)?.let { outState.putParcelable(SHARED_DOCUMENT, it.uri) }
+    }
+
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +96,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
         window.isNavigationBarContrastEnforced = false
         val notifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
-        if (savedInstanceState == null) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+        if (savedInstanceState == null) {
+            notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+            // Recents replays the intent that started the task; that share is already handled.
+            if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) incoming = shared(intent)
+        } else {
+            BundleCompat.getParcelable(savedInstanceState, SHARED_DOCUMENT, Uri::class.java)?.let { incoming = Shared.Document(it) }
+        }
         setContent {
             CommonplaceTheme {
                 // testTagsAsResourceId lets adb/uiautomator drive the app by tag (scripts/e2e-emulator.sh).
@@ -60,6 +111,26 @@ class MainActivity : ComponentActivity() {
                     // Activity scope, so the screen stays on while an answer streams behind a source page too:
                     // a hidden app gets a 3 GiB memory limit on Android 17, which swaps the model out mid-answer.
                     val ask: AskViewModel = viewModel()
+                    // Activity scope too: an install started on the Ask screen and one started in Library share one result.
+                    val packs: LibraryViewModel = viewModel()
+                    LaunchedEffect(incoming) {
+                        (incoming as? Shared.Draft)?.let {
+                            ask.receiveDraft(it.text)
+                            nav.popBackStack("ask", inclusive = false)
+                            incoming = null
+                        }
+                    }
+                    (incoming as? Shared.Document)?.let { d ->
+                        SharedDocumentDialog(
+                            d.uri,
+                            packs,
+                            onDismiss = { incoming = null },
+                            onAdded = {
+                                incoming = null
+                                nav.navigate("library")
+                            },
+                        )
+                    }
                     val view = LocalView.current
                     val answering = ask.busy
                     DisposableEffect(answering) {
@@ -80,14 +151,16 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("ask") {
                             AskScreen(
-                                onOpen = { o ->
+                                onDetails = { o ->
                                     nav.navigate("passage/${Uri.encode(o.source.packId)}/${o.source.passageId}?h=${Uri.encode(o.highlight)}")
                                 },
+                                onArticle = { pack, article, focus -> nav.navigate("article/${Uri.encode(pack)}/$article?f=$focus") },
                                 onLibrary = { nav.navigate("library") },
                                 onSettings = { nav.navigate("settings") },
-                                onDiagnostics = { nav.navigate("diagnostics") },
                                 onHistory = { nav.navigate("history") },
                                 vm = ask,
+                                packs = packs,
+                                onMorePacks = { nav.navigate("library?more=true") },
                             )
                         }
                         composable(
@@ -114,8 +187,13 @@ class MainActivity : ComponentActivity() {
                             ArticleScreen(a.getString("pack")!!, a.getLong("aid").toUInt(), a.getLong("f").toUInt(), onBack = { nav.popBackStack() })
                         }
                         composable("history") { HistoryScreen(ask, onBack = { nav.popBackStack() }) }
-                        composable("library") {
+                        composable(
+                            "library?more={more}",
+                            arguments = listOf(navArgument("more") { type = NavType.BoolType; defaultValue = false }),
+                        ) { e ->
                             LibraryScreen(
+                                vm = packs,
+                                moreFirst = e.arguments!!.getBoolean("more"),
                                 onBack = { nav.popBackStack() },
                                 onNotice = { id -> nav.navigate("notice/${Uri.encode(id)}") },
                                 onAskDocument = { id, title ->

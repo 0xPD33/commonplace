@@ -608,7 +608,7 @@ def main() -> int:
                 restart()
                 card = subtree_text(ui.wait(90, tag="get_started"))
                 size = f"{b['download_bytes'] / 1e9:.1f} GB" if b["download_bytes"] >= 1e9 else f"{b['download_bytes'] / 1e6:.0f} MB"
-                check(b["title"] in card and "Download one file" in card and size in card, f"Get started card: {card!r}")
+                check(b["title"] in card and size in card, f"Get started card: {card!r}")
                 r.shot("bundle-get-started", card)
                 ui.tap(ui.scroll_find(tag="go_import"))
                 ui.wait(10, tag="library_list")
@@ -690,6 +690,9 @@ def main() -> int:
         # First card in the sources row.
         child = next(n for n in row.iter("node") if n is not row and n.get("clickable") == "true")
         ui.tap(child)
+        ui.wait(15, tag="source_sheet")
+        r.shot("source-sheet")
+        ui.tap(ui.wait(15, tag="source_details"))
         ui.wait(15, tag="passage_view")
         r.shot("passage")
         ui.tap(ui.scroll_find(tag="open_article"))
@@ -755,8 +758,7 @@ def main() -> int:
 
     @step("settings")
     def _():
-        ui.tap(ui.wait(10, tag="overflow"))
-        ui.tap(ui.wait(10, text="Settings"))
+        ui.tap(ui.wait(10, tag="open_settings"))
         ui.wait(10, tag="settings")
         r.shot("settings")
         ui.tap(ui.scroll_find(tag="open_diagnostics"))
@@ -788,8 +790,8 @@ def main() -> int:
         r.shot("history", "search: Mississippi")
         row = next(n for n in ui.wait(10, tag="history_list").iter("node") if n.get("clickable") == "true")
         ui.tap(row)
-        # The list opens at the last saved turn: the small-talk step's "thanks!".
-        ui.wait(15, tag="turn_query", contains="thanks")
+        # The list opens at the last saved turn: the stop step's question, or "thanks!" if it stopped before a word.
+        ui.wait(15, tag="turn_query")
         r.shot("history-reopened", "the saved conversation is back")
         ui.tap(ui.wait(10, tag="new_topic"))
         ui.wait(10, tag="welcome")
@@ -948,12 +950,16 @@ def main() -> int:
         if not credit or not all(credit):
             raise RuntimeError(f"source cards lack the pack line: {credit!r}")
         r.shot("attr-source-cards", " | ".join(credit[:3]))
-        for _ in range(8):  # the answer streamed past the card: scroll back up to it
-            if ui.find(tag="evidence_card") is not None:
+        for _ in range(8):  # the answer streamed past the card: scroll back up to the question above it
+            if ui.find(tag="turn_query") is not None:
                 break
             adb("shell", "input", "swipe", "540", "600", "540", "1900", "200")
             time.sleep(0.6)
         ui.tap(ui.wait(10, tag="evidence_card"))
+        if ui.find(tag="evidence_fold") is not None:  # the first tap unfolds a folded card, the second opens the source
+            time.sleep(0.5)
+            ui.tap(ui.wait(10, tag="evidence_card"))
+        ui.tap(ui.wait(15, tag="source_details"))
         ui.wait(10, tag="passage_view")
         ui.scroll_find(tag="source_credit")
         checks = {"source_attribution": "", "source_license": "License:", "source_url": "https://"}
@@ -1006,8 +1012,7 @@ def main() -> int:
     @step("licenses")
     def _():
         fresh_app(r, remove_docs=False)
-        ui.tap(ui.wait(10, tag="overflow"))
-        ui.tap(ui.wait(5, text="Settings"))
+        ui.tap(ui.wait(10, tag="open_settings"))
         ui.tap(ui.scroll_find(tag="open_licenses"))
         ui.wait(10, tag="licenses_view")
         if "llama.cpp" not in ui.all_text():
@@ -1085,7 +1090,7 @@ def main() -> int:
 
         first = ask_card(r, question, "scope-q1")
         credit = [n.get("text") for n in ui.nodes() if n.get("resource-id", "").endswith("source_credit_line")]
-        if "museum" not in first["card"] or not credit or not all("quillfeather" in c for c in credit):
+        if "quillfeather" not in first["card"] or not credit or not all("quillfeather" in c for c in credit):
             raise RuntimeError(f"a scoped question reached other packs: card {first['card']!r}, sources {credit!r}")
         if ui.find(tag="scope_chip") is None:
             raise RuntimeError("the chip vanished after a question")

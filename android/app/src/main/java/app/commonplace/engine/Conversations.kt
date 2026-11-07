@@ -19,6 +19,8 @@ data class SavedTurn(
     val card: AnswerCard?,
     val sources: List<SourceItem>,
     val segments: List<AnswerSegment>,
+    val stopped: Boolean = false,
+    val error: String? = null,
 )
 
 /** Saved conversations, one JSON file each in `filesDir/conversations`. Nothing leaves the phone. */
@@ -39,8 +41,13 @@ class Conversations(context: Context) {
         tmp.renameTo(File(dir, "$id.json"))
     }
 
-    // ponytail: parses every file on each call; keep an index file if people save thousands.
-    fun list(): List<Summary> = (dir.listFiles { f -> f.name.endsWith(".json") } ?: emptyArray())
+    /**
+     * Newest first, read one file at a time, so a caller pays only for what it takes.
+     * ponytail: file time picks the order; keep an index file if people save many thousands.
+     */
+    fun summaries(): Sequence<Summary> = (dir.listFiles { f -> f.name.endsWith(".json") } ?: emptyArray())
+        .sortedByDescending { it.lastModified() }
+        .asSequence()
         .mapNotNull { f ->
             runCatching {
                 val o = JSONObject(f.readText())
@@ -54,7 +61,6 @@ class Conversations(context: Context) {
                 )
             }.getOrNull()
         }
-        .sortedByDescending { it.updated }
 
     fun load(id: Long): List<SavedTurn> =
         runCatching { JSONObject(File(dir, "$id.json").readText()).getJSONArray("turns").objects().map(::turn) }.getOrDefault(emptyList())
@@ -85,6 +91,7 @@ private fun turn(t: SavedTurn) = JSONObject()
             is AnswerSegment.Cite -> JSONObject().put("cite", s.n.toLong())
         }
     }))
+    .put("stopped", t.stopped).put("error", t.error ?: JSONObject.NULL)
 
 private fun turn(o: JSONObject) = SavedTurn(
     o.getString("query"),
@@ -99,6 +106,9 @@ private fun turn(o: JSONObject) = SavedTurn(
             else -> AnswerSegment.Text(s.getString("text"))
         }
     },
+    // Older files hold neither key.
+    o.optBoolean("stopped"),
+    if (o.isNull("error")) null else o.getString("error"),
 )
 
 private fun source(s: SourceItem) = JSONObject()

@@ -7,7 +7,16 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TextButton
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -30,6 +39,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -49,13 +59,10 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.LocalLibrary
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MicOff
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
@@ -121,6 +128,8 @@ import app.commonplace.engine.ModelState
 import app.commonplace.engine.answers
 import app.commonplace.engine.Prefs
 import app.commonplace.engine.SHELF_BUNDLE
+import app.commonplace.engine.availableBundles
+import app.commonplace.engine.availablePacks
 import app.commonplace.engine.loadCatalog
 import app.commonplace.engine.suitsPhone
 import kotlinx.coroutines.Dispatchers
@@ -142,12 +151,14 @@ private val EXAMPLES = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AskScreen(
-    onOpen: (OpenSource) -> Unit,
+    onDetails: (OpenSource) -> Unit,
+    onArticle: (String, UInt, UInt) -> Unit,
     onLibrary: () -> Unit,
     onSettings: () -> Unit,
-    onDiagnostics: () -> Unit,
     onHistory: () -> Unit,
     vm: AskViewModel = viewModel(),
+    packs: LibraryViewModel = viewModel(),
+    onMorePacks: () -> Unit = {},
 ) {
     val app = LocalContext.current.applicationContext as CommonplaceApp
     val holder = app.engine
@@ -155,7 +166,11 @@ fun AskScreen(
     val library by holder.library.collectAsState()
     val model by holder.model.collectAsState()
     var showOffline by rememberSaveable { mutableStateOf(false) }
-    var menu by remember { mutableStateOf(false) }
+    var peek by remember { mutableStateOf<OpenSource?>(null) }
+    val snack = remember { SnackbarHostState() }
+    LaunchedEffect(packs.snackbar) { packs.snackbar?.let { snack.showSnackbar(it); packs.snackbar = null } }
+    val catalog = remember { loadCatalog(app) }
+    val picker = rememberLauncherForActivityResult(PickFromDownloads()) { packs.importUris(it, catalog) }
     val scroll = TopAppBarDefaults.pinnedScrollBehavior()
     val inputFocus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -175,9 +190,23 @@ fun AskScreen(
     DisposableEffect(Unit) { onDispose { vm.stopVoice(); vm.stopSpeaking() } }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopVoice(); vm.stopSpeaking() }
 
+    val barShown = engineState is EngineState.Ready && library?.packs?.isNotEmpty() == true
+    // A draft from another app: on a cold start it waits until the question box exists.
+    LaunchedEffect(vm.draftWaiting, barShown) {
+        if (vm.draftWaiting && barShown) {
+            delay(120)
+            runCatching { inputFocus.requestFocus() }
+            vm.draftWaiting = false
+        }
+    }
+    val morePacks = remember(catalog, library) {
+        library?.let(::installedIds)?.let { have -> availablePacks(catalog, have).isNotEmpty() || availableBundles(catalog, have).isNotEmpty() } == true
+    }
+
     Scaffold(
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = {
+        snackbarHost = { SnackbarHost(snack) },
+        topBar = { Column {
             TopAppBar(
                 scrollBehavior = scroll,
                 colors = TopAppBarDefaults.topAppBarColors(scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -198,18 +227,17 @@ fun AskScreen(
                     }
                     IconButton(onClick = onHistory, enabled = !vm.busy, modifier = Modifier.testTag("open_history")) { Icon(Icons.Outlined.History, "History") }
                     IconButton(onClick = onLibrary, modifier = Modifier.testTag("open_library")) { Icon(Icons.Outlined.LocalLibrary, "Library") }
-                    Box {
-                        IconButton(onClick = { menu = true }, modifier = Modifier.testTag("overflow")) { Icon(Icons.Outlined.MoreVert, "More") }
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            DropdownMenuItem(text = { Text("Settings") }, onClick = { menu = false; onSettings() }, modifier = Modifier.testTag("menu_settings"))
-                            DropdownMenuItem(text = { Text("Diagnostics") }, onClick = { menu = false; onDiagnostics() }, modifier = Modifier.testTag("menu_diagnostics"))
-                        }
-                    }
+                    IconButton(onClick = onSettings, modifier = Modifier.testTag("open_settings")) { Icon(Icons.Outlined.Settings, "Settings") }
                 },
             )
-        },
+            // An answer that waits for this load shows its own rule, where the user is looking.
+            // Zero height: the page must not jump when a load starts or ends.
+            if (vm.turns.lastOrNull()?.loadingModel != true) {
+                Box(Modifier.height(0.dp).wrapContentHeight(Alignment.Top, unbounded = true)) { ModelLoadRule(Modifier.padding(horizontal = 16.dp)) }
+            }
+        } },
         bottomBar = {
-            if (engineState is EngineState.Ready && library?.packs?.isNotEmpty() == true) {
+            if (barShown) {
                 AskBar(
                     value = vm.input,
                     onValue = { vm.input = it },
@@ -240,11 +268,11 @@ fun AskScreen(
             is EngineState.Ready -> {
                 val lib = library
                 if (lib == null || lib.packs.isEmpty()) {
-                    EmptyLibrary(pad, onLibrary, onOffline = { showOffline = true })
+                    EmptyLibrary(pad, packs, onInstall = { picker.launch(arrayOf("*/*")) }, onLibrary, onOffline = { showOffline = true })
                 } else if (vm.turns.isEmpty()) {
-                    Welcome(pad, lib, vm::history, onAsk = { vm.ask(it) }, onOpen = vm::open, onHistory = onHistory, onOffline = { showOffline = true })
+                    Welcome(pad, lib, packs.import, vm::recent, onAsk = { vm.ask(it) }, onOpen = vm::open, onHistory = onHistory, onOffline = { showOffline = true })
                 } else {
-                    Conversation(pad, vm, holder.prefs.showTimings, onOpen, onDraft = { d ->
+                    Conversation(pad, vm, holder.prefs.showTimings, { peek = it }, onMorePacks.takeIf { morePacks }, onDraft = { d ->
                         vm.input = d
                         inputFocus.requestFocus()
                     })
@@ -253,6 +281,15 @@ fun AskScreen(
         }
     }
     if (showOffline) OfflineSheet(onDismiss = { showOffline = false })
+    peek?.let { open ->
+        SourceSheet(
+            open,
+            onDismiss = { peek = null },
+            onDetails = { peek = null; onDetails(open) },
+            onArticle = { pack, article, focus -> peek = null; onArticle(pack, article, focus) },
+        )
+    }
+    DeleteDownloadsDialog(packs)
 }
 
 @Composable
@@ -291,14 +328,16 @@ private fun Centered(pad: PaddingValues, content: @Composable () -> Unit) {
 private fun Welcome(
     pad: PaddingValues,
     lib: LibraryInfo,
-    history: () -> List<Conversations.Summary>,
+    import: ImportState,
+    readRecent: () -> List<Conversations.Summary>,
     onAsk: (String) -> Unit,
     onOpen: (Long) -> Unit,
     onHistory: () -> Unit,
     onOffline: () -> Unit,
 ) {
-    var recent by remember { mutableStateOf(emptyList<Conversations.Summary>()) }
-    LaunchedEffect(Unit) { recent = withContext(Dispatchers.IO) { history().take(5) } }
+    // Null until read: showing the examples first would swap the list under a finger when Recent arrives.
+    var loaded by remember { mutableStateOf<List<Conversations.Summary>?>(null) }
+    LaunchedEffect(Unit) { loaded = withContext(Dispatchers.IO) { readRecent() } }
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp).testTag("welcome"),
     ) {
@@ -306,6 +345,12 @@ private fun Welcome(
         Spacer(Modifier.height(16.dp))
         OfflineBadge(onOffline, Modifier.riseIn("welcome_badge", delayMs = 140))
         Spacer(Modifier.height(20.dp))
+        AnimatedVisibility(import.running) {
+            Column {
+                ImportProgress(import)
+                Spacer(Modifier.height(12.dp))
+            }
+        }
         val passages = lib.packs.sumOf { it.passages.toLong() }.toULong()
         val names = lib.packs.joinToString(", ") { it.title }
         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().riseIn("welcome_library", delayMs = 210)) {
@@ -320,6 +365,7 @@ private fun Welcome(
                 )
             }
         }
+        val recent = loaded ?: return@Column
         if (recent.isNotEmpty()) {
             Spacer(Modifier.height(24.dp))
             Column(Modifier.riseIn("welcome_recent", delayMs = 280)) {
@@ -389,8 +435,10 @@ private fun Opening(pad: PaddingValues) {
 }
 
 @Composable
-private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: () -> Unit) {
+private fun EmptyLibrary(pad: PaddingValues, vm: LibraryViewModel, onInstall: () -> Unit, onLibrary: () -> Unit, onOffline: () -> Unit) {
     val ctx = LocalContext.current
+    // The file names the user sent to the browser; saved, because the browser can push this process out of memory.
+    var started by rememberSaveable { mutableStateOf(emptyList<String>()) }
     Column(
         Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(24.dp).testTag("empty_library"),
         horizontalAlignment = Alignment.Start,
@@ -399,7 +447,7 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
         Text("Add your first library", style = MaterialTheme.typography.displaySmall)
         Spacer(Modifier.height(12.dp))
         Text(
-            "Commonplace answers from knowledge packs stored on this phone. It never goes online, so you add packs yourself.",
+            "Commonplace answers from knowledge packs stored on this phone. It never goes online, so your browser downloads them.",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -418,76 +466,83 @@ private fun EmptyLibrary(pad: PaddingValues, onLibrary: () -> Unit, onOffline: (
                     c.bundles.filter { it.packId == SHELF_BUNDLE }
             }
         }
-        val oneFile = starters.size == 1
-        if (starters.isNotEmpty()) {
-            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth().testTag("get_started")) {
-                Column(Modifier.padding(16.dp)) {
-                    SectionLabel("Get started")
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        if (oneFile) "Download one file in your browser: ${bytes(starters[0].downloadBytes)}."
-                        else "Download the starter packs in your browser: ${bytes(starters.sumOf { it.downloadBytes })} in total.",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    for (p in starters) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column(Modifier.weight(1f)) {
-                                Text(p.title, style = MaterialTheme.typography.titleSmall)
-                                if (oneFile) Text(p.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val files = starters.flatMap { it.files }
+        val anyStarted = started.isNotEmpty()
+        Step(1, "Download", done = files.isNotEmpty() && files.all { it.name in started }, modifier = Modifier.testTag("get_started")) {
+            for (p in starters) {
+                Column(Modifier.padding(top = 8.dp)) {
+                    Text(p.title, style = MaterialTheme.typography.titleSmall)
+                    Text(p.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    for (f in p.files) {
+                        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(bytes(f.bytes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            val download = {
+                                started = started + f.name
+                                vm.openDownload(f.url)
                             }
-                            Text(bytes(p.downloadBytes), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            // The first file not yet sent to the browser is the next step.
+                            if (f.name !in started && files.firstOrNull { it.name !in started } == f) {
+                                Button(onClick = download, modifier = Modifier.testTag("starter_download")) { Text("Download") }
+                            } else {
+                                OutlinedButton(onClick = download, modifier = Modifier.testTag("starter_download")) { Text(if (f.name in started) "Download again" else "Download") }
+                            }
                         }
-                    }
-                    if (lowRam) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "This phone has less than 10 GB of memory, so it gets the starter set with the small model. The fast model needs a 12 GB phone.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    starters.firstOrNull { it.chip != null }?.let { p ->
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "This phone has a ${p.chip} chip, so ${p.title} answers about three times faster than the model in the starter set.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    starters.firstOrNull { it.packId == SHELF_BUNDLE }?.let { p ->
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "The ${p.title} adds travel guides, textbooks and how-to guides that Wikipedia does not have.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            if (lowRam) {
+                StepNote("This phone has less than 10 GB of memory, so it gets the starter set with the small model. The fast model needs a 12 GB phone.")
+            }
+            starters.firstOrNull { it.chip != null }?.let { p ->
+                StepNote("This phone has a ${p.chip} chip, so ${p.title} answers about three times faster than the model in the starter set.")
+            }
         }
-        if (oneFile) {
-            Step(1, "Download the ${starters[0].title}", "Open Library, tap ${starters[0].title} under Get more, and download the file in your browser. It lands in Downloads.")
-            Step(2, "Install it here", "Tap Install from Downloads in Library and select the file. Commonplace checks every byte before it uses it.")
-        } else {
-            Step(1, "Download the starter packs", "Open Library, tap each pack under Get more, and download it in your browser. The files land in Downloads.")
-            Step(2, "Install them here", "Tap Install from Downloads in Library and select all the files. Commonplace checks every byte before it uses them.")
+        Step(2, "Install", done = false) {
+            Text(
+                "When the browser finishes, select the files in Downloads. Commonplace checks every byte. You need about twice the file size in free space.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(10.dp))
+            when {
+                vm.import.running -> ImportProgress(vm.import)
+                anyStarted -> Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("starter_install")) { Text("Install from Downloads") }
+                else -> OutlinedButton(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("starter_install")) { Text("Install from Downloads") }
+            }
+            if (vm.problems.isNotEmpty() && !vm.import.running) {
+                Spacer(Modifier.height(10.dp))
+                ErrorNote("Not installed:\n" + vm.problems.joinToString("\n") { "• $it" })
+            }
         }
-        Step(3, "Ask anything", "Search works at once. Add a model pack for written answers with citations.")
-        Spacer(Modifier.height(24.dp))
-        Button(onClick = onLibrary, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("go_import")) { Text("Open Library") }
+        Step(3, "Ask", done = false) {
+            Text("Search works at once. A model pack adds written answers with citations.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onLibrary, modifier = Modifier.testTag("go_import")) { Text("See every pack in Library") }
     }
 }
 
 @Composable
-private fun Step(n: Int, title: String, body: String) {
-    Row(Modifier.padding(vertical = 10.dp)) {
-        NumberDisc(n.toUInt(), Modifier.padding(top = 2.dp))
+private fun StepNote(text: String) {
+    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
+}
+
+@Composable
+private fun Step(n: Int, title: String, done: Boolean, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Row(modifier.padding(vertical = 10.dp)) {
+        AnimatedContent(done, transitionSpec = { (fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.6f)) togetherWith fadeOut(tween(120)) }, label = "step_disc", modifier = Modifier.padding(top = 2.dp)) { finished ->
+            if (finished) {
+                Box(Modifier.size(22.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Check, "Sent to the browser", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(14.dp))
+                }
+            } else {
+                NumberDisc(n.toUInt())
+            }
+        }
         Spacer(Modifier.width(14.dp))
         Column {
             Text(title, style = MaterialTheme.typography.titleMedium)
-            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            content()
         }
     }
 }
@@ -498,6 +553,7 @@ private fun Conversation(
     vm: AskViewModel,
     showTimings: Boolean,
     onOpen: (OpenSource) -> Unit,
+    onMorePacks: (() -> Unit)?,
     onDraft: (String) -> Unit,
 ) {
     val list = rememberLazyListState()
@@ -543,7 +599,7 @@ private fun Conversation(
         ) {
             itemsIndexed(vm.turns, key = { _, t -> t.id }) { i, t ->
                 Column {
-                    if (i > 0) Ornament(Modifier.padding(bottom = 28.dp))
+                    if (i > 0) Ornament(Modifier.padding(bottom = 28.dp), key = if (t.restored) null else "ornament-${t.id}")
                     val latest = i == vm.turns.lastIndex && !vm.busy
                     TurnView(
                         t, showTimings, onOpen,
@@ -555,6 +611,7 @@ private fun Conversation(
                         speaking = vm.speaking == t.id,
                         speakError = vm.speakError?.takeIf { it.first == t.id }?.second,
                         onSpeak = { vm.toggleSpeak(t) },
+                        onMorePacks = onMorePacks,
                     )
                 }
             }
@@ -683,11 +740,17 @@ private fun AskBar(
             )
             Spacer(Modifier.width(8.dp))
             // 60 dp: the one-line field, a 28 sp line plus 16 dp above and below.
-            if (busy) {
-                FilledIconButton(onClick = onStop, modifier = Modifier.size(60.dp).testTag("ask_stop")) { Icon(Icons.Outlined.Stop, "Stop") }
-            } else {
-                FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening, modifier = Modifier.size(60.dp).testTag("ask_send")) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Ask")
+            AnimatedContent(
+                busy,
+                transitionSpec = { (fadeIn(tween(160)) + scaleIn(tween(160), initialScale = 0.8f)) togetherWith (fadeOut(tween(90)) + scaleOut(tween(90), targetScale = 0.8f)) },
+                label = "send_stop",
+            ) { working ->
+                if (working) {
+                    FilledIconButton(onClick = onStop, modifier = Modifier.size(60.dp).testTag("ask_stop")) { Icon(Icons.Outlined.Stop, "Stop") }
+                } else {
+                    FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening, modifier = Modifier.size(60.dp).testTag("ask_send")) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Ask")
+                    }
                 }
             }
         }
@@ -717,6 +780,7 @@ private fun ThinkToggle(on: Boolean, onToggle: (Boolean) -> Unit) {
 private fun OfflineSheet(onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     ModalBottomSheet(onDismissRequest = onDismiss, modifier = Modifier.testTag("offline_sheet")) {
+        ClearSheetNavBar()
         Column(Modifier.verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             Text("Private by construction", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(12.dp))

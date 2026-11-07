@@ -21,6 +21,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -76,7 +80,10 @@ fun AvailableRow(p: CatalogPack, onClick: () -> Unit, installed: Int = 0, badge:
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun PackSheet(p: CatalogPack, contents: List<String>, onDismiss: () -> Unit, onDownload: (String) -> Unit, onInstall: () -> Unit) {
+    // The filled button is the next step: Download first, Install once the browser has the file.
+    var started by rememberSaveable { mutableStateOf(false) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        ClearSheetNavBar()
         // The sheet is its own window, so it needs its own testTagsAsResourceId (see MainActivity).
         Column(Modifier.semantics { testTagsAsResourceId = true }.padding(horizontal = 20.dp).padding(bottom = 24.dp).verticalScroll(rememberScrollState()).testTag("pack_sheet")) {
             Text(p.title, style = MaterialTheme.typography.titleLarge)
@@ -101,11 +108,20 @@ fun PackSheet(p: CatalogPack, contents: List<String>, onDismiss: () -> Unit, onD
                         Text(f.name, style = MaterialTheme.typography.bodyMedium)
                         Text(bytes(f.bytes), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     }
-                    OutlinedButton(onClick = { onDownload(f.url) }, modifier = Modifier.testTag("download_file")) { Text("Download") }
+                    val download = { started = true; onDownload(f.url) }
+                    if (started) {
+                        OutlinedButton(onClick = download, modifier = Modifier.testTag("download_file")) { Text("Download") }
+                    } else {
+                        Button(onClick = download, modifier = Modifier.testTag("download_file")) { Text("Download") }
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("sheet_install")) { Text("Install from Downloads") }
+            if (started) {
+                Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("sheet_install")) { Text("Install from Downloads") }
+            } else {
+                OutlinedButton(onClick = onInstall, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("sheet_install")) { Text("Install from Downloads") }
+            }
         }
     }
 }

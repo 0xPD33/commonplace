@@ -18,6 +18,8 @@ pub const MAX_PASSAGES: usize = 5_000;
 const MIN_WORDS: usize = 80;
 const MAX_WORDS: usize = 220;
 const MERGE_MAX: usize = 260;
+/// Text without spaces, such as Chinese, is one "word" of any length. No passage may outgrow what the model can read.
+const MAX_PASSAGE_BYTES: usize = 2000;
 
 fn words(s: &str) -> usize {
     s.split_whitespace().count()
@@ -90,9 +92,23 @@ fn pack_blocks(blocks: Vec<String>) -> Vec<String> {
     out
 }
 
+/// `text` in pieces of at most `MAX_PASSAGE_BYTES`, cut at a space where one is near the limit.
+fn split_oversized(text: String) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = text.as_str();
+    while rest.len() > MAX_PASSAGE_BYTES {
+        let hard = rest.floor_char_boundary(MAX_PASSAGE_BYTES);
+        let cut = rest[..hard].rfind(' ').filter(|&i| i > hard / 2).unwrap_or(hard);
+        out.push(rest[..cut].trim().to_string());
+        rest = rest[cut..].trim_start();
+    }
+    out.push(rest.to_string());
+    out
+}
+
 /// Passages of a document in reading order, as (1-based page number, text). A passage never spans pages.
 pub fn chunk(pages: &[String]) -> Vec<(usize, String)> {
-    pages.iter().enumerate().flat_map(|(i, p)| pack_blocks(paragraphs(p)).into_iter().map(move |t| (i + 1, t))).collect()
+    pages.iter().enumerate().flat_map(|(i, p)| pack_blocks(paragraphs(p)).into_iter().flat_map(split_oversized).map(move |t| (i + 1, t))).collect()
 }
 
 /// Build the pack of a document and install it into `<library_dir>/packs/`. Returns the pack id.

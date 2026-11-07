@@ -183,12 +183,14 @@ fn head_window(text: &str, scores: &[Option<f32>], max_tokens: usize) -> Option<
     Some(text[at(parts[a])..at(parts[b]) + parts[b].len()].to_string())
 }
 
-/// A "sentence" longer than `limit` tokens, such as a table flattened to text, cut at spaces into pieces that fit.
+/// A "sentence" longer than `limit` tokens, such as a table flattened to text, cut into pieces that fit.
 fn split_long(s: &str, limit: usize) -> Vec<&str> {
     let mut out = Vec::new();
     let mut rest = s;
     while approx_tokens(rest) > limit {
-        let cut = rest.match_indices(' ').map(|(i, _)| i).take_while(|&i| approx_tokens(&rest[..i]) <= limit).last().unwrap_or(0);
+        let at_space = rest.match_indices(' ').map(|(i, _)| i).take_while(|&i| approx_tokens(&rest[..i]) <= limit).last().unwrap_or(0);
+        // No space in reach: text such as Chinese is cut anywhere.
+        let cut = if at_space > 0 { at_space } else { rest.char_indices().map(|(i, _)| i).take_while(|&i| approx_tokens(&rest[..i]) <= limit).last().unwrap_or(0) };
         if cut == 0 {
             break;
         }

@@ -101,7 +101,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
     val model by holder.model.collectAsState()
     var backend by remember { mutableStateOf(prefs.backend) }
     var speculative by remember { mutableStateOf(prefs.speculative) }
-    var liteCrashed by remember { mutableStateOf(prefs.liteCrashed) }
+    var crashedModel by remember { mutableStateOf(prefs.crashedModel) }
     var threads by remember { mutableIntStateOf(prefs.threads) }
     var evidenceOverride by remember { mutableStateOf(prefs.evidenceOverride) }
     // The loaded model's own budget (its profile in the core); it changes when another model loads.
@@ -165,7 +165,9 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             // A Gemma pack (LiteRT-LM) is one choice next to the llama.cpp models; choosing it sets the engine.
             val choices = lib?.models?.filter { it.answers } ?: emptyList()
             val gemma = choices.firstOrNull { it.filePath.endsWith(".litertlm") }
-            if (choices.size > 1) {
+            // One model too, when the app will not load it by itself: this is the only place to choose it.
+            val onlyChoiceIsStuck = choices.singleOrNull()?.let { it.filePath == crashedModel || (prefs.lowRam && it.kind == ModelKind.FAST) } == true
+            if (choices.size > 1 || onlyChoiceIsStuck) {
                 Spacer(Modifier.height(8.dp))
                 for (m in choices) {
                     val lite = m == gemma
@@ -174,11 +176,10 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                         Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton) {
                             backend = if (lite) Backend.Tpu else Backend.Cpu
                             prefs.backend = backend
-                            if (lite) {
-                                // Choosing Gemma again retries a model that crashed while it loaded.
-                                liteCrashed = null
-                                prefs.liteCrashed = null
-                            } else {
+                            // Choosing a model retries one that crashed while it loaded.
+                            crashedModel = null
+                            prefs.crashedModel = null
+                            if (!lite) {
                                 modelKind = m.kind
                                 prefs.modelKind = m.kind
                             }
@@ -194,6 +195,7 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                                 when {
                                     lite && m.filePath.contains("_Google_Tensor_") -> "Fastest: runs on the Tensor chip"
                                     lite -> "Runs with LiteRT-LM"
+                                    m.kind == ModelKind.FAST && prefs.lowRam -> "Best answers, but it needs about 5.5 GB of memory. Android may stop the app on this phone."
                                     m.kind == ModelKind.FAST -> "Best answers, on the CPU"
                                     else -> "Less memory, on the CPU"
                                 },
@@ -204,9 +206,9 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
                     }
                 }
             }
-            if (gemma != null && backend == Backend.Tpu && liteCrashed == gemma.filePath) {
+            choices.firstOrNull { it.filePath == crashedModel }?.let { failed ->
                 Text(
-                    "${gemma.title} stopped the app while it loaded, so the CPU model answers. Choose ${gemma.title} to try again.",
+                    "${failed.title} stopped the app while it loaded. Choose it to try again.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 4.dp).testTag("lite_crashed"),

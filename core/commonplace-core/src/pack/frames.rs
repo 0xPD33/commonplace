@@ -15,6 +15,8 @@ const MAGIC: &[u8; 4] = b"CPFI";
 const VERSION: u32 = 1;
 const HEADER: usize = 4 + 4 + 4 + 8 + 8;
 pub const RECORDS_PER_FRAME: u32 = 64;
+/// A frame holds a few dozen passages. A damaged header must not ask for more memory than the phone has.
+const MAX_FRAME_BYTES: usize = 256 << 20;
 
 pub struct FrameStore {
     bin: Mmap,
@@ -43,6 +45,7 @@ impl FrameStore {
         let n_records = u64_at(12);
         let n_frames = u64_at(20);
         ensure!(idx.len() == HEADER + 8 * (n_frames as usize + 1), "truncated frames.idx");
+        ensure!(per_frame > 0, "bad frames.idx in {}", dir.display());
         #[cfg(unix)]
         let _ = bin.advise(memmap2::Advice::Random);
         Ok(Self { bin, idx, dict: zstd::dict::DecoderDictionary::copy(&dict_bytes), per_frame, n_records, n_frames })
@@ -73,11 +76,12 @@ impl FrameStore {
     fn frame_with(&self, d: &mut zstd::bulk::Decompressor, f: u64) -> Result<Frame> {
         ensure!(f < self.n_frames, "frame {f} out of range");
         let (a, b) = (self.frame_offset(f) as usize, self.frame_offset(f + 1) as usize);
-        let src = &self.bin[a..b];
+        let src = self.bin.get(a..b).with_context(|| format!("frame {f} lies outside frames.bin"))?;
         let size = zstd::zstd_safe::get_frame_content_size(src)
             .ok()
             .flatten()
             .context("frame lacks content size")? as usize;
+        ensure!(size <= MAX_FRAME_BYTES, "frame {f} claims {size} bytes");
         let raw = d.decompress(src, size)?;
         Frame::parse(raw)
     }
@@ -85,7 +89,7 @@ impl FrameStore {
     pub fn get(&self, id: u64) -> Result<Vec<u8>> {
         ensure!(id < self.n_records, "record {id} out of range ({})", self.n_records);
         let frame = self.frame(id / self.per_frame as u64)?;
-        Ok(frame.record((id % self.per_frame as u64) as usize).to_vec())
+        Ok(frame.record((id % self.per_frame as u64) as usize)?.to_vec())
     }
 
     /// Fetch many records, decompressing each needed frame once. Frames decompress in parallel.
@@ -101,7 +105,7 @@ impl FrameStore {
             .par_iter()
             .map_init(|| self.decompressor(), |d, &f| self.frame_with(d.as_mut().map_err(|e| anyhow::anyhow!("{e}"))?, f))
             .collect::<Result<_>>()?;
-        Ok(ids.iter().map(|id| frames[fs.binary_search(&(id / per)).unwrap()].record((id % per) as usize).to_vec()).collect())
+        ids.iter().map(|id| frames[fs.binary_search(&(id / per)).unwrap()].record((id % per) as usize).map(<[u8]>::to_vec)).collect()
     }
 }
 
@@ -126,10 +130,11 @@ impl Frame {
         self.n == 0
     }
 
-    pub fn record(&self, i: usize) -> &[u8] {
+    pub fn record(&self, i: usize) -> Result<&[u8]> {
+        ensure!(i < self.n, "record {i} lies outside a frame of {}", self.n);
         let off = |k: usize| u32::from_le_bytes(self.raw[4 + 4 * k..8 + 4 * k].try_into().unwrap()) as usize;
         let base = 4 + 4 * (self.n + 1);
-        &self.raw[base + off(i)..base + off(i + 1)]
+        self.raw.get(base + off(i)..base + off(i + 1)).context("bad record offsets in a frame")
     }
 }
 

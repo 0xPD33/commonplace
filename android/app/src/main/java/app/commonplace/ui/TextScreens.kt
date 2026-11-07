@@ -54,7 +54,7 @@ fun NoticeScreen(packId: String, onBack: () -> Unit) {
     val holder = (LocalContext.current.applicationContext as CommonplaceApp).engine
     val text by produceState<String?>(null, packId) {
         value = withContext(Dispatchers.IO) {
-            val notice = runCatching { holder.engineOrNull?.packNotice(packId) }.getOrNull().orEmpty()
+            val notice = runCatching { holder.awaitEngine().packNotice(packId) }.getOrDefault("")
             notice.ifBlank { "This pack has no notice file." }
         }
     }

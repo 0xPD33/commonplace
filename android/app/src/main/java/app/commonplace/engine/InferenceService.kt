@@ -23,9 +23,15 @@ import app.commonplace.MainActivity
  */
 class InferenceService : Service() {
     private val handler = Handler(Looper.getMainLooper())
-    private val stopper = Runnable {
-        (application as CommonplaceApp).engine.unloadModel()
-        stopSelf()
+    private val stopper: Runnable = Runnable {
+        val engine = (application as CommonplaceApp).engine
+        // An install or an answer that outlasts the wait still needs the process.
+        if (engine.installing || engine.answering) {
+            handler.postDelayed(stopper, RECHECK_MS)
+        } else {
+            engine.unloadModel()
+            stopSelf()
+        }
     }
     private val observer = object : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) = handler.removeCallbacks(stopper)
@@ -58,14 +64,15 @@ class InferenceService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun notification(): Notification {
+        val installing = (application as CommonplaceApp).engine.installing
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(NotificationChannel(CHANNEL, "Model in memory", NotificationManager.IMPORTANCE_LOW))
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         val stop = PendingIntent.getService(this, 1, Intent(this, InferenceService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_menu_search)
-            .setContentTitle("Commonplace is ready")
-            .setContentText("The offline model stays loaded for quick answers.")
+            .setContentTitle(if (installing) "Commonplace is installing" else "Commonplace is ready")
+            .setContentText(if (installing) "Keep the app open or in the background until it ends." else "The offline model stays loaded for quick answers.")
             .setContentIntent(open)
             .addAction(Notification.Action.Builder(null, "Unload", stop).build())
             .setOngoing(true)
@@ -77,9 +84,14 @@ class InferenceService : Service() {
         private const val NOTIFICATION_ID = 7
         private const val ACTION_STOP = "app.commonplace.STOP"
         private const val KEEP_ALIVE_MS = 5 * 60_000L
+        private const val RECHECK_MS = 30_000L
 
         fun start(context: Context) {
             runCatching { context.startForegroundService(Intent(context, InferenceService::class.java)) }
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, InferenceService::class.java))
         }
     }
 }

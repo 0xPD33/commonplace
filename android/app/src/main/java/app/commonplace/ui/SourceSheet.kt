@@ -35,13 +35,21 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import uniffi.commonplace_ffi.PassageView
 
 /** A source over the answer, with the cited sentence marked, so checking a citation does not leave the conversation. */
+/** A saved source as the library holds it now: its passage, or else the id of the article with its title, if there is one. */
+private class Current(val passage: PassageView?, val articleId: UInt?)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun SourceSheet(open: OpenSource, onDismiss: () -> Unit, onDetails: () -> Unit, onArticle: (String, UInt, UInt) -> Unit) {
     val s = open.source
-    val state = load("${s.packId}/${s.passageId}") { it.passage(s.packId, s.passageId) }
+    val state = load("${s.packId}/${s.passageId}") { e ->
+        // A pack update numbers its passages anew, so a saved number can now hold another article's text.
+        val now = runCatching { e.passage(s.packId, s.passageId) }.getOrNull()
+        if (now?.title == s.title) Current(now, null) else Current(null, runCatching { e.articleByTitle(s.packId, s.title) }.getOrNull())
+    }
     // Open at the final height: when the content grows during the show animation, the sheet stays at the old height with its actions off screen.
     if (state is Loaded.Loading) return
     val c = MaterialTheme.colorScheme
@@ -66,8 +74,16 @@ fun SourceSheet(open: OpenSource, onDismiss: () -> Unit, onDetails: () -> Unit, 
                 when (val p = state) {
                     Loaded.Loading -> Unit
                     is Loaded.Err -> ErrorNote(p.msg)
-                    is Loaded.Ok -> {
-                        val v = p.value
+                    is Loaded.Ok -> if (p.value.passage == null) {
+                        Text(
+                            "The library changed after this answer, so this passage has moved. This is how it began:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = c.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 10.dp).testTag("source_moved"),
+                        )
+                        Text(s.snippet, style = ReadingStyle.copy(fontSize = 16.sp, lineHeight = 26.sp))
+                    } else {
+                        val v = p.value.passage
                         val mark = remember(v, open.highlight) { bestMatch(v.text, open.highlight) }
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             for (para in v.text.split('\n').filter { it.isNotBlank() }) {
@@ -77,7 +93,17 @@ fun SourceSheet(open: OpenSource, onDismiss: () -> Unit, onDetails: () -> Unit, 
                     }
                 }
             }
-            (state as? Loaded.Ok)?.value?.let { v ->
+            (state as? Loaded.Ok)?.value?.let { now ->
+                val v = now.passage
+                if (v == null) {
+                    now.articleId?.let { aid ->
+                        HorizontalDivider(color = c.outlineVariant)
+                        Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp)) {
+                            Button(onClick = { onArticle(s.packId, aid, 0u) }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("sheet_article")) { Text("Read the current article") }
+                        }
+                    }
+                    return@let
+                }
                 HorizontalDivider(color = c.outlineVariant)
                 Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 4.dp)) {
                     Button(onClick = { onArticle(v.packId, v.articleId, v.passageId) }, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("sheet_article")) { Text("Read the full article") }

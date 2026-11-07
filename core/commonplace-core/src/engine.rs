@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
 use std::path::PathBuf;
 use regex::Regex;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::Instant;
 
@@ -34,6 +35,8 @@ pub struct EngineConfig {
     pub ort_dylib: Option<PathBuf>,
     pub encoder_threads: usize,
     pub telemetry_path: Option<PathBuf>,
+    /// Telemetry lines hold the question. Release builds on a phone keep the timings only.
+    pub telemetry_text: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -193,6 +196,10 @@ const NUMBER_ASKED: f32 = 0.16;
 /// Thermal headroom above which the model uses one thread less. In a 75-question Pixel session it stayed at 0.89–0.90
 /// from the tenth question on, and prefill fell from 75 to 23 tok/s.
 const HOT_HEADROOM: f32 = 0.85;
+/// Longer questions get an error: they would crowd out the sources and the answer in the model's context.
+const MAX_QUESTION_CHARS: usize = 4000;
+/// A large evidence setting never cuts the evidence below this to make room for the answer.
+const MIN_EVIDENCE_TOKENS: usize = 200;
 /// Thermal headroom above which the evidence shrinks. On the Pixel 10, prefill already fell to 47–61 tok/s at
 /// 0.76 (92 tok/s cool).
 const WARM_HEADROOM: f32 = 0.70;
@@ -240,6 +247,10 @@ pub trait EventSink: Send + Sync {
     fn event(&self, e: Event);
     fn cancelled(&self) -> bool {
         false
+    }
+    /// The flag behind `cancelled`, for a backend that can stop in the middle of a prefill.
+    fn cancel_flag(&self) -> Option<Arc<AtomicBool>> {
+        None
     }
 }
 
@@ -655,7 +666,8 @@ impl Engine {
         // Each entity's best-matching number. A comparison needs the same one for both: "How far is Mars from
         // the Sun?" matches the distance, which only Mars has, so the areas are not compared.
         let best = |facts: &[WdFact]| scores.iter().filter(|s| value(facts, s.id).is_some()).max_by(|a, b| a.score.total_cmp(&b.score));
-        let round2 = |x: f64| (x * 100.0).round() / 100.0;
+        // A small ratio keeps its digits for `format_num`: Malta's area is not 0 times Russia's.
+        let round2 = |x: f64| if x.abs() < 0.01 { x } else { (x * 100.0).round() / 100.0 };
         let mut out = Vec::new();
         // "Walking 5 km an hour, how long …": the user's speed, not a Wikidata one ("walking: speed 0.9 m/s"),
         // over each entity's best-matching length.
@@ -717,6 +729,8 @@ impl Engine {
     }
 
     pub fn ask(&self, req: &AskRequest, sink: &dyn EventSink) -> Result<AskOutcome> {
+        let chars = req.query.chars().count();
+        ensure!(chars <= MAX_QUESTION_CHARS, "This question is too long: {chars} characters. The limit is {MAX_QUESTION_CHARS}.");
         let t0 = Instant::now();
         let ms = |t: Instant| t.elapsed().as_secs_f64() * 1000.0;
         let lib = self.library();
@@ -741,7 +755,7 @@ impl Engine {
             rec.peak_rss_mb = telemetry::peak_rss_mb();
             sink.event(Event::Stage { stage: Stage::Done, detail: String::new() });
             if let Some(p) = &self.cfg.telemetry_path {
-                let _ = telemetry::append_jsonl(p, &rec);
+                let _ = telemetry::append_jsonl(p, &rec, self.cfg.telemetry_text);
             }
             let mut r = self.recent.lock().unwrap();
             r.push_back(rec.clone());
@@ -1088,6 +1102,12 @@ impl Engine {
         let base = s.evidence_tokens.unwrap_or(if lean { lean_budget } else { profile.evidence_tokens });
         let warm = !lean && profile.warm_evidence_cut && rec.thermal_headroom.is_some_and(|h| h > WARM_HEADROOM);
         let budget = if warm { base.min(HOT_EVIDENCE_TOKENS) } else { base };
+        // The prompt and the answer share the model's context, so a large evidence setting must leave the answer its room.
+        let budget = llm.n_ctx().map_or(budget, |n| {
+            let reasoning = if req.think { s.think_budget as usize } else { 0 };
+            let others = crate::text::approx_tokens(&prompts::synthesis_system(&lib.snapshot_date(), profile.lean)) + crate::text::approx_tokens(&req.query) + s.max_answer_tokens as usize + reasoning + 256;
+            budget.min(n.saturating_sub(others).max(MIN_EVIDENCE_TOKENS))
+        });
         if let (Some(gap), Some(best)) = (s.evidence_score_gap, hits.iter().filter_map(|h| h.rerank).reduce(f32::max)) {
             let mut kept = 0;
             hits.retain(|h| {
@@ -1145,7 +1165,7 @@ impl Engine {
             let st = llm.generate(
                 prompts::COMPUTE_SYSTEM,
                 &prompts::compute_user(&ev.render(&lib), &question),
-                &GenParams::json(200, prompts::COMPUTE_GRAMMAR),
+                &GenParams { cancel: sink.cancel_flag(), ..GenParams::json(200, prompts::COMPUTE_GRAMMAR) },
                 &mut |t| {
                     out.push_str(t);
                     !sink.cancelled()
@@ -1167,6 +1187,9 @@ impl Engine {
                         ev.add_computed(format!("{} = {}", calc.label.trim(), format_num(v)));
                     }
                 }
+            }
+            if sink.cancelled() {
+                return Ok(finish(rec, vec![], vec![], card));
             }
         }
 
@@ -1204,6 +1227,7 @@ impl Engine {
         let mut params = GenParams::synthesis(s.max_answer_tokens);
         params.think_budget = req.think.then_some(s.think_budget);
         params.keep_prefix = true;
+        params.cancel = sink.cancel_flag();
         let mut raw = String::new();
         let mut first: Option<f64> = None;
         let mut thought_done = !req.think;
@@ -1406,7 +1430,7 @@ impl Engine {
         let numbers: HashSet<String> = crate::text::numbers(&prev.answer).into_iter().collect();
         sink.event(Event::Sources(prev.sources.clone()));
         let mut raw = String::new();
-        let st = llm.generate(prompts::REFORMAT_SYSTEM, &prompts::reformat_user(&prev.query, &prev.answer, request), &GenParams::synthesis(max_tokens), &mut |t| {
+        let st = llm.generate(prompts::REFORMAT_SYSTEM, &prompts::reformat_user(&prev.query, &prev.answer, request), &GenParams { cancel: sink.cancel_flag(), ..GenParams::synthesis(max_tokens) }, &mut |t| {
             raw.push_str(t);
             if rec.ttft_ms.is_none() && !raw.trim().is_empty() {
                 rec.ttft_ms = Some(t0.elapsed().as_secs_f64() * 1000.0);

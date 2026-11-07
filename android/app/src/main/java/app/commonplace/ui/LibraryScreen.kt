@@ -5,6 +5,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -113,13 +114,20 @@ class ImportState {
 private val importState = ImportState()
 
 private const val WIKIDATA = "wikidata-facts"
+private const val NOT_FROM_CATALOG = "not from the app's catalog"
 private val DOCUMENT_TYPES = arrayOf("application/pdf", "text/plain", "text/markdown")
 // A browser saves a second download of `x.tar` as `x (1).tar`; the catalog knows only `x.tar`.
 private val BROWSER_COPY = Regex("""\s?\(\d+\)(?=\.tar$|\.pack\.json$)""")
 private const val PDF_NEEDS_ANDROID_15 = "PDF import needs Android 15 or later. Text and Markdown files still work."
 
+/** Room to leave free, so that the phone and the app's own saves still work after an install. */
+private const val STORAGE_MARGIN = 500_000_000L
+
 /** The message of a core error without the UniFFI "msg=" wrapper. */
-private fun reason(t: Throwable) = (t as? CpException.Failed)?.msg ?: t.message ?: t.toString()
+private fun reason(t: Throwable): String {
+    val msg = (t as? CpException.Failed)?.msg ?: t.message ?: t.toString()
+    return if ("os error 28" in msg || "ENOSPC" in msg) "The phone is out of storage. Free up space, then try again." else msg
+}
 
 internal fun installedIds(l: LibraryInfo): Set<String> =
     (l.packs.map { it.packId } + l.models.map { it.packId } + listOfNotNull(WIKIDATA.takeIf { l.hasWikidata })).toSet()
@@ -133,10 +141,26 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     var deletable by mutableStateOf<List<Pair<Uri, Long>>>(emptyList())
 
     /** What the last selection could not install: missing files and failed imports. */
-    var problems by mutableStateOf<List<String>>(emptyList())
+    var problems by mutableStateOf(
+        listOfNotNull(holder.takeInterruptedInstall()?.let { "$it: the app was closed before the install ended. Nothing was installed. Select the files again." }),
+    )
 
     /** The state a switch was just set to, shown until the engine has reloaded the library. */
     val toggling = mutableStateMapOf<String, Boolean>()
+
+    /**
+     * Ask Android for the room, which can also clear other apps' caches. On a phone with too little, this stops the
+     * install before it copies anything.
+     */
+    private fun requireStorage(installed: Long) {
+        val ctx = getApplication<Application>()
+        val sm = ctx.getSystemService(StorageManager::class.java)
+        val uuid = sm.getUuidForPath(ctx.filesDir)
+        val need = installed + STORAGE_MARGIN
+        val free = sm.getAllocatableBytes(uuid)
+        check(free >= need) { "It needs ${bytes(need)} of free storage, and this phone has ${bytes(free)}. Free up space, then install again." }
+        sm.allocateBytes(uuid, need)
+    }
 
     /** Install every bundle or pack whose files are all among `uris`, one after the other. Unrelated files are ignored. */
     fun importUris(uris: List<Uri>, catalog: Catalog) {
@@ -167,7 +191,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             val sources = mutableListOf<Pair<Uri, Long>>()
             plan.jobs.forEachIndexed { i, job ->
                 val opened = mutableListOf<Pair<SelectedFile<Uri>, ParcelFileDescriptor>>()
+                holder.installStarted(job.title)
                 val result = runCatching {
+                    val engine = holder.awaitEngine()
+                    requireStorage(job.installedBytes)
                     for (f in job.files) cr.openFileDescriptor(f.handle, "r")?.let { opened += f to it }
                     val label = "Installing ${job.title}" + if (plan.jobs.size > 1) " (${i + 1} of ${plan.jobs.size})" else ""
                     withContext(Dispatchers.Main) {
@@ -195,8 +222,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                     // detachFd hands each descriptor to Rust, which closes it.
                     val parts = opened.map { (f, fd) -> ImportPart(f.name, fd.detachFd(), f.size.toULong(), job.sha256[f.name]) }
                     opened.clear()
-                    holder.engineOrNull!!.importPack(parts, listener)
+                    engine.importPack(parts, job.packIds, listener)
                 }
+                holder.installEnded()
                 opened.forEach { runCatching { it.second.close() } }
                 result.onSuccess {
                     installed += it
@@ -210,7 +238,6 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                 deletable = sources
             }
             holder.refreshLibrary()
-            // Also after a failed bundle: the packs that were complete before the error are installed.
             if (plan.jobs.isNotEmpty()) holder.ensureModel(null)
         }
     }
@@ -237,7 +264,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     fun setEnabled(packId: String, title: String, enabled: Boolean) {
         toggling[packId] = enabled
         holder.scope.launch {
-            val r = runCatching { holder.engineOrNull!!.setPackEnabled(packId, enabled) }
+            val r = runCatching { holder.awaitEngine().setPackEnabled(packId, enabled) }
             runCatching { holder.refreshLibrary() }
             withContext(Dispatchers.Main) {
                 if (toggling[packId] == enabled) toggling.remove(packId)
@@ -287,6 +314,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
                 override fun onPack(packId: String) {}
             }
+            holder.installStarted(title)
             val result = runCatching {
                 require(size <= DocumentText.MAX_BYTES) { "$name is larger than 50 MB." }
                 val isPdf = cr.getType(uri) == "application/pdf" || name.endsWith(".pdf", ignoreCase = true)
@@ -298,8 +326,9 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
                     val input = cr.openInputStream(uri) ?: error("Could not open $name.")
                     input.use { DocumentText.textPages(it) }
                 }
-                holder.engineOrNull!!.addDocument(title, pages, listener)
+                holder.awaitEngine().addDocument(title, pages, listener)
             }
+            holder.installEnded()
             withContext(Dispatchers.Main) {
                 import.running = false
                 snackbar = result.fold({ "Added $title" }, { reason(it) })
@@ -319,7 +348,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun verify(packId: String, title: String) = viewModelScope.launch(Dispatchers.IO) {
         withContext(Dispatchers.Main) { snackbar = "Checking $title…" }
-        val r = runCatching { holder.engineOrNull!!.verifyPack(packId) }
+        val r = runCatching { holder.awaitEngine().verifyPack(packId) }
         withContext(Dispatchers.Main) {
             snackbar = r.fold({ if (it.isEmpty()) "$title is intact" else "$title: ${it.size} files damaged" }, { "Check failed: ${it.message}" })
         }
@@ -423,6 +452,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                         add(bytes(p.sizeBytes.toLong()))
                         if (p.hasDense) add("semantic search")
                         if (p.hasCards) add("fact cards")
+                        if (p.unverified) add(NOT_FROM_CATALOG)
                     }.joinToString(" · "),
                     license = p.license,
                     enabled = vm.toggling[p.packId] ?: p.enabled,
@@ -486,7 +516,7 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
                         ModelKind.VOICE -> "Voice input · speak your question"
                         ModelKind.READ_ALOUD -> "Read aloud · a voice for answers, English"
                     } + if (loaded) " · loaded" else "",
-                    detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}",
+                    detail = "${bytes(m.sizeBytes.toLong())} · ${m.license}" + if (m.unverified) " · $NOT_FROM_CATALOG" else "",
                     onVerify = { vm.verify(m.packId, m.title) },
                     onRemove = { confirmRemove = m.packId },
                     onNotice = { onNotice(m.packId) },
@@ -495,7 +525,13 @@ fun LibraryScreen(onBack: () -> Unit, onNotice: (String) -> Unit, onAskDocument:
             if (!firstRun) getMore()
             l?.skipped?.takeIf { it.isNotEmpty() }?.let { sk ->
                 item { SectionLabel("Not loaded", Modifier.padding(top = 12.dp)) }
-                items(sk) { s -> InfoNote("${catalog.titleOf(s.packId)}: ${s.reason}") }
+                items(sk) { s ->
+                    // A pack that does not load has no row, and only this button frees its storage.
+                    Column(horizontalAlignment = Alignment.End) {
+                        InfoNote("${catalog.titleOf(s.packId)}: ${s.reason}")
+                        TextButton(onClick = { confirmRemove = s.packId }, modifier = Modifier.testTag("remove_skipped")) { Text("Remove") }
+                    }
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 package app.commonplace.engine
 
 import android.content.Context
+import android.util.AtomicFile
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.commonplace_ffi.AnswerCard
@@ -30,15 +31,26 @@ class Conversations(context: Context) {
     /** `text` holds every question and answer, for search. */
     data class Summary(val id: Long, val title: String, val updated: Long, val turns: Int, val text: String)
 
-    fun save(id: Long, turns: List<SavedTurn>) {
-        if (turns.isEmpty()) return
-        dir.mkdirs()
-        val json = JSONObject().put("id", id).put("updated", System.currentTimeMillis())
-            .put("turns", JSONArray(turns.map { turn(it) }))
-        // Write then rename, so a crash mid-write cannot leave a half file.
-        val tmp = File(dir, "$id.json.tmp")
-        tmp.writeText(json.toString())
-        tmp.renameTo(File(dir, "$id.json"))
+    /** False when the file could not be written, such as on a full disk. The last saved version then stays. */
+    @Synchronized
+    fun save(id: Long, turns: List<SavedTurn>): Boolean {
+        if (turns.isEmpty()) return true
+        return runCatching {
+            dir.mkdirs()
+            val json = JSONObject().put("id", id).put("updated", System.currentTimeMillis())
+                .put("turns", JSONArray(turns.map { turn(it) }))
+            val file = AtomicFile(File(dir, "$id.json"))
+            val out = file.startWrite()
+            try {
+                out.write(json.toString().toByteArray())
+                // finishWrite logs a failed sync and renames anyway, which would put a cut file in place of a good one.
+                out.fd.sync()
+                file.finishWrite(out)
+            } catch (t: Throwable) {
+                file.failWrite(out)
+                throw t
+            }
+        }.isSuccess
     }
 
     /**

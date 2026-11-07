@@ -286,6 +286,19 @@ pub fn today() -> String {
 }
 
 /// Sum of file sizes under a directory.
+/// The bytes of the installed packs, without the ids in `except`. Dot directories hold unfinished work and do not count.
+pub fn installed_size(packs_dir: &Path, except: &[String]) -> u64 {
+    let Ok(rd) = std::fs::read_dir(packs_dir) else { return 0 };
+    rd.flatten()
+        .filter(|e| {
+            let name = e.file_name();
+            let name = name.to_string_lossy();
+            !name.starts_with('.') && !except.iter().any(|x| *x == name)
+        })
+        .map(|e| dir_size(&e.path()))
+        .sum()
+}
+
 pub fn dir_size(p: &Path) -> u64 {
     let Ok(rd) = std::fs::read_dir(p) else { return 0 };
     rd.flatten()

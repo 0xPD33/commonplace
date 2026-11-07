@@ -41,13 +41,18 @@ class VoiceInput(context: Context) {
                 close(m) // the line that lands after stop() is the flush; a no-op while listening
             }
             .onError(onError)
-        m.loadFromFiles((modelDir ?: error("voice model not installed")).path, JNI.MOONSHINE_MODEL_ARCH_MEDIUM_STREAMING)
-        synchronized(lock) {
-            if (id == session) {
-                m.start()
-                mic = m
-                return
+        try {
+            m.loadFromFiles((modelDir ?: error("voice model not installed")).path, JNI.MOONSHINE_MODEL_ARCH_MEDIUM_STREAMING)
+            synchronized(lock) {
+                if (id == session) {
+                    m.start()
+                    mic = m
+                    return
+                }
             }
+        } catch (t: Throwable) {
+            Thread { m.close() }.start() // about 0.75 GB that nothing else would free
+            throw t
         }
         Thread { m.close() }.start() // stopped while the model loaded
     }

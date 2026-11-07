@@ -279,9 +279,11 @@ impl Retriever<'_> {
             by_pack.entry(*pack).or_default().push((i, *pid));
         }
         use rayon::prelude::*;
+        // A damaged pack loses its own hits; the other packs can still answer.
         let per_pack: Vec<Vec<(usize, Hit)>> = by_pack
             .into_par_iter()
-            .map(|(pack, items)| -> Result<Vec<(usize, Hit)>> {
+            .filter_map(|(pack, items)| {
+                let read = || -> Result<Vec<(usize, Hit)>> {
                 let p = &self.lib.packs[pack as usize];
                 let pids: Vec<u32> = items.iter().map(|x| x.1).collect();
                 let recs = p.passages(&pids)?;
@@ -297,8 +299,10 @@ impl Retriever<'_> {
                         Some((i, Hit { pack, pid, article: a, passage: rec, fused: ids[i].1, rerank: None, sentence_scores: None }))
                     })
                     .collect())
+                };
+                read().inspect_err(|e| log::warn!("pack {pack}: {e:#}")).ok()
             })
-            .collect::<Result<_>>()?;
+            .collect();
         let mut out: Vec<Option<Hit>> = vec![None; ids.len()];
         for (i, h) in per_pack.into_iter().flatten() {
             out[i] = Some(h);

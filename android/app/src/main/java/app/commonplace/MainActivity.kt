@@ -108,6 +108,8 @@ class MainActivity : ComponentActivity() {
                 // testTagsAsResourceId lets adb/uiautomator drive the app by tag (scripts/e2e-emulator.sh).
                 Surface(Modifier.semantics { testTagsAsResourceId = true }.paperGrain(),color = MaterialTheme.colorScheme.background) {
                     val nav = rememberNavController()
+                    // A second tap during the page animation must not pop the first page, which leaves a blank screen.
+                    val back: () -> Unit = { if (nav.previousBackStackEntry != null) nav.popBackStack() }
                     // Activity scope, so the screen stays on while an answer streams behind a source page too:
                     // a hidden app gets a 3 GiB memory limit on Android 17, which swaps the model out mid-answer.
                     val ask: AskViewModel = viewModel()
@@ -175,7 +177,7 @@ class MainActivity : ComponentActivity() {
                                 packId = a.getString("pack")!!,
                                 passageId = a.getLong("pid").toUInt(),
                                 highlight = a.getString("h") ?: "",
-                                onBack = { nav.popBackStack() },
+                                onBack = back,
                                 onArticle = { pack, article, focus -> nav.navigate("article/${Uri.encode(pack)}/$article?f=$focus") },
                             )
                         }
@@ -184,9 +186,9 @@ class MainActivity : ComponentActivity() {
                             arguments = listOf(navArgument("aid") { type = NavType.LongType }, navArgument("f") { type = NavType.LongType; defaultValue = 0L }),
                         ) { e ->
                             val a = e.arguments!!
-                            ArticleScreen(a.getString("pack")!!, a.getLong("aid").toUInt(), a.getLong("f").toUInt(), onBack = { nav.popBackStack() })
+                            ArticleScreen(a.getString("pack")!!, a.getLong("aid").toUInt(), a.getLong("f").toUInt(), onBack = back)
                         }
-                        composable("history") { HistoryScreen(ask, onBack = { nav.popBackStack() }) }
+                        composable("history") { HistoryScreen(ask, onBack = back) }
                         composable(
                             "library?more={more}",
                             arguments = listOf(navArgument("more") { type = NavType.BoolType; defaultValue = false }),
@@ -194,20 +196,20 @@ class MainActivity : ComponentActivity() {
                             LibraryScreen(
                                 vm = packs,
                                 moreFirst = e.arguments!!.getBoolean("more"),
-                                onBack = { nav.popBackStack() },
+                                onBack = back,
                                 onNotice = { id -> nav.navigate("notice/${Uri.encode(id)}") },
                                 onAskDocument = { id, title ->
                                     ask.searchOnly(id, title)
-                                    nav.popBackStack()
+                                    back()
                                 },
                             )
                         }
-                        composable("notice/{pack}") { e -> NoticeScreen(e.arguments!!.getString("pack")!!, onBack = { nav.popBackStack() }) }
+                        composable("notice/{pack}") { e -> NoticeScreen(e.arguments!!.getString("pack")!!, onBack = back) }
                         composable("settings") {
-                            SettingsScreen(onBack = { nav.popBackStack() }, onDiagnostics = { nav.navigate("diagnostics") }, onLicenses = { nav.navigate("licenses") })
+                            SettingsScreen(onBack = back, onDiagnostics = { nav.navigate("diagnostics") }, onLicenses = { nav.navigate("licenses") })
                         }
-                        composable("licenses") { LicensesScreen(onBack = { nav.popBackStack() }) }
-                        composable("diagnostics") { DiagnosticsScreen(onBack = { nav.popBackStack() }) }
+                        composable("licenses") { LicensesScreen(onBack = back) }
+                        composable("diagnostics") { DiagnosticsScreen(onBack = back) }
                     }
                 }
             }

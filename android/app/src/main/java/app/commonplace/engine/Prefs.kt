@@ -23,10 +23,15 @@ class Prefs(context: Context) {
         get() = if (sp.getString("engine", "tpu") == "tpu") Backend.Tpu else Backend.Cpu
         set(v) = sp.edit().putString("engine", if (v == Backend.Tpu) "tpu" else "cpu").apply()
 
-    /** The LiteRT model file that killed the app while it loaded; the app uses llama.cpp until the user picks Gemma again. */
-    var liteCrashed: String?
+    /** The model file that killed the app while it loaded. The app does not load it by itself until the user picks it again. */
+    var crashedModel: String?
         get() = sp.getString("lite_crashed", null)
         set(v) = sp.edit().putString("lite_crashed", v).apply()
+
+    /** What an install is working on. A value at the next start means that the process died during it. */
+    var installing: String?
+        get() = sp.getString("installing", null)
+        set(v) = sp.edit().putString("installing", v).apply()
 
     /** Speculative decoding for Gemma on the Tensor NPU. */
     var speculative: Boolean

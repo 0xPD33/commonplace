@@ -124,6 +124,8 @@ class ImportJob<T>(
     val files: List<SelectedFile<T>>,
     val sha256: Map<String, String> = emptyMap(),
     val packIds: List<String> = listOf(packId),
+    /** The size on disk from the catalog; a file outside the catalog takes about its own size. */
+    val installedBytes: Long = files.sumOf { it.size },
 )
 
 class ImportPlan<T>(val jobs: List<ImportJob<T>>, val missing: List<String>)
@@ -149,6 +151,7 @@ fun <T> planImport(catalog: Catalog, selected: List<SelectedFile<T>>): ImportPla
             jobs += ImportJob(
                 pack.packId, pack.title, have.distinctBy { it.name }, pack.files.associate { it.name to it.sha256 },
                 pack.members.ifEmpty { listOf(pack.packId) },
+                pack.installedBytes,
             )
         } else {
             missing += "${pack.title}: " + absent.joinToString(", ") { f ->

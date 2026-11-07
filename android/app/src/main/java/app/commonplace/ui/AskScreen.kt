@@ -190,6 +190,10 @@ fun AskScreen(
     DisposableEffect(Unit) { onDispose { vm.stopVoice(); vm.stopSpeaking() } }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.stopVoice(); vm.stopSpeaking() }
 
+    LaunchedEffect(vm.saveFailed) {
+        if (vm.saveFailed) snack.showSnackbar("Could not save this conversation. The phone's storage may be full.")
+    }
+
     val barShown = engineState is EngineState.Ready && library?.packs?.isNotEmpty() == true
     // A draft from another app: on a cold start it waits until the question box exists.
     LaunchedEffect(vm.draftWaiting, barShown) {
@@ -216,7 +220,12 @@ fun AskScreen(
                         val answerModels = library?.models?.filter { it.answers }.orEmpty()
                         // A low-RAM phone does not load the fast model by itself (see EngineHolder.ensureModel).
                         val onlyFast = holder.prefs.lowRam && answerModels.isNotEmpty() && answerModels.all { it.kind == ModelKind.FAST } && holder.prefs.modelKind != ModelKind.FAST
-                        ModelStatusLine(model, installed = answerModels.isNotEmpty(), known = library != null, onlyFast = onlyFast)
+                        // After a model stopped the app, another model answers: name it, so the user knows the choice is not in use.
+                        val crashed = holder.prefs.crashedModel?.takeIf { c -> answerModels.any { it.filePath == c } }
+                        val fallback = crashed?.let { model as? ModelState.Loaded }?.let { m ->
+                            answerModels.firstOrNull { it.kind == m.kind && it.filePath.endsWith(".litertlm") == (m.backend == Backend.Tpu) }?.title
+                        }
+                        ModelStatusLine(model, installed = answerModels.isNotEmpty(), known = library != null, onlyFast = onlyFast, fallback = fallback)
                     }
                 },
                 actions = {
@@ -264,6 +273,8 @@ fun AskScreen(
             EngineState.Starting -> Opening(pad)
             is EngineState.Failed -> Centered(pad) {
                 ErrorNote("The engine could not start: ${s.message}")
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = holder::retryStart, modifier = Modifier.testTag("retry_start")) { Text("Try again") }
             }
             is EngineState.Ready -> {
                 val lib = library
@@ -293,11 +304,12 @@ fun AskScreen(
 }
 
 @Composable
-private fun ModelStatusLine(model: ModelState, installed: Boolean, known: Boolean, onlyFast: Boolean) {
+private fun ModelStatusLine(model: ModelState, installed: Boolean, known: Boolean, onlyFast: Boolean, fallback: String?) {
     val (text, color) = when {
         // Until the library is open, the app cannot tell whether a model is installed.
         !known -> "" to MaterialTheme.colorScheme.onSurfaceVariant
         onlyFast && model !is ModelState.Loaded -> "Search only · this phone needs the small model" to MaterialTheme.colorScheme.onSurfaceVariant
+        fallback != null -> "Ready · using $fallback instead" to MaterialTheme.colorScheme.primary
         else -> modelStatus(model, installed)
     }
     Text(text, style = MaterialTheme.typography.labelSmall, color = color, modifier = Modifier.testTag("model_status"))
@@ -680,6 +692,15 @@ private fun AskBar(
                 modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 8.dp).testTag("scope_chip"),
             )
         }
+        val tooLong = value.trim().length > MAX_QUESTION_CHARS
+        if (tooLong) {
+            Text(
+                "This question is too long: ${value.trim().length} characters. The limit is $MAX_QUESTION_CHARS.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp).testTag("too_long"),
+            )
+        }
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -748,7 +769,7 @@ private fun AskBar(
                 if (working) {
                     FilledIconButton(onClick = onStop, modifier = Modifier.size(60.dp).testTag("ask_stop")) { Icon(Icons.Outlined.Stop, "Stop") }
                 } else {
-                    FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening, modifier = Modifier.size(60.dp).testTag("ask_send")) {
+                    FilledIconButton(onClick = onSend, enabled = value.isNotBlank() && !listening && !tooLong, modifier = Modifier.size(60.dp).testTag("ask_send")) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Ask")
                     }
                 }

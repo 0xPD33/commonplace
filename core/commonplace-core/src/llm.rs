@@ -3,6 +3,8 @@
 
 use anyhow::Result;
 use serde::Serialize;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 #[derive(Debug, Clone)]
 pub struct GenParams {
@@ -17,20 +19,22 @@ pub struct GenParams {
     pub think_budget: Option<u32>,
     /// Never evict this system prompt's cached prefill (the answer prompt, which every question uses).
     pub keep_prefix: bool,
+    /// Set when the user stops the answer. A backend may check it during the prefill, which yields no tokens.
+    pub cancel: Option<Arc<AtomicBool>>,
 }
 
 impl GenParams {
     pub fn synthesis(max_tokens: u32) -> Self {
-        Self { max_tokens, temperature: 0.3, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None, keep_prefix: false }
+        Self { max_tokens, temperature: 0.3, top_p: 0.9, repeat_penalty: 1.05, grammar: None, think_budget: None, keep_prefix: false, cancel: None }
     }
 
     /// Short deterministic output without a grammar (query rewriting).
     pub fn greedy(max_tokens: u32) -> Self {
-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None, keep_prefix: false }
+        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: None, think_budget: None, keep_prefix: false, cancel: None }
     }
 
     pub fn json(max_tokens: u32, grammar: &str) -> Self {
-        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None, keep_prefix: false }
+        Self { max_tokens, temperature: 0.0, top_p: 1.0, repeat_penalty: 1.0, grammar: Some(grammar.to_string()), think_budget: None, keep_prefix: false, cancel: None }
     }
 }
 
@@ -67,4 +71,8 @@ pub trait LlmBackend: Send + Sync {
     /// Hint: the next `generate` will likely use `system` and a user text that starts with `user_prefix`.
     /// A backend may start that prefill now, while retrieval runs on the CPU. Default: ignored.
     fn prepare(&self, _system: &str, _user_prefix: &str, _params: &GenParams) {}
+    /// The tokens that the prompt and the answer share, when the backend has a fixed limit.
+    fn n_ctx(&self) -> Option<usize> {
+        None
+    }
 }

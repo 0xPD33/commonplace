@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::path::{Path, PathBuf};
 use std::ptr;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{Mutex, Once};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex, Once};
 use std::time::Instant;
 
 static INIT: Once = Once::new();
@@ -132,7 +132,30 @@ impl Drop for Inner {
 
 pub struct LlamaBackend {
     id: String,
+    n_ctx: usize,
     inner: Mutex<Inner>,
+}
+
+/// What `llama_decode` returns when the abort callback stopped it.
+const DECODE_ABORTED: i32 = 2;
+/// The prompt must leave the answer at least this many tokens.
+const MIN_ANSWER_ROOM: usize = 32;
+
+/// The user stopped the answer during a decode.
+#[derive(Debug)]
+struct Cancelled;
+
+impl std::fmt::Display for Cancelled {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("cancelled")
+    }
+}
+
+impl std::error::Error for Cancelled {}
+
+/// ggml's main compute thread calls this between graph nodes. `data` is the `AtomicBool` of `GenParams::cancel`.
+unsafe extern "C" fn cancel_requested(data: *mut std::os::raw::c_void) -> bool {
+    unsafe { &*(data as *const AtomicBool) }.load(Ordering::Relaxed)
 }
 
 pub struct LoadOptions {
@@ -244,7 +267,8 @@ impl LlamaBackend {
             let _ = inner.decode_tokens(&[inner.bos()], 0);
             unsafe { sys::llama_memory_clear(sys::llama_get_memory(ctx), true) };
         }
-        Ok(Self { id: format!("{name} ({desc})"), inner: Mutex::new(inner) })
+        let n_ctx = unsafe { sys::llama_n_ctx(ctx) } as usize;
+        Ok(Self { id: format!("{name} ({desc})"), n_ctx, inner: Mutex::new(inner) })
     }
 }
 
@@ -365,6 +389,9 @@ impl Inner {
             let mut c = chunk.to_vec();
             let batch = unsafe { sys::llama_batch_get_one(c.as_mut_ptr(), c.len() as i32) };
             let rc = unsafe { sys::llama_decode(self.ctx, batch) };
+            if rc == DECODE_ABORTED {
+                return Err(Cancelled.into());
+            }
             ensure!(rc == 0, "llama_decode failed ({rc})");
         }
         Ok(())
@@ -398,7 +425,19 @@ impl Inner {
         }
     }
 
+    /// `run`, which a set `GenParams::cancel` can stop in the middle of a decode. The next call restores the context.
     fn generate(&mut self, system: &str, user: &str, p: &GenParams, on_token: &mut dyn FnMut(&str) -> bool) -> Result<GenStats> {
+        let flag = p.cancel.as_ref().map(Arc::as_ptr);
+        unsafe { sys::llama_set_abort_callback(self.ctx, flag.map(|_| cancel_requested as _), flag.map_or(ptr::null_mut(), |f| f as *mut _)) };
+        let result = self.run(system, user, p, on_token);
+        unsafe { sys::llama_set_abort_callback(self.ctx, None, ptr::null_mut()) };
+        match result {
+            Err(e) if e.is::<Cancelled>() => Ok(GenStats::default()),
+            other => other,
+        }
+    }
+
+    fn run(&mut self, system: &str, user: &str, p: &GenParams, on_token: &mut dyn FnMut(&str) -> bool) -> Result<GenStats> {
         let mut st = GenStats::default();
         // Thinking runs only when asked for and the model has a thinking mode.
         let budget = p.think_budget.filter(|_| self.think.is_some());
@@ -465,7 +504,12 @@ impl Inner {
             [self.tokenize(head, true)?, user_toks, self.tokenize(&tail, false)?].concat()
         };
         let n_ctx = unsafe { sys::llama_n_ctx(self.ctx) } as usize;
-        ensure!(st.prompt_tokens as usize + suffix_toks.len() + ((p.max_tokens + budget.unwrap_or(0)) as usize) < n_ctx, "prompt too long for n_ctx {n_ctx}");
+        // The answer gets what the context has left. The loop below stops before the context is full.
+        let mut used = st.prompt_tokens as usize + suffix_toks.len();
+        ensure!(
+            used + MIN_ANSWER_ROOM <= n_ctx,
+            "The question and its sources do not fit the model's memory: {used} of {n_ctx} tokens. Lower the evidence budget in Settings, or ask a shorter question."
+        );
         self.decode_tokens(&suffix_toks, 0)?;
         st.prompt_tokens += suffix_toks.len() as u32;
         st.prefill_ms = t.elapsed().as_secs_f64() * 1000.0;
@@ -484,6 +528,10 @@ impl Inner {
         let mut answer_tokens = 0u32;
         let result = (|| -> Result<()> {
             for _ in 0..p.max_tokens + 2 * budget.unwrap_or(0) {
+                if used + 1 >= n_ctx {
+                    st.truncated = true;
+                    return Ok(());
+                }
                 let tok = unsafe { sys::llama_sampler_sample(smpl, self.ctx, -1) };
                 if unsafe { sys::llama_vocab_is_eog(self.vocab(), tok) } {
                     return Ok(());
@@ -510,6 +558,7 @@ impl Inner {
                                 return Ok(()); // cancelled
                             }
                             self.decode_tokens(&[tok], 0)?;
+                            used += 1;
                             continue;
                         }
                     } else if st.think_tokens >= budget.unwrap_or(0) {
@@ -517,7 +566,12 @@ impl Inner {
                         // often ignored (the model keeps reasoning in the answer); a closing sentence is followed.
                         thinking = false;
                         let close = self.tokenize("\n\nI have to give the answer now, based on the reasoning so far.\n</think>\n\n", false)?;
+                        if used + close.len() + 1 >= n_ctx {
+                            st.truncated = true;
+                            return Ok(());
+                        }
                         self.decode_tokens(&close, 0)?;
+                        used += close.len();
                         if !on_token("</think>") {
                             return Ok(()); // cancelled
                         }
@@ -546,7 +600,11 @@ impl Inner {
                 let mut one = [tok];
                 let batch = unsafe { sys::llama_batch_get_one(one.as_mut_ptr(), 1) };
                 let rc = unsafe { sys::llama_decode(self.ctx, batch) };
+                if rc == DECODE_ABORTED {
+                    return Ok(()); // cancelled
+                }
                 ensure!(rc == 0, "llama_decode failed ({rc})");
+                used += 1;
             }
             st.truncated = true; // ran out of tokens before the end token
             Ok(())
@@ -561,6 +619,10 @@ impl Inner {
 impl LlmBackend for LlamaBackend {
     fn id(&self) -> String {
         self.id.clone()
+    }
+
+    fn n_ctx(&self) -> Option<usize> {
+        Some(self.n_ctx)
     }
 
     fn generate(&self, system: &str, user: &str, params: &GenParams, on_token: &mut dyn FnMut(&str) -> bool) -> Result<GenStats> {

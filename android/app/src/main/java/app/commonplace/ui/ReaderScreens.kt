@@ -72,8 +72,7 @@ internal fun <T> load(key: Any, block: (uniffi.commonplace_ffi.CommonplaceEngine
     val holder = (LocalContext.current.applicationContext as CommonplaceApp).engine
     val state by produceState<Loaded<T>>(Loaded.Loading, key) {
         value = withContext(Dispatchers.IO) {
-            val e = holder.engineOrNull ?: return@withContext Loaded.Err("Engine not ready")
-            runCatching { Loaded.Ok(block(e)) }.getOrElse { Loaded.Err(it.message ?: it.toString()) }
+            runCatching { Loaded.Ok(block(holder.awaitEngine())) }.getOrElse { Loaded.Err(it.message ?: it.toString()) }
         }
     }
     return state

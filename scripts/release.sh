@@ -34,6 +34,12 @@ need_repo() {
 
 case $MODE in
 app)
+  # The APK's build stamp would read <hash>-dirty, and the release would hold code that no commit has.
+  if [[ -n $(git status --porcelain) ]]; then
+    git status --short >&2
+    echo "commit or remove these changes before a release" >&2
+    exit 1
+  fi
   : "${KEYSTORE:?set KEYSTORE to the release keystore (keep it out of the repository)}"
   : "${KEY_ALIAS:=commonplace}"
   scripts/build-android.sh release arm64-v8a

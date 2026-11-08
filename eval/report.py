@@ -11,7 +11,7 @@ import statistics
 import sys
 from pathlib import Path
 
-from common import BASELINES, CATEGORIES, EVAL, PHONE_CLI, REPO, RUNS, load_queries, now, read_jsonl
+from common import BASELINES, CATEGORIES, EVAL, PHONE_CLI, REPO, RUNS, load_queries, now, portable, read_jsonl
 from judge import CRITERIA
 from pairwise import summarize as pairwise_summary
 
@@ -335,19 +335,25 @@ def cell(text, limit):
     return t if len(t) <= limit else t[:limit - 1] + "…"
 
 
+def shown(paths):
+    """Older runs recorded full local paths. The report publishes them as `portable` does; relative ones stay."""
+    return ",".join(portable(p) if Path(p).is_absolute() else p for p in paths.split(","))
+
+
 def render(meta, rows, overall, groups, by_cat, smoke, summary):
     qt, lt, ct, gt = tables(groups)
     rid = meta["run_id"]
+    model_path, bin_path, queries = shown(meta["model"]["path"]), shown(meta.get("bin") or ""), shown(meta["queries"])
     flags = " ".join(f"--{f}" for f in meta["flags"]) or "(none)"
     subset = f" --subset {meta['subset']}" if meta.get("subset") else ""
     phone = meta.get("phone")
     run_flags = ("".join(f" --{f}" for f in meta["flags"])
                  + (" --live-history" if meta.get("live_history") else "") + (" --phone" if phone else ""))
     cli_args = "".join(f" --cli={c}" for c in meta.get("cli", []) if not (phone and c in PHONE_CLI))
-    model_arg = "" if meta["model"].get("from_library") else f" --model {meta['model']['path']}"
-    bin_arg = f" --bin {meta['bin']}" if meta.get("bin") else ""
+    model_arg = "" if meta["model"].get("from_library") else f" --model {model_path}"
+    bin_arg = f" --bin {bin_path}" if bin_path else ""
     cli_text = " ".join(meta.get("cli", [])) or "(none)"
-    library = meta.get("library", "data/library")
+    library = shown(meta.get("library", "data/library"))
     packs = "\n".join(f"  - `{p['pack_id']}`: {p['title']}, snapshot {p['snapshot_date']}, built "
                       f"{p['build_date']}, "
                       + ", ".join(f"{v:,} {k}" for k, v in (p["counts"] or {}).items())
@@ -390,10 +396,10 @@ def render(meta, rows, overall, groups, by_cat, smoke, summary):
 
 - Run id: `{rid}` ({meta['started']} → {meta.get('finished', '?')})
 - Git: `{meta['git']}`, binary sha256 `{meta['binary_sha256'][:16]}…`
-- Model: `{meta['model']['path']}`, sha256 `{meta['model']['sha256'][:16]}…`
-- Binary: `{meta.get('bin', '?')}`
+- Model: `{model_path}`, sha256 `{meta['model']['sha256'][:16]}…`
+- Binary: `{bin_path or '?'}`
 - Flags: {flags}; extra CLI flags: {cli_text}; phone preset: {bool(phone)}
-- Queries: `{meta['queries']}`{f" (subset `{meta['subset']}`)" if meta.get('subset') else ''}, {overall['n']} answered
+- Queries: `{queries}`{f" (subset `{meta['subset']}`)" if meta.get('subset') else ''}, {overall['n']} answered
 - Host: {meta['host']['node']} ({meta['host']['machine']}, {meta['host']['cpus']} CPUs)
 - Baseline: {baseline_info([r['id'] for r in rows])}
 - Judge: {judge_info(rows)}
@@ -458,8 +464,8 @@ Per-query rows (answer, scores, recall, timings): `eval/runs/{rid}/per_query.jso
 Run inside the devshell from the repo root:
 
 ```sh
-nix develop -c python3 eval/run.py --queries {meta['queries']}{subset} --library {library}{model_arg}{run_flags}{cli_args}{bin_arg} --run-id {rid}
-nix develop -c python3 eval/baseline.py --queries {meta['queries']}{subset}
+nix develop -c python3 eval/run.py --queries {queries}{subset} --library {library}{model_arg}{run_flags}{cli_args}{bin_arg} --run-id {rid}
+nix develop -c python3 eval/baseline.py --queries {queries}{subset}
 nix develop -c python3 eval/recall.py --run {rid}
 nix develop -c python3 eval/judge.py --run {rid}
 nix develop -c python3 eval/evidence.py --run {rid}

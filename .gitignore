@@ -14,6 +14,7 @@ __pycache__/
 .direnv
 result
 /android/app/src/main/assets/encoders
+/android/app/src/main/assets/eval
 /dist
 /eval/runs/
 # Signing keys and secrets never belong in the repo (release keys live in ~/keys).

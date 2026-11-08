@@ -39,6 +39,8 @@ for d in 2_Dense 3_LayerNorm 4_Dense; do mkdir -p "$E/ettin-17m/$d" && cp $M/ett
 # Extractive reader for the featured snippet (the int8 file runs on arm64 and x86_64).
 mkdir -p "$E/reader/onnx" && cp $M/reader/tokenizer.json "$E/reader/" && cp $M/reader/onnx/model_int8.onnx "$E/reader/onnx/"
 (cd "$E" && find . -type f | sort > manifest.txt)
+# The Diagnostics accuracy check asks the eval canary questions.
+mkdir -p "$APP/assets/eval" && cp eval/canary.jsonl "$APP/assets/eval/"
 
 # 4. APK.
 TASK=assemble${VARIANT^}

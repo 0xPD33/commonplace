@@ -1,0 +1,81 @@
+name: Device report
+description: Tell us how Commonplace runs on your phone.
+title: "Device report: <phone model>"
+labels: ["device report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Each phone that is not a Pixel 10 helps us a lot.
+
+        In the app, open **Settings > Diagnostics and benchmark**, run the speed test, the accuracy check or both, then tap **Report on GitHub**.
+        The app fills this form for you. Check it, pick the model, and submit.
+
+        The report holds the phone, the app and the results of the checks. It has none of your own questions.
+  - type: input
+    id: phone
+    attributes:
+      label: Phone
+      description: 'For example "Google Pixel 9 (Google Tensor G4) · Android 16, arm64-v8a".'
+    validations:
+      required: true
+  - type: input
+    id: ram
+    attributes:
+      label: RAM
+      description: For example 12 GB.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: For example stock Android, GrapheneOS, LineageOS or One UI.
+  - type: input
+    id: app
+    attributes:
+      label: App version
+      description: The "App" line in Diagnostics.
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model
+      options:
+        - Ling-3.0-tiny
+        - MiniCPM5-2B
+        - Gemma 4 E2B (Pixel 10 only)
+        - I don't know
+    validations:
+      required: true
+  - type: input
+    id: bench
+    attributes:
+      label: Speed test
+      description: 'For example "first word 2.7 s · full answer 5.3 s · 26.1 tok/s". Empty if you did not run it.'
+  - type: input
+    id: accuracy
+    attributes:
+      label: Accuracy check
+      description: 'For example "12 of 12 passed". Empty if you did not run it.'
+  - type: dropdown
+    id: power
+    attributes:
+      label: During the checks the phone was
+      options:
+        - On battery
+        - Plugged in
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: The full report from Diagnostics. Report on GitHub fills it; Copy or Share gives the same text.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Crashes, a hot phone, slow answers, wrong answers, problems with the install.

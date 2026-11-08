@@ -97,7 +97,8 @@ def expect_ok(answer, expect):
     first sentence, so "China …; India is second" fails for India) or
     {"text": [...], "sentences": n} to search the first n sentences (multi-hop answers name the
     last hop second), or {"number": x or [x, ...], "tol": relative tolerance, default 0.02}; a list of numbers
-    accepts any one, for questions with two common readings. None when the query has no `expect`."""
+    accepts any one, for questions with two common readings. None when the query has no `expect`.
+    The app has a Kotlin copy in ui/DiagnosticsScreen.kt (`expectOk`): change both together."""
     if not expect:
         return None
     if isinstance(expect, dict) and "number" in expect:

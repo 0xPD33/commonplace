@@ -1,8 +1,6 @@
 package app.commonplace.ui
 
 import android.app.UiModeManager
-import android.content.Intent
-import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -10,9 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,17 +16,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,20 +33,17 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.rotate
 import androidx.compose.runtime.setValue
@@ -68,27 +56,10 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.semantics.Role
 import uniffi.commonplace_ffi.ModelKind
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Backend
 import app.commonplace.engine.ModelState
 import app.commonplace.engine.answers
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import uniffi.commonplace_ffi.AskInput
-import uniffi.commonplace_ffi.AskListener
-import uniffi.commonplace_ffi.AnswerCard
-import uniffi.commonplace_ffi.AnswerSegment
-import uniffi.commonplace_ffi.AskStage
-import uniffi.commonplace_ffi.DeviceInfo
-import uniffi.commonplace_ffi.QuerySummary
-import uniffi.commonplace_ffi.SourceItem
-import java.io.File
-import java.text.DateFormat
-import java.util.Date
-import java.util.Locale
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -327,138 +298,4 @@ private fun LabeledSlider(label: String, value: Float, range: ClosedFloatingPoin
             colors = SliderDefaults.colors(activeTickColor = Color.Transparent, inactiveTickColor = Color.Transparent),
         )
     }
-}
-
-private val BENCH = listOf(
-    "What is the capital of Australia?",
-    "Why do we have seasons?",
-    "Compare lions and tigers",
-    "How does a refrigerator work?",
-    "When did the Berlin Wall fall and why?",
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DiagnosticsScreen(onBack: () -> Unit) {
-    val ctx = LocalContext.current
-    val holder = (ctx.applicationContext as CommonplaceApp).engine
-    val scope = rememberCoroutineScope()
-    var device by remember { mutableStateOf<DeviceInfo?>(null) }
-    var recent by remember { mutableStateOf<List<QuerySummary>>(emptyList()) }
-    var bench by remember { mutableStateOf<String?>(null) }
-    var refresh by remember { mutableIntStateOf(0) }
-    // The benchmark shares the engine with the Ask screen: stop it when the user leaves.
-    DisposableEffect(Unit) { onDispose { if (bench?.startsWith("Running") == true) holder.engineOrNull?.cancel() } }
-    LaunchedEffect(refresh) {
-        withContext(Dispatchers.IO) {
-            val e = holder.engineOrNull ?: return@withContext
-            device = e.deviceInfo()
-            recent = e.recentQueries()
-        }
-    }
-
-    Scaffold(topBar = {
-        TopAppBar(
-            title = { Text("Diagnostics") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back") } },
-            actions = {
-                IconButton(onClick = {
-                    val path = holder.engineOrNull?.telemetryPath() ?: return@IconButton
-                    val f = File(path)
-                    if (!f.exists()) return@IconButton
-                    val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", f)
-                    ctx.startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).setType("application/json").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-                            "Export query timings",
-                        ),
-                    )
-                }) { Icon(Icons.Outlined.IosShare, "Export timings") }
-            },
-        )
-    }) { pad ->
-        LazyColumn(
-            Modifier.fillMaxSize().padding(pad).testTag("diagnostics"),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item {
-                Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow, border = hairline(), modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        SectionLabel("Device")
-                        Spacer(Modifier.height(6.dp))
-                        Text("${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} · ${Build.SUPPORTED_ABIS.firstOrNull()}", style = MaterialTheme.typography.bodyMedium)
-                        device?.let { d ->
-                            Text("Build ${d.build} · big cores ${d.bigCores.joinToString(",")}", style = MaterialTheme.typography.bodySmall)
-                            Text(d.llamaSystemInfo.trim(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            if (!d.cpuFeaturesOk) Text(d.cpuFeaturesError, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                        }
-                        holder.thermalHeadroom()?.let { Text(String.format(Locale.ROOT, "Thermal headroom %.2f", it), style = MaterialTheme.typography.bodySmall) }
-                    }
-                }
-            }
-            item {
-                FilledTonalButton(
-                    enabled = bench == null || !bench!!.startsWith("Running"),
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val e = holder.engineOrNull ?: return@launch
-                            holder.ensureModel(null)
-                            for ((i, q) in BENCH.withIndex()) {
-                                if (!isActive) return@launch
-                                bench = "Running ${i + 1} of ${BENCH.size}: $q"
-                                runCatching { e.ask(AskInput(q, emptyList(), false, holder.thermalHeadroom(), emptyList()), SilentListener) }
-                            }
-                            val rs = e.recentQueries().take(BENCH.size)
-                            fun p50(xs: List<Double>) = xs.sorted().getOrNull(xs.size / 2) ?: 0.0
-                            bench = "Benchmark: card p50 ${seconds(p50(rs.map { it.timing.cardMs }))} · first word p50 ${seconds(p50(rs.mapNotNull { it.timing.ttftMs }))} · " +
-                                String.format(Locale.ROOT, "%.1f tok/s", p50(rs.mapNotNull { it.timing.decodeTps }))
-                            refresh++
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().testTag("run_benchmark"),
-                ) {
-                    Icon(Icons.Outlined.Speed, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Run benchmark (5 questions)")
-                }
-                bench?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp).testTag("benchmark_result")) }
-            }
-            item { SectionLabel("Last ${recent.size} questions") }
-            items(recent) { q -> QueryRow(q) }
-        }
-    }
-}
-
-@Composable
-private fun QueryRow(q: QuerySummary) {
-    val t = q.timing
-    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer, border = hairline(), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(14.dp)) {
-            Text(q.query, style = MaterialTheme.typography.titleSmall)
-            Text(DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(q.tsMs.toLong())) + " · " + q.model.ifBlank { "search only" }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-            Spacer(Modifier.height(6.dp))
-            val parts = buildList {
-                add("card ${seconds(t.cardMs)}")
-                t.ttftMs?.let { add("first word ${seconds(it)}") }
-                add("total ${seconds(t.totalMs)}")
-                t.prefillTps?.let { add(String.format(Locale.ROOT, "prefill %.0f tok/s", it)) }
-                t.decodeTps?.let { add(String.format(Locale.ROOT, "decode %.1f tok/s", it)) }
-                add("${t.evidenceTokens} evidence tokens")
-                add(String.format(Locale.ROOT, "RSS %.0f MB", t.peakRssMb))
-                q.thermalHeadroom?.let { add(String.format(Locale.ROOT, "thermal %.2f", it)) }
-                q.threads?.let { add("$it threads") }
-            }
-            Text(parts.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
-            q.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-        }
-    }
-}
-
-private object SilentListener : AskListener {
-    override fun onStage(stage: AskStage, detail: String) {}
-    override fun onCard(card: AnswerCard) {}
-    override fun onSources(sources: List<SourceItem>) {}
-    override fun onThinking(text: String, done: Boolean) {}
-    override fun onAnswer(segments: List<AnswerSegment>, done: Boolean) {}
 }

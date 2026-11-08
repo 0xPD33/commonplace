@@ -965,7 +965,7 @@ impl Engine {
         let bare = line.as_ref().is_some_and(|(_, b)| *b) && route.query == raw_query;
         let unit_line = line.map(|(l, _)| l);
         let card = {
-            let top = card_passage(&hits, &route.entities).map(|h| {
+            let top = card_passage(&lib, &hits, &route.entities).map(|h| {
                 let facts = if s.use_cards { lib.packs[h.pack as usize].facts(h.pid).unwrap_or_default() } else { vec![] };
                 let (text, from_cards) = if facts.is_empty() {
                     (h.passage.text.clone(), false)
@@ -1395,9 +1395,11 @@ fn complete_part(text: &str) -> &str {
 /// The card's passage: the named entity's article when it is among the hits; otherwise the best passage
 /// of the article with the strongest set of hits (best score plus half of the rest). Relevant passages
 /// score within tenths of each other, so the single top one is often a page that only mentions the topic.
-fn card_passage<'a>(hits: &'a [Hit], entities: &[crate::route::Entity]) -> Option<&'a Hit> {
+fn card_passage<'a>(lib: &Library, hits: &'a [Hit], entities: &[crate::route::Entity]) -> Option<&'a Hit> {
     // The article the question names ("St Augustine" → Augustine of Hippo) wins when it is among the hits.
-    if let Some(h) = entities.first().and_then(|e| hits.iter().find(|h| h.pack == e.pack && h.article.id == e.article.id)) {
+    // Not when the user's own document is the top hit: a link from one of its words ("Lighthouse") would hide it.
+    let doc_first = hits.first().is_some_and(|h| lib.packs[h.pack as usize].manifest.user_document);
+    if let Some(h) = entities.first().filter(|_| !doc_first).and_then(|e| hits.iter().find(|h| h.pack == e.pack && h.article.id == e.article.id)) {
         return Some(h);
     }
     let mut by_article: Vec<((u8, u32), f32, &Hit)> = Vec::new();

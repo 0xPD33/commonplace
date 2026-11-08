@@ -1162,6 +1162,25 @@ def main() -> int:
             adb("shell", "input", "keyevent", "KEYCODE_HOME")
             time.sleep(2)
 
+        def pss() -> int:
+            return int(re.search(r"TOTAL PSS:\s+(\d+)", adb("shell", "dumpsys", "meminfo", PKG)).group(1))
+
+        def last_saved(q: str, t0: int) -> dict | None:
+            """The question's turn in the newest conversation file if the app saved it after t0 (ms). Only ended turns are saved."""
+            name = adb("shell", "run-as", PKG, "sh", "-c", "'ls -t files/conversations | head -1'").strip()
+            if not name:
+                return None
+            doc = json.loads(adb("exec-out", "run-as", PKG, "cat", f"files/conversations/{name}"))
+            ok = doc["updated"] >= t0 and doc["turns"] and doc["turns"][-1]["query"] == q
+            return doc["turns"][-1] if ok else None
+
+        def saved_turn(q: str, t0: int) -> dict:
+            end = time.time() + 300
+            while (turn := last_saved(q, t0)) is None:
+                must(time.time() < end, "the answer did not end while the app was hidden")
+                time.sleep(3)
+            return turn
+
         def to_ask_screen() -> None:
             for _ in range(5):
                 if ui.find(tag="open_settings") is not None:
@@ -1295,30 +1314,20 @@ def main() -> int:
         @step("fp-hide-during-answer")
         def _():
             # Ling unloads when the app goes off screen; an answer that runs then keeps it until the answer ends.
-            # One thread and a long answer keep the answer running after the app hides.
-            def pss() -> int:
-                return int(re.search(r"TOTAL PSS:\s+(\d+)", adb("shell", "dumpsys", "meminfo", PKG)).group(1))
-
-            with settings('<int name="threads" value="1" /><int name="answer_tokens" value="700" />'):
+            # One thread and a large evidence budget give a long prefill, so the app hides while the answer runs.
+            with settings('<int name="threads" value="1" /><int name="evidence_override" value="2500" />'):
                 new_topic(r)
                 q = "Describe in detail how castles were built in the Middle Ages"
                 t0 = int(time.time() * 1000)
                 ui.tap(ui.wait(20, tag="ask_input"))
                 r.type_text(q)
                 ui.tap(ui.wait(10, tag="ask_send"))
-                ui.wait(60, tag="answer_text")
+                ui.wait(60, tag="evidence_card")
                 hide()
                 during = pss()
+                must(last_saved(q, t0) is None, "the answer ended before the app hid: the test needs a longer prefill")
                 must(during > 2_000_000, f"Ling is not loaded during the answer: {during} kB")
-                end = time.time() + 300
-                while True:
-                    name = adb("shell", "run-as", PKG, "sh", "-c", "'ls -t files/conversations | head -1'").strip()
-                    doc = json.loads(adb("exec-out", "run-as", PKG, "cat", f"files/conversations/{name}"))
-                    if doc["updated"] >= t0 and doc["turns"][-1]["query"] == q:
-                        break
-                    must(time.time() < end, "the answer did not end while the app was hidden")
-                    time.sleep(3)
-                turn = doc["turns"][-1]
+                turn = saved_turn(q, t0)
                 must(not turn["stopped"] and not turn["error"] and turn["segments"], f"the hidden answer was cut: {turn}")
                 time.sleep(5)
                 after = pss()
@@ -1326,6 +1335,45 @@ def main() -> int:
                 launch()
                 ui.wait(20, tag="turn_query", contains=q)
                 r.shot("fp-hide-during-answer", f"the answer ended off screen, then Ling unloaded: {during // 1024} MB -> {after // 1024} MB")
+
+        @step("fp-notification-unload")
+        def _():
+            # Unload in the notification frees the memory at once: it stops a running answer, then the model goes.
+            # One thread and a large evidence budget give a long prefill, so the tap lands while the answer runs.
+            with settings('<int name="threads" value="1" /><int name="evidence_override" value="2500" />'):
+                new_topic(r)
+                q = "Describe in detail how bridges were built in Roman times"
+                t0 = int(time.time() * 1000)
+                ui.tap(ui.wait(20, tag="ask_input"))
+                r.type_text(q)
+                ui.tap(ui.wait(10, tag="ask_send"))
+                ui.wait(60, tag="evidence_card")
+                hide()
+                during = pss()
+                must(during > 2_000_000, f"Ling is not loaded during the answer: {during} kB")
+                adb("shell", "cmd", "statusbar", "expand-notifications")
+                end = time.time() + 15
+                unload = None
+                while unload is None and time.time() < end:
+                    unload = next((n for n in ui.nodes() if (n.get("text") or "").lower() == "unload"), None)
+                must(unload is not None, "no Unload action in the notification shade")
+                r.shot("fp-notification-unload-shade", "the notification offers Unload during the answer")
+                must(last_saved(q, t0) is None, "the answer ended before the Unload tap: the test needs a longer prefill")
+                tapped = time.time()
+                ui.tap(unload)
+                adb("shell", "cmd", "statusbar", "collapse")
+                turn = saved_turn(q, t0)
+                ended = time.time() - tapped
+                must(turn["stopped"], f"the answer ran on after Unload: {turn}")
+                time.sleep(3)
+                after = pss()
+                must(after < during - 1_000_000, f"the model stayed loaded after Unload: {during} kB -> {after} kB")
+                time.sleep(35)
+                services = adb("shell", "dumpsys", "activity", "services", PKG)
+                must("InferenceService" not in services, "the service still runs 35 s after Unload")
+                launch()
+                ui.wait(20, tag="turn_query", contains=q)
+                r.shot("fp-notification-unload", f"answer stopped {ended:.0f} s after Unload; {during // 1024} -> {after // 1024} MB; service gone")
 
         @step("fp-model-change-stops-answer")
         def _():

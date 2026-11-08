@@ -47,6 +47,10 @@ class InferenceService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
+            // The user asked for the memory now: stop a running answer. An install keeps running without the model.
+            val engine = (application as CommonplaceApp).engine
+            engine.cancelAnswer()
+            engine.unloadModel()
             stopper.run()
             return START_NOT_STICKY
         }

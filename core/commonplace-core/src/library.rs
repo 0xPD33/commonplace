@@ -62,6 +62,25 @@ impl Library {
         Ok(())
     }
 
+    /// Clears what a killed process left in the pack directory, and puts back a pack that a killed update moved aside.
+    /// Call it once at process start, before any import: `.staging` and `.building-*` are live during one.
+    pub fn sweep(root: &Path) {
+        let dir = Self::packs_dir(root);
+        for e in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+            let name = e.file_name().to_string_lossy().into_owned();
+            if !name.starts_with('.') {
+                continue;
+            }
+            if let Some(id) = name.strip_prefix(".old-")
+                && !dir.join(id).exists()
+                && std::fs::rename(e.path(), dir.join(id)).is_ok()
+            {
+                continue;
+            }
+            let _ = std::fs::remove_dir_all(e.path());
+        }
+    }
+
     pub fn open(root: &Path) -> Result<Self> {
         let dir = Self::packs_dir(root);
         std::fs::create_dir_all(&dir)?;
@@ -158,7 +177,7 @@ impl Library {
     }
 
     pub fn total_bytes(&self) -> u64 {
-        pack::dir_size(&Self::packs_dir(&self.root))
+        pack::installed_size(&Self::packs_dir(&self.root), &[])
     }
 
     /// How rare `word` is in the library: ln(passages ÷ (1 + passages that hold it)). 0 for a stopword.

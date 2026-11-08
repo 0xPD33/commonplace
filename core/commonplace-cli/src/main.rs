@@ -213,6 +213,7 @@ fn engine(o: &Opts) -> Result<Engine> {
         ort_dylib: None,
         encoder_threads: 4,
         telemetry_path: o.telemetry.clone(),
+        telemetry_text: true,
     };
     let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, t| {
         let file = mp.file().context("model pack has no file")?;

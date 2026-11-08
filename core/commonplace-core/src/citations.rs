@@ -2,8 +2,10 @@
 //! sentences whose numbers are not in the evidence. Replaces a second LLM verification pass.
 
 use crate::text::{numbers, sentences};
+use regex::Regex;
 use serde::Serialize;
 use std::collections::HashSet;
+use std::sync::LazyLock;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum Segment {
@@ -21,10 +23,12 @@ pub fn check(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>) -
 /// `check`, and a sentence without a valid citation is also unverified when `supported` rejects its text.
 pub fn check_supported(answer: &str, n_sources: u32, evidence_numbers: &HashSet<String>, supported: &dyn Fn(&str) -> bool) -> Vec<Segment> {
     let mut out: Vec<Segment> = Vec::new();
+    let mut fence = false;
     for sent in split_keep_ws(strip_sources_block(answer)) {
-        let (plain, cites) = strip_citations(&sent, n_sources);
+        let (plain, cites) = strip_citations(&sent, n_sources, &mut fence);
         let cited = cites.iter().any(|p| matches!(p, Piece::Cite(_)));
-        let unverified = numbers(&plain).iter().any(|n| !evidence_numbers.contains(n) && !rounds_from(n, evidence_numbers))
+        let scales = stated_scales(&plain);
+        let unverified = numbers(&plain).iter().any(|n| !evidence_numbers.contains(n) && !rounds_from(n, evidence_numbers, &scales))
             || (!cited && !supported(&plain));
         let mut text = String::new();
         for piece in cites {
@@ -95,15 +99,42 @@ fn flush(out: &mut Vec<Segment>, text: &mut String, unverified: bool) {
     }
 }
 
-/// A rounded evidence number: "26.5" for 26.52, "27" for 26.52, and "16.4" (million) for 16,431,599.
-fn rounds_from(n: &str, ev: &HashSet<String>) -> bool {
+static SCALE_WORD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\b(thousand|million|billion|trillion|mn|bn)\b").unwrap());
+
+/// The divisors that a sentence's numbers may stand for: 1, and each scale it names.
+fn stated_scales(sentence: &str) -> Vec<f64> {
+    let mut scales = vec![1.0];
+    scales.extend(SCALE_WORD.find_iter(sentence).map(|m| match m.as_str().to_lowercase().as_str() {
+        "thousand" => 1e3,
+        "million" | "mn" => 1e6,
+        "billion" | "bn" => 1e9,
+        _ => 1e12,
+    }));
+    scales
+}
+
+/// A rounded evidence number: "26.5" for 26.52, "27" for 26.52, and "16.4" for 16,431,599 in a sentence that says
+/// million. Without the word, a year would vouch for a small number: 1905 is not "1.9 km".
+fn rounds_from(n: &str, ev: &HashSet<String>, scales: &[f64]) -> bool {
     let Ok(x) = n.parse::<f64>() else { return false };
     let decimals = n.split_once('.').map_or(0, |(_, d)| d.len()) as i32;
     let unit = 10f64.powi(-decimals);
-    ev.iter().filter_map(|e| e.parse::<f64>().ok()).any(|e| {
-        // Thousands and larger only with a decimal: "12" is not a rounded 12,345.
-        [1.0, 1e3, 1e6, 1e9, 1e12].iter().filter(|&&scale| scale == 1.0 || decimals > 0).any(|scale| ((e / scale) - x).abs() <= unit / 2.0 + 1e-9)
-    })
+    ev.iter().filter_map(|e| e.parse::<f64>().ok()).any(|e| scales.iter().any(|scale| ((e / scale) - x).abs() <= unit / 2.0 + 1e-9))
+}
+
+/// Follow the code marks in `text`. A fence (```) stays open across sentences; inline code ends with its sentence.
+fn track_code(text: &str, fence: &mut bool, inline: &mut bool) {
+    let mut rest = text;
+    while let Some(i) = rest.find('`') {
+        if rest[i..].starts_with("```") {
+            *fence = !*fence;
+            *inline = false;
+            rest = &rest[i + 3..];
+        } else {
+            *inline = !*inline && !*fence;
+            rest = &rest[i + 1..];
+        }
+    }
 }
 
 enum Piece {
@@ -117,13 +148,21 @@ fn is_fact_label(s: &str) -> bool {
 }
 
 /// Parse `[n]`, `[n][m]`, `[n, m]`. Invalid numbers are dropped with their brackets, and so are labels
-/// of lines that have no number ("[W]", "[1, W]" keeps the 1).
-fn strip_citations(s: &str, n_sources: u32) -> (String, Vec<Piece>) {
+/// of lines that have no number ("[W]", "[1, W]" keeps the 1). Brackets in code are text: `nums = [1, 2, 3]`.
+fn strip_citations(s: &str, n_sources: u32, fence: &mut bool) -> (String, Vec<Piece>) {
     let mut plain = String::new();
     let mut pieces = Vec::new();
     let mut cur = String::new();
     let mut rest = s;
+    let mut inline = false;
     while let Some(open) = rest.find('[') {
+        track_code(&rest[..open], fence, &mut inline);
+        if *fence || inline {
+            cur.push_str(&rest[..=open]);
+            plain.push_str(&rest[..=open]);
+            rest = &rest[open + 1..];
+            continue;
+        }
         let Some(close_rel) = rest[open..].find(']') else { break };
         let inner = &rest[open + 1..open + close_rel];
         let items: Vec<&str> = inner.split(',').map(str::trim).collect();
@@ -152,6 +191,7 @@ fn strip_citations(s: &str, n_sources: u32) -> (String, Vec<Piece>) {
         }
         rest = &rest[open + close_rel + 1..];
     }
+    track_code(rest, fence, &mut inline);
     cur.push_str(rest);
     plain.push_str(rest);
     if !cur.is_empty() {

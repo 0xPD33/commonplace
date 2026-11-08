@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import app.commonplace.CommonplaceApp
 import app.commonplace.engine.Conversations
@@ -90,16 +91,39 @@ class Turn(val query: String, val think: Boolean = false) {
 class AskScope(val packId: String, val title: String)
 
 private const val MAX_DRAFT_CHARS = 1000
+/** The core's limit (`engine::MAX_QUESTION_CHARS`). */
+internal const val MAX_QUESTION_CHARS = 4000
 
-class AskViewModel(app: Application) : AndroidViewModel(app) {
+private const val KEY_CONVERSATION = "conversation"
+private const val KEY_INPUT = "input"
+private const val KEY_ASKING = "asking"
+
+class AskViewModel(app: Application, private val restored: SavedStateHandle) : AndroidViewModel(app) {
     private val holder = (app as CommonplaceApp).engine
     private val main = Handler(Looper.getMainLooper())
 
     val turns = mutableStateListOf<Turn>()
     private val saved = Conversations(app)
     /** The file id of the conversation on screen; a new topic starts a new one. */
-    private var conversationId = System.currentTimeMillis()
-    var input by mutableStateOf("")
+    private var conversationId: Long = restored[KEY_CONVERSATION] ?: System.currentTimeMillis()
+    private var draft by mutableStateOf(restored[KEY_ASKING] ?: restored[KEY_INPUT] ?: "")
+    var input: String
+        get() = draft
+        set(v) {
+            draft = v
+            // Voice input writes from its audio thread; SavedStateHandle belongs to the main thread.
+            main.post { restored[KEY_INPUT] = v.take(MAX_QUESTION_CHARS) }
+        }
+
+    /** The last answer could not be written to storage. It stays on screen. */
+    var saveFailed by mutableStateOf(false)
+        private set
+
+    // After the system killed the process, the conversation on screen comes back, and a question with no answer yet waits in the box.
+    init {
+        restored.remove<String>(KEY_ASKING)
+        if (restored.contains(KEY_CONVERSATION)) turns += saved.load(conversationId).map(Turn::restore)
+    }
 
     /** While set, every question searches only this pack, follow-ups included, until the user removes it. */
     var scope by mutableStateOf<AskScope?>(null)
@@ -225,7 +249,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         readAloud.close()
         voice.stop()
         // The foreground service can keep the process alive; do not leave an answer running nobody sees.
-        if (busy) holder.engineOrNull?.cancel()
+        if (busy) holder.cancelAnswer()
     }
 
     fun toggleThinking() {
@@ -238,7 +262,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
 
     fun ask(text: String = input, think: Boolean = thinking) {
         val query = text.trim()
-        if (query.isEmpty() || busy) return
+        if (query.isEmpty() || query.length > MAX_QUESTION_CHARS || busy) return
         val engine = holder.engineOrNull ?: return
         stopSpeaking()
         if (listening) {
@@ -254,6 +278,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         val turn = Turn(query, think)
         val packs = listOfNotNull(scope?.packId)
         turns += turn
+        restored[KEY_ASKING] = query
         holder.answering = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -288,6 +313,8 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                     turn.timing = result.timing
                     turn.done = true
                     turn.answering = false
+                    // Settings can cancel an answer too, by a change of model. Its text may end anywhere.
+                    if (result.cancelled) turn.stopped = true
                     // Only a question reads evidence; thinking adds its own reasoning time before the first word.
                     result.timing?.takeIf { !think && result.kind == TurnKind.QUESTION }?.let { t -> t.ttftMs?.let { holder.prefs.noteRead(it - t.cardMs) } }
                     persist()
@@ -301,8 +328,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
                 }
             } finally {
                 // The app may have gone off screen during the answer.
-                holder.answering = false
-                holder.unloadModelOverHiddenLimit()
+                holder.answerEnded()
             }
         }
     }
@@ -319,7 +345,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
 
     fun stop() {
         turns.lastOrNull()?.takeIf { it.answering }?.stopped = true
-        holder.engineOrNull?.cancel()
+        holder.cancelAnswer()
     }
 
     fun newTopic() {
@@ -327,13 +353,19 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         stopSpeaking()
         turns.clear()
         conversationId = System.currentTimeMillis()
+        restored.remove<Long>(KEY_CONVERSATION)
     }
 
-    /** Save the finished turns of the conversation on screen. */
+    /** Save the finished turns of the conversation on screen. The process scope: an answer can end after the screen. */
     private fun persist() {
         val id = conversationId
         val done = turns.filter { it.done }.map { it.saved() }
-        viewModelScope.launch(Dispatchers.IO) { saved.save(id, done) }
+        restored[KEY_CONVERSATION] = id
+        restored.remove<String>(KEY_ASKING)
+        holder.scope.launch {
+            val ok = saved.save(id, done)
+            main.post { saveFailed = !ok }
+        }
     }
 
     fun recent(): List<Conversations.Summary> = saved.summaries().take(5).toList().sortedByDescending { it.updated }
@@ -348,6 +380,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
         turns.clear()
         turns += loaded.map(Turn::restore)
         conversationId = id
+        restored[KEY_CONVERSATION] = id
     }
 
     fun deleteConversation(id: Long) {
@@ -358,7 +391,7 @@ class AskViewModel(app: Application) : AndroidViewModel(app) {
     private inner class Listener(private val turn: Turn) : AskListener {
         override fun onStage(stage: AskStage, detail: String) = main.post {
             // A stop that landed while engine.ask was clearing the cancel flag.
-            if (turn.stopped) holder.engineOrNull?.cancel()
+            if (turn.stopped) holder.cancelAnswer()
             turn.stage = stage
             turn.stageDetail = detail
         }.let { }

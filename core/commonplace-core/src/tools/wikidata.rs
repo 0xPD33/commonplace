@@ -114,8 +114,12 @@ pub fn prop_scores(emb: &[f32]) -> Vec<PropScore> {
 pub fn format_num(x: f64) -> String {
     let s = if x.fract() == 0.0 && x.abs() < 1e15 {
         format!("{}", x as i64)
+    } else if x != 0.0 && x.abs() < 1e-12 {
+        return format!("{x:.2e}");
     } else {
-        let s = format!("{x:.4}");
+        // Four decimals, or three significant digits of a smaller value: 0.0000144 must not read as 0.
+        let decimals = if x.abs() < 0.001 { (2 - x.abs().log10().floor() as i32).max(4) as usize } else { 4 };
+        let s = format!("{x:.decimals$}");
         s.trim_end_matches('0').trim_end_matches('.').to_string()
     };
     let (sign, rest) = s.strip_prefix('-').map(|d| ("-", d)).unwrap_or(("", &s));

@@ -5,7 +5,7 @@ use commonplace_core::engine::{self, AskRequest, Engine, EngineConfig, Event, Ev
 use commonplace_core::library::{FOOTPRINT_CAP, Library};
 use commonplace_core::llm::{GenParams, GenStats, LlmBackend};
 use commonplace_core::pack::{self, ModelRole, PackType, import};
-use commonplace_core::telemetry::QueryRecord;
+use commonplace_core::telemetry::{self, QueryRecord};
 use commonplace_llm::{LlamaBackend, LoadOptions};
 use std::io::Read;
 use std::os::fd::{FromRawFd, OwnedFd};
@@ -27,6 +27,13 @@ impl From<anyhow::Error> for CpError {
     }
 }
 
+/// Any exception of a Kotlin callback. Without this, UniFFI panics on the calling thread.
+impl From<uniffi::UnexpectedUniFFICallbackError> for CpError {
+    fn from(e: uniffi::UnexpectedUniFFICallbackError) -> Self {
+        CpError::Failed { msg: e.reason }
+    }
+}
+
 type R<T> = Result<T, CpError>;
 
 // ---------- records ----------
@@ -42,6 +49,8 @@ pub struct EngineOptions {
     pub encoder_threads: u32,
     pub llm_threads: u32,
     pub pin_big_cores: bool,
+    /// Keep each question in `telemetry.jsonl`: debug builds, for the phone benchmarks.
+    pub keep_query_text: bool,
 }
 
 #[derive(uniffi::Enum, Clone, Copy, PartialEq)]
@@ -77,6 +86,8 @@ fn kind(r: &ModelRole) -> ModelKind {
 #[derive(uniffi::Record)]
 pub struct PackInfo {
     pub pack_id: String,
+    /// The pack came from a file outside the app's catalog, so the app could not check it.
+    pub unverified: bool,
     pub title: String,
     pub kind: String,
     pub snapshot_date: String,
@@ -96,6 +107,8 @@ pub struct PackInfo {
 #[derive(uniffi::Record)]
 pub struct ModelPackInfo {
     pub pack_id: String,
+    /// The pack came from a file outside the app's catalog, so the app could not check it.
+    pub unverified: bool,
     pub title: String,
     pub kind: ModelKind,
     pub size_bytes: u64,
@@ -250,6 +263,8 @@ pub struct AskResult {
     pub segments: Vec<AnswerSegment>,
     pub answer_text: String,
     pub timing: Timing,
+    /// `cancel` stopped this answer, so the text may end anywhere.
+    pub cancelled: bool,
 }
 
 #[derive(uniffi::Record)]
@@ -347,6 +362,8 @@ pub struct GenStatsRecord {
     pub gen_tokens: u32,
     pub prefill_ms: f64,
     pub decode_ms: f64,
+    /// The answer stopped at `max_tokens`, not at the model's end token.
+    pub truncated: bool,
 }
 
 // ---------- callbacks ----------
@@ -398,6 +415,17 @@ impl TokenSink {
 
 struct ForeignAdapter(Arc<dyn ForeignLlm>);
 
+/// Ends the token channel when a worker ends, by a panic too, so that the receiver loop always ends.
+struct CloseChannel(Arc<TokenSink>);
+
+impl Drop for CloseChannel {
+    fn drop(&mut self) {
+        if let Ok(mut tx) = self.0.tx.lock() {
+            *tx = std::sync::mpsc::channel().0;
+        }
+    }
+}
+
 impl LlmBackend for ForeignAdapter {
     fn id(&self) -> String {
         self.0.id()
@@ -409,10 +437,8 @@ impl LlmBackend for ForeignAdapter {
         let (sys, usr, llm, s2) = (system.to_string(), user.to_string(), self.0.clone(), sink.clone());
         let (max, temp, top_p, json, think) = (p.max_tokens, p.temperature, p.top_p, p.grammar.is_some(), p.think_budget);
         let worker = std::thread::spawn(move || {
-            let r = llm.generate(sys, usr, max, temp, top_p, json, think, s2.clone());
-            // Close the channel so the receiver loop ends.
-            *s2.tx.lock().unwrap() = std::sync::mpsc::channel().0;
-            r
+            let _close = CloseChannel(s2.clone());
+            llm.generate(sys, usr, max, temp, top_p, json, think, s2)
         });
         for tok in rx {
             if !on_token(&tok) {
@@ -420,7 +446,7 @@ impl LlmBackend for ForeignAdapter {
             }
         }
         let st = worker.join().map_err(|_| anyhow::anyhow!("foreign llm panicked"))?.map_err(|e| anyhow::anyhow!("{e}"))?;
-        Ok(GenStats { prompt_tokens: st.prompt_tokens, gen_tokens: st.gen_tokens, prefill_ms: st.prefill_ms, decode_ms: st.decode_ms, ..Default::default() })
+        Ok(GenStats { prompt_tokens: st.prompt_tokens, gen_tokens: st.gen_tokens, prefill_ms: st.prefill_ms, decode_ms: st.decode_ms, truncated: st.truncated, ..Default::default() })
     }
 
     fn prepare(&self, system: &str, user_prefix: &str, p: &GenParams) {
@@ -559,6 +585,10 @@ impl EventSink for ListenerSink {
     fn cancelled(&self) -> bool {
         self.cancel.load(Ordering::Relaxed)
     }
+
+    fn cancel_flag(&self) -> Option<Arc<AtomicBool>> {
+        Some(self.cancel.clone())
+    }
 }
 
 struct ImportProgressAdapter {
@@ -618,7 +648,12 @@ impl CommonplaceEngine {
             ort_dylib: None,
             encoder_threads: opts.encoder_threads as usize,
             telemetry_path: Some(data_dir.join("telemetry.jsonl")),
+            telemetry_text: opts.keep_query_text,
         };
+        Library::sweep(&cfg.library_dir);
+        if !opts.keep_query_text {
+            telemetry::prune(&data_dir.join("telemetry.jsonl"));
+        }
         let cpus: Vec<usize> = if opts.pin_big_cores { commonplace_llm::big_cores() } else { vec![] };
         let state_dir = data_dir.join("llm-state");
         let loader: LlmLoader = Box::new(move |mp, threads| {
@@ -641,7 +676,10 @@ impl CommonplaceEngine {
 
     pub fn library(&self) -> LibraryInfo {
         let lib: Arc<Library> = self.engine.library();
+        let packs_dir = Library::packs_dir(&lib.root);
+        let unverified = |id: &str| packs_dir.join(id).join(import::UNVERIFIED_MARK).exists();
         let info = |m: &pack::Manifest, has_dense: bool, has_cards: bool, enabled: bool| PackInfo {
+            unverified: unverified(&m.pack_id),
             pack_id: m.pack_id.clone(),
             title: m.title.clone(),
             kind: "knowledge".into(),
@@ -656,7 +694,6 @@ impl CommonplaceEngine {
             enabled,
             user_document: m.user_document,
         };
-        let packs_dir = Library::packs_dir(&lib.root);
         let packs = lib
             .packs
             .iter()
@@ -672,6 +709,7 @@ impl CommonplaceEngine {
             .iter()
             .filter_map(|m| {
                 Some(ModelPackInfo {
+                    unverified: unverified(&m.manifest.pack_id),
                     pack_id: m.manifest.pack_id.clone(),
                     title: m.manifest.title.clone(),
                     kind: kind(m.role()?),
@@ -779,6 +817,7 @@ impl CommonplaceEngine {
             answer_text: commonplace_core::citations::plain_text(&out.segments),
             segments: segments(&out.segments),
             timing: timing(&out.record),
+            cancelled: self.cancel.load(Ordering::Relaxed),
         })
     }
 
@@ -857,6 +896,13 @@ impl CommonplaceEngine {
         })
     }
 
+    /// The id of the article with this title in the pack, if there is one.
+    pub fn article_by_title(&self, pack_id: String, title: String) -> R<Option<u32>> {
+        let lib = self.engine.library();
+        let Some(p) = lib.packs.iter().find(|p| p.manifest.pack_id == pack_id) else { return Ok(None) };
+        Ok(p.meta.lookup_title(&pack::normalize_title(&title))?.map(|a| a.id))
+    }
+
     /// The pack's `NOTICE.txt` (credit, license and license texts); empty when it has none.
     pub fn pack_notice(&self, pack_id: String) -> String {
         if pack_id.contains('/') || pack_id.starts_with('.') {
@@ -866,8 +912,9 @@ impl CommonplaceEngine {
     }
 
     /// Stream-import the packs of a file, or of its parts (any order; sorted by name). A bundle file holds several packs.
-    /// Returns the ids of the installed packs. After an error, the packs that were complete before it stay installed.
-    pub fn import_pack(&self, parts: Vec<ImportPart>, listener: Arc<dyn ImportListener>) -> R<Vec<String>> {
+    /// `pack_ids` lists the packs the file should hold: an update replaces them, so they do not count against the limit.
+    /// Returns the ids of the installed packs. An error installs nothing.
+    pub fn import_pack(&self, parts: Vec<ImportPart>, pack_ids: Vec<String>, listener: Arc<dyn ImportListener>) -> R<Vec<String>> {
         let mut index: Option<import::PartIndex> = None;
         let mut tars: Vec<(String, OwnedFd, u64, Option<String>)> = Vec::new();
         for p in parts {
@@ -887,11 +934,15 @@ impl CommonplaceEngine {
         tars.sort_by(|a, b| a.0.cmp(&b.0));
         let total: u64 = tars.iter().map(|t| t.2).sum();
         let lib = self.engine.library();
-        if lib.total_bytes() + total > FOOTPRINT_CAP {
+        let packs_dir = Library::packs_dir(&self.engine.cfg.library_dir);
+        if pack::installed_size(&packs_dir, &pack_ids) + total > FOOTPRINT_CAP {
             return Err(CpError::Failed {
                 msg: format!("importing {:.1} GB would exceed the 50 GB limit ({:.1} GB used)", total as f64 / 1e9, lib.total_bytes() as f64 / 1e9),
             });
         }
+        // The catalog in the APK vouches for a file. A `.pack.json` comes from the same place as the file it describes.
+        let trusted = tars.iter().all(|t| t.3.is_some());
+        let named = index.as_ref().map(|ix| ix.pack_id.clone()).or_else(|| tars.first().and_then(|t| t.0.split(".tar").next()).map(str::to_string));
         if let Some(ix) = &index {
             if ix.parts.len() != tars.len() {
                 return Err(CpError::Failed { msg: format!("{} needs {} parts, {} selected", ix.pack_id, ix.parts.len(), tars.len()) });
@@ -907,9 +958,9 @@ impl CommonplaceEngine {
         let readers: Vec<Box<dyn Read + Send>> =
             tars.into_iter().map(|(_, fd, _, _)| Box::new(std::io::BufReader::with_capacity(1 << 20, std::fs::File::from(fd))) as Box<dyn Read + Send>).collect();
         let mut prog = ImportProgressAdapter { l: listener, names, total, last: 0 };
-        let packs_dir = Library::packs_dir(&self.engine.cfg.library_dir);
-        let imported = import::import(readers, expected, &packs_dir, &mut prog, &|m| lib.check_compatible(m));
-        // Reload after an error too: the packs that were complete before it are installed.
+        let rules = import::ImportRules { trusted, only_pack: named.as_deref().filter(|_| !trusted), cap: FOOTPRINT_CAP };
+        let imported = import::import(readers, expected, &packs_dir, &rules, &mut prog, &|m| lib.check_compatible(m));
+        // Reload after an error too: a failed swap of a later pack leaves the earlier ones in place.
         self.engine.reload_library()?;
         Ok(imported?.into_iter().map(|m| m.pack_id).collect())
     }
@@ -926,10 +977,11 @@ impl CommonplaceEngine {
         if !dir.starts_with(Library::packs_dir(&self.engine.cfg.library_dir)) || pack_id.contains('/') || pack_id.starts_with('.') {
             return Err(CpError::Failed { msg: "invalid pack id".into() });
         }
-        let m = pack::Manifest::read(&dir)?;
-        if m.pack_type == PackType::Model
-            && self.engine.llm().is_some_and(|(r, _)| m.model.as_ref().is_some_and(|mi| mi.role == r))
-        {
+        // A pack with a damaged manifest never loaded, and the user must still be able to free its storage.
+        let m = pack::Manifest::read(&dir).ok();
+        if m.as_ref().is_some_and(|m| {
+            m.pack_type == PackType::Model && self.engine.llm().is_some_and(|(r, _)| m.model.as_ref().is_some_and(|mi| mi.role == r))
+        }) {
             self.engine.unload_model();
         }
         // Drop open readers before deleting their files.

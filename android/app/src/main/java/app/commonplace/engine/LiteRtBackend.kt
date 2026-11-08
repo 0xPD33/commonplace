@@ -40,6 +40,8 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
     private val lock = Any() // one generate at a time; close() waits for it so the engine never closes under a conversation
     @Volatile private var running: Conversation? = null
     @Volatile private var runningSession: Session? = null
+    /** A cancelled generate may end with any error. It is a stop, not a failure. */
+    @Volatile private var cancelRequested = false
 
     /** A session whose prompt start runs through the NPU while the Rust core searches ([prepare]). */
     private class Prepared(val system: String, val prefix: String, val session: Session, val thread: Thread) {
@@ -88,19 +90,24 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
     override fun prepare(system: String, userPrefix: String, temperature: Float, topP: Float) {
         val e = engine ?: return
         if (backendName != "npu") return
-        discardPrepared()
-        val session = e.createSession(sessionConfig(temperature, topP))
-        val text = systemStart + system.trim() + systemEnd + userStart + userPrefix
-        lateinit var p: Prepared
-        val thread = Thread {
-            val t = System.nanoTime()
-            runCatching { session.runPrefill(listOf(InputData.Text(text))) }.onFailure { p.error = it }
-            p.prefillMs = (System.nanoTime() - t) / 1e6
-            Log.i(TAG, "prepare: prefilled ${text.length} chars in ${p.prefillMs.toInt()} ms")
+        // This call has no error result, so an exception would panic in the core. Without it, generate only takes longer.
+        try {
+            discardPrepared()
+            val session = e.createSession(sessionConfig(temperature, topP))
+            val text = systemStart + system.trim() + systemEnd + userStart + userPrefix
+            lateinit var p: Prepared
+            val thread = Thread {
+                val t = System.nanoTime()
+                runCatching { session.runPrefill(listOf(InputData.Text(text))) }.onFailure { p.error = it }
+                p.prefillMs = (System.nanoTime() - t) / 1e6
+                Log.i(TAG, "prepare: prefilled ${text.length} chars in ${p.prefillMs.toInt()} ms")
+            }
+            p = Prepared(system, userPrefix, session, thread)
+            prepared = p
+            thread.start()
+        } catch (t: Throwable) {
+            Log.w(TAG, "prepare failed", t)
         }
-        p = Prepared(system, userPrefix, session, thread)
-        prepared = p
-        thread.start()
     }
 
     private fun discardPrepared() {
@@ -115,12 +122,20 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
         enableSpeculativeDecoding = speculative && backendName == "npu",
     )
 
+    /** Stop the running generate. It may have closed its conversation in this moment, so a failure here means nothing. */
+    fun cancelRunning() {
+        cancelRequested = true
+        runCatching { running?.cancelProcess() }
+        runCatching { runningSession?.cancelProcess() }
+    }
+
     fun close() {
-        running?.cancelProcess()
-        runningSession?.cancelProcess()
+        cancelRunning()
         synchronized(lock) {
-            discardPrepared()
-            engine?.close()
+            runCatching {
+                discardPrepared()
+                engine?.close()
+            }.onFailure { Log.w(TAG, "close failed", it) }
             engine = null
         }
     }
@@ -138,6 +153,7 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
         sink: TokenSink,
     ): GenStatsRecord = synchronized(lock) {
         val e = engine ?: throw CpException.Failed("LiteRT-LM engine is not initialized")
+        cancelRequested = false
         val p = prepared
         if (p != null) {
             prepared = null
@@ -160,11 +176,13 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
         var error: Throwable? = null
         var bench: BenchmarkInfo? = null
         var thinking = false
+        var truncated = false
         // Reasoning tokens do not count against the answer's limit, as with llama.cpp.
         val limit = maxTokens + (thinkBudget ?: 0u)
         val done = CountDownLatch(1)
         e.createConversation(cfg).use { conv ->
             running = conv
+            try {
             conv.sendMessageAsync(
                 user,
                 object : MessageCallback {
@@ -186,7 +204,9 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
                                 append(text)
                             }
                         }
-                        if ((out.isNotEmpty() && !sink.onToken(out)) || tokens >= limit) conv.cancelProcess()
+                        val more = out.isEmpty() || sink.onToken(out)
+                        truncated = tokens >= limit
+                        if (!more || truncated) conv.cancelProcess()
                     }
 
                     override fun onDone() = done.countDown()
@@ -200,9 +220,11 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             )
             done.await()
             bench = runCatching { conv.getBenchmarkInfo() }.getOrNull()
-            running = null
+            } finally {
+                running = null
+            }
         }
-        error?.let { if (it !is java.util.concurrent.CancellationException) throw CpException.Failed(it.message ?: it.toString()) }
+        error?.let { if (!cancelRequested && !truncated && it !is java.util.concurrent.CancellationException) throw CpException.Failed(it.message ?: it.toString()) }
         val end = System.nanoTime()
         val firstAt = if (first == 0L) end else first
         GenStatsRecord(
@@ -211,6 +233,7 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             genTokens = bench?.lastDecodeTokenCount?.toUInt() ?: tokens,
             prefillMs = (firstAt - start) / 1e6,
             decodeMs = (end - firstAt) / 1e6,
+            truncated = truncated,
         )
     }
 
@@ -221,15 +244,19 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
         var first = 0L
         var tokens = 0u
         var error: Throwable? = null
+        var truncated = false
         val done = CountDownLatch(1)
         runningSession = s
+        try {
         s.generateContentStream(
             listOf(InputData.Text(text)),
             object : ResponseCallback {
                 override fun onNext(response: String) {
                     if (first == 0L) first = System.nanoTime()
                     tokens++
-                    if ((response.isNotEmpty() && !sink.onToken(response)) || tokens >= maxTokens) s.cancelProcess()
+                    val more = response.isEmpty() || sink.onToken(response)
+                    truncated = tokens >= maxTokens
+                    if (!more || truncated) s.cancelProcess()
                 }
 
                 override fun onDone() = done.countDown()
@@ -241,8 +268,10 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             },
         )
         done.await()
-        runningSession = null
-        error?.let { if (it !is java.util.concurrent.CancellationException) throw CpException.Failed(it.message ?: it.toString()) }
+        } finally {
+            runningSession = null
+        }
+        error?.let { if (!cancelRequested && !truncated && it !is java.util.concurrent.CancellationException) throw CpException.Failed(it.message ?: it.toString()) }
         val end = System.nanoTime()
         val firstAt = if (first == 0L) end else first
         Log.i(TAG, "resume: prepared prefill ${p.prefillMs.toInt()} ms, rest to first token ${((firstAt - start) / 1e6).toInt()} ms, $tokens chunks")
@@ -252,6 +281,7 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             genTokens = tokens,
             prefillMs = (firstAt - start) / 1e6,
             decodeMs = (end - firstAt) / 1e6,
+            truncated = truncated,
         )
     }
 

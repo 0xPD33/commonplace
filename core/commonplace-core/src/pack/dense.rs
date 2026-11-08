@@ -92,6 +92,13 @@ impl DenseIndex {
         ensure!(s.lists.len() == (nl + 1) * 8, "lists.idx size mismatch");
         ensure!(s.codes.len() == n * d / 8, "codes.bin size mismatch");
         ensure!(s.ids.len() == n * 4, "ids.bin size mismatch");
+        // A list offset past the codes would panic in every search.
+        let mut end = 0;
+        for l in 0..nl {
+            let (a, b) = s.list_range(l);
+            ensure!(a == end && a <= b && b <= n, "lists.idx is damaged");
+            end = b;
+        }
         Ok(s)
     }
 
@@ -115,7 +122,7 @@ impl DenseIndex {
     pub fn search(&self, query: &[f32], nprobe: usize, hamming_k: usize, k: usize) -> Vec<(u32, f32)> {
         let d = self.info.dims as usize;
         let nl = self.info.n_lists as usize;
-        let q = &query[..d];
+        let Some(q) = query.get(..d) else { return vec![] };
         let cents = self.centroids_f16();
         use rayon::prelude::*;
         let mut list_scores: Vec<(f32, usize)> = (0..nl)

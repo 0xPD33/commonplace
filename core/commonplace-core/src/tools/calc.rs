@@ -99,14 +99,17 @@ impl Parser<'_> {
 }
 
 static PERCENT: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)(-?\d[\d,]*(?:\.\d+)?)\s*(?:%|percent|per cent)\s+of\s+(-?\d[\d,]*(?:\.\d+)?)\s*$").unwrap());
+    LazyLock::new(|| Regex::new(&format!(r"(?i)(-?{0})\s*(?:%|percent|per cent)\s+of\s+(-?{0})\s*$", super::NUM)).unwrap());
 
 /// "What is 15 percent of 240?": the line `15% of 240 = 36`, and whether the question asks only that.
 pub fn percent_query(query: &str) -> Option<(String, bool)> {
     let whole = query.trim().trim_end_matches(['?', '.', '!']);
     let caps = PERCENT.captures(whole)?;
-    let num = |i: usize| caps[i].replace(',', "").parse::<f64>().ok();
-    let (p, x) = (num(1)?, num(2)?);
-    let line = format!("{}% of {} = {}", format_num(p), format_num(x), format_num((p * x).round() / 100.0));
-    Some((line, super::bare(&whole[..caps.get(0)?.start()])))
+    let before = &whole[..caps.get(0)?.start()];
+    if super::part_of_larger(before, &caps[1]) {
+        return None;
+    }
+    let (p, x) = (super::parse_num(&caps[1])?, super::parse_num(&caps[2])?);
+    let line = format!("{}% of {} = {}", format_num(p), format_num(x), format_num(p * x / 100.0));
+    Some((line, super::bare(before)))
 }

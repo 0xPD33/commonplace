@@ -55,12 +55,12 @@ const UNITS: &[(&[&str], Dim, f64, &str)] = &[
 ];
 
 static PATTERN: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(-?\d[\d,]*(?:\.\d+)?)\s*([a-z°/ 2]+?)\s+(?:in|to|into|as)\s+([a-z°/ 2]+?)\s*\??$").unwrap()
+    Regex::new(&format!(r"(?i)(-?{})\s*([a-z°/ 2]+?)\s+(?:in|to|into|as)\s+([a-z°/ 2]+?)\s*\??$", super::NUM)).unwrap()
 });
 
 /// "How many cups are in a liter?": the target unit comes first, and "a" stands for 1.
 static HOW_MANY: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\bhow many\s+([a-z°/ 2]+?)\s+(?:(?:are|is)\s+)?(?:there\s+)?(?:in|per|is|are|make|make up|equal|equals)\s+(an?|one|-?\d[\d,]*(?:\.\d+)?)\s*([a-z°/ 2]+?)\s*$").unwrap()
+    Regex::new(&format!(r"(?i)\bhow many\s+([a-z°/ 2]+?)\s+(?:(?:are|is)\s+)?(?:there\s+)?(?:in|per|is|are|make|make up|equal|equals)\s+(an?|one|-?{})\s*([a-z°/ 2]+?)\s*$", super::NUM)).unwrap()
 });
 
 fn find(name: &str) -> Option<&'static (&'static [&'static str], Dim, f64, &'static str)> {
@@ -99,12 +99,16 @@ fn round_sig(x: f64) -> String {
 pub fn convert_query(query: &str) -> Option<(String, bool)> {
     let whole = query.trim().trim_end_matches(['?', '.', '!']);
     let (v, from, to, start) = if let Some(caps) = HOW_MANY.captures(whole) {
-        let v: f64 = if caps[2].chars().any(|c| c.is_ascii_digit()) { caps[2].replace(',', "").parse().ok()? } else { 1.0 };
+        let v: f64 = if caps[2].chars().any(|c| c.is_ascii_digit()) { super::parse_num(&caps[2])? } else { 1.0 };
         (v, find(&caps[3])?, find(&caps[1])?, caps.get(0)?.start())
     } else {
         let q = whole.trim_start_matches(|c: char| !c.is_ascii_digit() && c != '-');
         let caps = PATTERN.captures(q)?;
-        (caps[1].replace(',', "").parse().ok()?, find(&caps[2])?, find(&caps[3])?, whole.len() - q.len() + caps.get(0)?.start())
+        let start = whole.len() - q.len() + caps.get(0)?.start();
+        if super::part_of_larger(&whole[..start], &caps[1]) {
+            return None;
+        }
+        (super::parse_num(&caps[1])?, find(&caps[2])?, find(&caps[3])?, start)
     };
     if from.1 != to.1 {
         return None;
@@ -114,13 +118,17 @@ pub fn convert_query(query: &str) -> Option<(String, bool)> {
 }
 
 static SPEED: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)(\d[\d,]*(?:\.\d+)?)\s*(km/h|kph|kmh|mph|m/s|knots?|kilomet(?:er|re)s per hour|miles per hour|(?:km|kilomet(?:er|re)s?|mi|miles?|m|met(?:er|re)s?)\s+(?:an|a|per|each)\s+hour)\b").unwrap()
+    Regex::new(&format!(r"(?i)({})\s*(km/h|kph|kmh|mph|m/s|knots?|kilomet(?:er|re)s per hour|miles per hour|(?:km|kilomet(?:er|re)s?|mi|miles?|m|met(?:er|re)s?)\s+(?:an|a|per|each)\s+hour)\b", super::NUM)).unwrap()
 });
 
 /// The speed a question states ("walking 5 km an hour", "at 60 mph"): m/s, and as written for a COMPUTED line.
 pub fn speed_in(query: &str) -> Option<(f64, String)> {
     let caps = SPEED.captures(query)?;
-    let v: f64 = caps[1].replace(',', "").parse().ok()?;
+    // "5-10 km an hour" states no one speed.
+    if query[..caps.get(1)?.start()].ends_with(['-', '\u{2013}']) {
+        return None;
+    }
+    let v = super::parse_num(&caps[1])?;
     let unit = caps[2].to_lowercase();
     let (mps, shown) = match find(&unit).filter(|u| u.1 == Dim::Speed) {
         Some(u) => (v * u.2, u.3.to_string()),

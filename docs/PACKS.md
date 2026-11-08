@@ -71,9 +71,8 @@ The app imports a file through the Android file picker. It extracts the stream, 
 
 In a bundle, the importer handles each pack like a single pack:
 
-- It moves a checked pack into place when the next pack starts. The last pack waits until the whole file is read.
-- If an error stops the import, the complete packs stay installed, and the error names the failed pack.
-- A mismatch of the whole file's SHA-256 shows before the last pack goes into place.
+- Nothing moves into place until the whole file has passed its hash, so a failed import installs nothing and removes its partial files.
+- A file outside the catalog cannot replace an installed pack, must hold only the pack in its file name, and shows "not from the app's catalog" in the Library.
 - The app names each pack while it installs (`ImportListener.on_pack`), and `import_pack` returns the ids of all installed packs.
 
 ### Release

@@ -69,8 +69,29 @@ pub fn peak_rss_mb() -> f64 {
         .unwrap_or(0.0)
 }
 
-pub fn append_jsonl(path: &Path, rec: &QueryRecord) -> std::io::Result<()> {
+/// Append one record. Without `with_text`, the line holds the timings and no words of the user's.
+pub fn append_jsonl(path: &Path, rec: &QueryRecord, with_text: bool) -> std::io::Result<()> {
     let mut f = std::fs::OpenOptions::new().create(true).append(true).open(path)?;
-    let line = serde_json::to_string(rec).map_err(std::io::Error::other)?;
+    let line = if with_text {
+        serde_json::to_string(rec)
+    } else {
+        serde_json::to_string(&QueryRecord { query: String::new(), search_query: String::new(), topics: vec![], subqueries: vec![], ..rec.clone() })
+    }
+    .map_err(std::io::Error::other)?;
     writeln!(f, "{line}")
+}
+
+/// Largest telemetry file that a release build keeps: about 700 questions.
+const TELEMETRY_MAX_BYTES: u64 = 1 << 20;
+
+/// For a build that keeps no question text: delete a file that older builds filled with questions, or one that has grown too large.
+pub fn prune(path: &Path) {
+    let Ok(f) = std::fs::File::open(path) else { return };
+    let oversized = f.metadata().is_ok_and(|m| m.len() > TELEMETRY_MAX_BYTES);
+    let mut first = String::new();
+    let _ = std::io::BufRead::read_line(&mut std::io::BufReader::new(f), &mut first);
+    let has_text = serde_json::from_str::<serde_json::Value>(&first).is_ok_and(|v| v["query"].as_str().is_some_and(|q| !q.is_empty()));
+    if oversized || has_text {
+        let _ = std::fs::remove_file(path);
+    }
 }

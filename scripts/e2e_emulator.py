@@ -11,6 +11,7 @@ Usage (inside `nix develop`, with the emulator running and the APK built):
 from __future__ import annotations
 
 import argparse
+import contextlib
 import html
 import json
 import re
@@ -277,10 +278,13 @@ def select_all(r: Run) -> None:
     """The picker is open on Downloads: long-press the first .tar, choose Select all, confirm."""
     ui = r.ui
     ui.wait(20, contains=".tar")
-    x, y = ui.center(ui.find(contains=".tar"))
+    files = [n for n in ui.dump().iter("node") if n.get("text", "").endswith(".tar")]
+    x, y = ui.center(files[0])
     adb("shell", "input", "swipe", str(x), str(y), str(x), str(y), "900")
-    ui.tap(ui.wait(10, text="More options"))
-    ui.tap(ui.wait(10, text="Select all"))
+    # With one file, the long press already selects all, and the menu offers only "Deselect all".
+    if len(files) > 1:
+        ui.tap(ui.wait(10, text="More options"))
+        ui.tap(ui.wait(10, text="Select all"))
     time.sleep(1)
     r.shot("catalog-picker", "all files selected")
     ui.tap(ui.wait(10, text="Select"))
@@ -336,6 +340,7 @@ def main() -> int:
     ap.add_argument("--withhold", default="", help=".tar file of --catalog-dir that is missing at the first install and added for the second")
     ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
     ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
+    ap.add_argument("--failure-paths", metavar="TAR_DIR", help="also run the failure steps (fp-*). They kill the app and fill the disk, so use an emulator. TAR_DIR holds cdc-travel.tar and simplewiki.tar, and the app must start with only ling3-tiny and simplewiki")
     ap.add_argument("--only", nargs="*", default=[], help="run only these steps (pack-switch, my-pdf, my-txt, my-progress, my-errors, plus the names above)")
     args = ap.parse_args()
 
@@ -586,7 +591,7 @@ def main() -> int:
                 check(sorted(adb("shell", "ls", "/sdcard/Download/").split()) == ["notes.txt"], "the unrelated file must stay in Downloads")
 
             def corrupt(label: str, offset: int, want: str, kept: list[str]) -> None:
-                """A copy of the bundle with one flipped byte is refused. The packs that were complete before the damage stay."""
+                """A copy of the bundle with one flipped byte is refused, and `kept` is what stays installed."""
                 reset(ids)
                 data = bytearray((d / name).read_bytes())
                 data[offset] ^= 1
@@ -598,7 +603,8 @@ def main() -> int:
                 check(want in text and "mismatch" in text, f"unexpected refusal: {text!r}")
                 have = installed()
                 check([i for i in ids if i in have] == kept, f"installed {have}, expected {kept} of {ids}")
-                ui.scroll_find(contains=f"{len(kept)} of {len(ids)} installed")
+                if kept:
+                    ui.scroll_find(contains=f"{len(kept)} of {len(ids)} installed")
                 r.shot(label, text.replace("\n", " "))
 
             # Get started on an empty library points to the one bundle file. The packs directory moves aside for a moment.
@@ -656,9 +662,10 @@ def main() -> int:
             if small:
                 with tarfile.open(d / name) as tf:
                     big = max((m for m in tf.getmembers() if m.isfile() and m.name.startswith(ids[1] + "/")), key=lambda m: m.size)
-                corrupt("bundle-corrupt-middle", big.offset_data + big.size // 2, ids[1], ids[:1])
-                # The last byte lies after the end of the tar stream: only the SHA-256 of the whole file fails, so the last pack waits.
-                corrupt("bundle-corrupt-last-byte", b["files"][0]["bytes"] - 1, "sha256", ids[:-1])
+                # The hash of the whole file decides before anything moves into place, so a bad file installs nothing.
+                corrupt("bundle-corrupt-middle", big.offset_data + big.size // 2, "sha256", [])
+                # The last byte lies after the end of the tar stream: only the SHA-256 of the whole file fails.
+                corrupt("bundle-corrupt-last-byte", b["files"][0]["bytes"] - 1, "sha256", [])
                 reset(ids)
                 push(d / name)
                 install("bundle-again")
@@ -1121,6 +1128,505 @@ def main() -> int:
         remove_row(r, "quillfeather")
         ui.wait(15, contains="Removed quillfeather")
         r.back()
+
+    if args.failure_paths:
+        tars = Path(args.failure_paths)
+        adb("logcat", "-b", "crash", "-c", check=False)
+
+        def must(ok: object, msg: str) -> None:
+            if not ok:
+                raise RuntimeError(msg)
+
+        def pid() -> str:
+            return adb("shell", "pidof", PKG, check=False).strip()
+
+        def kill() -> None:
+            adb("shell", "run-as", PKG, "kill", "-9", pid())
+
+        def launch() -> None:
+            """Android sometimes drops a start right after a force stop, so start again until the app has focus."""
+            for _ in range(3):
+                adb("shell", "am", "start", "-n", f"{PKG}/.MainActivity")
+                for _ in range(15):
+                    focus = adb("shell", "dumpsys", "window").split("mCurrentFocus=", 1)[-1].split("\n", 1)[0]
+                    if PKG in focus:
+                        return
+                    time.sleep(1)
+            raise TimeoutError("the app did not come on screen")
+
+        def relaunch() -> None:
+            adb("shell", "am", "force-stop", PKG)
+            launch()
+
+        def hide() -> None:
+            adb("shell", "input", "keyevent", "KEYCODE_HOME")
+            time.sleep(2)
+
+        def pss() -> int:
+            return int(re.search(r"TOTAL PSS:\s+(\d+)", adb("shell", "dumpsys", "meminfo", PKG)).group(1))
+
+        def last_saved(q: str, t0: int) -> dict | None:
+            """The question's turn in the newest conversation file if the app saved it after t0 (ms). Only ended turns are saved."""
+            name = adb("shell", "run-as", PKG, "sh", "-c", "'ls -t files/conversations | head -1'").strip()
+            if not name:
+                return None
+            doc = json.loads(adb("exec-out", "run-as", PKG, "cat", f"files/conversations/{name}"))
+            ok = doc["updated"] >= t0 and doc["turns"] and doc["turns"][-1]["query"] == q
+            return doc["turns"][-1] if ok else None
+
+        def saved_turn(q: str, t0: int) -> dict:
+            end = time.time() + 300
+            while (turn := last_saved(q, t0)) is None:
+                must(time.time() < end, "the answer did not end while the app was hidden")
+                time.sleep(3)
+            return turn
+
+        def to_ask_screen() -> None:
+            for _ in range(5):
+                if ui.find(tag="open_settings") is not None:
+                    return
+                r.back()
+            raise TimeoutError("not back on the Ask screen")
+
+        def ready(timeout: float = 300) -> None:
+            ui.wait(timeout, tag="model_status", contains="Ready")
+
+        def import_downloads() -> None:
+            ui.tap(ui.wait(30, tag="import_pack"))
+            select_all(r)
+
+        def downloads(*files: Path) -> None:
+            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            for f in files:
+                adb("push", "-q", str(f), "/sdcard/Download/")
+
+        def error_note() -> str:
+            return " ".join(n.get("text", "") for n in ui.wait(120, tag="error_note").iter("node"))
+
+        @step("fp-low-ram-choice")
+        def _():
+            # The emulator has 8 GB, so it counts as a low-RAM phone, and the app does not load Ling by itself.
+            relaunch()
+            ui.wait(60, tag="model_status", contains="small model")
+            r.shot("fp-low-ram-status", ui.find(tag="model_status").get("text"))
+            ui.tap(ui.wait(10, tag="open_settings"))
+            row = ui.wait(10, tag="model_fast")
+            must("Android may stop the app" in subtree_text(row), f"no warning: {subtree_text(row)!r}")
+            r.shot("fp-low-ram-picker", "one model, and the user can still choose it")
+            ui.tap(row)
+            to_ask_screen()
+            ready()
+            r.shot("fp-low-ram-loaded", "Ling loaded after the user chose it")
+
+        @step("fp-double-back")
+        def _():
+            ui.tap(ui.wait(60, tag="open_library"))
+            ui.wait(10, tag="library_list")
+            # The second tap must land during the page animation, which the emulator script switches off.
+            adb("shell", "settings", "put", "global", "animator_duration_scale", "1")
+            try:
+                x, y = ui.center(ui.wait(5, text="Back"))
+                adb("shell", f"input tap {x} {y} & input tap {x} {y} & wait")
+                time.sleep(2)
+                r.shot("fp-double-back", "two taps on Back during the page animation")
+                must(ui.find(tag="open_settings") is not None, "the Ask screen is gone after a double Back")
+            finally:
+                adb("shell", "settings", "put", "global", "animator_duration_scale", "0")
+
+        @step("fp-too-long")
+        def _():
+            ui.tap(ui.wait(20, tag="ask_input"))
+            r.type_text("a" * 4100)
+            ui.wait(20, tag="too_long")
+            send = ui.wait(5, tag="ask_send")
+            must(send.get("enabled") == "false", "the send button stays on for a question over the limit")
+            r.shot("fp-too-long", "the box says why, and send is off")
+            # Ctrl+A does not always reach the box; Delete then removes one letter, so repeat until the text is gone.
+            for _ in range(3):
+                adb("shell", "input", "keycombination", "113", "29")
+                adb("shell", "input", "keyevent", "KEYCODE_DEL")
+                time.sleep(1)
+                if ui.find(tag="ask_input", contains="aaa") is None:
+                    break
+            must(ui.find(tag="ask_input", contains="aaa") is None, "the text did not clear")
+            must(ui.find(tag="too_long") is None, "the note stays after the text is gone")
+
+        @step("fp-restore-after-kill")
+        def _():
+            results["questions"].append(ask_and_wait(r, "What is the capital of France?", "fp-restore", args.answer_timeout))
+            ui.tap(ui.wait(10, tag="ask_input"))
+            r.type_text("my unsent draft")
+            time.sleep(1)
+            hide()
+            kill()
+            time.sleep(2)
+            must(not pid(), "the process is still alive")
+            launch()
+            ui.wait(60, tag="turn_query", contains="capital of France")
+            must(ui.wait(10, tag="ask_input", contains="my unsent draft") is not None, "the draft is gone")
+            r.shot("fp-restored", "the conversation and the draft came back")
+            adb("shell", "input", "keycombination", "113", "29")
+            adb("shell", "input", "keyevent", "KEYCODE_DEL")
+            # A question without an answer yet comes back as a draft.
+            ready()
+            ui.tap(ui.wait(10, tag="ask_input"))
+            r.type_text("Tell me about the river Danube")
+            ui.tap(ui.wait(10, tag="ask_send"))
+            ui.wait(20, tag="ask_stop")
+            hide()
+            kill()
+            time.sleep(2)
+            launch()
+            ui.wait(60, tag="ask_input", contains="Tell me about the river Danube")
+            r.shot("fp-restored-question", "the unanswered question waits in the box")
+            adb("shell", "input", "keycombination", "113", "29")
+            adb("shell", "input", "keyevent", "KEYCODE_DEL")
+
+        @step("fp-moved-source")
+        def _():
+            ready()
+            def first_source() -> None:
+                row = ui.scroll_find(tag="sources_row")
+                ui.tap(next(n for n in row.iter("node") if n is not row and n.get("clickable") == "true"))
+                ui.wait(15, tag="source_sheet")
+            first_source()
+            must(ui.find(tag="source_moved") is None, "a source that did not change shows as moved")
+            must(ui.find(tag="source_details") is not None, "no details for a source that did not change")
+            r.shot("fp-source-same", "the same pack: the passage opens as usual")
+            ui.tap(ui.wait(5, tag="sheet_close"))
+            time.sleep(1)
+            name = adb("shell", "run-as", PKG, "sh", "-c", "'ls -t files/conversations | head -1'").strip()
+            doc = json.loads(adb("exec-out", "run-as", PKG, "cat", f"files/conversations/{name}"))
+            for s in doc["turns"][-1]["sources"]:
+                s["title"] = "An article of an older pack build"
+            hide()
+            subprocess.run(["adb", "exec-in", "run-as", PKG, "sh", "-c", f"cat > files/conversations/{name}"], input=json.dumps(doc), text=True, check=True)
+            relaunch()
+            ui.tap(ui.wait(60, tag="open_history"))
+            ui.tap(next(n for n in ui.wait(10, tag="history_list").iter("node") if n.get("clickable") == "true"))
+            ui.wait(15, tag="turn_query")
+            first_source()
+            ui.wait(10, tag="source_moved")
+            must(ui.find(tag="source_details") is None, "the sheet offers the wrong passage")
+            r.shot("fp-source-moved", "a saved number that now holds other text: the saved start and a note, not the wrong article")
+            ui.tap(ui.wait(5, tag="sheet_close"))
+
+        @step("fp-hide-during-answer")
+        def _():
+            # Ling unloads when the app goes off screen; an answer that runs then keeps it until the answer ends.
+            # One thread and a large evidence budget give a long prefill, so the app hides while the answer runs.
+            with settings('<int name="threads" value="1" /><int name="evidence_override" value="2500" />'):
+                new_topic(r)
+                q = "Describe in detail how castles were built in the Middle Ages"
+                t0 = int(time.time() * 1000)
+                ui.tap(ui.wait(20, tag="ask_input"))
+                r.type_text(q)
+                ui.tap(ui.wait(10, tag="ask_send"))
+                ui.wait(60, tag="evidence_card")
+                hide()
+                during = pss()
+                must(last_saved(q, t0) is None, "the answer ended before the app hid: the test needs a longer prefill")
+                must(during > 2_000_000, f"Ling is not loaded during the answer: {during} kB")
+                turn = saved_turn(q, t0)
+                must(not turn["stopped"] and not turn["error"] and turn["segments"], f"the hidden answer was cut: {turn}")
+                time.sleep(5)
+                after = pss()
+                must(after < during - 1_000_000, f"Ling stayed loaded after the answer: {during} kB -> {after} kB")
+                launch()
+                ui.wait(20, tag="turn_query", contains=q)
+                r.shot("fp-hide-during-answer", f"the answer ended off screen, then Ling unloaded: {during // 1024} MB -> {after // 1024} MB")
+
+        @step("fp-notification-unload")
+        def _():
+            # Unload in the notification frees the memory at once: it stops a running answer, then the model goes.
+            # One thread and a large evidence budget give a long prefill, so the tap lands while the answer runs.
+            with settings('<int name="threads" value="1" /><int name="evidence_override" value="2500" />'):
+                new_topic(r)
+                q = "Describe in detail how bridges were built in Roman times"
+                t0 = int(time.time() * 1000)
+                ui.tap(ui.wait(20, tag="ask_input"))
+                r.type_text(q)
+                ui.tap(ui.wait(10, tag="ask_send"))
+                ui.wait(60, tag="evidence_card")
+                hide()
+                during = pss()
+                must(during > 2_000_000, f"Ling is not loaded during the answer: {during} kB")
+                adb("shell", "cmd", "statusbar", "expand-notifications")
+                end = time.time() + 15
+                unload = None
+                while unload is None and time.time() < end:
+                    unload = next((n for n in ui.nodes() if (n.get("text") or "").lower() == "unload"), None)
+                must(unload is not None, "no Unload action in the notification shade")
+                r.shot("fp-notification-unload-shade", "the notification offers Unload during the answer")
+                must(last_saved(q, t0) is None, "the answer ended before the Unload tap: the test needs a longer prefill")
+                tapped = time.time()
+                ui.tap(unload)
+                adb("shell", "cmd", "statusbar", "collapse")
+                turn = saved_turn(q, t0)
+                ended = time.time() - tapped
+                must(turn["stopped"], f"the answer ran on after Unload: {turn}")
+                time.sleep(3)
+                after = pss()
+                must(after < during - 1_000_000, f"the model stayed loaded after Unload: {during} kB -> {after} kB")
+                time.sleep(35)
+                services = adb("shell", "dumpsys", "activity", "services", PKG)
+                must("InferenceService" not in services, "the service still runs 35 s after Unload")
+                launch()
+                ui.wait(20, tag="turn_query", contains=q)
+                r.shot("fp-notification-unload", f"answer stopped {ended:.0f} s after Unload; {during // 1024} -> {after // 1024} MB; service gone")
+
+        @step("fp-model-change-stops-answer")
+        def _():
+            ready()
+            # A second copy of Ling as the small model gives Settings a second choice.
+            adb("shell", "am", "force-stop", PKG)
+            adb("shell", "run-as", PKG, "sh", "-c", "'cd files/library/packs && rm -rf ling-small && cp -r ling3-tiny ling-small && sed -i -e s/ling3-tiny/ling-small/ -e s/llm-fast/llm-small/ ling-small/manifest.json'")
+            launch()
+            ready()
+            new_topic(r)
+            ui.tap(ui.wait(20, tag="ask_input"))
+            r.type_text("Explain in detail how the Roman Empire fell")
+            ui.tap(ui.wait(10, tag="ask_send"))
+            ui.wait(20, tag="ask_stop")
+            ui.tap(ui.wait(10, tag="open_settings"))
+            ui.tap(ui.wait(10, tag="model_small"))
+            to_ask_screen()
+            ui.wait(120, text="Stopped")
+            r.shot("fp-model-change", "the cut-off answer says Stopped, not done")
+            ready()
+
+        @step("fp-crash-mark")
+        def _():
+            relaunch()
+            ui.wait(60, tag="model_status", contains="Loading")
+            adb("shell", "am", "force-stop", PKG)
+            launch()
+            ready()
+            r.shot("fp-force-stop-during-load", "the user closed the app during a load: the model still loads")
+            relaunch()
+            ui.wait(60, tag="model_status", contains="Loading")
+            kill()
+            time.sleep(2)
+            if not pid():
+                launch()
+            ui.wait(60, tag="model_status", contains="failed")
+            ui.tap(ui.wait(10, tag="open_settings"))
+            ui.wait(10, tag="lite_crashed")
+            r.shot("fp-crash-note", subtree_text(ui.find(tag="lite_crashed")))
+            ui.tap(ui.wait(10, tag="model_small"))
+            to_ask_screen()
+            ready()
+            r.shot("fp-crash-retry", "choosing the model tries it again")
+            # The chosen model crashes and another one is installed: the other one answers, and the status names it.
+            ui.tap(ui.wait(10, tag="open_settings"))
+            ui.tap(ui.wait(10, tag="model_fast"))
+            to_ask_screen()
+            ready()
+            relaunch()
+            ui.wait(60, tag="model_status", contains="Loading")
+            kill()
+            time.sleep(2)
+            if not pid():
+                launch()
+            status = ui.wait(120, tag="model_status", contains="instead").get("text")
+            r.shot("fp-crash-fallback", status)
+            ui.tap(ui.wait(10, tag="open_settings"))
+            ui.tap(ui.wait(10, tag="model_small"))
+            to_ask_screen()
+            ready()
+            must("instead" not in ui.find(tag="model_status").get("text"), "the status still names a fallback after the user chose a model")
+
+        @step("fp-broken-pack")
+        def _():
+            # A pack with a damaged manifest does not load; the user can still remove it and get its storage back.
+            adb("shell", "am", "force-stop", PKG)
+            adb("shell", "run-as", PKG, "sh", "-c", "'mkdir -p files/library/packs/broken-pack && echo { > files/library/packs/broken-pack/manifest.json && dd if=/dev/zero of=files/library/packs/broken-pack/data.bin bs=1048576 count=50 2>/dev/null'")
+            launch()
+            open_library(r)
+            # The section is last; tap the button only once it is clear of the floating Install button.
+            for _ in range(20):
+                n = ui.find(tag="remove_skipped")
+                if n is not None and ui.center(n)[1] < 2000:
+                    r.shot("fp-broken-pack-listed", "the pack that does not load, with its reason and a Remove button")
+                    ui.tap(n)
+                    break
+                adb("shell", "input", "swipe", "540", "1700", "540", "900", "300")
+                time.sleep(0.8)
+            else:
+                raise TimeoutError("the Remove button of the pack that does not load is not reachable")
+            ui.wait(5, contains="Remove broken-pack?")
+            ui.tap(ui.wait(5, text="Remove"))
+            ui.wait(15, contains="Removed broken-pack")
+            left = adb("shell", "run-as", PKG, "ls", "-a", "files/library/packs")
+            must("broken-pack" not in left, f"the pack is still on disk: {left}")
+            r.shot("fp-broken-pack", "a pack that does not load is removed, and its storage is free")
+            to_ask_screen()
+
+        @step("fp-sideload")
+        def _():
+            tar = tars / "cdc-travel.tar"
+            adb("shell", "run-as", PKG, "rm", "-rf", "files/library/packs/cdc-travel")
+            relaunch()
+            open_library(r)
+            downloads(tar)
+            import_downloads()
+            ui.tap(ui.wait(120, text="Delete"))
+            ui.wait(10, contains="Deleted")
+            row = scroll_to_row(r, "CDC")
+            must("not from the app's catalog" in subtree_text(row), f"no label: {subtree_text(row)!r}")
+            r.shot("fp-sideload-label", "a file outside the catalog installs with a label")
+            downloads(tar)
+            import_downloads()
+            note = error_note()
+            must("is installed" in note, f"the file replaced the pack: {note!r}")
+            r.shot("fp-sideload-replace", note)
+            remove_row(r, "CDC travel health by destination")
+            ui.wait(15, contains="Removed")
+            renamed = Path(args.failure_paths) / "notes.tar"
+            renamed.write_bytes(tar.read_bytes())
+            downloads(renamed)
+            renamed.unlink()
+            import_downloads()
+            note = error_note()
+            must("holds the pack cdc-travel" in note, f"a wrong name passed: {note!r}")
+            must("cdc-travel" not in adb("shell", "run-as", PKG, "ls", "files/library/packs"), "the pack installed under another file name")
+            r.shot("fp-sideload-name", note)
+            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            to_ask_screen()
+
+        @step("fp-kill-during-install")
+        def _():
+            adb("shell", "am", "force-stop", PKG)
+            # Kept aside, so a failed step does not leave the later steps without a library.
+            adb("shell", "run-as", PKG, "mv", "files/library/packs/simplewiki", "files/simplewiki-kept")
+            try:
+                launch()
+                # A kill during a model load counts against the model; this step tests only the install.
+                ready()
+                open_library(r)
+                downloads(tars / "simplewiki.tar")
+                import_downloads()
+                end = time.time() + 60
+                while "0" != adb("shell", "run-as", PKG, "sh", "-c", "'test -d files/library/packs/.staging; echo $?'").strip():
+                    must(time.time() < end, "the install never started")
+                services = adb("shell", "dumpsys", "activity", "services", PKG)
+                must("InferenceService" in services and "isForeground=true" in services, "no foreground service protects the install")
+                kill()
+                time.sleep(2)
+                if not pid():
+                    launch()
+                open_library(r)
+                note = error_note()
+                must("before the install ended" in note, f"no note: {note!r}")
+                left = adb("shell", "run-as", PKG, "ls", "-a", "files/library/packs")
+                must(".staging" not in left, f"partial files stayed: {left}")
+                r.shot("fp-install-killed", note)
+                import_downloads()
+                ui.tap(ui.wait(180, text="Delete"))
+                ui.wait(10, contains="Deleted")
+                must("simplewiki" in adb("shell", "run-as", PKG, "ls", "files/library/packs"), "the second try did not install")
+                r.shot("fp-install-retried", "the same file installs after the kill")
+                to_ask_screen()
+            finally:
+                if "simplewiki" not in adb("shell", "run-as", PKG, "ls", "files/library/packs"):
+                    adb("shell", "am", "force-stop", PKG)
+                    adb("shell", "run-as", PKG, "mv", "files/simplewiki-kept", "files/library/packs/simplewiki")
+                    launch()
+                adb("shell", "run-as", PKG, "rm", "-rf", "files/simplewiki-kept")
+
+        @contextlib.contextmanager
+        def settings(extra: str):
+            """Restart the app with extra settings, then put the old ones back. A later entry for a key wins."""
+            ready()
+            hide()
+            path = "shared_prefs/commonplace.xml"
+            xml = adb("exec-out", "run-as", PKG, "cat", path)
+            put = lambda s: subprocess.run(["adb", "exec-in", "run-as", PKG, "sh", "-c", f"cat > {path}"], input=s, text=True, check=True)
+            adb("shell", "am", "force-stop", PKG)
+            put(xml.replace("</map>", extra + "</map>"))
+            try:
+                launch()
+                ready()
+                yield
+            finally:
+                adb("shell", "am", "force-stop", PKG)
+                put(xml)
+                launch()
+
+        @step("fp-big-settings")
+        def _():
+            # A large evidence budget, a long answer and a long reasoning budget do not fit the 4,096-token context of Ling together.
+            with settings('<int name="evidence_override" value="2500" /><int name="answer_tokens" value="700" /><int name="think_budget" value="1536" /><boolean name="thinking" value="true" />'):
+                ui.tap(ui.wait(20, tag="ask_input"))
+                r.type_text("Explain how the printing press changed Europe")
+                ui.tap(ui.wait(10, tag="ask_send"))
+                ui.wait(20, tag="ask_stop")
+                time.sleep(25)
+                note = ui.find(tag="error_note")
+                must(note is None, f"the question failed: {subtree_text(note) if note is not None else ''}")
+                r.shot("fp-big-settings", "the settings do not fit, and the question still runs")
+                if (stop := ui.find(tag="ask_stop")) is not None:
+                    ui.tap(stop)
+                ui.wait(180, tag="ask_send")
+
+        @step("fp-stop-during-prefill")
+        def _():
+            # One thread and a large evidence budget make the emulator's prefill long enough to tap Stop inside it.
+            with settings('<int name="threads" value="1" /><int name="evidence_override" value="2500" />'):
+                new_topic(r)
+                times = []
+                for q in ["How do volcanoes form and why do they erupt", "Why did the Soviet Union collapse"]:
+                    ui.tap(ui.wait(20, tag="ask_input"))
+                    r.type_text(q)
+                    ui.tap(ui.wait(10, tag="ask_send"))
+                    # The card appears when the search ends; the prefill starts right after it.
+                    ui.wait(60, tag="evidence_card")
+                    stop = ui.wait(10, tag="ask_stop")
+                    t0 = time.time()
+                    ui.tap(stop)
+                    ui.wait(180, tag="ask_send")
+                    times.append((round(time.time() - t0, 1), "no answer text" if ui.find(tag="answer_text") is None else "some answer text"))
+                    ui.wait(5, text="Stopped")
+                    ui.tap(ui.wait(20, tag="new_topic"))
+                results["stop_during_prefill_s"] = times
+                r.shot("fp-stop-during-prefill", f"seconds from the Stop tap to the send button: {times}")
+
+        @step("fp-full-disk")
+        def _():
+            ready()
+            downloads(tars / "cdc-travel.tar")
+            def fill(name: str) -> None:
+                avail = int(adb("shell", "df", "-k", "/data").splitlines()[-1].split()[3])
+                if avail > 2000:
+                    adb("shell", "run-as", PKG, "fallocate", "-l", f"{avail - 2000}k", f"files/{name}")
+                adb("shell", "run-as", PKG, "sh", "-c", f"'dd if=/dev/zero of=files/{name}-rest bs=4k 2>/dev/null; true'")
+            try:
+                fill("fill")
+                r.shot("fp-disk-full", adb("shell", "df", "-k", "/data").splitlines()[-1])
+                ui.tap(ui.wait(20, tag="ask_input"))
+                r.type_text("Explain in detail how the Roman Empire fell")
+                ui.tap(ui.wait(10, tag="ask_send"))
+                # The failed prompt-state save frees its partial file before the answer streams; fill that space too.
+                ui.wait(120, tag="answer_text")
+                fill("fill2")
+                must(ui.find(tag="ask_stop") is not None, "the answer ended before the disk was full again, so the step proves nothing")
+                ui.wait(180, contains="Could not save")
+                must(pid(), "the app died on a full disk")
+                r.shot("fp-save-failed", "the answer stays on screen, and the app says that it could not save")
+                # The system file picker crashes on a disk with no room at all (SQLiteFullException), so leave it about 2 MB.
+                adb("shell", "run-as", PKG, "rm", "-f", "files/fill-rest", "files/fill2", "files/fill2-rest")
+                open_library(r)
+                import_downloads()
+                note = error_note()
+                must("free storage" in note, f"unexpected note: {note!r}")
+                r.shot("fp-install-no-space", note)
+                to_ask_screen()
+            finally:
+                adb("shell", "run-as", PKG, "rm", "-f", "files/fill", "files/fill-rest", "files/fill2", "files/fill2-rest")
+                adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            must(pid(), "the app died on a full disk")
+
+        flows[:] = [f for f in flows if f[0].startswith("fp-")] if not args.only else flows
 
     for name, fn in flows:
         if args.only and name not in args.only:

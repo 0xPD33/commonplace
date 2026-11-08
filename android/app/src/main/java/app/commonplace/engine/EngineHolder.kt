@@ -1,6 +1,8 @@
 package app.commonplace.engine
 
+import android.app.ActivityManager
 import android.app.Application
+import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
@@ -19,6 +21,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -73,14 +76,57 @@ class EngineHolder(private val app: Application) {
     private val _loadProgress = MutableStateFlow<LoadProgress?>(null)
     val loadProgress: StateFlow<LoadProgress?> = _loadProgress.asStateFlow()
 
-    private var liteRt: LiteRtBackend? = null
+    @Volatile private var liteRt: LiteRtBackend? = null
     /** The Gemma pack failed to start (another chip, or no NPU access): answer with llama.cpp until the next reload. */
     private var liteFailed = false
-    /** Exists while LiteRT loads a model. A native crash there kills the process, so the next start finds it. */
-    private val liteLoading = File(app.filesDir, "litert-loading")
+    /** Exists while a model loads and holds its path. A process that dies there leaves it, so the next start finds it. */
+    private val loadingMarker = File(app.filesDir, "litert-loading")
 
     val engineOrNull: CommonplaceEngine?
         get() = (state.value as? EngineState.Ready)?.engine
+
+    /** The engine, once it has started. A restored screen can ask before it has. Throws when the start failed. */
+    suspend fun awaitEngine(): CommonplaceEngine = when (val s = state.first { it !is EngineState.Starting }) {
+        is EngineState.Ready -> s.engine
+        is EngineState.Failed -> error(s.message)
+        EngineState.Starting -> error("The engine is starting")
+    }
+
+    /** Start again after a failed start, for example when the user has freed up storage. */
+    fun retryStart() {
+        _state.value = EngineState.Starting
+        start()
+    }
+
+    /** A pack install or a document index runs. The foreground service keeps the process alive until it ends. */
+    @Volatile
+    var installing = false
+        private set
+
+    fun installStarted(what: String) {
+        installing = true
+        prefs.installing = what
+        InferenceService.start(app)
+    }
+
+    fun installEnded() {
+        installing = false
+        prefs.installing = null
+        val m = _model.value
+        if (m is ModelState.Loaded || m is ModelState.Loading) InferenceService.start(app) else InferenceService.stop(app)
+    }
+
+    /** What the last process was installing when it died, once. */
+    fun takeInterruptedInstall(): String? {
+        if (installing) return null
+        return prefs.installing?.also { prefs.installing = null }
+    }
+
+    private fun startFailure(t: Throwable): String {
+        val free = app.filesDir.usableSpace
+        return if (free < LOW_STORAGE_BYTES) "The phone is almost out of storage: ${free / 1_000_000} MB free. Free up space, then try again."
+        else t.message ?: t.toString()
+    }
 
     fun start() {
         scope.launch {
@@ -97,6 +143,7 @@ class EngineHolder(private val app: Application) {
                         encoderThreads = 4u,
                         llmThreads = prefs.threads.toUInt(),
                         pinBigCores = arm,
+                        keepQueryText = BuildConfig.DEBUG,
                     ),
                 )
                 prefs.applyTo(engine)
@@ -105,7 +152,7 @@ class EngineHolder(private val app: Application) {
                 if (onScreen()) ensureModel(null)
             } catch (t: Throwable) {
                 Log.e(TAG, "engine start failed", t)
-                _state.value = EngineState.Failed(t.message ?: t.toString())
+                _state.value = EngineState.Failed(startFailure(t))
             }
         }
     }
@@ -123,14 +170,17 @@ class EngineHolder(private val app: Application) {
             _library.value = lib
             val gguf = lib.models.filter { !it.filePath.endsWith(".litertlm") }.map { it.kind }
             val litePack = lib.models.firstOrNull { it.filePath.endsWith(".litertlm") }
-            if (liteLoading.exists()) {
-                prefs.liteCrashed = liteLoading.readText()
-                liteLoading.delete()
+            if (loadingMarker.exists()) {
+                if (lastExitBlamesModel()) prefs.crashedModel = loadingMarker.readText()
+                loadingMarker.delete()
             }
-            val useTpu = prefs.backend == Backend.Tpu && litePack != null && !liteFailed && prefs.liteCrashed != litePack.filePath
+            val crashed = prefs.crashedModel
+            // With no llama.cpp model installed, an old choice of the CPU must not leave the Gemma pack unused.
+            val useTpu = (prefs.backend == Backend.Tpu || gguf.isEmpty()) && litePack != null && !liteFailed && crashed != litePack.filePath
+            val usable = lib.models.filter { !it.filePath.endsWith(".litertlm") && it.filePath != crashed }.map { it.kind }
             // `null` means the everyday model: the user's choice, else fast, else small. A low-RAM phone loads the
             // fast model only when the user picks it: Android kills the app when it holds about 5.5 GB.
-            val want = kind ?: listOfNotNull(prefs.modelKind, ModelKind.FAST.takeIf { !prefs.lowRam }, ModelKind.SMALL).firstOrNull { it in gguf }
+            val want = kind ?: listOfNotNull(prefs.modelKind, ModelKind.FAST.takeIf { !prefs.lowRam }, ModelKind.SMALL).firstOrNull { it in usable }
             val current = _model.value
             if (current is ModelState.Loaded && (if (useTpu) current.backend == Backend.Tpu else current.backend == Backend.Cpu && current.kind == want)) {
                 return@withLock
@@ -141,7 +191,7 @@ class EngineHolder(private val app: Application) {
                     it.close()
                     liteRt = null
                 }
-                _model.value = ModelState.None
+                _model.value = notLoadedReason(lib, crashed)?.let { ModelState.Failed(it) } ?: ModelState.None
                 return@withLock
             }
             _model.value = ModelState.Loading(want)
@@ -151,18 +201,23 @@ class EngineHolder(private val app: Application) {
                 if (useTpu) {
                     e.unloadModel()
                     val lr = liteRt ?: LiteRtBackend(app, litePack!!.filePath, prefs.speculative).also { liteRt = it }
-                    liteLoading.writeText(litePack.filePath)
+                    markLoading(litePack.filePath)
                     try {
                         lr.initialize()
                     } finally {
-                        liteLoading.delete()
+                        loadingMarker.delete()
                     }
                     e.setForeignLlm(lr, litePack.filePath)
                     _model.value = ModelState.Loaded(litePack!!.kind, lr.id(), Backend.Tpu)
                 } else {
                     liteRt?.close()
                     liteRt = null
-                    val st = e.loadModel(want!!)
+                    markLoading(lib.models.first { it.kind == want && !it.filePath.endsWith(".litertlm") }.filePath)
+                    val st = try {
+                        e.loadModel(want!!)
+                    } finally {
+                        loadingMarker.delete()
+                    }
                     _model.value = if (st.loaded) ModelState.Loaded(st.kind, st.id, Backend.Cpu) else ModelState.None
                 }
             } catch (t: Throwable) {
@@ -185,6 +240,39 @@ class EngineHolder(private val app: Application) {
                 withContext(NonCancellable) { poll.cancelAndJoin() }
                 _loadProgress.value = null
             }
+        }
+    }
+
+    /** A full disk must not stop a load that needs no disk; the marker is only a safety net. */
+    private fun markLoading(path: String) {
+        runCatching { loadingMarker.writeText(path) }
+    }
+
+    /** A user or an update can also end the process during a load. Only a crash or low memory counts against the model. */
+    private fun lastExitBlamesModel(): Boolean {
+        val am = app.getSystemService(ActivityManager::class.java)
+        val reason = am.getHistoricalProcessExitReasons(null, 0, 1).firstOrNull()?.reason ?: return true
+        return reason in setOf(
+            ApplicationExitInfo.REASON_CRASH,
+            ApplicationExitInfo.REASON_CRASH_NATIVE,
+            ApplicationExitInfo.REASON_LOW_MEMORY,
+            ApplicationExitInfo.REASON_SIGNALED,
+            ApplicationExitInfo.REASON_ANR,
+            ApplicationExitInfo.REASON_INITIALIZATION_FAILURE,
+            ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE,
+        )
+    }
+
+    /** Why an installed model is not loading, and where the user can change that; null when none is installed. */
+    private fun notLoadedReason(lib: LibraryInfo, crashed: String?): String? {
+        val models = lib.models.filter { it.answers }
+        val failed = models.firstOrNull { it.filePath == crashed }
+        val lite = models.firstOrNull { it.filePath.endsWith(".litertlm") }
+        return when {
+            failed != null -> "${failed.title} stopped the app while it loaded. Choose it in Settings to try again."
+            liteFailed && lite != null -> "${lite.title} could not start on this phone."
+            prefs.lowRam && models.isNotEmpty() && models.all { it.kind == ModelKind.FAST } -> "${models.first().title} needs more memory than this phone has. Choose it in Settings to try anyway."
+            else -> null
         }
     }
 
@@ -240,8 +328,32 @@ class EngineHolder(private val app: Application) {
         }
     }
 
-    /** Free the model under memory pressure; retrieval keeps working. */
+    /** The answer has ended, on screen or off it. */
+    fun answerEnded() {
+        answering = false
+        if (unloadAfterAnswer && !onScreen()) {
+            unloadAfterAnswer = false
+            unloadModel()
+        } else {
+            unloadAfterAnswer = false
+            unloadModelOverHiddenLimit()
+        }
+    }
+
+    /** Stop the running answer. LiteRT reads the core's flag only when a token arrives, so its prefill needs a direct cancel. */
+    fun cancelAnswer() {
+        engineOrNull?.cancel()
+        liteRt?.cancelRunning()
+    }
+
+    @Volatile private var unloadAfterAnswer = false
+
+    /** Free the model under memory pressure; retrieval keeps working. An answer keeps its model until it ends. */
     fun unloadModel() {
+        if (answering) {
+            unloadAfterAnswer = true
+            return
+        }
         scope.launch {
             modelLock.withLock {
                 engineOrNull?.unloadModel()
@@ -254,7 +366,7 @@ class EngineHolder(private val app: Application) {
 
     fun reloadModel() {
         // A running answer holds its model until it ends; stop it so two models are never resident.
-        engineOrNull?.cancel()
+        cancelAnswer()
         scope.launch {
             modelLock.withLock {
                 engineOrNull?.let {
@@ -285,6 +397,7 @@ class EngineHolder(private val app: Application) {
     companion object {
         private const val TAG = "Commonplace"
         private const val WEIGHTS_SHARE = 0.85f
+        private const val LOW_STORAGE_BYTES = 500_000_000L
 
         /** Copy the bundled ONNX encoders out of the APK once per app version. */
         private fun installEncoders(app: Application): File {

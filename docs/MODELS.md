@@ -81,7 +81,7 @@ The phone never runs this model. It embeds questions with leaf-mt, which works w
 |---|---|
 | `LiquidAI/LFM2.5-8B-A1B-GGUF`, `LFM2.5-1.2B-Instruct-GGUF` | The models before Ling and MiniCPM. LFM Open License v1.0: commercial use only below US$10M annual revenue. |
 | LFM3-1.7B, Spark-X2.6-1.7B | Lower scores than MiniCPM on the dev set (0.524–0.576 and 0.478 against 0.621). |
-| `litert-community/gemma-4-E2B-it-litert-lm`, `gemma-4-E2B-it.litertlm` | GPU or CPU through LiteRT-LM. The NPU file is the one that ships. |
+| `gemma-4-E2B-it.litertlm` (the generic file in `litert-community/gemma-4-E2B-it-litert-lm`) | GPU or CPU through LiteRT-LM. The NPU file is the one that ships. |
 | `deepgrove/maple-preview-GGUF` (1B active of 20B) | 0.40 against Ling's 0.44 on 63 seeds. It decodes 1.65× faster and prefills 21% slower. |
 | `bartowski/Qwen_Qwen3.6-35B-A3B-GGUF` | It does not fit in 12 GB of RAM. |
 | `cross-encoder/ettin-reranker-17m-v1` | The stock reranker, before the distilled one (2026-10-13). |

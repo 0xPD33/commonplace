@@ -168,6 +168,9 @@ The first release.
 - Comparisons, follow-up questions, thinking mode, voice input (a separate pack) and "My documents" for your own PDF, text and Markdown files.
 - The Library with an on/off switch for each pack and a 50 GB limit.
 
+[0.4.0]: https://github.com/0xPD33/commonplace/releases/tag/v0.4.0
+[0.3.2]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.2
+[0.3.1]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.1
 [0.3.0]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.0
 [0.2.4]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.4
 [0.2.3]: https://github.com/0xPD33/commonplace/releases/tag/v0.2.3

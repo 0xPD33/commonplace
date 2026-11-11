@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Android llama-bench: stock (today's app flags, no patches) and ship (0.4.0 patches 0001-0010, 0012, 0013, +fp16).
-set -e
+set -eo pipefail
 S=${OUT:-/tmp/commonplace-bench}; P=$(cd "$(dirname "$0")/../../patches/llama.cpp" && pwd)
 for v in stock:armv8.2-a+dotprod+i8mm ship:armv8.2-a+dotprod+i8mm+fp16; do n=${v%%:*}; arch=${v#*:}; d=$S/bench-$n; rm -rf $d; mkdir -p $d/src
   (cd "$(dirname "$P")/../third_party/llama.cpp" && git archive HEAD) | tar x -C $d/src

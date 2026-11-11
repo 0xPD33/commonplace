@@ -53,7 +53,9 @@ def main():
     out = RUNS / run_id
     out.mkdir(parents=True, exist_ok=True)
     answers = out / "answers.jsonl"
-    done = {r["id"] for r in read_jsonl(answers)}
+    rows = read_jsonl(answers)
+    kept = [r for r in rows if not r.get("error")]
+    done = {r["id"] for r in kept}
 
     flags = [f for f in ABLATIONS if getattr(a, f.replace("-", "_"))]
     cli = [*PHONE_CLI, *a.cli] if a.phone else a.cli
@@ -94,6 +96,9 @@ def main():
             "host": {"node": platform.node(), "machine": platform.machine(), "cpus": os.cpu_count()},
         }
     meta["query_ids"] = [q["id"] for q in queries]
+    # A resume retries failed queries, so their error rows go first: one row per id.
+    if len(kept) < len(rows):
+        answers.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in kept))
 
     cmd = [a.bin, "--library", a.library, *(["--model", model["path"]] if own_model else []),
            *cli_flags(flags), *cli, "serve-eval"]

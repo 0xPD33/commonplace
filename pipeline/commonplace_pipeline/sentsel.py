@@ -181,17 +181,19 @@ def cmd_label(a) -> None:
         return {"id": p["id"], "query": p["query"], "hits": [[h["pack"], h["pid"]] for h in hits],
                 "needed": res["needed"], "helpful": res["helpful"], "model": a.model, "cost_usd": raw.get("total_cost_usd")}
 
+    # One batch of calls at a time, so that the cap stops new calls instead of waiting for queued ones.
     with ThreadPoolExecutor(a.jobs) as pool, open(out, "a") as f:
-        for p, fut in [(p, pool.submit(one, p)) for p in pools]:
-            try:
-                r = fut.result()
-            except Exception as e:  # noqa: BLE001
-                print(f"{p['id']}: FAILED {e}", file=sys.stderr)
-                continue
-            spent += r["cost_usd"] or 0
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-            f.flush()
-            print(f"{p['id']}: {len(r['needed'])} needed, {len(r['helpful'])} helpful; ${spent:.2f} so far", file=sys.stderr)
+        for i in range(0, len(pools), a.jobs):
+            for p, fut in [(p, pool.submit(one, p)) for p in pools[i : i + a.jobs]]:
+                try:
+                    r = fut.result()
+                except Exception as e:  # noqa: BLE001
+                    print(f"{p['id']}: FAILED {e}", file=sys.stderr)
+                    continue
+                spent += r["cost_usd"] or 0
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+                f.flush()
+                print(f"{p['id']}: {len(r['needed'])} needed, {len(r['helpful'])} helpful; ${spent:.2f} so far", file=sys.stderr)
             if spent > a.max_usd:
                 sys.exit(f"stopped at ${spent:.2f} (--max-usd {a.max_usd})")
 

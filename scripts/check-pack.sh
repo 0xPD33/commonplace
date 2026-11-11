@@ -4,6 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 id=$1 q=$2
+if [[ ! -d data/library/packs/$id ]]; then
+  echo "no pack $id in data/library/packs" >&2
+  exit 1
+fi
+mkdir -p "data/work/$id"
 lib=$(mktemp -d)
 trap 'rm -rf "$lib"' EXIT
 mkdir -p "$lib/packs"

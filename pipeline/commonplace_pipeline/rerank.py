@@ -189,7 +189,16 @@ def cmd_train(a) -> None:
     teacher = {}
     for sf in a.teacher:
         teacher |= {r["id"]: r["scores"] for r in read_jsonl(sf)}
-    train = [p for p in read_jsonl(a.pools) if p["id"] in teacher and len(p["hits"]) >= 4]
+    train, scores = [], {}
+    for p in read_jsonl(a.pools):
+        if p["id"] not in teacher:
+            continue
+        # No Stack Exchange text in training data (AGENTS.md). Teacher scores index the hits by position.
+        keep = [j for j, h in enumerate(p["hits"]) if not h["pack"].startswith("stackexchange")]
+        p["hits"] = [p["hits"][j] for j in keep]
+        scores[p["id"]] = [teacher[p["id"]][j] for j in keep]
+        if len(p["hits"]) >= 4:
+            train.append(p)
     dev = read_jsonl(a.dev_pools)[: a.dev_n]
     answers = {r["id"]: r["answers"] for r in read_jsonl(a.dev_answers)}
     st = Student(student_src(a.init))
@@ -207,7 +216,7 @@ def cmd_train(a) -> None:
             st.head.train()
             pairs, tl = [], []
             for p in train[i : i + a.queries_per_step]:
-                t = teacher[p["id"]]
+                t = scores[p["id"]]
                 idx = argsort_desc(t)
                 pick = idx[:2] + random.sample(idx[2:], min(a.group - 2, len(idx) - 2))
                 pick += [pick[-1]] * (a.group - len(pick))  # pad short pools by repeating the last doc

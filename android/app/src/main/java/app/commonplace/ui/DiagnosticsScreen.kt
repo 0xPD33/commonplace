@@ -341,8 +341,7 @@ fun DiagnosticsScreen(onBack: () -> Unit) {
         holder.answering = true
         runCatching { e.ask(AskInput(q, emptyList(), false, holder.thermalHeadroom(), emptyList()), SilentListener) }.getOrNull()
     } finally {
-        holder.answering = false
-        holder.unloadModelOverHiddenLimit()
+        holder.answerEnded()
     }
 
     fun start(check: Check, body: suspend CoroutineScope.(CommonplaceEngine) -> Unit) {

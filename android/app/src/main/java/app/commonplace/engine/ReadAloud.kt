@@ -145,13 +145,23 @@ class ReadAloud(context: Context) {
                 }
             } catch (e: LinkageError) {
                 // No libptts_ffi.so for this ABI: only arm64 builds ship it.
+                Os.unsetenv("RAYON_NUM_THREADS")
                 return "the bundled voice is not available on this device. Choose System in Settings."
+            } catch (e: Throwable) {
+                Os.unsetenv("RAYON_NUM_THREADS")
+                throw e
             }
-            val t = AudioTrack.Builder()
-                .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
-                .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_FLOAT).setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build()
+            val t = try {
+                AudioTrack.Builder()
+                    .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+                    .setAudioFormat(AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_FLOAT).setSampleRate(RATE).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .build()
+            } catch (e: Throwable) {
+                tts.close()
+                Os.unsetenv("RAYON_NUM_THREADS")
+                throw e
+            }
             synchronized(lock) {
                 if (id != session) {
                     t.release()

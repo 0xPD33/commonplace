@@ -105,7 +105,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             CommonplaceTheme {
-                // testTagsAsResourceId lets adb/uiautomator drive the app by tag (scripts/e2e-emulator.sh).
+                // testTagsAsResourceId lets adb/uiautomator drive the app by tag (scripts/e2e_emulator.py).
                 Surface(Modifier.semantics { testTagsAsResourceId = true }.paperGrain(),color = MaterialTheme.colorScheme.background) {
                     val nav = rememberNavController()
                     // A second tap during the page animation must not pop the first page, which leaves a blank screen.

@@ -73,7 +73,13 @@ class LiteRtBackend(private val context: Context, private val modelPath: String,
             "gpu" -> LiteBackend.GPU()
             else -> LiteBackend.CPU()
         }
-        val e = Engine(EngineConfig(modelPath = modelPath, backend = backend, cacheDir = context.cacheDir.path)).also { it.initialize() }
+        val e = Engine(EngineConfig(modelPath = modelPath, backend = backend, cacheDir = context.cacheDir.path))
+        try {
+            e.initialize()
+        } catch (t: Throwable) {
+            e.close()
+            throw t
+        }
         engine = e
         e.createConversation(ConversationConfig(systemInstruction = Contents.of(MARK))).use { c ->
             val preface = c.renderPrefaceIntoString()

@@ -59,6 +59,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.commonplace.CommonplaceApp
@@ -140,13 +141,17 @@ fun Ornament(modifier: Modifier = Modifier, key: Any? = null) {
     }
 }
 
-/** A thin rule that fills with ink as work goes on. */
+/** A thin rule that fills with ink as work goes on. [progress] is read while drawing, so an animation redraws only the rule. */
 @Composable
-fun InkRule(progress: Float, modifier: Modifier = Modifier) {
+fun InkRule(progress: () -> Float, modifier: Modifier = Modifier) {
     val c = MaterialTheme.colorScheme
-    Box(modifier.fillMaxWidth().height(2.dp).background(c.outlineVariant)) {
-        Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(2.dp).background(c.primary))
-    }
+    Box(
+        modifier.fillMaxWidth().height(2.dp).background(c.outlineVariant).drawBehind {
+            val w = size.width * progress().coerceIn(0f, 1f)
+            val x = if (layoutDirection == LayoutDirection.Rtl) size.width - w else 0f
+            drawRect(c.primary, Offset(x, 0f), Size(w, size.height))
+        },
+    )
 }
 
 /** The ink rule of a model load, with the percentage while llama.cpp reports it. It shows nothing when no load runs. */
@@ -157,7 +162,7 @@ fun ModelLoadRule(modifier: Modifier = Modifier) {
     val current = load ?: return
     val shown by animateFloatAsState(current.fraction, tween(160, easing = LinearEasing), label = "model_load")
     Row(modifier.fillMaxWidth().testTag("model_load"), verticalAlignment = Alignment.CenterVertically) {
-        InkRule(shown, Modifier.weight(1f))
+        InkRule({ shown }, Modifier.weight(1f))
         current.percent?.let {
             Spacer(Modifier.width(10.dp))
             Text("$it%", style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -525,7 +525,7 @@ private fun ReadingRule(finishing: Boolean) {
             p.animateTo(0.97f, tween(expected * 2, easing = LinearEasing))
         }
     }
-    InkRule(p.value, Modifier.padding(vertical = 6.dp).testTag("reading_rule"))
+    InkRule({ p.value }, Modifier.padding(vertical = 6.dp).testTag("reading_rule"))
 }
 
 @Composable

@@ -302,24 +302,23 @@ const RECENT: usize = 20;
 
 impl Engine {
     pub fn new(cfg: EngineConfig, loader: Option<LlmLoader>) -> Result<Self> {
-        let lib = Library::open(&cfg.library_dir)?;
         let needs_ort = cfg.leaf_dir.is_some() || cfg.ettin_dir.is_some() || cfg.reader_dir.is_some();
         if needs_ort {
             crate::encoders::init_ort(cfg.ort_dylib.as_deref())?;
         }
-        let dims = lib.embedder.as_ref().map(|e| e.dims as usize).unwrap_or(512);
-        let enc = match &cfg.leaf_dir {
-            Some(d) => Some(QueryEncoder::load(d, &cfg.leaf_model, cfg.encoder_threads, dims)?),
-            None => None,
-        };
-        let rr = match &cfg.ettin_dir {
-            Some(d) => Some(Reranker::load(d, &cfg.ettin_model, cfg.encoder_threads)?),
-            None => None,
-        };
-        let reader = match &cfg.reader_dir {
-            Some(d) => Some(Reader::load(d, &cfg.reader_model, cfg.encoder_threads)?),
-            None => None,
-        };
+        // The reranker and the reader need nothing from the library, so they load while it opens.
+        let (lib, enc, rr, reader) = std::thread::scope(|s| -> Result<_> {
+            let rr = s.spawn(|| cfg.ettin_dir.as_ref().map(|d| Reranker::load(d, &cfg.ettin_model, cfg.encoder_threads)).transpose());
+            let reader = s.spawn(|| cfg.reader_dir.as_ref().map(|d| Reader::load(d, &cfg.reader_model, cfg.encoder_threads)).transpose());
+            let lib = Library::open(&cfg.library_dir);
+            let enc = lib.as_ref().ok().and_then(|lib| {
+                let dims = lib.embedder.as_ref().map(|e| e.dims as usize).unwrap_or(512);
+                cfg.leaf_dir.as_ref().map(|d| QueryEncoder::load(d, &cfg.leaf_model, cfg.encoder_threads, dims))
+            });
+            let rr = rr.join().map_err(|_| anyhow::anyhow!("the reranker load panicked"))??;
+            let reader = reader.join().map_err(|_| anyhow::anyhow!("the reader load panicked"))??;
+            Ok((lib?, enc.transpose()?, rr, reader))
+        })?;
         Ok(Self {
             cfg,
             lib: RwLock::new(Arc::new(lib)),
@@ -1227,6 +1226,7 @@ impl Engine {
         let mut first: Option<f64> = None;
         let mut thought_done = !req.think;
         let mut closes = 0;
+        let mut last_event: Option<Instant> = None;
         let st: GenStats = llm.generate(&system, &user, &params, &mut |t| {
             raw.push_str(t);
             let (thought, answer) = split_thinking(&raw);
@@ -1250,6 +1250,11 @@ impl Engine {
             if first.is_none() {
                 first = Some(ms(t0));
             }
+            // Each event carries the whole answer and redraws it, so send at most 10 a second; the done event follows.
+            if last_event.is_some_and(|t: Instant| t.elapsed().as_millis() < 100) {
+                return !sink.cancelled();
+            }
+            last_event = Some(Instant::now());
             let answer = tidy(answer);
             sink.event(Event::Answer { segments: citations::check(strip_echo(&answer, &[&question, &raw_query]), n, &ev.numbers), raw: answer.clone(), done: false });
             !sink.cancelled()

@@ -650,7 +650,7 @@ private fun CheckCard(
         }
         Spacer(Modifier.height(12.dp))
         if (active) {
-            InkRule(progress)
+            InkRule({ progress })
             Spacer(Modifier.height(8.dp))
             stage?.let { Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag("benchmark_stage")) }
             ModelLoadRule(Modifier.padding(top = 6.dp))

@@ -341,12 +341,7 @@ impl Engine {
 
     /// The fused pool the reranker would see for `query` (no rewrite, no follow-up context), in fusion
     /// order with the reranker's scores. Builds reranker training data (`commonplace pool`).
-    pub fn pool(&self, query: &str) -> Result<(Arc<Library>, Vec<Hit>)> {
-        let (lib, hits) = self.pool_with(query, None)?;
-        Ok((lib, hits.into_iter().map(|h| h.0).collect()))
-    }
-
-    /// `pool`, or with `depth` the learned-fusion candidates (`Retriever::candidate_dump`) with their features.
+    /// With `depth`, the learned-fusion candidates (`Retriever::candidate_dump`) with their features.
     pub fn pool_with(&self, query: &str, depth: Option<usize>) -> Result<(Arc<Library>, Vec<(Hit, Vec<f32>)>)> {
         let lib = self.library();
         let s = self.settings.read().unwrap().clone();

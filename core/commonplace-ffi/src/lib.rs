@@ -741,18 +741,6 @@ impl CommonplaceEngine {
         }
     }
 
-    /// Load the best installed model: fast, else small. Returns the status either way.
-    pub fn load_default_model(&self) -> R<ModelStatus> {
-        let lib = self.engine.library();
-        for k in [ModelKind::Fast, ModelKind::Small] {
-            if lib.model(&k.into()).is_some() {
-                self.engine.load_model(k.into())?;
-                break;
-            }
-        }
-        Ok(self.model_status())
-    }
-
     pub fn load_model(&self, kind: ModelKind) -> R<ModelStatus> {
         let loaded = self.engine.load_model(kind.into());
         commonplace_llm::reset_load_progress();
@@ -917,9 +905,16 @@ impl CommonplaceEngine {
     pub fn import_pack(&self, parts: Vec<ImportPart>, pack_ids: Vec<String>, listener: Arc<dyn ImportListener>) -> R<Vec<String>> {
         let mut index: Option<import::PartIndex> = None;
         let mut tars: Vec<(String, OwnedFd, u64, Option<String>)> = Vec::new();
-        for p in parts {
-            // SAFETY: Kotlin detached this fd and hands us ownership.
-            let fd = unsafe { OwnedFd::from_raw_fd(p.fd) };
+        // Own every fd before the first fallible step, so an early return closes them all.
+        let owned: Vec<(ImportPart, OwnedFd)> = parts
+            .into_iter()
+            .map(|p| {
+                // SAFETY: Kotlin detached this fd and hands us ownership.
+                let fd = unsafe { OwnedFd::from_raw_fd(p.fd) };
+                (p, fd)
+            })
+            .collect();
+        for (p, fd) in owned {
             if p.name.ends_with(".pack.json") {
                 let mut s = String::new();
                 std::fs::File::from(fd).read_to_string(&mut s).map_err(anyhow::Error::from)?;
@@ -973,10 +968,10 @@ impl CommonplaceEngine {
     }
 
     pub fn remove_pack(&self, pack_id: String) -> R<()> {
-        let dir = Library::packs_dir(&self.engine.cfg.library_dir).join(&pack_id);
-        if !dir.starts_with(Library::packs_dir(&self.engine.cfg.library_dir)) || pack_id.contains('/') || pack_id.starts_with('.') {
+        if pack_id.is_empty() || pack_id.contains('/') || pack_id.starts_with('.') {
             return Err(CpError::Failed { msg: "invalid pack id".into() });
         }
+        let dir = Library::packs_dir(&self.engine.cfg.library_dir).join(&pack_id);
         // A pack with a damaged manifest never loaded, and the user must still be able to free its storage.
         let m = pack::Manifest::read(&dir).ok();
         if m.as_ref().is_some_and(|m| {

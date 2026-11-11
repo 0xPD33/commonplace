@@ -398,11 +398,12 @@ impl Inner {
     }
 
     fn sampler(&self, p: &GenParams) -> Result<*mut sys::llama_sampler> {
+        // Fallible steps run before the chain exists, so an early return cannot leak it.
+        let grammar = p.grammar.as_deref().map(CString::new).transpose()?;
+        let root = CString::new("root")?;
         unsafe {
             let chain = sys::llama_sampler_chain_init(sys::llama_sampler_chain_default_params());
-            if let Some(g) = &p.grammar {
-                let gs = CString::new(g.as_str())?;
-                let root = CString::new("root")?;
+            if let Some(gs) = &grammar {
                 let s = sys::llama_sampler_init_grammar(self.vocab(), gs.as_ptr(), root.as_ptr());
                 if s.is_null() {
                     sys::llama_sampler_free(chain);

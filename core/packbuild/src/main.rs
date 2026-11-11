@@ -452,8 +452,15 @@ fn replace_meta(input: &Path, pack: &Path) -> Result<()> {
     let mut m: Manifest = serde_json::from_slice(&std::fs::read(pack.join("manifest.json"))?)?;
     let tmp = pack.join("meta.sqlite.new");
     let _ = std::fs::remove_file(&tmp);
-    let n = write_meta(input, &tmp, &m.title, &m.license, &m.snapshot_date)?.len() as u64;
-    ensure!(m.counts.as_ref().is_some_and(|c| c.articles == n), "the pack has {:?} articles, the input {n}", m.counts);
+    // A leftover meta.sqlite.new would be hashed into the manifest by later commands.
+    (|| -> Result<()> {
+        let n = write_meta(input, &tmp, &m.title, &m.license, &m.snapshot_date)?.len() as u64;
+        ensure!(m.counts.as_ref().is_some_and(|c| c.articles == n), "the pack has {:?} articles, the input {n}", m.counts);
+        Ok(())
+    })()
+    .inspect_err(|_| {
+        let _ = std::fs::remove_file(&tmp);
+    })?;
     std::fs::rename(&tmp, pack.join("meta.sqlite"))?;
     let (files, size) = import::file_entries(pack)?;
     m.files = files;

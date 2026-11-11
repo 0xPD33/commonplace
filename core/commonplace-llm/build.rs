@@ -28,10 +28,9 @@ fn main() {
         .define("GGML_OPENMP", "OFF")
         .define("GGML_BACKEND_DL", "OFF");
 
+    let ndk = env::var("ANDROID_NDK_HOME").or_else(|_| env::var("ANDROID_NDK_ROOT"));
     if target.contains("android") {
-        let ndk = env::var("ANDROID_NDK_HOME")
-            .or_else(|_| env::var("ANDROID_NDK_ROOT"))
-            .expect("ANDROID_NDK_HOME must point at the NDK");
+        let ndk = ndk.as_deref().expect("ANDROID_NDK_HOME must point at the NDK");
         let abi = match target.split('-').next().unwrap() {
             "aarch64" => "arm64-v8a",
             "x86_64" => "x86_64",
@@ -85,7 +84,7 @@ fn main() {
 
     if target.contains("android") {
         // Use the NDK sysroot instead of the host libc headers that the Nix bindgen hook adds.
-        let ndk = env::var("ANDROID_NDK_HOME").unwrap();
+        let ndk = ndk.as_deref().unwrap();
         let sysroot = format!("--sysroot={ndk}/toolchains/llvm/prebuilt/linux-x86_64/sysroot");
         unsafe { env::set_var(format!("BINDGEN_EXTRA_CLANG_ARGS_{target}"), sysroot) };
     }

@@ -126,11 +126,6 @@ impl MetaDb {
         .query_row([code], row_article)
         .optional()?)
     }
-
-    pub fn article_count(&self) -> Result<u64> {
-        let c = self.conn.lock().unwrap();
-        Ok(c.query_row("SELECT COUNT(*) FROM articles", [], |r| r.get::<_, i64>(0))? as u64)
-    }
 }
 
 /// Writer used by packbuild.

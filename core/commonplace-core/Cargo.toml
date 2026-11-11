@@ -6,7 +6,6 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
@@ -15,7 +14,6 @@ zstd.workspace = true
 rusqlite.workspace = true
 tantivy.workspace = true
 ort.workspace = true
-ndarray.workspace = true
 tokenizers.workspace = true
 safetensors.workspace = true
 half.workspace = true
@@ -23,5 +21,4 @@ sha2.workspace = true
 hex.workspace = true
 tar.workspace = true
 regex.workspace = true
-unicode-segmentation.workspace = true
 rayon = "1"

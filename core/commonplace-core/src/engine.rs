@@ -706,20 +706,25 @@ impl Engine {
 
     /// The turn-kind head's label for a message, and the kind of turn the engine makes of it.
     pub fn turn(&self, lib: &Library, req: &AskRequest) -> Result<(&'static str, TurnKind)> {
-        let Some(enc) = &self.enc else { return Ok(("question", TurnKind::Question)) };
-        let emb = enc.encode(&req.query)?;
-        let label = Head::turn().classify(&emb);
+        let emb = self.enc.as_ref().map(|e| e.encode(&req.query)).transpose()?;
+        Ok(self.turn_from(lib, req, emb.as_deref()))
+    }
+
+    /// [`Self::turn`] with the message's embedding already made; `None` when no search model is installed.
+    fn turn_from(&self, lib: &Library, req: &AskRequest, emb: Option<&[f32]>) -> (&'static str, TurnKind) {
+        let Some(emb) = emb else { return ("question", TurnKind::Question) };
+        let label = Head::turn().classify(emb);
         // "How do I reverse a list in Python?" reads like "as a list", but names a thing and stands alone. A
         // name alone is no proof: "in simpler words?" links to "Simplicity", yet the follow-up head reads that it
         // needs the last turn.
-        let follows = self.question_settings().reformat_followup && Head::follow_up().classify(&emb) == "followup";
+        let follows = self.question_settings().reformat_followup && Head::follow_up().classify(emb) == "followup";
         let stands_alone = || !follows && !route::link_entities(lib, &req.query, &req.packs).is_empty();
-        Ok((label, match label {
+        (label, match label {
             "reformat" if !req.history.is_empty() && !stands_alone() => TurnKind::Reformat,
             "chat" => TurnKind::Chat,
             "check" if req.history.is_empty() => TurnKind::Chat,
             _ => TurnKind::Question,
-        }))
+        })
     }
 
     pub fn ask(&self, req: &AskRequest, sink: &dyn EventSink) -> Result<AskOutcome> {
@@ -763,7 +768,8 @@ impl Engine {
         // reply. The empty card lets the app show it; a reformat also sends the last turn's sources, which
         // its citations use. An expand request ("tell me more") is a question about the last topic, and so is a
         // check request ("are you sure?").
-        let (label, kind) = self.turn(&lib, req)?;
+        let msg_emb = self.enc.as_ref().map(|e| e.encode(&req.query)).transpose()?;
+        let (label, kind) = self.turn_from(&lib, req, msg_emb.as_deref());
         if let Some((_, l)) = llm.as_ref().filter(|_| kind != TurnKind::Question) {
             let card = Card { query: req.query.clone(), ..Default::default() };
             sink.event(Event::Card(card.clone()));
@@ -801,7 +807,10 @@ impl Engine {
         let mut route = route::route(&lib, &search_text, self.rr.as_ref(), &topics, &req.packs);
         // The intent head reads the standalone question. Its best guess sets the cheap choices; only a
         // confident "calc" may start the slow LLM compute call.
-        let emb = self.enc.as_ref().map(|e| e.encode(&route.query)).transpose()?;
+        let emb = match msg_emb {
+            Some(e) if route.query == req.query => Some(e),
+            _ => self.enc.as_ref().map(|e| e.encode(&route.query)).transpose()?,
+        };
         let intent = emb.as_deref().map_or("lookup", |e| Head::intent().best(e));
         let calc_sure = emb.as_deref().is_some_and(|e| Head::intent().classify(e) == "calc");
         // The rewrite model also marks comparisons, with the conversation in view ("is K2 much shorter?").

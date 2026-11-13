@@ -16,7 +16,7 @@ from common import EVAL, read_jsonl
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--queries", default=str(EVAL / "queries.jsonl"))
-    ap.add_argument("--test-size", type=int, default=100)
+    ap.add_argument("--test-size", type=int, default=60)
     ap.add_argument("--seed", type=int, default=12)
     a = ap.parse_args()
 

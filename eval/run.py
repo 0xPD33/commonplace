@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from common import (ABLATIONS, BIN, DEFAULT_MODEL, LIBRARY, PHONE_CLI, REPO, RUNS, append_jsonl,
+from common import (ABLATIONS, BIN, DEFAULT_MODEL, EVAL, LIBRARY, PHONE_CLI, REPO, RUNS, append_jsonl,
                     cli_flags, git_describe, library_model, library_packs, load_queries, now, portable,
                     read_jsonl, sha256, split_evidence, write_json)
 
@@ -96,6 +96,10 @@ def main():
             "host": {"node": platform.node(), "machine": platform.machine(), "cpus": os.cpu_count()},
         }
     meta["query_ids"] = [q["id"] for q in queries]
+    locked = {q["id"] for f in ("test.jsonl", "conversation-test.jsonl") for q in read_jsonl(EVAL / f)}
+    meta["locked_queries"] = sum(q["id"] in locked for q in queries)
+    if meta["locked_queries"]:
+        print(f"warning: {meta['locked_queries']} of these queries are in the locked test splits; report on them, do not tune", file=sys.stderr)
     # A resume retries failed queries, so their error rows go first: one row per id.
     if len(kept) < len(rows):
         answers.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in kept))

@@ -74,10 +74,12 @@ One JSON object per line:
 
 Run each command from the repo root. Python exists only in the devshell.
 
+Use `eval/dev.jsonl` for tuning. `eval/test.jsonl` and `eval/conversation-test.jsonl` are for the final report only.
+
 ```sh
-nix develop -c python3 eval/run.py --queries eval/queries.jsonl --run-id <run-id>
-nix develop -c python3 eval/baseline.py --queries eval/queries.jsonl     # run before recall.py and judge.py
-nix develop -c python3 eval/gold.py --queries eval/queries.jsonl
+nix develop -c python3 eval/run.py --queries eval/dev.jsonl --run-id <run-id>
+nix develop -c python3 eval/baseline.py --queries eval/dev.jsonl     # run before recall.py and judge.py
+nix develop -c python3 eval/gold.py --queries eval/dev.jsonl
 nix develop -c python3 eval/recall.py --run <run-id>
 nix develop -c python3 eval/judge.py --run <run-id>
 nix develop -c python3 eval/report.py --run <run-id>     # writes docs/EVAL.md and a row in history.csv
@@ -101,7 +103,7 @@ nix develop -c python3 eval/run.py --queries $Q --phone --bin <edited build> --r
 nix develop -c python3 eval/abstain.py --run <candidate>      # and <candidate2>
 nix develop -c python3 eval/pairwise.py --a <candidate> --b <reference> --subset <test ids>
 nix develop -c python3 eval/pairwise.py --a <candidate2> --b <reference2> --subset <test ids>
-nix develop -c python3 eval/report.py --run <candidate> --roll2 <candidate2> --gate <reference>,<reference2>   # exit 1 on fail
+nix develop -c python3 eval/report.py --run <candidate> --roll2 <candidate2> --gate <reference>,<reference2>   # on fail: exit 1, report in the run folder
 ```
 
 The gate pools the rolls, except that the pairwise check takes one result per question, the mean of its rolls. It fails on any of these:
@@ -111,6 +113,8 @@ The gate pools the rolls, except that the pairwise check takes one result per qu
 - fewer `expect` passes
 - more than one lost abstention per roll
 - a significant pairwise loss on the locked test split (more losses than wins, sign test p < 0.05)
+
+On a fail, `report.py` writes the report to `<run>/report-failed.md` and leaves `docs/EVAL.md` and `history.csv` unchanged.
 
 Accuracy and speed tests are separate. The eval sets measure accuracy, and `scripts/bench/perf.jsonl` (9 demanding prompts, no judge) measures speed on a cool phone. `scripts/bench/phone_eval.py` runs a question set in the app on the Pixel, and `import.py` turns its answers into a run.
 

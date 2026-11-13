@@ -293,7 +293,7 @@ def findings(rows, qmeta, s, by_cat):
                        f"{mean(p[1] for p in pairs):.2f} for the clean wording (n = {len(pairs)}).")
         words = [(len((r.get("answer") or "").split()), baseline_words(qmeta.get(r["id"], {}).get("baseline", r["id"])),
                   r["judgment"]["ours"]) for r in judged]
-        if len(words) > 2 and len({w[0] for w in words}) > 1:
+        if len(words) > 2 and len({w[0] for w in words}) > 1 and len({w[2] for w in words}) > 1:
             out.append(f"- Answer length p50: {pct([w[0] for w in words], 50):.0f} words vs "
                        f"{pct([w[1] for w in words if w[1]], 50):.0f} for the baseline. Correlation of our length "
                        f"with our score: r = {statistics.correlation([w[0] for w in words], [w[2] for w in words]):+.2f}.")
@@ -655,6 +655,11 @@ def main():
             sys.exit("--gate needs one reference run per roll")
         gate_ok, section = gate(run_dirs, a.gate.split(","))
         report = report.replace("## Results\n", section + "\n## Results\n", 1)
+        if not gate_ok:
+            failed = run_dir / "report-failed.md"
+            failed.write_text(report)
+            print(f"{failed}\nrelease gate against {a.gate}: FAIL")
+            sys.exit(1)
     Path(a.out).write_text(report)
 
     hist = Path(a.history)
@@ -671,8 +676,7 @@ def main():
         w.writerows([*old, new])
     print(f"{a.out}\n{run_dir / 'per_query.jsonl'}\n{hist}")
     if a.gate:
-        print(f"release gate against {a.gate}: {'PASS' if gate_ok else 'FAIL'}")
-        sys.exit(0 if gate_ok else 1)
+        print(f"release gate against {a.gate}: PASS")
 
 
 if __name__ == "__main__":

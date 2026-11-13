@@ -34,6 +34,14 @@ def adb(*args: str, check: bool = True, capture: bool = True) -> str:
     return r.stdout if capture else ""
 
 
+def clear_downloads() -> None:
+    """Empty Downloads, but only on an emulator: on a real phone this would delete the owner's files."""
+    props = [adb("shell", "getprop", p, check=False).strip() for p in ("ro.boot.qemu", "ro.kernel.qemu", "ro.hardware")]
+    if "1" not in props[:2] and props[2] not in ("ranchu", "goldfish"):
+        raise RuntimeError("refusing to empty /sdcard/Download: the device is not an emulator")
+    adb("shell", "rm", "-rf", "/sdcard/Download/*")
+
+
 class Ui:
     def __init__(self) -> None:
         self.root: ET.Element | None = None
@@ -376,7 +384,7 @@ def main() -> int:
         def _():
             files = sorted(Path(args.import_dir).iterdir())
             pack_id = next(f.name for f in files if f.name.endswith(".pack.json")).removesuffix(".pack.json")
-            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            clear_downloads()
             for f in files:
                 adb("push", "-q", str(f), "/sdcard/Download/")
             adb("shell", "run-as", PKG, "rm", "-rf", f"files/library/packs/{pack_id}")
@@ -425,7 +433,7 @@ def main() -> int:
             files = sorted(f.name for f in d.iterdir() if f.suffix == ".tar" and f.name not in bundle_files)
             ids = [f.removesuffix(".tar") for f in files]
             outside = [i for i in ids if i not in {p["pack_id"] for p in catalog}]
-            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            clear_downloads()
             for f in files:
                 if f != args.withhold:
                     adb("push", "-q", str(d / f), "/sdcard/Download/")
@@ -547,7 +555,7 @@ def main() -> int:
                 adb("shell", "am", "start", "-n", f"{PKG}/.MainActivity")
 
             def reset(remove: list[str]) -> None:
-                adb("shell", "rm", "-rf", "/sdcard/Download/*")
+                clear_downloads()
                 for i in remove:
                     adb("shell", "run-as", PKG, "rm", "-rf", f"files/library/packs/{i}")
                 restart()
@@ -1036,7 +1044,7 @@ def main() -> int:
         @step("voice")
         def _():
             # Install the voice pack from Downloads (no developer copy of the model), listen, stop, then remove the pack.
-            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            clear_downloads()
             adb("push", "-q", args.voice_tar, "/sdcard/Download/voice-en.tar")
             adb("shell", "run-as", PKG, "sh", "-c", "'rm -rf files/stt files/library/packs/voice-en'")
             fresh_app(r, remove_docs=False)
@@ -1196,7 +1204,7 @@ def main() -> int:
             select_all(r)
 
         def downloads(*files: Path) -> None:
-            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            clear_downloads()
             for f in files:
                 adb("push", "-q", str(f), "/sdcard/Download/")
 
@@ -1491,7 +1499,7 @@ def main() -> int:
             must("holds the pack cdc-travel" in note, f"a wrong name passed: {note!r}")
             must("cdc-travel" not in adb("shell", "run-as", PKG, "ls", "files/library/packs"), "the pack installed under another file name")
             r.shot("fp-sideload-name", note)
-            adb("shell", "rm", "-rf", "/sdcard/Download/*")
+            clear_downloads()
             to_ask_screen()
 
         @step("fp-kill-during-install")
@@ -1623,7 +1631,7 @@ def main() -> int:
                 to_ask_screen()
             finally:
                 adb("shell", "run-as", PKG, "rm", "-f", "files/fill", "files/fill-rest", "files/fill2", "files/fill2-rest")
-                adb("shell", "rm", "-rf", "/sdcard/Download/*")
+                clear_downloads()
             must(pid(), "the app died on a full disk")
 
         flows[:] = [f for f in flows if f[0].startswith("fp-")] if not args.only else flows

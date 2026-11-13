@@ -6,7 +6,29 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 
 ### Added
 
-- **Faster writing with MiniCPM.** With the optional speed pack `minicpm5-2b-dspark` (187 MB) installed, a small draft model by OpenBMB proposes the next 3 tokens and MiniCPM checks them in one step. On a Pixel 10, MiniCPM wrote 15.1 instead of 10.0 tokens per second on 9 demanding prompts, and the first word did not come later. The answers change a little, but the release gate found the same quality (142 questions). Settings > Advanced > Speculative decoding turns it off.
+- **Faster writing with MiniCPM.** The Library lists the optional speed pack `minicpm5-2b-dspark` (187 MB). With it installed, a small draft model by OpenBMB proposes the next 3 tokens and MiniCPM checks them in one step. On a Pixel 10, MiniCPM wrote 15.1 instead of 10.0 tokens per second on 9 demanding prompts, and the first word did not come later. The answers change a little, but the release gate found the same quality (142 questions). Settings > Advanced > Speculative decoding turns it off.
+- **Guided first run.** A new first run guides you through the setup. A model load shows its real progress.
+- **Ask about other apps' text.** Select text in another app, or share it, and pick "Ask Commonplace". The app also takes shared PDF and Markdown files after you confirm.
+- **Diagnostics checks.** Diagnostics runs a speed test (5 fixed questions) and an accuracy check (the 12 canary questions). Share, Copy or "Report on GitHub" sends the report, which holds none of your questions. The GitHub button opens your browser, so the app stays offline.
+- **History keeps more.** Stopped and failed questions are saved, and History has Undo.
+
+### Changed
+
+- **A folding answer card.** The answer card folds, a sheet shows each citation with fixed actions, and a status line counts the citations. Settings is simpler.
+- **Your own document comes first.** When your document is the top search result, the card shows it, not an article that matches one word.
+- **Smoother streaming.** The app redraws an answer at most 10 times a second, and the search models load in parallel. On the desktop, the start time fell from 0.72 to 0.55 s. The phone is not measured.
+- **A switch toggles with a tap anywhere on its row,** and TalkBack reads its label.
+
+### Fixed
+
+- **Safer pack installs.** The app installs a pack only after it reads and checks the whole file. A full disk or a killed app leaves no partial files, and a pack that an update moved aside comes back. A pack that does not load gets a Remove button. An empty pack id can no longer delete every pack.
+- **No lost conversations.** A full disk or a kill keeps the last saved conversation, and the app says when a save fails. The conversation, the draft and an unanswered question come back after Android kills the app in the background.
+- **A failed model load no longer leaves the app stuck.** The app loads another installed model and names it. Settings explains the failure and retries when you choose the model again.
+- **Stop and Unload work at once.** Stop ends an answer during the prefill too. Unload in the notification stops a running answer and unloads the model when it ends; before, the model unloaded up to 30 s later.
+- **Correct calculator numbers.** "2,5% of 200" is 5, not 50, and "1,500" stays fifteen hundred. "0.1% of 2" is 0.002, not 0, and very small results keep three significant digits.
+- **Better citation checks.** A rounded figure such as "16.4" counts as supported by 16,431,599 only when the sentence names the scale. Brackets inside code no longer count as citations.
+- **Privacy.** Release builds keep no question text in the speed log and delete an old log that has it.
+- Questions over 4,000 characters get a note instead of an error. Two fast taps on Back no longer leave a blank screen.
 
 ## [0.4.0] - 2026-11-06
 

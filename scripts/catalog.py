@@ -18,6 +18,7 @@ DESCRIPTIONS = {
     "wikidata-facts": "Structured facts from Wikidata.",
     "ling3-tiny": "Fast answer model (Ling 3.0 tiny).",
     "minicpm5-2b": "Small answer model (MiniCPM5 2B).",
+    "minicpm5-2b-dspark": "Makes MiniCPM5 2B write about 1.5 times faster. Needs the MiniCPM5 2B pack.",
     "voice-en": "Speak your question instead of typing it. English only.",
     "tts-en": "A natural voice that reads answers aloud. English only. Without it, the phone's own voice reads them.",
     "gemma4-e2b-npu": "Fastest answers on a Pixel 10: Gemma 4 E2B on the Tensor G5 chip. Becomes the answer model.",

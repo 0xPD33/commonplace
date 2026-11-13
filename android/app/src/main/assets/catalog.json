@@ -261,6 +261,28 @@
       ]
     },
     {
+      "pack_id": "minicpm5-2b-dspark",
+      "title": "MiniCPM5 2B speed pack",
+      "description": "Makes MiniCPM5 2B write about 1.5 times faster. Needs the MiniCPM5 2B pack.",
+      "pack_type": "model",
+      "snapshot": "",
+      "license": "Apache-2.0",
+      "attribution": "MiniCPM5-2B-DSpark by OpenBMB (huggingface.co/openbmb/MiniCPM5-2B-DSpark-GGUF); pure Q4_0 by Commonplace",
+      "build_date": "2026-11-13",
+      "replaces": [],
+      "recommended": false,
+      "download_bytes": 187359744,
+      "installed_bytes": 187355197,
+      "files": [
+        {
+          "name": "minicpm5-2b-dspark.tar",
+          "bytes": 187359744,
+          "sha256": "5e49b410e35c7709b5748908b26ca109ac4f83051a2c856252e805302c1bd0e4",
+          "url": "https://huggingface.co/datasets/0xPD33/commonplace-packs/resolve/main/packs-2026-11/minicpm5-2b-dspark.tar?download=true"
+        }
+      ]
+    },
+    {
       "pack_id": "stackexchange",
       "title": "Stack Exchange Q&A (51 sites)",
       "description": "Questions and answers from 51 Stack Exchange sites.",

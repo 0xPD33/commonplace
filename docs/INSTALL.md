@@ -37,7 +37,7 @@ The app has no internet access, so it learns of new pack builds only from a new 
 
 ### Install from a computer
 
-1. Download the files from the dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs/tree/main). The Reference shelf is in the folder `packs-2026-11`, and all other files are in `packs-2026-09`.
+1. Download the files from the dataset [`0xPD33/commonplace-packs`](https://huggingface.co/datasets/0xPD33/commonplace-packs/tree/main). The Reference shelf and the MiniCPM speed pack are in the folder `packs-2026-11`, and all other files are in `packs-2026-09`.
 2. Compare each file with `SHA256SUMS` in the folder `packs-2026-11`: `sha256sum -c SHA256SUMS --ignore-missing`.
 3. Connect the phone with USB and copy the files to its **Downloads** folder.
 4. On the phone, tap **Install from Downloads** in the Library and select the files.

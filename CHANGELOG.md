@@ -1,8 +1,8 @@
 # Changelog
 
-Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`. Since 0.4.0 the Reference shelf (`commonplace-breadth.tar`) is in the folder `packs-2026-11`; the old file stays in `packs-2026-09` for older app versions.
+Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`. Since 0.4.0 the Reference shelf (`commonplace-breadth.tar`) is in the folder `packs-2026-11`, and since 0.4.1 the MiniCPM speed pack (`minicpm5-2b-dspark.tar`) too; the old file stays in `packs-2026-09` for older app versions.
 
-## [Unreleased]
+## [0.4.1] - 2026-11-13
 
 ### Added
 
@@ -196,6 +196,7 @@ The first release.
 - Comparisons, follow-up questions, thinking mode, voice input (a separate pack) and "My documents" for your own PDF, text and Markdown files.
 - The Library with an on/off switch for each pack and a 50 GB limit.
 
+[0.4.1]: https://github.com/0xPD33/commonplace/releases/tag/v0.4.1
 [0.4.0]: https://github.com/0xPD33/commonplace/releases/tag/v0.4.0
 [0.3.2]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.2
 [0.3.1]: https://github.com/0xPD33/commonplace/releases/tag/v0.3.1

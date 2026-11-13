@@ -30,6 +30,11 @@ Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/relea
 - **Privacy.** Release builds keep no question text in the speed log and delete an old log that has it.
 - Questions over 4,000 characters get a note instead of an error. Two fast taps on Back no longer leave a blank screen.
 
+### Known issues
+
+- The speed pack is tested only on a Pixel 10 (12 GB). With it, MiniCPM uses about 3.0 GB, close to Android's 3 GiB limit for a hidden app. On the Pixel 10 the app was not killed, and Android swapped about 190 MB of it out. On a phone with less memory, turn off Speculative decoding if the app closes in the background.
+- The known issues of 0.4.0 with Ling's squeaky-hinge and Eurovision answers and with wrong-article citations remain.
+
 ## [0.4.0] - 2026-11-06
 
 ### Added

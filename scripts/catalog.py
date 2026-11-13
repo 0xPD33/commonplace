@@ -15,7 +15,6 @@ CHIPS = {"gemma4-e2b-npu": "Tensor G5"}
 DESCRIPTIONS = {
     "enwiki-core": "The 2 million most useful English Wikipedia articles.",
     "enwiki": "All of English Wikipedia. Replaces the starter pack.",
-    "simplewiki": "Simple English Wikipedia.",
     "wikidata-facts": "Structured facts from Wikidata.",
     "ling3-tiny": "Fast answer model (Ling 3.0 tiny).",
     "minicpm5-2b": "Small answer model (MiniCPM5 2B).",

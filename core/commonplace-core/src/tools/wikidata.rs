@@ -150,7 +150,13 @@ impl WikidataDb {
         let c = self.conn.lock().unwrap();
         let entity: String = c
             .query_row("SELECT label FROM entities WHERE qid = ?", [qid], |r| r.get(0))
-            .unwrap_or_else(|_| qid.to_string());
+            .unwrap_or_else(|e| {
+                // An entity without a label row is normal; any other error means a damaged pack.
+                if !matches!(e, rusqlite::Error::QueryReturnedNoRows) {
+                    log::warn!("wikidata {qid}: label lookup failed: {e:#}");
+                }
+                qid.to_string()
+            });
         let mut st = c.prepare_cached(
             "SELECT f.pid, p.label, f.value_num, f.value_text, f.unit, f.point_in_time
              FROM facts f JOIN props p ON p.pid = f.pid

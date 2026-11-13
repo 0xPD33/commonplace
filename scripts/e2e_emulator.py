@@ -5,7 +5,7 @@ It walks the main user flows, takes a screenshot at each step, and writes
 artifacts/e2e/<stamp>/{NN-step.png, report.json, index.html} for a person to review.
 
 Usage (inside `nix develop`, with the emulator running and the APK built):
-  python3 scripts/e2e_emulator.py [--install] [--push simplewiki lfm25-1.2b] [--question "..."]
+  python3 scripts/e2e_emulator.py [--install] [--push simplewiki minicpm5-2b] [--question "..."]
 """
 
 from __future__ import annotations
@@ -340,7 +340,7 @@ def main() -> int:
     ap.add_argument("--withhold", default="", help=".tar file of --catalog-dir that is missing at the first install and added for the second")
     ap.add_argument("--toggle-pack", default="stackexchange", help="installed pack id that the pack-switch step turns off and on")
     ap.add_argument("--toggle-question", default="Where to stay safe and how to get around when visiting Reykjavik", help="a question the toggled pack answers best")
-    ap.add_argument("--failure-paths", metavar="TAR_DIR", help="also run the failure steps (fp-*). They kill the app and fill the disk, so use an emulator. TAR_DIR holds cdc-travel.tar and simplewiki.tar, and the app must start with only ling3-tiny and simplewiki")
+    ap.add_argument("--failure-paths", metavar="TAR_DIR", help="run the failure steps (fp-*) and no other step, unless --only names steps. They kill the app and fill the disk, so use an emulator. TAR_DIR holds cdc-travel.tar and simplewiki.tar, and the app must start with only ling3-tiny and simplewiki")
     ap.add_argument("--only", nargs="*", default=[], help="run only these steps (pack-switch, my-pdf, my-txt, my-progress, my-errors, plus the names above)")
     args = ap.parse_args()
 

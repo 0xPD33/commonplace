@@ -111,7 +111,7 @@ class AskViewModel(app: Application, private val restored: SavedStateHandle) : A
         get() = draft
         set(v) {
             draft = v
-            // Voice input writes from its audio thread; SavedStateHandle belongs to the main thread.
+            // SavedStateHandle belongs to the main thread. Voice callbacks arrive there already (MicTranscriber default).
             main.post { restored[KEY_INPUT] = v.take(MAX_QUESTION_CHARS) }
         }
 

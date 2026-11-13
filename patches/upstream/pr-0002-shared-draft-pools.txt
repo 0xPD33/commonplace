@@ -17,6 +17,6 @@ cpuparams match (the default when -td/-Cd are not given), and creates its own po
 llama_get_threadpool() / llama_get_threadpool_batch().
 
 Not covered: with -td/-Cd different from the target, the draft still gets its own pools and the idle pair still
-spins (3 cores, -t 3 strict, -td 2: 16.7 tok/s against 37.7 shared). A follow-up (our pending 0014) pauses a thread's
+spins (3 cores, -t 3 strict, -td 2: 16.7 tok/s against 37.7 shared). A follow-up (our pending 0016) pauses a thread's
 previous pool when it starts a graph on another live, idle one: -td 2 16.7 -> 37.4 tok/s. -td without -Cd also leaves the draft pool unpinned (postprocess_cpu_params inherits the
 mask only when n_threads < 0).

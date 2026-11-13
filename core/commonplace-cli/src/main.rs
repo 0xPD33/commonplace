@@ -75,8 +75,6 @@ struct Opts {
     #[arg(long, global = true)]
     no_rewrite: bool,
     #[arg(long, global = true)]
-    no_doc2query: bool,
-    #[arg(long, global = true)]
     telemetry: Option<PathBuf>,
     /// Save the warm system-prompt state here and load it on the next run.
     #[arg(long, global = true)]
@@ -254,9 +252,6 @@ fn engine(o: &Opts) -> Result<Engine> {
         s.evidence_tokens = o.evidence_tokens.or(s.evidence_tokens);
         s.how_to_steps &= !o.no_how_to_steps;
         s.reformat_followup &= !o.no_reformat_followup;
-    }
-    if o.no_doc2query {
-        eprintln!("note: --no-doc2query needs a pack built without questions; flag recorded only");
     }
     if o.evidence_only {
         e.set_llm(ModelRole::LlmFast, Some(Arc::new(NoAnswer)));

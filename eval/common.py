@@ -28,7 +28,7 @@ def portable(p):
     if p.is_relative_to(Path.home()):
         return "~/" + str(p.relative_to(Path.home()))
     return p.name
-ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-doc2query", "no-llm", "no-reformat-followup", "no-sentence-head"]
+ABLATIONS = ["no-dense", "no-sparse", "no-rerank", "no-cards", "no-llm", "no-reformat-followup", "no-sentence-head"]
 CATEGORIES = [
     "factual", "explanation", "comparison", "multihop", "numeric",
     "travel", "howto", "out_of_corpus", "long_tail",
@@ -139,7 +139,8 @@ def load_queries(path, subset=None):
 
 
 def cli_flags(meta_flags):
-    return [f"--{f}" for f in meta_flags]
+    # Old run metadata can hold the retired "no-doc2query"; the binary no longer takes it.
+    return [f"--{f}" for f in meta_flags if f != "no-doc2query"]
 
 
 def claude_version():

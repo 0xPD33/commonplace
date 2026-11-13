@@ -46,6 +46,9 @@ struct Opts {
     /// GGUF to load directly (otherwise the library's fast model pack, if any).
     #[arg(long, global = true)]
     model: Option<PathBuf>,
+    /// DSpark drafter for the llama.cpp model.
+    #[arg(long, global = true)]
+    drafter: Option<PathBuf>,
     /// Retrieval only: no LLM.
     #[arg(long, global = true)]
     no_llm: bool,
@@ -202,6 +205,7 @@ fn engine(o: &Opts) -> Result<Engine> {
     let threads = o.threads;
     let batch_threads = o.batch_threads.unwrap_or(threads);
     let state_dir = o.llm_state.clone();
+    let drafter = o.drafter.clone();
     let cfg = EngineConfig {
         library_dir: o.library.clone(),
         leaf_dir: o.leaf_dir.exists().then(|| o.leaf_dir.clone()),
@@ -215,10 +219,10 @@ fn engine(o: &Opts) -> Result<Engine> {
         telemetry_path: o.telemetry.clone(),
         telemetry_text: true,
     };
-    let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, t| {
+    let loader: commonplace_core::engine::LlmLoader = Box::new(move |mp, pack_drafter, t| {
         let file = mp.file().context("model pack has no file")?;
         let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
-        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(batch_threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone() })?;
+        let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads: t.max(threads), batch_threads: t.max(batch_threads), cpus: vec![], in_ram: true, state_dir: state_dir.clone(), drafter: drafter.clone().or(pack_drafter) })?;
         Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
     });
     let e = Engine::new(cfg, Some(loader))?;
@@ -258,7 +262,7 @@ fn engine(o: &Opts) -> Result<Engine> {
         e.set_llm(ModelRole::LlmFast, Some(Arc::new(NoAnswer)));
     } else if !o.no_llm {
         if let Some(path) = &o.model {
-            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone() })?;
+            let llm = LlamaBackend::load(path, &LoadOptions { n_ctx: 8192, threads, batch_threads, cpus: vec![], in_ram: true, state_dir: o.llm_state.clone(), drafter: o.drafter.clone() })?;
             e.set_profile(profiles::for_model(None, &path.file_name().map(|f| f.to_string_lossy().into_owned()).unwrap_or_default()));
             Engine::warm_up(&llm, &e.library().snapshot_date(), e.settings.read().unwrap().rewrite, e.profile().lean);
             e.set_llm(ModelRole::LlmFast, Some(Arc::new(llm)));

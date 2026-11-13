@@ -372,6 +372,7 @@ class EngineHolder(private val app: Application) {
                 engineOrNull?.let {
                     it.unloadModel()
                     it.setForeignLlm(null, null)
+                    prefs.applyTo(it)
                 }
                 // A new LiteRT engine picks up changed settings, such as speculative decoding.
                 liteRt?.close()

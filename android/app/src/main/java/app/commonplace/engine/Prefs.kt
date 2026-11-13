@@ -110,6 +110,7 @@ class Prefs(context: Context) {
                 maxAnswerTokens = answerTokens.toUInt(),
                 thinkBudget = thinkBudget.toUInt(),
                 rewrite = rewrite,
+                speculative = speculative,
             ),
         )
     }

@@ -61,6 +61,7 @@ pub enum ModelKind {
     Voice,
     /// The read-aloud voice. `load_model` finds no such model.
     ReadAloud,
+    Drafter,
 }
 
 impl From<ModelKind> for ModelRole {
@@ -70,6 +71,7 @@ impl From<ModelKind> for ModelRole {
             ModelKind::Small => ModelRole::LlmSmall,
             ModelKind::Voice => ModelRole::Stt,
             ModelKind::ReadAloud => ModelRole::Tts,
+            ModelKind::Drafter => ModelRole::Drafter,
         }
     }
 }
@@ -80,6 +82,7 @@ fn kind(r: &ModelRole) -> ModelKind {
         ModelRole::LlmSmall => ModelKind::Small,
         ModelRole::Stt => ModelKind::Voice,
         ModelRole::Tts => ModelKind::ReadAloud,
+        ModelRole::Drafter => ModelKind::Drafter,
     }
 }
 
@@ -334,6 +337,8 @@ pub struct Settings {
     pub think_budget: u32,
     /// Rewrite each message into a standalone, typo-free search query first (one short model call).
     pub rewrite: bool,
+    /// Use a model's drafter pack. Reload the model to apply it.
+    pub speculative: bool,
     pub use_rerank: bool,
     pub use_dense: bool,
     pub nprobe: u32,
@@ -656,11 +661,11 @@ impl CommonplaceEngine {
         }
         let cpus: Vec<usize> = if opts.pin_big_cores { commonplace_llm::big_cores() } else { vec![] };
         let state_dir = data_dir.join("llm-state");
-        let loader: LlmLoader = Box::new(move |mp, threads| {
+        let loader: LlmLoader = Box::new(move |mp, drafter, threads| {
             let file = mp.file().ok_or_else(|| anyhow::anyhow!("model pack has no file"))?;
             let n_ctx = mp.manifest.model.as_ref().map(|m| m.n_ctx).unwrap_or(4096);
             let batch_threads = (cpus.len() as u32).max(threads);
-            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: true, state_dir: Some(state_dir.clone()) })?;
+            let llm = LlamaBackend::load(&file, &LoadOptions { n_ctx, threads, batch_threads, cpus: cpus.clone(), in_ram: true, state_dir: Some(state_dir.clone()), drafter })?;
             Ok(Arc::new(llm) as Arc<dyn LlmBackend>)
         });
         let engine = Engine::new(cfg, Some(loader))?;
@@ -1031,6 +1036,7 @@ impl CommonplaceEngine {
             max_answer_tokens: s.max_answer_tokens,
             think_budget: s.think_budget,
             rewrite: s.rewrite,
+            speculative: s.speculative,
             use_rerank: s.retrieval.use_rerank,
             use_dense: s.retrieval.use_dense,
             nprobe: s.retrieval.nprobe as u32,
@@ -1050,6 +1056,7 @@ impl CommonplaceEngine {
         s.max_answer_tokens = n.max_answer_tokens.clamp(64, 1024);
         s.think_budget = n.think_budget.clamp(64, 2048);
         s.rewrite = n.rewrite;
+        s.speculative = n.speculative;
         s.retrieval.use_rerank = n.use_rerank;
         s.retrieval.use_dense = n.use_dense;
         s.retrieval.nprobe = n.nprobe.clamp(1, 512) as usize;

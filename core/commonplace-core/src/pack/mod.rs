@@ -46,6 +46,8 @@ pub enum ModelRole {
     Stt,
     /// Text to speech (Phonon through Gradium's ptts runtime). The Kotlin app loads it, like `Stt`.
     Tts,
+    /// Proposes tokens for the answer model of pack `<pack_id without -dspark>`. The engine loads it with that model.
+    Drafter,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -4,6 +4,7 @@
 mod sys {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
+mod draft;
 
 use anyhow::{Context, Result, bail, ensure};
 use commonplace_core::llm::{GenParams, GenStats, LlmBackend};
@@ -73,6 +74,8 @@ struct ThinkStyle {
 struct Cached {
     tokens: usize,
     state: Vec<u8>,
+    /// The drafter's state for the same tokens, when it read them.
+    draft_state: Option<Vec<u8>>,
     /// `Inner::uses` at the last use: the least recent entry goes first when the cache is full.
     used: u64,
     /// Never evicted (`GenParams::keep_prefix`).
@@ -107,6 +110,8 @@ struct Inner {
     model_key: String,
     /// The chat template writes `bos_token` but the vocabulary does not add it (MiniCPM5, LFM3).
     template_bos: bool,
+    /// Proposes tokens for the answer prompt (`GenParams::keep_prefix`).
+    drafter: Option<draft::Drafter>,
 }
 
 // SAFETY: all access to the raw pointers goes through the Mutex in LlamaBackend.
@@ -114,6 +119,7 @@ unsafe impl Send for Inner {}
 
 impl Drop for Inner {
     fn drop(&mut self) {
+        self.drafter = None;
         unsafe {
             if !self.ctx.is_null() {
                 sys::llama_free(self.ctx);
@@ -172,6 +178,8 @@ pub struct LoadOptions {
     /// Save kept system-prompt states (`GenParams::keep_prefix`) here, so a new process loads them instead of
     /// prefilling the prompt again (seconds on a phone).
     pub state_dir: Option<PathBuf>,
+    /// DSpark drafter for this model. Without one, or if it fails to load, the model decodes one token at a time.
+    pub drafter: Option<PathBuf>,
 }
 
 /// How much of the weights the current load has read, in thousandths. One model loads at a time.
@@ -216,6 +224,10 @@ impl LlamaBackend {
         cp.n_seq_max = 1;
         cp.n_threads = opts.threads as i32;
         cp.n_threads_batch = opts.batch_threads.max(1) as i32;
+        if opts.drafter.is_some() {
+            cp.n_outputs_max = draft::DRAFT_LEN + 1;
+            cp.n_outputs_max_per_seq = draft::DRAFT_LEN + 1;
+        }
         let ctx = unsafe { sys::llama_init_from_model(model, cp) };
         if ctx.is_null() {
             unsafe { sys::llama_model_free(model) };
@@ -259,13 +271,17 @@ impl LlamaBackend {
         } else {
             None
         };
-        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key, template_bos: false };
+        let mut inner = Inner { model, ctx, threadpool, batch_pool, cache: HashMap::new(), uses: 0, think, think_end: None, batch_threads: opts.batch_threads.max(1), n_batch: 512, state_dir: opts.state_dir.clone(), model_key, template_bos: false, drafter: None };
         inner.template_bos = tmpl.contains("bos_token") && !unsafe { sys::llama_vocab_get_add_bos(inner.vocab()) };
         inner.think_end = inner.tokenize("</think>", false).ok().filter(|t| t.len() == 1).map(|t| t[0]);
         if opts.in_ram {
             // One tiny decode warms the kernels.
             let _ = inner.decode_tokens(&[inner.bos()], 0);
             unsafe { sys::llama_memory_clear(sys::llama_get_memory(ctx), true) };
+        }
+        if let Some(d) = &opts.drafter {
+            inner.drafter = draft::Drafter::load(d, model, ctx, opts).inspect_err(|e| log::warn!("no drafter: {e:#}")).ok();
+            inner.set_decoding(false);
         }
         let n_ctx = unsafe { sys::llama_n_ctx(ctx) } as usize;
         Ok(Self { id: format!("{name} ({desc})"), n_ctx, inner: Mutex::new(inner) })
@@ -343,29 +359,26 @@ impl Inner {
 
     /// The saved state's file name. The hash may change with the Rust release; that only costs one prefill.
     fn state_name(&self, system: &str) -> String {
-        use std::hash::{Hash, Hasher};
-        let mut h = std::collections::hash_map::DefaultHasher::new();
-        (&self.model_key, system).hash(&mut h);
-        format!("{:016x}.state", h.finish())
+        state_name(&self.model_key, system)
     }
 
     /// Loads a saved state into sequence 0. False (and the memory may hold partial state) unless the file
     /// was made from exactly `toks`.
-    fn load_state(&self, file: &Path, toks: &[i32]) -> bool {
+    fn load_state(ctx: *mut sys::llama_context, file: &Path, toks: &[i32]) -> bool {
         let Ok(c) = CString::new(file.to_string_lossy().as_bytes()) else { return false };
         let mut got = vec![0i32; toks.len()];
         let mut n = 0usize;
-        let size = unsafe { sys::llama_state_seq_load_file(self.ctx, c.as_ptr(), 0, got.as_mut_ptr(), got.len(), &mut n) };
+        let size = unsafe { sys::llama_state_seq_load_file(ctx, c.as_ptr(), 0, got.as_mut_ptr(), got.len(), &mut n) };
         size > 0 && got[..n.min(got.len())] == *toks
     }
 
     /// Writes sequence 0's state, then drops the oldest files beyond `STATE_FILES`. Failures only cost a later prefill.
-    fn save_state(&self, file: &Path, toks: &[i32]) {
+    fn save_state(ctx: *mut sys::llama_context, file: &Path, toks: &[i32]) {
         let Some(dir) = file.parent() else { return };
         let tmp = file.with_extension("tmp");
         let Ok(c) = CString::new(tmp.to_string_lossy().as_bytes()) else { return };
         // Written aside and renamed, so a process killed mid-write leaves no half file under the real name.
-        let ok = std::fs::create_dir_all(dir).is_ok() && unsafe { sys::llama_state_seq_save_file(self.ctx, c.as_ptr(), 0, toks.as_ptr(), toks.len()) } > 0;
+        let ok = std::fs::create_dir_all(dir).is_ok() && unsafe { sys::llama_state_seq_save_file(ctx, c.as_ptr(), 0, toks.as_ptr(), toks.len()) } > 0;
         if !ok || std::fs::rename(&tmp, file).is_err() {
             let _ = std::fs::remove_file(&tmp);
             return;
@@ -387,14 +400,91 @@ impl Inner {
     fn decode_tokens(&mut self, toks: &[i32], _pos: usize) -> Result<()> {
         for chunk in toks.chunks(self.n_batch) {
             let mut c = chunk.to_vec();
+            let next = unsafe { sys::llama_memory_seq_pos_max(sys::llama_get_memory(self.ctx), 0) } + 1;
             let batch = unsafe { sys::llama_batch_get_one(c.as_mut_ptr(), c.len() as i32) };
             let rc = unsafe { sys::llama_decode(self.ctx, batch) };
             if rc == DECODE_ABORTED {
                 return Err(Cancelled.into());
             }
             ensure!(rc == 0, "llama_decode failed ({rc})");
+            if let Some(d) = self.drafter.as_mut().filter(|d| d.feeding()) {
+                d.inject(self.ctx, next, chunk.len())?;
+            }
         }
         Ok(())
+    }
+
+    /// Prefill uses the batch threads. A verify batch has several tokens, so llama.cpp would also give it the batch
+    /// threads; decoding uses the decode threads and pool for both models, because a second pool would fight the first.
+    fn set_decoding(&self, decoding: bool) {
+        let Some(d) = &self.drafter else { return };
+        let n = unsafe { sys::llama_n_threads(self.ctx) };
+        let (n_batch, pool) = if decoding { (n, self.threadpool) } else { (self.batch_threads as i32, self.batch_pool) };
+        for c in [self.ctx, d.ctx] {
+            unsafe {
+                sys::llama_set_n_threads(c, n, n_batch);
+                if !self.threadpool.is_null() && !pool.is_null() {
+                    sys::llama_attach_threadpool(c, self.threadpool, pool);
+                }
+            }
+        }
+    }
+
+    /// The answer with drafts: each step proposes tokens, checks them in one batch and keeps those the sampler also picks.
+    fn write_drafted(&mut self, smpl: *mut sys::llama_sampler, p: &GenParams, st: &mut GenStats, on_token: &mut dyn FnMut(&str) -> bool) -> Result<()> {
+        let mem = unsafe { sys::llama_get_memory(self.ctx) };
+        let mut pos = unsafe { sys::llama_memory_seq_pos_max(mem, 0) } + 1;
+        let mut pending: Vec<u8> = Vec::new();
+        let vocab = self.vocab();
+        let mut ids = vec![unsafe { sys::llama_sampler_sample(smpl, self.ctx, -1) }];
+        self.set_decoding(true);
+        loop {
+            for &tok in &ids {
+                if unsafe { sys::llama_vocab_is_eog(vocab, tok) } {
+                    return Ok(());
+                }
+                st.gen_tokens += 1;
+                if st.gen_tokens > p.max_tokens {
+                    st.truncated = true;
+                    return Ok(());
+                }
+                self.piece(tok, &mut pending);
+                if let Some(s) = take_utf8(&mut pending)
+                    && !on_token(&s)
+                {
+                    return Ok(()); // cancelled
+                }
+            }
+            let last = *ids.last().unwrap();
+            let d = self.drafter.as_mut().context("the drafter went away")?;
+            let room = p.max_tokens - st.gen_tokens;
+            let draft = d.draft(last, pos, draft::DRAFT_LEN.min(room))?;
+            unsafe {
+                sys::llama_batch_ext_clear(d.verify);
+                for (i, &t) in std::iter::once(&last).chain(&draft).enumerate() {
+                    let idx = sys::llama_batch_ext_add_token(d.verify, 0, t);
+                    ensure!(idx >= 0, "cannot add a token to the verify batch ({idx})");
+                    let at = pos + i as i32;
+                    sys::llama_batch_ext_set_pos(d.verify, idx, &at);
+                    sys::llama_batch_ext_set_output_logits(d.verify, idx, true);
+                }
+                let rc = sys::llama_process(self.ctx, sys::LLAMA_PROCESS_TYPE_DECODE, d.verify);
+                ensure!(rc == 0, "verify failed ({rc})");
+            }
+            d.inject(self.ctx, pos, draft.len() + 1)?;
+            ids.clear();
+            for i in 0..=draft.len() {
+                let tok = unsafe { sys::llama_sampler_sample(smpl, self.ctx, i as i32) };
+                ids.push(tok);
+                if i < draft.len() && (tok != draft[i] || unsafe { sys::llama_vocab_is_eog(vocab, tok) }) {
+                    break;
+                }
+            }
+            pos += ids.len() as i32;
+            ensure!(unsafe { sys::llama_memory_seq_rm(mem, 0, pos, -1) }, "cannot drop rejected tokens");
+            d.remove_from(pos)?;
+            st.draft_steps += 1;
+        }
     }
 
     fn sampler(&self, p: &GenParams) -> Result<*mut sys::llama_sampler> {
@@ -458,45 +548,74 @@ impl Inner {
         unsafe { sys::llama_head_extra_tokens(self.ctx, user_toks.as_ptr(), user_toks.len() as i32) };
         let mem = unsafe { sys::llama_get_memory(self.ctx) };
         unsafe { sys::llama_memory_clear(mem, true) };
+        // Only the answer prompt drafts: the other prompts write a few tokens, too few to pay for the feature copies.
+        let drafting = p.keep_prefix && p.grammar.is_none() && budget.is_none() && self.drafter.is_some();
+        let ctx = self.ctx;
+        let draft_mem = self.drafter.as_mut().map(|d| {
+            d.set_feeding(ctx, drafting);
+            let m = unsafe { sys::llama_get_memory(d.ctx) };
+            unsafe { sys::llama_memory_clear(m, true) };
+            m
+        });
+        self.set_decoding(false);
 
         let t = Instant::now();
         self.uses += 1;
         let suffix_toks = if let Some(rest) = head.strip_prefix(prefix.as_str()) {
             let restored = match self.cache.get_mut(system.as_str()) {
-                Some(c) => {
-                    let ok = unsafe { sys::llama_state_seq_set_data(self.ctx, c.state.as_ptr(), c.state.len(), 0) } > 0;
+                Some(c) if !drafting || c.draft_state.is_some() => {
+                    let mut ok = unsafe { sys::llama_state_seq_set_data(self.ctx, c.state.as_ptr(), c.state.len(), 0) } > 0;
+                    if let (true, Some(d), Some(s)) = (drafting, &self.drafter, &c.draft_state) {
+                        ok &= unsafe { sys::llama_state_seq_set_data(d.ctx, s.as_ptr(), s.len(), 0) } > 0;
+                    }
                     c.used = self.uses;
                     c.keep |= p.keep_prefix;
                     if ok { Some(c.tokens) } else { None }
                 }
-                None => None,
+                _ => None,
             };
             match restored {
                 Some(n) => st.cached_tokens = n as u32,
                 None => {
-                    unsafe { sys::llama_memory_clear(mem, true) };
+                    let clear = || unsafe {
+                        sys::llama_memory_clear(mem, true);
+                        if let Some(m) = draft_mem {
+                            sys::llama_memory_clear(m, true);
+                        }
+                    };
+                    clear();
                     let ptoks = self.tokenize(&prefix, true)?;
                     let file = self.state_dir.as_ref().filter(|_| p.keep_prefix).map(|d| d.join(self.state_name(&system)));
-                    if file.as_deref().is_some_and(|f| self.load_state(f, &ptoks)) {
+                    // Beside the main state, in a folder of its own: the two files must not take each other's place in the limit.
+                    let live_drafter = self.drafter.as_ref().filter(|_| drafting);
+                    let draft_file = live_drafter.zip(file.as_deref()).and_then(|(d, f)| Some(f.parent()?.join("draft").join(state_name(&d.key, &system))));
+                    let draft_ctx = live_drafter.map(|d| d.ctx);
+                    let draft_loaded = match (draft_ctx, &draft_file) {
+                        (Some(c), Some(f)) => Self::load_state(c, f, &ptoks),
+                        (Some(_), None) => false,
+                        _ => true,
+                    };
+                    if draft_loaded && file.as_deref().is_some_and(|f| Self::load_state(self.ctx, f, &ptoks)) {
                         st.cached_tokens = ptoks.len() as u32;
                     } else {
-                        unsafe { sys::llama_memory_clear(mem, true) };
+                        clear();
                         self.decode_tokens(&ptoks, 0)?;
                         st.prompt_tokens += ptoks.len() as u32;
                         if let Some(f) = &file {
-                            self.save_state(f, &ptoks);
+                            Self::save_state(self.ctx, f, &ptoks);
+                        }
+                        if let (Some(c), Some(f)) = (draft_ctx, &draft_file) {
+                            Self::save_state(c, f, &ptoks);
                         }
                     }
-                    let size = unsafe { sys::llama_state_seq_get_size(self.ctx, 0) };
-                    let mut state = vec![0u8; size];
-                    let got = unsafe { sys::llama_state_seq_get_data(self.ctx, state.as_mut_ptr(), size, 0) };
-                    state.truncate(got);
+                    let state = seq_state(self.ctx);
+                    let draft_state = draft_ctx.map(seq_state);
                     if self.cache.len() >= CACHE_ENTRIES
                         && let Some(old) = self.cache.iter().filter(|(_, c)| !c.keep).min_by_key(|(_, c)| c.used).map(|(k, _)| k.clone())
                     {
                         self.cache.remove(&old);
                     }
-                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), state, used: self.uses, keep: p.keep_prefix });
+                    self.cache.insert(system.clone(), Cached { tokens: ptoks.len(), state, draft_state, used: self.uses, keep: p.keep_prefix });
                 }
             }
             st.prompt_tokens += st.cached_tokens;
@@ -517,6 +636,13 @@ impl Inner {
 
         let smpl = self.sampler(p)?;
         let t = Instant::now();
+        if drafting {
+            let result = self.write_drafted(smpl, p, &mut st, on_token);
+            unsafe { sys::llama_sampler_free(smpl) };
+            result?;
+            st.decode_ms = t.elapsed().as_secs_f64() * 1000.0;
+            return Ok(st);
+        }
         let mut pending: Vec<u8> = Vec::new();
         // Reasoning is streamed between "<think>" and "</think>" so the caller can show it apart.
         let mut thinking = budget.is_some();
@@ -580,14 +706,7 @@ impl Inner {
                     }
                 }
                 self.piece(tok, &mut pending);
-                let valid = match std::str::from_utf8(&pending) {
-                    Ok(_) => pending.len(),
-                    Err(e) if e.error_len().is_none() => e.valid_up_to(),
-                    Err(_) => pending.len(),
-                };
-                if valid > 0 {
-                    let s = String::from_utf8_lossy(&pending[..valid]).into_owned();
-                    pending.drain(..valid);
+                if let Some(s) = take_utf8(&mut pending) {
                     if budget.is_some() {
                         // Enough text to spot a "</think>" written as several ordinary tokens.
                         tail.push_str(&s);
@@ -615,6 +734,35 @@ impl Inner {
         st.decode_ms = t.elapsed().as_secs_f64() * 1000.0;
         Ok(st)
     }
+}
+
+/// The complete characters at the start of `pending`. A character that a later token finishes stays there.
+fn take_utf8(pending: &mut Vec<u8>) -> Option<String> {
+    let valid = match std::str::from_utf8(pending) {
+        Ok(_) => pending.len(),
+        Err(e) if e.error_len().is_none() => e.valid_up_to(),
+        Err(_) => pending.len(),
+    };
+    (valid > 0).then(|| {
+        let s = String::from_utf8_lossy(&pending[..valid]).into_owned();
+        pending.drain(..valid);
+        s
+    })
+}
+
+fn state_name(key: &str, system: &str) -> String {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    (key, system).hash(&mut h);
+    format!("{:016x}.state", h.finish())
+}
+
+fn seq_state(ctx: *mut sys::llama_context) -> Vec<u8> {
+    let size = unsafe { sys::llama_state_seq_get_size(ctx, 0) };
+    let mut state = vec![0u8; size];
+    let got = unsafe { sys::llama_state_seq_get_data(ctx, state.as_mut_ptr(), size, 0) };
+    state.truncate(got);
+    state
 }
 
 impl LlmBackend for LlamaBackend {

@@ -52,6 +52,8 @@ pub struct Settings {
     pub max_answer_tokens: u32,
     /// Let the model rewrite each message into a standalone, typo-free search query first.
     pub rewrite: bool,
+    /// Use a model's drafter pack when it has one. A model load reads this.
+    pub speculative: bool,
     pub use_compute: bool,
     pub use_cards: bool,
     pub llm_threads: u32,
@@ -72,6 +74,7 @@ impl Default for Settings {
             max_answer_tokens: 400,
             // Off: on the Pixel it doubles the card time (2.0 vs 1.0 s) and did not raise the seeds score (docs/BENCHMARKS.md).
             rewrite: false,
+            speculative: true,
             use_compute: true,
             use_cards: true,
             llm_threads: 4,
@@ -281,7 +284,8 @@ fn parse_json<T: for<'de> Deserialize<'de>>(s: &str) -> Option<T> {
     serde_json::from_str(&s[a..=b]).ok()
 }
 
-pub type LlmLoader = Box<dyn Fn(&ModelPack, u32) -> Result<Arc<dyn LlmBackend>> + Send + Sync>;
+/// Takes the model pack, its drafter file if it has one and should use it, and the thread count.
+pub type LlmLoader = Box<dyn Fn(&ModelPack, Option<PathBuf>, u32) -> Result<Arc<dyn LlmBackend>> + Send + Sync>;
 
 pub struct Engine {
     pub cfg: EngineConfig,
@@ -423,11 +427,11 @@ impl Engine {
         let lib = self.library();
         let mp = lib.model(&role).with_context(|| format!("no {role:?} model installed"))?;
         *self.llm.write().unwrap() = None;
-        let (threads, rewrite) = {
+        let (threads, rewrite, speculative) = {
             let s = self.settings.read().unwrap();
-            (s.llm_threads, s.rewrite)
+            (s.llm_threads, s.rewrite, s.speculative)
         };
-        let llm = loader(mp, threads)?;
+        let llm = loader(mp, lib.drafter_for(mp).filter(|_| speculative), threads)?;
         self.set_profile(mp.profile());
         Self::warm_up(llm.as_ref(), &lib.snapshot_date(), rewrite, self.profile().lean);
         *self.llm.write().unwrap() = Some((role, llm));

@@ -1,0 +1,50 @@
+C names for the staging API that a target-feature drafter needs
+
+llama-ext.h is C++ with C++ linkage, so the Rust FFI cannot call it. The app runs DSpark directly on libllama, because
+the `common` library that holds upstream's driver also brings chat parsing, Jinja and download code into the APK.
+
+diff --git a/include/llama.h b/include/llama.h
+index 18ab651..1537a2e 100644
+--- a/include/llama.h
++++ b/include/llama.h
+@@ -1105,6 +1105,12 @@ extern "C" {
+                              enum llama_process_type   type,
+                               struct llama_batch_ext * batch);
+ 
++    // C access to the staging API (llama-ext.h is C++) that a target-feature drafter (DFlash, DSpark) needs.
++    LLAMA_API uint32_t      llama_draft_target_layers(const struct llama_model * model, const int32_t ** ids);
++    LLAMA_API void          llama_draft_set_features (struct llama_context * ctx, uint32_t layer, bool value);
++    LLAMA_API const float * llama_draft_get_features (struct llama_context * ctx, uint32_t layer);
++    LLAMA_API void          llama_draft_set_nextn    (struct llama_context * ctx, bool value, bool masked);
++
+     // Set the number of threads used for decoding
+     // n_threads is the number of threads used for generation (single token)
+     // n_threads_batch is the number of threads used for prompt and batch processing (multiple tokens)
+diff --git a/src/llama-context.cpp b/src/llama-context.cpp
+index e9bfb3b..d3e2d38 100644
+--- a/src/llama-context.cpp
++++ b/src/llama-context.cpp
+@@ -4839,6 +4839,23 @@ void llama_opt_epoch(
+         callback_eval);
+ }
+ 
++uint32_t llama_draft_target_layers(const llama_model * model, const int32_t ** ids) {
++    *ids = llama_model_target_layer_ids(model);
++    return llama_model_target_layer_ids_n(model);
++}
++
++void llama_draft_set_features(llama_context * ctx, uint32_t layer, bool value) {
++    llama_set_embeddings_layer_inp(ctx, layer, value);
++}
++
++const float * llama_draft_get_features(llama_context * ctx, uint32_t layer) {
++    return llama_get_embeddings_layer_inp(ctx, layer);
++}
++
++void llama_draft_set_nextn(llama_context * ctx, bool value, bool masked) {
++    llama_set_embeddings_nextn(ctx, value, masked);
++}
++
+ int32_t llama_process(llama_context * ctx, llama_process_type type, llama_batch_ext * batch) {
+     switch (type) {
+         case LLAMA_PROCESS_TYPE_ENCODE: return ctx->encode(*batch);

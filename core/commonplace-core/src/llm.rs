@@ -45,6 +45,8 @@ pub struct GenStats {
     pub gen_tokens: u32,
     /// Reasoning tokens among `gen_tokens` (thinking mode).
     pub think_tokens: u32,
+    /// Draft-and-verify steps in the answer; 0 without a drafter.
+    pub draft_steps: u32,
     /// The answer stopped at `max_tokens`, not at the model's end token.
     pub truncated: bool,
     pub prefill_ms: f64,

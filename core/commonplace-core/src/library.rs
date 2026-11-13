@@ -176,6 +176,12 @@ impl Library {
         self.models.iter().find(|m| m.role() == Some(role) && !m.file().is_some_and(|f| f.extension().is_some_and(|e| e == "litertlm")))
     }
 
+    /// The drafter pack of model pack `mp`, by the name `<pack_id>-dspark`.
+    pub fn drafter_for(&self, mp: &ModelPack) -> Option<PathBuf> {
+        let id = format!("{}-dspark", mp.manifest.pack_id);
+        self.models.iter().find(|m| m.role() == Some(&ModelRole::Drafter) && m.manifest.pack_id == id)?.file()
+    }
+
     pub fn total_bytes(&self) -> u64 {
         pack::installed_size(&Self::packs_dir(&self.root), &[])
     }

@@ -2,6 +2,12 @@
 
 Each release is on [GitHub Releases](https://github.com/0xPD33/commonplace/releases) with its signed APK and SHA-256. All releases use the same signing certificate, so each one installs over the one before and keeps the installed packs. The packs are in the Hugging Face dataset [0xPD33/commonplace-packs](https://huggingface.co/datasets/0xPD33/commonplace-packs), folder `packs-2026-09`. After 0.1.1 the folder got two new files: `minicpm5-2b.tar` and `commonplace-starter-small.tar`. Since 0.4.0 the Reference shelf (`commonplace-breadth.tar`) is in the folder `packs-2026-11`; the old file stays in `packs-2026-09` for older app versions.
 
+## [Unreleased]
+
+### Added
+
+- **Faster writing with MiniCPM.** With the optional speed pack `minicpm5-2b-dspark` (187 MB) installed, a small draft model by OpenBMB proposes the next 3 tokens and MiniCPM checks them in one step. On a Pixel 10, MiniCPM wrote 15.1 instead of 10.0 tokens per second on 9 demanding prompts, and the first word did not come later. The answers change a little, but the release gate found the same quality (142 questions). Settings > Advanced > Speculative decoding turns it off.
+
 ## [0.4.0] - 2026-11-06
 
 ### Added

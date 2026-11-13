@@ -239,8 +239,9 @@ fun SettingsScreen(onBack: () -> Unit, onDiagnostics: () -> Unit, onLicenses: ()
             AnimatedVisibility(advanced, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                 Column {
                     SwitchRow("Show timings under answers", timings) { timings = it }
-                    if (gemma != null && backend == Backend.Tpu) {
-                        SwitchRow("Speculative decoding", speculative, "Writes about 1.5× faster on the Tensor chip.") {
+                    val speedPack = lib?.models?.any { it.kind == ModelKind.DRAFTER } == true
+                    if ((gemma != null && backend == Backend.Tpu) || speedPack) {
+                        SwitchRow("Speculative decoding", speculative, "Writes about 1.5× faster: Gemma on the Tensor chip, and models with a speed pack.") {
                             speculative = it
                             prefs.speculative = it
                             holder.reloadModel()

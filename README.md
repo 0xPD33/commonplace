@@ -8,11 +8,9 @@ I built it for the poidh bounty [Build the Best Offline AI Research App for Andr
 
 [Download the APK](https://github.com/0xPD33/commonplace/releases/latest) · [Install](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source) · [Changelog](CHANGELOG.md)
 
-<img src="docs/images/demo.webp" width="300" align="right" alt="Commonplace 0.4.1 on a Pixel 10 in airplane mode: you ask questions and Gemma writes answers with citations">
+<p align="center"><img src="docs/images/demo.webp" width="300" alt="Commonplace 0.4.1 on a Pixel 10 in airplane mode: you ask questions and Gemma writes answers with citations"></p>
 
-*Right: a real screen recording of 0.4.1 on a Pixel 10 in airplane mode. Gemma 4 E2B writes on the Tensor G5 chip. The video is not sped up. An older 95-second tour of 0.4.0 with sound is an [MP4 (17 MB)](docs/media/commonplace-showcase.mp4).*
-
-<br clear="right">
+*A real screen recording of 0.4.1 on a Pixel 10 in airplane mode. Gemma 4 E2B writes on the Tensor G5 chip. The video is not sped up. An older 95-second tour of 0.4.0 with sound is an [MP4 (17 MB)](docs/media/commonplace-showcase.mp4).*
 
 ## Screens
 

@@ -8,9 +8,11 @@ I built it for the poidh bounty [Build the Best Offline AI Research App for Andr
 
 [Download the APK](https://github.com/0xPD33/commonplace/releases/latest) · [Install](#install-on-a-phone) · [Bounty requirements](#bounty-requirements) · [Under the hood](#under-the-hood) · [Packs on Hugging Face](https://huggingface.co/datasets/0xPD33/commonplace-packs) · [Build from source](docs/INSTALL.md#build-from-source) · [Changelog](CHANGELOG.md)
 
-[![Commonplace on a Pixel 10: you type "How tall is Mount Everest?", the best passage and Wikidata facts appear, then the answer streams in with citations](docs/media/commonplace-ask.gif)](docs/media/commonplace-showcase.mp4)
+<img src="docs/images/demo.webp" width="300" align="right" alt="Commonplace 0.4.1 on a Pixel 10 in airplane mode: you ask questions and Gemma writes answers with citations">
 
-*16 seconds from the tour, recorded on a Pixel 10. The full 95-second tour with sound is an [MP4 (17 MB)](docs/media/commonplace-showcase.mp4). The video speeds up the waits and shows each speed-up on screen.*
+*Right: a real screen recording of 0.4.1 on a Pixel 10 in airplane mode. Gemma 4 E2B writes on the Tensor G5 chip. The video is not sped up. An older 95-second tour of 0.4.0 with sound is an [MP4 (17 MB)](docs/media/commonplace-showcase.mp4).*
+
+<br clear="right">
 
 ## Screens
 
@@ -18,27 +20,27 @@ All screenshots come from the app in airplane mode. The answers are real.
 
 <table>
   <tr>
-    <td width="25%"><img src="docs/images/answer-explain.png" alt="An answer to 'What causes the northern lights?' with the best passage, a Wikidata fact and numbered citations"></td>
-    <td width="25%"><img src="docs/images/answer-compare.png" alt="A comparison of Mars and Venus with a side-by-side Wikidata table and a written answer"></td>
-    <td width="25%"><img src="docs/images/source.png" alt="The source reader with the passage, its credit, license and web address"></td>
-    <td width="25%"><img src="docs/images/my-documents.png" alt="An answer from a user's own PDF, limited to that document"></td>
+    <td width="25%"><img src="docs/images/first-run.png" alt="The first run with the files for a 12 GB phone"></td>
+    <td width="25%"><img src="docs/images/answer-explain.png" alt="An answer to 'What causes the northern lights?' with numbered citations"></td>
+    <td width="25%"><img src="docs/images/answer-card.png" alt="The best passage card folded open above the answer, with a Wikidata fact"></td>
+    <td width="25%"><img src="docs/images/source.png" alt="The citation sheet with the passage, its credit and license"></td>
   </tr>
   <tr>
-    <td>The best passage appears first, then the written answer with citations.</td>
-    <td>Compare two things. Facts from Wikidata appear side by side.</td>
-    <td>Open any source to check it. Each source shows its credit and license.</td>
-    <td>Add your own PDF and ask questions about it.</td>
+    <td>The first run lists the files for your phone. Your browser downloads them.</td>
+    <td>Every answer cites its sources. Gemma wrote this one in 4.5 s.</td>
+    <td>The best passage folds open above the answer.</td>
+    <td>Tap a citation to read the source with its credit and license.</td>
   </tr>
   <tr>
-    <td><img src="docs/images/library.png" alt="The Library with the storage meter and an on/off switch for each pack"></td>
-    <td><img src="docs/images/get-more.png" alt="The download sheet of the Reference shelf bundle with its 13 packs"></td>
+    <td width="25%"><img src="docs/images/answer-compare.png" alt="A comparison of Mars and Venus with a warning that some sentences are unverified"></td>
+    <td width="25%"><img src="docs/images/library.png" alt="The Library with the storage meter and an on/off switch for each pack"></td>
+    <td width="25%"><img src="docs/images/diagnostics.png" alt="The Diagnostics report with speed numbers and a Report on GitHub button"></td>
     <td></td>
-    <td></td>
   </tr>
   <tr>
+    <td>Compare two things. The app marks sentences that it cannot verify.</td>
     <td>Switch each source on or off. The meter shows the 50 GB limit.</td>
-    <td>Get more packs. One file holds several packs.</td>
-    <td></td>
+    <td>Diagnostics measures speed and accuracy. The report holds none of your questions.</td>
     <td></td>
   </tr>
 </table>
